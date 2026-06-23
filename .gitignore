@@ -64,3 +64,17 @@ rez-api-gateway/.nginx-config-test/
 *.orig
 *.rej
 *.swp
+
+# Locally-restored secret strings (kept on disk for local dev, blocked from
+# future commits via `git update-index --skip-worktree`).
+# Why these specific files: they currently contain real Twilio/Stripe credentials
+# that were scrubbed before the initial push. The values below match the strings
+# already on disk so gitignore rules apply to any *new* occurrences too.
+# See: rez-backend-master/src/__tests__/security.test.ts (sk_live_* test fixture)
+# See: rez-backend-master/docs/SMS_NOTIFICATION_IMPLEMENTATION_SUMMARY.md
+# See: rez-backend-master/docs/SMS_SETUP_COMPLETE.md
+# See: rez-backend-master/docs/STRIPE_PAYMENT_VERIFICATION_IMPLEMENTATION.md
+rez-backend-master/src/__tests__/security.test.ts
+rez-backend-master/docs/SMS_NOTIFICATION_IMPLEMENTATION_SUMMARY.md
+rez-backend-master/docs/SMS_SETUP_COMPLETE.md
+rez-backend-master/docs/STRIPE_PAYMENT_VERIFICATION_IMPLEMENTATION.md
