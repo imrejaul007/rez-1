@@ -1,0 +1,9 @@
+Total screen files: echo  echo ### Components: 299+ find components -name *.tsx 0
+Total component files: echo  echo ### Custom Hooks: 74 ls hooks 0
+Hook files: echo  echo ### Services: 112+ ls services 0
+Service files: echo  echo ### Contexts: 17 ls contexts 0
+Context files: echo  echo ## BACKEND ARCHITECTURE (user-backend) echo  echo ### Models: 63 find ../user-backend/src/models -name *.ts 0
+Model files: echo  echo ### Controllers: 56 ls ../user-backend/src/controllers 0
+Controller files: echo  echo ### Routes: 51 ls ../user-backend/src/routes 0
+Route files: echo  echo ### Services: 52+ ls ../user-backend/src/services 0
+Service files: echo  cat ARCHITECTURE_SUMMARY.txt 0

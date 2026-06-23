@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Security - temporary token files
+.tmp_token
+*.tmp_token
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.production.example
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Build output
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+
+# Temp/junk files
+tmpclaude-*
+test-results.txt

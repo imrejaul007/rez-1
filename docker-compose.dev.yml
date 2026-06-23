@@ -1,0 +1,227 @@
+# REZ Local Development — Full Stack
+# ----------------------------------------------------------------------------
+# Brings up: Mongo 7, Redis 7, rez-auth-service (4002), rez-backend (5001),
+# rez-api-gateway nginx (10000).
+#
+# Usage:
+#   cd C:\Users\user\Downloads\rez-backend-master
+#   docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
+#
+# Notes:
+#   - All services share the rez-net bridge network.
+#   - Internal URLs use service-name + port (not localhost).
+#   - Host ports are exposed for local debugging only.
+#   - Source mounts are bind-mounts so dev edits are picked up on restart.
+# ----------------------------------------------------------------------------
+
+name: rez-dev
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: rez-dev-mongo
+    ports:
+      - "127.0.0.1:27018:27017"  # 27017 is in use on the host (MongoDB Tools)
+    environment:
+      MONGO_INITDB_DATABASE: rez
+      MONGO_INITDB_ROOT_USERNAME: rezadmin
+      MONGO_INITDB_ROOT_PASSWORD: rezdevpass
+    volumes:
+      - rez-dev-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [rez-net]
+
+  redis:
+    image: redis:7-alpine
+    container_name: rez-dev-redis
+    ports:
+      - "127.0.0.1:6380:6379"  # 6379 is in use on the host (Windows Redis)
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "rezdevpass"]
+    volumes:
+      - rez-dev-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "rezdevpass", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks: [rez-net]
+
+  # rez-auth-service — the canonical auth microservice
+  auth-service:
+    build:
+      context: ./rez-auth-service
+      dockerfile: Dockerfile
+    container_name: rez-dev-auth
+    ports:
+      - "127.0.0.1:4002:4002"
+    environment:
+      NODE_ENV: development
+      PORT: 4002
+      HEALTH_PORT: 4102
+      SERVICE_NAME: rez-auth-service
+      LOG_LEVEL: info
+      MONGODB_URI: mongodb://rezadmin:rezdevpass@mongo:27017/rez-auth?authSource=admin
+      REDIS_URL: redis://:rezdevpass@redis:6379
+      # JWT secrets — REPLACE before any non-local use
+      # SECURITY: regenerated 2026-06-21 from crypto.randomBytes(48). The
+      # dev-... placeholder values were a real security risk if .env.dev or
+      # docker-compose.dev.yml ever leaked into a non-dev environment.
+      JWT_SECRET: oRyv5Wm49RkBUAQjNwKokCgOuRKXIoExXuIa5DaeJajgIE19iujYWIy5r/orDt7K
+      JWT_REFRESH_SECRET: uhe/eyF9Sf1hw1nETkqp6nKD57U7YTCZZwyyUp7GQ6N/0UeAu0C0iX3j49QntyuD
+      JWT_ADMIN_SECRET: SiGhD84YJYrJc+8lxTPZt0mIxNtc8tE0N/048iPlHY9SmTqoE2S2hRXK2dukpDqt
+      JWT_MERCHANT_SECRET: fLO08vlCgDbTWaxF3iut316/OKr6S85/MZT1dYSXYEEsaH5+wYpcFBKC3D6OpaU0
+      # OTP secrets
+      OTP_HMAC_SECRET: 1mhq+OWAH3gP7tJZhc+y5F8/UiQ1fh1qnVehFs3+YKg=
+      OTP_TOTP_ENCRYPTION_KEY: 0973ee9607d00cbe8be637b2ffed20bc11515a907ca5dc443b047e9d1043ec97
+      # Internal service auth
+      INTERNAL_SERVICE_TOKENS_JSON: '{"auth-service":"db85112566bf6e61ee966b14657257210600028990b407924a7182754a5f8c7e","backend":"28a980a8f3bb9cd22753d1fe859b0aee1e4f8b2b23eed7467ebbaec451a730b8"}'
+      # CORS
+      CORS_ORIGIN: http://localhost:8081,http://localhost:19006,http://localhost:3000
+      APP_URL: http://localhost:8081
+      # Email (Resend) — leave blank for local
+      RESEND_API_KEY: ""
+      RESEND_FROM_EMAIL: "REZ Auth <noreply@rezapp.dev>"
+      # Dev-only OTP exposure
+      EXPOSE_DEV_OTP: "true"
+      # OAuth2 partner clients (REQUIRED for auth-service startup; replaced at runtime via env_file in prod)
+      PARTNER_RENDEZ_CLIENT_ID: rendez-app
+      PARTNER_RENDEZ_CLIENT_SECRET: 6958795b2426737dbfd2cc5b215ef0e1372989aba28bbb0b6278d528e7f4dd7a
+      PARTNER_RENDEZ_REDIRECT_URI: http://localhost:8081/api/auth/callback
+      PARTNER_STAY_OWEN_CLIENT_ID: stay-owen
+      PARTNER_STAY_OWEN_CLIENT_SECRET: f7e985286b74a0f99907198050ca602276d8fe555cb32fa23d11e862cf62cde5
+      PARTNER_STAY_OWEN_REDIRECT_URI: http://localhost:8081/api/auth/callback
+      PARTNER_ADBAZAAR_CLIENT_ID: adbazaar
+      PARTNER_ADBAZAAR_CLIENT_SECRET: 8c1d670fd1592ed23aebe153d4e3366914b570224e142d16d6179bfc0100551e
+      PARTNER_ADBAZAAR_REDIRECT_URI: http://localhost:8081/api/auth/callback
+      # OTEL
+      OTEL_SERVICE_NAME: rez-auth-service
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:4002/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks: [rez-net]
+
+  # rez-backend — the monolith (your existing service)
+  backend:
+    build:
+      context: ./rez-backend-master
+      dockerfile: Dockerfile
+    container_name: rez-dev-backend
+    ports:
+      - "127.0.0.1:5001:5001"
+    environment:
+      NODE_ENV: development
+      PORT: 5001
+      API_PREFIX: /api
+      MONGODB_URI: mongodb://rezadmin:rezdevpass@mongo:27017/rez?authSource=admin
+      REDIS_URL: redis://:rezdevpass@redis:6379
+      REDIS_PASSWORD: rezdevpass
+      # JWT secrets MUST match auth-service so tokens are cross-validated.
+      # In production, both services read these from the same secret store.
+      JWT_SECRET: oRyv5Wm49RkBUAQjNwKokCgOuRKXIoExXuIa5DaeJajgIE19iujYWIy5r/orDt7K
+      JWT_REFRESH_SECRET: uhe/eyF9Sf1hw1nETkqp6nKD57U7YTCZZwyyUp7GQ6N/0UeAu0C0iX3j49QntyuD
+      JWT_MERCHANT_SECRET: fLO08vlCgDbTWaxF3iut316/OKr6S85/MZT1dYSXYEEsaH5+wYpcFBKC3D6OpaU0
+      # Trust the gateway when it sets X-Forwarded-* headers
+      TRUST_PROXY: "true"
+      # CORS — gateway will rewrite; allow direct calls during dev
+      CORS_ORIGIN: http://localhost:8081,http://localhost:19006
+      # Service-to-service auth (so backend can verify tokens from auth-service)
+      AUTH_SERVICE_URL: http://auth-service:4002
+      INTERNAL_SERVICE_TOKEN: dev-internal-token-aaaa
+      # Phase 4 smoke test: payment/cloudinary dummy creds so server starts
+      STRIPE_PUBLISHABLE_KEY: pk_test_dev_placeholder
+      STRIPE_SECRET_KEY: sk_test_dev_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_dev_placeholder
+      RAZORPAY_KEY_ID: rzp_test_dev_placeholder
+      RAZORPAY_KEY_SECRET: razorpay_dev_placeholder
+      RAZORPAY_WEBHOOK_SECRET: razorpay_webhook_dev_placeholder
+      CLOUDINARY_CLOUD_NAME: devcloud_placeholder
+      CLOUDINARY_API_KEY: devkey_placeholder
+      CLOUDINARY_API_SECRET: devsecret_placeholder
+      SENTRY_DSN: ""
+      OTEL_ENABLED: "false"
+      FRONTEND_URL: http://localhost:8081
+      MERCHANT_FRONTEND_URL: http://localhost:8081
+      PUBLIC_URL: http://localhost:5001
+      TWILIO_ACCOUNT_SID: ACdev_placeholder
+      TWILIO_AUTH_TOKEN: dev_placeholder
+      TWILIO_PHONE_NUMBER: "+910000000000"
+      SENDGRID_API_KEY: SG.dev_placeholder
+      SENDGRID_FROM_EMAIL: "REZ App <noreply@rezapp.dev>"
+      EXTERNAL_API_TIMEOUT_MS: "10000"
+      LOG_LEVEL: info
+    volumes:
+      - ./rez-backend-master/src:/app/src
+      - ./rez-backend-master/uploads:/app/uploads
+      - ./rez-backend-master/logs:/app/logs
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:5001/health',(r)=>{process.exit(r.statusCode===200?0:1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks: [rez-net]
+
+  # rez-api-gateway — nginx-based router. Port 10000 mimics Render.
+  gateway:
+    build:
+      context: ./rez-api-gateway
+      dockerfile: Dockerfile
+    container_name: rez-dev-gateway
+    ports:
+      - "127.0.0.1:10000:10000"
+    environment:
+      PORT: 10000
+      # Internal URLs — these are the service-name + port within docker network
+      MONOLITH_URL: http://backend:5001
+      AUTH_SERVICE_URL: http://auth-service:4002
+      SEARCH_SERVICE_URL: http://backend:5001
+      PAYMENT_SERVICE_URL: http://backend:5001
+      WALLET_SERVICE_URL: http://backend:5001
+      MERCHANT_SERVICE_URL: http://backend:5001
+      CATALOG_SERVICE_URL: http://backend:5001
+      MARKETING_SERVICE_URL: http://backend:5001
+      ORDER_SERVICE_URL: http://backend:5001
+      ANALYTICS_SERVICE_URL: http://backend:5001
+      GAMIFICATION_SERVICE_URL: http://backend:5001
+      MEDIA_SERVICE_URL: http://backend:5001
+      FINANCE_SERVICE_URL: http://backend:5001
+      NOTIFICATION_SERVICE_URL: http://backend:5001
+      ADS_SERVICE_URL: http://backend:5001
+      KARMA_SERVICE_URL: http://backend:5001
+    depends_on:
+      backend:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks: [rez-net]
+
+volumes:
+  rez-dev-mongo-data:
+    driver: local
+  rez-dev-redis-data:
+    driver: local
+
+networks:
+  rez-net:
+    driver: bridge

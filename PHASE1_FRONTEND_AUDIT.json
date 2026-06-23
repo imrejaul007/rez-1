@@ -1,0 +1,3562 @@
+{
+  "generatedAt": "2026-06-21",
+  "frontendRoot": "C:\\Users\\user\\Downloads\\rez-backend-master\\nuqta-master",
+  "totalUniqueEndpoints": 564,
+  "totalCallSites": 686,
+  "methodBreakdown": {
+    "GET": 431,
+    "POST": 219,
+    "PUT": 14,
+    "PATCH": 6,
+    "DELETE": 10,
+    "UPLOADFILE": 6
+  },
+  "categoryBreakdown": {
+    "public": 193,
+    "authenticated": 274,
+    "other": 80,
+    "auth": 11,
+    "file": 6
+  },
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/stores",
+      "callCount": 10,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/products",
+      "callCount": 6,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/featured",
+      "callCount": 5,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/videos",
+      "callCount": 5,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/categories",
+      "callCount": 4,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/stats",
+      "callCount": 4,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/bank-offers",
+      "callCount": 4,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/flash-sales",
+      "callCount": 4,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/products/featured",
+      "callCount": 4,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/products/search",
+      "callCount": 4,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/reviews/featured",
+      "callCount": 4,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/nearby",
+      "callCount": 4,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/search",
+      "callCount": 4,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/user/profile",
+      "callCount": 4,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/challenges",
+      "callCount": 3,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/hotspots",
+      "callCount": 3,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/projects",
+      "callCount": 3,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/social-media/posts",
+      "callCount": 3,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/trending",
+      "callCount": 3,
+      "category": "public"
+    },
+    {
+      "method": "PATCH",
+      "path": "/notifications/read",
+      "callCount": 3,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/deals/track",
+      "callCount": 3,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/deals/verify-payment",
+      "callCount": 3,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/cart/add",
+      "callCount": 3,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/payment/create-checkout-session",
+      "callCount": 3,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/search/history",
+      "callCount": 3,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/store-payment/cancel",
+      "callCount": 3,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/store-payment/confirm",
+      "callCount": 3,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/coupons",
+      "callCount": 2,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/coupons/my-coupons",
+      "callCount": 2,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/discounts",
+      "callCount": 2,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/earnings/history",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/experiences",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/flash-sales/expiring-soon",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/challenges/my-progress?includeCompleted=true",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/reviewable-items",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/streaks",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/stats",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/new-arrivals",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/orders",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/prive/eligibility",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/products/new-arrivals",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/products/trending",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/search/ai-search",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/search/autocomplete",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/services/featured",
+      "callCount": 2,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/store-visits/user",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/user/auth/me",
+      "callCount": 2,
+      "category": "auth"
+    },
+    {
+      "method": "GET",
+      "path": "/videos/search",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/videos/trending",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/balance",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/transactions",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/bills/analyze-image",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/coupons/validate",
+      "callCount": 2,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/memory-match/complete",
+      "callCount": 2,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/memory-match/start",
+      "callCount": 2,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/quiz/create",
+      "callCount": 2,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/quiz/submit",
+      "callCount": 2,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/gamification/streak/checkin",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/location/geocode",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/offers/redemptions/validate",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/payment/create-order",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/payment/verify",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/payment/verify-stripe-payment",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/service-bookings",
+      "callCount": 2,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/streak/freeze",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/support/tickets",
+      "callCount": 2,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/travel-payment/create-order",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/travel-payment/verify",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/confirm-payment",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/initiate-payment",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "PUT",
+      "path": "/user/profile",
+      "callCount": 2,
+      "category": "authenticated"
+    },
+    {
+      "method": "DELETE",
+      "path": "/auth/account",
+      "callCount": 1,
+      "category": "auth"
+    },
+    {
+      "method": "DELETE",
+      "path": "/cart/clear",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "DELETE",
+      "path": "/cart/coupon",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "DELETE",
+      "path": "/comparisons/user/clear-all",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "DELETE",
+      "path": "/favorites/clear-all",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "DELETE",
+      "path": "/notifications/clear-all",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "DELETE",
+      "path": "/notifications/push/subscribe",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "DELETE",
+      "path": "/user/auth/account",
+      "callCount": 1,
+      "category": "auth"
+    },
+    {
+      "method": "DELETE",
+      "path": "/user/profile/picture",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "DELETE",
+      "path": "/videos/history",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/achievements",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/api/b/activity/live",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/api/referral/analytics",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/api/referral/check-upgrade",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/api/referral/leaderboard",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/api/referral/milestones",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/api/referral/rewards",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/api/referral/tier",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/articles",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/articles/bookmarks",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/articles/categories",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/articles/featured",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/articles/recommendations",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/articles/search",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/articles/trending",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/b/notif-prefs",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/bill-payments/types",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/billing/history",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/billing/summary",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/bills",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/bills/statistics",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus-zone/campaigns",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus-zone/my-claims",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/bookings/health",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/bookings/user",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/bookings/user/past",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/bookings/user/stats",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/bookings/user/upcoming",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/active",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/admin/all",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/exciting-deals",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/my-redemptions",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/cart",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/cart/locked",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/cart/summary",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/cart/validate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/cart/validate/summary",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/cashback/campaigns",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/cashback/coin-drops",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/cashback/double-campaigns",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/cashback/expiring-soon",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/cashback/history",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/cashback/pending",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/cashback/statistics",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/cashback/summary",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/cashback/super-cashback-stores",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/cashback/upload-bill-stores",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/challenges/my-progress",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/config/feature-flags",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/consultations/user",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/content/quick-actions",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/content/value-cards",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/coupons/featured",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/coupons/search",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/creators/all",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/creators/eligibility",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/creators/featured",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/creators/my-earnings",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/creators/my-picks",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/creators/my-profile",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/creators/trending-picks",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/discounts/bill-payment",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/discounts/my-history",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/earn/nearby",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/earning-projects/categories",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/earnings/consolidated-summary",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/earnings/notifications",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/earnings/partner-summary",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/earnings/project-stats",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/earnings/referral-info",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/earnings/summary",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/emergency/active",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/experiences/homepage",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/experiences/unique-finds",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/explore/featured-comparison",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/explore/friends-activity",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/explore/live-stats",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/explore/stats-summary",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/explore/verified-reviews",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/favorites/user/my-favorites",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/flash-sales/active",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/flash-sales/upcoming",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/games/available",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/games/daily-limits",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/games/daily-trivia",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/games/my-games",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/games/pending",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/games/statistics",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/affiliate/stats",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/affiliate/submissions",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/bonus-opportunities",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/checkin-config",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/coins/balance",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/leaderboard",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/play-and-earn",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/promotional-posters",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/quick-actions",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/spin-wheel/data",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/spin-wheel/eligibility",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/spin-wheel/history",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gamification/streak/bonuses",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gold/holding",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gold/price",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/hero-banners",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/home-services/categories",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/home-services/stats",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/homepage/user-context",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/insurance/featured",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/insurance/types",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/leaderboard/campus",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/learning",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/location/current",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/location/history",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/location/region/detect",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/location/regions",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/location/timezone",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/loyalty/milestones",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/loyalty/progress",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/messages/conversations",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/messages/search",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/messages/unread/count",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/nearby-stores",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/archived",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/pinned",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/preferences",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/push/subscriptions",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/templates",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/unread-count",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/offer-categories",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/bogo",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/discount-buckets",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/exclusive-zones",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/exclusive-zones/birthday/offers",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/featured",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/free-delivery",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/friends-redeemed",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/homepage-deals-section",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/mega",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/nearby",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/page-data",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/page-data-v2",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/recommendations",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/sales-clearance",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/special-profiles",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/students",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/trending",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/user/recommendations",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/user/redemptions",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/orders/analytics",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/orders/counts",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/orders/reorder/frequently-ordered",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/orders/reorder/suggestions",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/orders/stats",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/outlets",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/outlets/nearby",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/payment/cod/config",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/payment/preferences",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/payment/saved-methods",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/platform/stats",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/play-earn/batch",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/play-earn/shopping-methods",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/polls/daily",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/prive/access",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/prive/campaigns",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/prive/campaigns/earnings",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/prive/invites/codes",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/prive/invites/stats",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/prive/program-config/public",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/products/hot-deals",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/products/popular",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/products/popular-searches",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/products/suggestions",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/products?category=healthcare&limit=6",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/products?category=healthcare&type=medicine",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/programs/college",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/programs/corporate",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/programs/my-programs",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/programs/social-impact",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/programs/social-impact/my-stats",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/categories",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/my-earnings",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/my-submissions",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/templates",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/razorpay/config",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/recommendations/personalized",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/recommendations/picked-for-you",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/recommendations/products/personalized",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/referral/data",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/referral/history",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/referral/leaderboard",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/referral/statistics",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/reviews",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/reviews/analytics",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/reviews/pending",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/reviews/suggestions",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/search/did-you-mean",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/search/history/popular",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/search/history/recent",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/search/popular",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/search/products-grouped",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/search/suggestions",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/service-appointments/user",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/service-bookings",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/service-bookings/available-slots",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/service-categories",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/services/popular",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/services/search",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/shares/content",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/shares/daily-limits",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/shares/stats",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/social-media/earnings",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/social-media/shared-status",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/social-media/stats",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/social/feed",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/special-programs",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/special-programs/my-memberships",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stats",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/store-vouchers/my-vouchers",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/bnpl",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/by-category-slug/gyms?limit=10",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/by-category-slug/gyms?limit=5&sortBy=rating",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/by-category-slug/store?limit=5",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/by-category-slug/studios?limit=5",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/by-category-slug/trainers?limit=5",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/categories",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/categories/list",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/cuisine-counts",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/nearby?...",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/search-by-delivery-time",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/search/advanced",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores/top-cashback",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores?category=healthcare&type=doctor",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores?category=healthcare&type=doctor&limit=1",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores?category=healthcare&type=doctor&specialty=dentist",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores?category=healthcare&type=lab&limit=1",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores?category=healthcare&type=pharmacy",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/stores?category=healthcare&type=pharmacy&limit=1",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/streaks",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/subscriptions/benefits",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/subscriptions/current",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/subscriptions/tiers",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/subscriptions/usage",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/support/config/public",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/support/faq",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/support/faq/categories",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/support/faq/popular",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/support/faq/search",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/support/tickets",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/support/tickets/summary",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/tournaments",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/tournaments/featured",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/tournaments/live",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/tournaments/my-tournaments",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/travel-services/categories",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/travel-services/stats",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/user-products",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/user-products/expiring-amc",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/user-products/expiring-warranties",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/user-products/service-requests",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/user-products/service-requests/active",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/user-settings/courier",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/user-settings/notifications/all",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/user/auth/statistics",
+      "callCount": 1,
+      "category": "auth"
+    },
+    {
+      "method": "GET",
+      "path": "/user/boot",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/user/credit-limit",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/user/profile/completion",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/user/stats",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/user/trust-passport",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/user/trust-score",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/user/verifications",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/users/me/questions",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "GET",
+      "path": "/videos/bookmarks",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/videos/categories",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/videos/featured",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/videos/history",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/videos/recommendations",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/vouchers/categories",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/vouchers/redemptions",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/vouchers/savings-stats",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/categories",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/coin-rules",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/expiring-coins",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/gift/config",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/gift/received",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/gift/sent",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/limits",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/payment-methods",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/recharge/preview",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/scheduled-drops",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet/summary",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wishlist",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wishlist/check",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wishlist/default",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wishlist/following",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wishlist/public",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wishlist/recommendations",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wishlist/shared",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/wishlist/shared-with-me",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "GET",
+      "path": "/zones/my-verifications",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "PATCH",
+      "path": "/notifications/preferences",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "PATCH",
+      "path": "/subscriptions/auto-renew",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "PATCH",
+      "path": "/wishlist/items/bulk-move",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/achievements/recalculate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/analytics/batch",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/analytics/track",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/api/referral/apply-code",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/api/referral/claim-reward",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/api/referral/generate-qr",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/api/referral/validate-code",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/articles",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/bill-payments/fetch-bill",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/bill-payments/pay",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/bill-payments/refund",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/bills/calculate-cashback",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/bills/extract-data",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/bills/fraud-check",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/bills/match-merchant",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/bills/verify",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/bookings",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/cart/check-stock",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/cart/check-stock/batch",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/cart/coupon",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/cart/lock",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/cart/lock-with-payment",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/cart/validate/auto-fix",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/cashback/forecast",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/cashback/redeem",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/comparisons",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/consultations",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/consultations/book",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/coupons/best-offer",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/creators/apply",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/creators/my-picks",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/discounts/apply",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/discounts/card-offers/apply",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/discounts/card-offers/validate",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/discounts/validate",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/earnings/withdraw",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/emergency/book",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/favorites/statuses",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/financial-services/leads",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/flash-sales/purchase/fail",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/flash-sales/purchase/initiate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/flash-sales/purchase/verify",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/games/coin-hunt/complete",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/daily-trivia/answer",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/guess-price/start",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/guess-price/submit",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/scratch-card/create",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/scratch-card/play",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/spin-wheel/create",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/games/spin-wheel/play",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/gamification/affiliate/submit",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/gamification/quiz/start",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/gamification/spin-wheel/spin",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/gamification/surprise-drop/claim",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/gold/buy",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/gold/sell",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/health-records",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/institute-referrals",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/location/search",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/location/update",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/location/validate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/messages/conversations",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/bulk-delete",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/push/subscribe",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/register-push-token",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/register-token",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/send",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/templates",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/test",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/unregister-token",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/orders",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/outlets/search",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/payment/cod/create",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/payment/internal/process",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/payment/save-method",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/payment/stripe/create-setup-intent",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/payment/verify-stripe-session",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/photos/upload",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/prive/invites/apply",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/prive/invites/generate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/prive/invites/validate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/programs/college/join",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/programs/college/submit",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/programs/corporate/join",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/programs/social-impact/register",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/projects",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/upload",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "POST",
+      "path": "/razorpay/create-order",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/razorpay/refund",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/razorpay/verify-payment",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/recharge",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/referral/claim-rewards",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/referral/generate-link",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/referral/share",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/reviews",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/reviews/bulk-moderate",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/service-appointments",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/shares/purchase",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/shares/track",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/social-media/check-duplicate",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/social-media/submit",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/store-payment/initiate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/store-visits/queue",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/store-visits/schedule",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/store-vouchers/validate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/subscriptions/cancel",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/subscriptions/downgrade",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/subscriptions/renew",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/subscriptions/subscribe",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/subscriptions/upgrade",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/subscriptions/upgrade/confirm",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/subscriptions/upgrade/initiate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/subscriptions/validate-promo",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/support/callback",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/support/quick-actions/order-issue",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/support/quick-actions/report-product",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/table-bookings",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/travel-payment/create-checkout-session",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/travel-payment/verify-stripe-session",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/travel-services/plan",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/ugc/create",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/ugc/create-post",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/user-products/service-requests",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/user/auth/complete-onboarding",
+      "callCount": 1,
+      "category": "auth"
+    },
+    {
+      "method": "POST",
+      "path": "/user/auth/logout",
+      "callCount": 1,
+      "category": "auth"
+    },
+    {
+      "method": "POST",
+      "path": "/user/auth/refresh-token",
+      "callCount": 1,
+      "category": "auth"
+    },
+    {
+      "method": "POST",
+      "path": "/user/auth/send-otp",
+      "callCount": 1,
+      "category": "auth"
+    },
+    {
+      "method": "POST",
+      "path": "/user/auth/verify-otp",
+      "callCount": 1,
+      "category": "auth"
+    },
+    {
+      "method": "POST",
+      "path": "/user/profile/picture",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/user/profile/verify",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/videos",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/vouchers/confirm-card-purchase",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/vouchers/purchase",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/vouchers/redeem",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/vouchers/validate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/credit-loyalty-points",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/dev-topup",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/gift-cards/purchase",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/gift/send",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/gift/validate-recipient",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/money-requests",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/payment",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/refund",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/split",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/sync-balance",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/topup",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/transfer/confirm",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/transfer/initiate",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wallet/withdraw",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wishlist",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wishlist/items/bulk",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wishlist/items/bulk-remove",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wishlist/merge",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wishlist/remove-item",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/wishlists/items",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "POST",
+      "path": "/zones/corporate/verify",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/zones/defence/verify",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/zones/healthcare/verify",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/zones/student/verify",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/zones/teacher/verify",
+      "callCount": 1,
+      "category": "public"
+    },
+    {
+      "method": "PUT",
+      "path": "/auth/change-password",
+      "callCount": 1,
+      "category": "auth"
+    },
+    {
+      "method": "PUT",
+      "path": "/b/notif-prefs",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "PUT",
+      "path": "/creators/my-profile",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "PUT",
+      "path": "/payment/preferences",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "PUT",
+      "path": "/user-settings/courier",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "PUT",
+      "path": "/user-settings/notifications/email",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "PUT",
+      "path": "/user-settings/notifications/inapp",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "PUT",
+      "path": "/user-settings/notifications/push",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "PUT",
+      "path": "/user-settings/notifications/sms",
+      "callCount": 1,
+      "category": "other"
+    },
+    {
+      "method": "PUT",
+      "path": "/user/auth/profile",
+      "callCount": 1,
+      "category": "auth"
+    },
+    {
+      "method": "PUT",
+      "path": "/wallet/limits",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "PUT",
+      "path": "/wallet/settings",
+      "callCount": 1,
+      "category": "authenticated"
+    },
+    {
+      "method": "UPLOADFILE",
+      "path": "/articles",
+      "callCount": 1,
+      "category": "file"
+    },
+    {
+      "method": "UPLOADFILE",
+      "path": "/bills/upload",
+      "callCount": 1,
+      "category": "file"
+    },
+    {
+      "method": "UPLOADFILE",
+      "path": "/reviews/upload-image",
+      "callCount": 1,
+      "category": "file"
+    },
+    {
+      "method": "UPLOADFILE",
+      "path": "/social-media/submit-media",
+      "callCount": 1,
+      "category": "file"
+    },
+    {
+      "method": "UPLOADFILE",
+      "path": "/videos/upload",
+      "callCount": 1,
+      "category": "file"
+    },
+    {
+      "method": "UPLOADFILE",
+      "path": "/wishlist/import",
+      "callCount": 1,
+      "category": "file"
+    }
+  ],
+  "tokenStorage": {
+    "native": "expo-secure-store (keys: access_token, refresh_token, auth_user) with AsyncStorage one-shot migration fallback",
+    "web": "window.localStorage (keys: access_token, refresh_token, auth_user)",
+    "storageModule": "utils/authStorage.ts",
+    "storageKeys": {
+      "access_token": "expo-secure-store + localStorage",
+      "refresh_token": "expo-secure-store + localStorage",
+      "auth_user": "expo-secure-store + localStorage (JSON string)"
+    },
+    "inMemoryMirror": "apiClient.authToken in services/apiClient.ts",
+    "note": "EXPO_PUBLIC_JWT_STORAGE_KEY / EXPO_PUBLIC_REFRESH_TOKEN_KEY / EXPO_PUBLIC_USER_DATA_KEY env vars are defined but unused (hardcoded in utils/authStorage.ts)."
+  },
+  "authHeaderPattern": {
+    "format": "Authorization: Bearer <accessToken>",
+    "construction": "this.defaultHeaders['Authorization'] = `Bearer ${token}`",
+    "attachment": "automatic on every request via apiClient.merge of defaultHeaders into RequestInit.headers",
+    "unsetOnLogout": "delete this.defaultHeaders['Authorization'] when token is null",
+    "otherHeaders": [
+      "X-Rez-Region: <region>",
+      "X-Device-Fingerprint: <hash> (when AsyncStorage key @security_device_fingerprint is present)",
+      "X-Device-OS: \"<Platform.OS> <Platform.Version>\"",
+      "Content-Type: application/json (stripped for FormData uploads)",
+      "Accept: application/json"
+    ],
+    "refreshFlow": "401 -> apiClient.handleTokenRefresh() -> AuthContext.tryRefreshToken() -> authService.refreshToken(refreshToken) POST /user/auth/refresh-token -> saves new tokens via authStorage.saveAuthToken + saveRefreshToken -> updates apiClient.authToken + defaultHeaders.Authorization -> retries original request once",
+    "refreshFailureFlow": "on 401/403/invalid/expired: clearAuthData + dispatch AUTH_LOGOUT + redirect to /sign-in"
+  },
+  "apiBaseUrls": {
+    "EXPO_PUBLIC_API_BASE_URL": "http://localhost:5001/api",
+    "EXPO_PUBLIC_API_URL": "http://localhost:5001/api",
+    "EXPO_PUBLIC_DEV_API_URL": "http://localhost:5001/api",
+    "EXPO_PUBLIC_PROD_API_URL": "https://your-production-api.com/api",
+    "EXPO_PUBLIC_SOCKET_URL": "http://localhost:5001",
+    "EXPO_PUBLIC_AUTH_ENDPOINT": "/auth (UNUSED - auth paths hardcoded as /user/auth/*)",
+    "readAt": {
+      "EXPO_PUBLIC_API_BASE_URL": [
+        "config/env.ts:15",
+        "services/apiClient.ts:95"
+      ],
+      "EXPO_PUBLIC_API_URL": [
+        "components/homepage/DealsThatSaveMoney.tsx:373,388",
+        "services/eventAnalytics.ts",
+        "components/subscription/StripePaymentModal.tsx:95"
+      ]
+    },
+    "referenceFrontend": {
+      "EXPO_PUBLIC_API_BASE_URL": "https://rez-api-gateway.onrender.com/api",
+      "EXPO_PUBLIC_GATEWAY_URL": "https://rez-api-gateway.onrender.com",
+      "EXPO_PUBLIC_RABTUL_AUTH_URL": "https://rez-auth-service.onrender.com",
+      "EXPO_PUBLIC_INTERNAL_SERVICE_TOKEN": "shared secret (X-Internal-Token header)"
+    }
+  },
+  "authEndpoints": {
+    "sendOtp": {
+      "method": "POST",
+      "path": "/user/auth/send-otp",
+      "callCount": 1,
+      "category": "auth"
+    },
+    "verifyOtp": {
+      "method": "POST",
+      "path": "/user/auth/verify-otp",
+      "callCount": 1,
+      "category": "auth"
+    },
+    "refreshToken": {
+      "method": "POST",
+      "path": "/user/auth/refresh-token",
+      "callCount": 1,
+      "category": "auth"
+    },
+    "logout": {
+      "method": "POST",
+      "path": "/user/auth/logout",
+      "callCount": 1,
+      "category": "auth"
+    },
+    "me": {
+      "method": "GET",
+      "path": "/user/auth/me",
+      "callCount": 2,
+      "category": "auth"
+    },
+    "updateProfile": {
+      "method": "PUT",
+      "path": "/user/auth/profile",
+      "callCount": 1,
+      "category": "auth"
+    },
+    "completeOnboarding": {
+      "method": "POST",
+      "path": "/user/auth/complete-onboarding",
+      "callCount": 1,
+      "category": "auth"
+    },
+    "deleteAccount": {
+      "method": "DELETE",
+      "path": "/user/auth/account",
+      "callCount": 1,
+      "category": "auth"
+    },
+    "statistics": {
+      "method": "GET",
+      "path": "/user/auth/statistics",
+      "callCount": 1,
+      "category": "auth"
+    },
+    "legacy_change_password": {
+      "method": "PUT",
+      "path": "/auth/change-password",
+      "callCount": 1,
+      "category": "auth"
+    },
+    "legacy_delete_account": {
+      "method": "DELETE",
+      "path": "/auth/account",
+      "callCount": 1,
+      "category": "auth"
+    },
+    "upload_avatar": {
+      "method": "POST",
+      "path": "/user/auth/upload-avatar",
+      "callCount": 1,
+      "category": "auth",
+      "note": "raw fetch, not apiClient"
+    }
+  },
+  "migrationItems": [
+    "Set EXPO_PUBLIC_API_BASE_URL to gateway URL (currently http://localhost:5001/api)",
+    "Add EXPO_PUBLIC_AUTH_SERVICE_URL pointing to auth-service (e.g. https://rez-auth-service.onrender.com)",
+    "Add EXPO_PUBLIC_INTERNAL_SERVICE_TOKEN shared secret (X-Internal-Token header on auth-service calls)",
+    "Remap auth endpoints: /user/auth/* -> {RABTUL_AUTH_SERVICE_URL}/api/auth/*",
+    "Rename /user/auth/complete-onboarding -> /api/auth/onboarding",
+    "Switch profile update from PUT /user/auth/profile to PATCH /api/auth/profile",
+    "Add X-Internal-Token + X-Request-Origin headers on auth-service calls (RABTUL pattern)",
+    "Add CSRF nonce (X-CSRF-Token) on web auth requests, cached 5 min",
+    "Add Idempotency-Key on POST /api/auth/logout",
+    "Disable retry on OTP send (maxRetries: 0) - duplicate SMS charge risk",
+    "Disable retry on OTP verify (maxRetries: 0) - wrong-OTP must fail immediately",
+    "Disable retry on logout (maxRetries: 0) - double-invalidation risk",
+    "Validate tokens.expiresIn is positive in authApi.validateAuthResponse",
+    "Refactor services/surveysApi.ts, services/eventsApi.ts, services/eventAnalytics.ts to use apiClient (currently use raw fetch and miss the auth header)",
+    "Migrate web token storage from localStorage to httpOnly cookies (apiClient fetch must set credentials: \"include\")",
+    "Keep native SecureStore as primary; remove AsyncStorage token fallback (one-shot migration can stay)",
+    "Delete unused config/api.ts axios wrapper + API_ENDPOINTS map",
+    "Update components/homepage/DealsThatSaveMoney.tsx impression/click tracking to use apiClient",
+    "Update components/subscription/StripePaymentModal.tsx to use apiClient",
+    "Update services/imageUploadService.ts to use apiClient.uploadFile",
+    "Update app/orders/[id].tsx billing invoice download to use apiClient",
+    "Decide whether /auth/change-password and /auth/account (legacy paths) should be migrated to auth-service",
+    "Update EXPO_PUBLIC_PROD_API_URL placeholder to the real production gateway URL",
+    "Remove or document dead env vars: EXPO_PUBLIC_JWT_STORAGE_KEY, EXPO_PUBLIC_REFRESH_TOKEN_KEY, EXPO_PUBLIC_USER_DATA_KEY (hardcoded in utils/authStorage.ts)",
+    "Update test scripts that hardcode http://localhost:5001 to point at the gateway dev port",
+    "Update Jest integration tests to mock the new auth-service URL pattern"
+  ]
+}

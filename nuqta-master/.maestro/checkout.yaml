@@ -1,0 +1,110 @@
+appId: com.nuqta.app
+name: "Checkout - Complete purchase flow"
+tags:
+  - critical
+  - shopping
+  - payment
+
+---
+
+# Launch app (assumes cart has items from add_to_cart flow)
+- launchApp
+
+# Wait for app to finish loading before checking auth state
+- waitForAnimationToEnd
+
+# Login if needed
+- runFlow:
+    when:
+      visible: "Mobile number"
+    file: helpers/login.yaml
+
+# Wait for home screen to be ready
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 10000
+
+# Navigate to cart
+- tapOn:
+    id: "cart-icon"
+
+# Wait for cart screen
+- extendedWaitUntil:
+    visible:
+      id: "cart-screen"
+    timeout: 8000
+
+# Verify cart has items
+- assertVisible: "Buy Now"
+
+# Tap "Buy Now" to proceed to checkout
+- tapOn: "Buy Now"
+
+# Wait for checkout screen
+- extendedWaitUntil:
+    visible:
+      id: "checkout-screen"
+    timeout: 10000
+
+- takeScreenshot: "checkout_screen"
+
+# --- SELECT ADDRESS ---
+# Tap on address section to select/change address
+- tapOn:
+    id: "address-section"
+
+# Wait for address list
+- extendedWaitUntil:
+    visible:
+      id: "address-list"
+    timeout: 5000
+
+# Select first saved address
+- tapOn:
+    id: "address-item-0"
+
+# --- APPLY COUPON ---
+# Tap promo code input
+- tapOn:
+    id: "promo-code-input"
+- inputText: "TESTCOUPON"
+
+# Tap apply button
+- tapOn:
+    id: "apply-promo-button"
+
+# Wait for discount to reflect
+- extendedWaitUntil:
+    visible:
+      id: "promo-applied-badge"
+    timeout: 5000
+
+- takeScreenshot: "checkout_with_coupon"
+
+# --- PAYMENT ---
+# Scroll down to payment section
+- scrollUntilVisible:
+    element:
+      id: "payment-methods"
+    direction: DOWN
+    timeout: 8000
+
+# Select Wallet payment method (also available: COD, Razorpay)
+- tapOn:
+    id: "payment-method-wallet"
+
+# Tap "Place Order" / confirm button
+- tapOn:
+    id: "confirm-pay-button"
+
+# Handle order confirmation modal if present
+- extendedWaitUntil:
+    visible:
+      id: "order-confirmation-screen"
+    timeout: 15000
+
+# Verify order placed successfully
+- assertVisible:
+    id: "order-success-icon"
+
+- takeScreenshot: "order_confirmation"

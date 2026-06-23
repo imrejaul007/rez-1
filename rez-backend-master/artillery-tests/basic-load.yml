@@ -1,0 +1,63 @@
+config:
+  target: "http://localhost:5001"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 180
+      arrivalRate: 50
+      name: "Sustained load"
+    - duration: 120
+      arrivalRate: 100
+      name: "Peak load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+  processor: "./artillery-helpers.js"
+
+scenarios:
+  - name: "Health Check"
+    weight: 10
+    flow:
+      - get:
+          url: "/health"
+          capture:
+            - json: "$.status"
+              as: "healthStatus"
+
+  - name: "Get Products List"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/products"
+          qs:
+            page: 1
+            limit: 20
+
+  - name: "Get Product Detail"
+    weight: 25
+    flow:
+      - get:
+          url: "/api/products"
+          qs:
+            limit: 1
+          capture:
+            - json: "$[0]._id"
+              as: "productId"
+      - get:
+          url: "/api/products/{{ productId }}"
+
+  - name: "Search Products"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/products/search"
+          qs:
+            q: "{{ $randomString() }}"
+            limit: 10
+
+  - name: "Get Categories"
+    weight: 15
+    flow:
+      - get:
+          url: "/api/categories"

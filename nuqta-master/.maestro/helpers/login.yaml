@@ -1,0 +1,44 @@
+appId: com.nuqta.app
+name: "Helper - Login with test user"
+
+# Reusable login flow. Import from other tests via:
+#   - runFlow: helpers/login.yaml
+
+---
+
+# Wait for auth screen
+- extendedWaitUntil:
+    visible: "Mobile number"
+    timeout: 10000
+
+# Handle landing on registration vs sign-in
+- runFlow:
+    when:
+      visible: "Already have an account?"
+    commands:
+      - tapOn: "Sign In"
+
+# Enter phone number
+- tapOn:
+    id: "phone-input"
+- inputText: "501234567"
+
+# Submit phone
+- tapOn:
+    id: "send-otp-button"
+
+# Wait for OTP screen
+- extendedWaitUntil:
+    visible:
+      id: "otp-input-0"
+    timeout: 10000
+
+# Enter demo OTP
+- tapOn:
+    id: "otp-input-0"
+- inputText: "123456"
+
+# Wait for home
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 15000

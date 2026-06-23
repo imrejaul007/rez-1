@@ -1,0 +1,136 @@
+groups:
+  - name: rez_backend_alerts
+    interval: 15s
+    rules:
+      # ─── High API Latency ────────────────────────────────────────────────────
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.6
+        for: 2m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High API Latency Detected"
+          description: "API p95 latency is {{ $value | humanizeDuration }} (threshold: 600ms) on {{ $labels.instance }}"
+          runbook: "https://wiki.rez.money/runbooks/high-latency"
+
+      # ─── High Error Rate ────────────────────────────────────────────────────
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[1m]) / rate(http_requests_total[1m]) > 0.03
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High Error Rate Detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 3%) on {{ $labels.instance }}"
+          runbook: "https://wiki.rez.money/runbooks/high-error-rate"
+
+      # ─── Low Redis Cache Hit Ratio ──────────────────────────────────────────
+      - alert: LowRedisCacheHitRatio
+        expr: (redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)) < 0.6
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Low Redis Cache Hit Ratio"
+          description: "Cache hit ratio is {{ $value | humanizePercentage }} (threshold: 60%) on {{ $labels.instance }}"
+          runbook: "https://wiki.rez.money/runbooks/low-cache-ratio"
+
+      # ─── High Queue Backlog ────────────────────────────────────────────────
+      - alert: HighQueueBacklog
+        expr: bull_queue_count{status="waiting"} > 5000
+        for: 1m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High Queue Backlog"
+          description: "Queue {{ $labels.queue }} has {{ $value }} waiting jobs (threshold: 5000) on {{ $labels.instance }}"
+          runbook: "https://wiki.rez.money/runbooks/high-queue-backlog"
+
+      # ─── High Memory Usage ──────────────────────────────────────────────────
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes > 419430400
+        for: 3m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High Memory Usage Detected"
+          description: "Process memory usage is {{ $value | humanize }}B (threshold: 400MB) on {{ $labels.instance }}"
+          runbook: "https://wiki.rez.money/runbooks/high-memory-usage"
+
+      # ─── Payment Failure Spike ──────────────────────────────────────────────
+      - alert: PaymentFailureSpike
+        expr: rate(bill_payments_total{status="failed"}[1m]) / rate(bill_payments_total[1m]) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+          team: payments
+        annotations:
+          summary: "Payment Failure Rate Spike"
+          description: "Payment failure rate is {{ $value | humanizePercentage }} (threshold: 10%) on {{ $labels.instance }}"
+          runbook: "https://wiki.rez.money/runbooks/payment-failure-spike"
+          dashboard: "https://grafana.rez.money/d/payments"
+
+      # ─── Database Connection Pool Exhausted ────────────────────────────────
+      - alert: DatabaseConnectionPoolExhausted
+        expr: mongodb_pool_connections_total - mongodb_pool_connections_available < 1
+        for: 2m
+        labels:
+          severity: critical
+          team: database
+        annotations:
+          summary: "Database Connection Pool Exhausted"
+          description: "No available MongoDB connections on {{ $labels.instance }}"
+          runbook: "https://wiki.rez.money/runbooks/db-connection-pool"
+
+      # ─── Wallet Service Unavailable ────────────────────────────────────────
+      - alert: WalletServiceUnavailable
+        expr: up{job="wallet-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: payments
+        annotations:
+          summary: "Wallet Service Down"
+          description: "Wallet service is unavailable on {{ $labels.instance }}"
+          runbook: "https://wiki.rez.money/runbooks/wallet-service-down"
+
+      # ─── BBPS Payment Gateway Error ────────────────────────────────────────
+      - alert: BBPSGatewayError
+        expr: rate(bbps_requests_total{status=~"4..|5.."}[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          team: payments
+        annotations:
+          summary: "BBPS Gateway Error Rate High"
+          description: "BBPS gateway error rate is {{ $value }} errors/sec on {{ $labels.instance }}"
+          runbook: "https://wiki.rez.money/runbooks/bbps-gateway"
+
+      # ─── Node.js GC Pressure ────────────────────────────────────────────────
+      - alert: NodeJSGCPressure
+        expr: rate(nodejs_gc_duration_seconds_count[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "GC running >5x per minute — memory pressure building"
+          description: "Node.js GC frequency is high on {{ $labels.instance }}. Check for memory leaks or large object allocations."
+          runbook: "https://wiki.rez.money/runbooks/nodejs-gc-pressure"
+
+      # ─── Worker Queue Backlog ──────────────────────────────────────────────
+      - alert: WorkerQueueBacklog
+        expr: bullmq_queue_waiting_count > 500
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Worker queue backlog >500 jobs"
+          description: "Reward/notification queue on {{ $labels.instance }} is backing up with {{ $value }} jobs. Check worker health and Redis connection."
+          runbook: "https://wiki.rez.money/runbooks/worker-queue-backlog"

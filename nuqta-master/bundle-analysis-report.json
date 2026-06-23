@@ -1,0 +1,195 @@
+{
+  "timestamp": "2025-11-14T15:10:33.971Z",
+  "totalSize": 12993385,
+  "assets": {
+    "totalSize": 1588749,
+    "fileCount": 24,
+    "byType": {
+      ".ttf": {
+        "count": 1,
+        "size": 93252,
+        "files": [
+          {
+            "path": "fonts/SpaceMono-Regular.ttf",
+            "size": 93252
+          }
+        ]
+      },
+      ".png": {
+        "count": 22,
+        "size": 1362567,
+        "files": [
+          {
+            "path": "images/adaptive-icon.png",
+            "size": 17547
+          },
+          {
+            "path": "images/bag.png",
+            "size": 7808
+          },
+          {
+            "path": "images/card1.png",
+            "size": 264735
+          },
+          {
+            "path": "images/card2.png",
+            "size": 219900
+          },
+          {
+            "path": "images/card3.png",
+            "size": 347673
+          },
+          {
+            "path": "images/card4.png",
+            "size": 160889
+          },
+          {
+            "path": "images/coin-stack.png",
+            "size": 38707
+          },
+          {
+            "path": "images/deal.png",
+            "size": 28583
+          },
+          {
+            "path": "images/favicon.png",
+            "size": 1466
+          },
+          {
+            "path": "images/icon.png",
+            "size": 22380
+          },
+          {
+            "path": "images/order-now.png",
+            "size": 3002
+          },
+          {
+            "path": "images/partial-react-logo.png",
+            "size": 5075
+          },
+          {
+            "path": "images/promo-coin.png",
+            "size": 3160
+          },
+          {
+            "path": "images/react-logo.png",
+            "size": 6341
+          },
+          {
+            "path": "images/react-logo@2x.png",
+            "size": 14225
+          },
+          {
+            "path": "images/react-logo@3x.png",
+            "size": 21252
+          },
+          {
+            "path": "images/scratch-offer.png",
+            "size": 9736
+          },
+          {
+            "path": "images/splash-icon.png",
+            "size": 17547
+          },
+          {
+            "path": "images/wallet1.png",
+            "size": 55230
+          },
+          {
+            "path": "images/wallet2.png",
+            "size": 54657
+          },
+          {
+            "path": "images/wallet3.png",
+            "size": 58884
+          },
+          {
+            "path": "images/wasil-coin.png",
+            "size": 3770
+          }
+        ]
+      },
+      ".jpg": {
+        "count": 1,
+        "size": 132930,
+        "files": [
+          {
+            "path": "images/card.jpg",
+            "size": 132930
+          }
+        ]
+      }
+    },
+    "largeFiles": [
+      {
+        "path": "images/card3.png",
+        "size": 347673
+      },
+      {
+        "path": "images/card1.png",
+        "size": 264735
+      },
+      {
+        "path": "images/card2.png",
+        "size": 219900
+      },
+      {
+        "path": "images/card4.png",
+        "size": 160889
+      },
+      {
+        "path": "images/card.jpg",
+        "size": 132930
+      }
+    ]
+  },
+  "dependencies": {
+    "totalDeps": 81,
+    "prodDeps": 65,
+    "devDeps": 16,
+    "heavyDeps": [
+      "@expo/vector-icons",
+      "@stripe/stripe-react-native",
+      "axios",
+      "expo",
+      "react-native",
+      "react-native-reanimated",
+      "react-native-svg",
+      "socket.io-client"
+    ]
+  },
+  "sourceCode": {
+    "totalSize": 11404636,
+    "sizes": {
+      "app": 3818622,
+      "components": 4370415,
+      "services": 1535464,
+      "hooks": 868219,
+      "utils": 811916
+    }
+  },
+  "opportunities": [
+    {
+      "type": "images",
+      "severity": "high",
+      "description": "Large image assets detected (1.43 MB)",
+      "suggestion": "Convert images to WebP format and compress them",
+      "potentialSavings": 598199
+    },
+    {
+      "type": "assets",
+      "severity": "medium",
+      "description": "5 large asset files detected",
+      "suggestion": "Review and optimize large assets",
+      "potentialSavings": 337838
+    },
+    {
+      "type": "dependencies",
+      "severity": "medium",
+      "description": "8 heavy dependencies installed",
+      "suggestion": "Review if all features are needed, consider tree-shaking",
+      "potentialSavings": null
+    }
+  ],
+  "potentialSavings": 936037
+}

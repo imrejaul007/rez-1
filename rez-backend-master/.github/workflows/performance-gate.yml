@@ -1,0 +1,137 @@
+name: Performance Regression Gate
+
+on:
+  pull_request:
+    branches: [main, staging]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'tsconfig.json'
+
+concurrency:
+  group: perf-gate-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  perf-check:
+    name: API Performance Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+        env:
+          NODE_ENV: test
+
+      - name: Start application
+        run: |
+          timeout 30 npm start &
+          sleep 10
+        env:
+          MONGODB_URI: mongodb://localhost:27017/rez_perf_test
+          REDIS_URL: redis://localhost:6379
+          NODE_ENV: test
+          JWT_SECRET: test-secret-12345
+          JWT_MERCHANT_SECRET: test-merchant-secret-12345
+          JWT_REFRESH_SECRET: test-refresh-secret-12345
+
+      - name: Run performance benchmarks
+        id: perf
+        run: |
+          npm run perf:bench 2>&1 | tee perf-results.txt
+
+          # Extract p95 latency from results
+          P95=$(grep "p95:" perf-results.txt | tail -1 | awk '{print $NF}' | tr -d 'ms')
+
+          if [ -z "$P95" ]; then
+            echo "Failed to parse p95 latency from benchmark results"
+            exit 1
+          fi
+
+          echo "p95=${P95}" >> $GITHUB_OUTPUT
+          echo "P95 latency: ${P95}ms"
+        env:
+          MONGODB_URI: mongodb://localhost:27017/rez_perf_test
+          REDIS_URL: redis://localhost:6379
+          NODE_ENV: test
+          JWT_SECRET: test-secret-12345
+          JWT_MERCHANT_SECRET: test-merchant-secret-12345
+          JWT_REFRESH_SECRET: test-refresh-secret-12345
+
+      - name: Check against baseline
+        run: |
+          P95=${{ steps.perf.outputs.p95 }}
+          BASELINE=250  # 250ms p95 threshold for critical endpoints
+
+          if [ -n "$P95" ] && [ "$P95" -gt "$BASELINE" ]; then
+            echo "PERFORMANCE REGRESSION DETECTED"
+            echo "P95 latency: ${P95}ms (threshold: ${BASELINE}ms)"
+            echo "Investigate:"
+            echo "  - New database queries"
+            echo "  - Missing indexes"
+            echo "  - Increased algorithmic complexity"
+            echo "  - Larger payloads"
+            exit 1
+          else
+            echo "Performance OK"
+            echo "P95 latency: ${P95}ms (baseline: ${BASELINE}ms)"
+          fi
+
+      - name: Upload perf results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-results-${{ github.sha }}
+          path: perf-results.txt
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Comment PR with results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const p95 = '${{ steps.perf.outputs.p95 }}' || 'unknown';
+            const baseline = 250;
+            const status = p95 !== 'unknown' && parseInt(p95) > baseline ? '❌' : '✅';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${status} **Performance Gate**\n\nP95 latency: ${p95}ms (baseline: ${baseline}ms)\n\n[View detailed results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+            });

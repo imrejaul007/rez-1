@@ -1,0 +1,309 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.2.3)'
+        required: true
+        type: string
+      skip_staging_check:
+        description: 'Skip staging verification (emergency only)'
+        required: false
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'v*.*.*'
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: rezapp/merchant-backend
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for duplicate run
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # If this tag was just created by a workflow_dispatch run, skip to avoid duplicate
+          RECENT=$(gh run list \
+            --workflow=production.yml \
+            --event=workflow_dispatch \
+            --status=in_progress \
+            --limit=1 \
+            --json status \
+            --jq 'length')
+          if [ "$RECENT" -gt 0 ]; then
+            echo "Another production deploy is already in progress. Skipping tag-triggered run."
+            exit 1
+          fi
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Release version: ${VERSION}"
+
+      - name: Validate semver format
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if ! echo "$VERSION" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+            echo "Invalid version format: $VERSION"
+            echo "Expected format: v1.2.3 or v1.2.3-beta.1"
+            exit 1
+          fi
+          echo "Version format valid: $VERSION"
+
+      - name: Check staging workflow passed
+        if: github.event.inputs.skip_staging_check != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Checking latest staging deployment status..."
+          RESULT=$(gh run list \
+            --workflow=staging.yml \
+            --branch=main \
+            --status=success \
+            --limit=1 \
+            --json conclusion,createdAt \
+            --jq '.[0].conclusion')
+
+          if [ "$RESULT" != "success" ]; then
+            echo "No successful staging deployment found on main branch."
+            echo "Run the staging workflow first, or use skip_staging_check for emergencies."
+            exit 1
+          fi
+          echo "Staging workflow verification passed"
+
+      - name: Warning - staging check skipped
+        if: github.event.inputs.skip_staging_check == true
+        run: echo "WARNING - Staging verification was skipped. This is an emergency deploy."
+
+  build-and-tag:
+    name: Build & Tag Release
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.validate.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+      - name: Create git tag
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          # Check if tag already exists (prevents re-trigger loop)
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists, skipping"
+          else
+            git tag -a "$VERSION" -m "Release $VERSION"
+            git push origin "$VERSION"
+          fi
+
+  deploy:
+    name: Deploy to Production
+    needs: [validate, build-and-tag]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://api.rezapp.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Deploy with rolling update
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          echo "Deploying version $VERSION to production..."
+          kubectl set image deployment/merchant-backend \
+            api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION} \
+            -n production
+
+      - name: Wait for rollout (zero-downtime)
+        run: kubectl rollout status deployment/merchant-backend -n production --timeout=5m
+
+      - name: Verify pods
+        run: kubectl get pods -n production -l app=merchant-backend
+
+      - name: Post-deploy health check
+        run: |
+          sleep 10
+          RESPONSE=$(curl -sf --retry 5 --retry-delay 5 --retry-all-errors \
+            "${{ secrets.PRODUCTION_URL }}/health")
+          STATUS=$(echo "$RESPONSE" | jq -r '.status')
+          if [ "$STATUS" = "error" ]; then
+            echo "Production health check failed"
+            echo "$RESPONSE"
+            exit 1
+          fi
+          echo "Production is healthy: $STATUS"
+
+  rollback:
+    name: Rollback
+    needs: [validate, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: failure()
+    steps:
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Rollback deployment
+        run: |
+          echo "Rolling back production deployment..."
+          kubectl rollout undo deployment/merchant-backend -n production
+          kubectl rollout status deployment/merchant-backend -n production --timeout=5m
+
+      - name: Notify rollback
+        continue-on-error: true
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "attachments": [
+                {
+                  "color": "#dc3545",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ":rotating_light: *Production Deploy ROLLED BACK*\n*Version:* `${{ needs.validate.outputs.version }}`\n*Repo:* ${{ github.repository }}\n*Triggered by:* ${{ github.actor }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+  notify:
+    name: Slack Notification
+    needs: [validate, deploy]
+    runs-on: ubuntu-latest
+    if: always() && needs.deploy.result != 'cancelled'
+    steps:
+      - name: Checkout code
+        if: needs.deploy.result == 'success'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine status
+        id: status
+        run: |
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "color=#36a64f" >> $GITHUB_OUTPUT
+            echo "status=SUCCESS" >> $GITHUB_OUTPUT
+            echo "emoji=:rocket:" >> $GITHUB_OUTPUT
+          else
+            echo "color=#dc3545" >> $GITHUB_OUTPUT
+            echo "status=FAILED" >> $GITHUB_OUTPUT
+            echo "emoji=:x:" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        continue-on-error: true
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "attachments": [
+                {
+                  "color": "${{ steps.status.outputs.color }}",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "${{ steps.status.outputs.emoji }} *Production Deploy ${{ steps.status.outputs.status }}*\n*Version:* `${{ needs.validate.outputs.version || 'unknown' }}`\n*Repo:* ${{ github.repository }}\n*Triggered by:* ${{ github.actor }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Create GitHub Release
+        if: needs.deploy.result == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          gh release create "$VERSION" \
+            --title "Release $VERSION" \
+            --generate-notes \
+            || echo "Release already exists for $VERSION"

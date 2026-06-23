@@ -1,0 +1,3183 @@
+ACCESSIBILITY REPORT
+================================================================================
+
+SUMMARY:
+Total files: 460
+Files with accessibility: 31 (7%)
+Files needing improvement: 453
+Overall coverage: 1%
+
+FILES NEEDING IMPROVEMENT:
+--------------------------------------------------------------------------------
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\(tabs)\earn.tsx
+Status: ❌
+Interactive elements: 12
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\(tabs)\index.tsx
+Status: ❌
+Interactive elements: 79
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":57,"Button":12,"TextInput":1,"ScrollView":9}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\(tabs)\play.tsx
+Status: ❌
+Interactive elements: 21
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":9,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\addresses.tsx
+Status: ❌
+Interactive elements: 47
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":23,"Button":21,"FlatList":2,"ScrollView":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\cashback.tsx
+Status: ❌
+Interactive elements: 31
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":11,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\change-password.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":11,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\coupons.tsx
+Status: ❌
+Interactive elements: 37
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":21,"Button":10,"TextInput":1,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\courier-preferences.tsx
+Status: ❌
+Interactive elements: 34
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":10,"TextInput":2,"Switch":10,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\delete-account.tsx
+Status: ❌
+Interactive elements: 25
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":9,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\delivery.tsx
+Status: ❌
+Interactive elements: 55
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":19,"Button":30,"Switch":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\email-notifications.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":6,"Switch":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\index.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":7,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\language.tsx
+Status: ❌
+Interactive elements: 31
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":15,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\notification-history.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\notifications.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":6,"Switch":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\payment-methods.tsx
+Status: ❌
+Interactive elements: 91
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":47,"Button":25,"TextInput":14,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\payment.tsx
+Status: ❌
+Interactive elements: 47
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":28,"Switch":5,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\product-detail.tsx
+Status: ❌
+Interactive elements: 34
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":17,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\products.tsx
+Status: ❌
+Interactive elements: 39
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":22,"<Image[^>]*source=":1,"FlatList":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\profile-visibility.tsx
+Status: ❌
+Interactive elements: 13
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\profile.tsx
+Status: ❌
+Interactive elements: 32
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":4,"Switch":8,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\push-notifications.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":6,"Switch":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\settings.tsx
+Status: ❌
+Interactive elements: 68
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":25,"Button":20,"Switch":20,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\sms-notifications.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":6,"Switch":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\two-factor-auth.tsx
+Status: ❌
+Interactive elements: 45
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":21,"TextInput":2,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\account\wasilpay.tsx
+Status: ❌
+Interactive elements: 62
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":29,"Button":24,"Switch":6,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\admin\social-media-posts.tsx
+Status: ❌
+Interactive elements: 58
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":27,"Button":24,"TextInput":2,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\article\[id].tsx
+Status: ❌
+Interactive elements: 37
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":15,"<Image[^>]*source=":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\articles.tsx
+Status: ❌
+Interactive elements: 42
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":18,"TextInput":2,"FlatList":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\bill-history.tsx
+Status: ❌
+Interactive elements: 40
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":16,"<Image[^>]*source=":2,"ScrollView":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\bill-upload-enhanced.tsx
+Status: ❌
+Interactive elements: 65
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":27,"Button":34,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\bill-upload.tsx
+Status: ❌
+Interactive elements: 95
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":39,"Button":37,"TextInput":9,"<Image[^>]*source=":2,"ScrollView":8}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\BookingsPage.tsx
+Status: ❌
+Interactive elements: 35
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":15,"ScrollView":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\CartPage.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\category\[slug].tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"Button":6,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\challenges\index.tsx
+Status: ❌
+Interactive elements: 29
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":11,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\challenges\[id].tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":15,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\checkout.tsx
+Status: ❌
+Interactive elements: 77
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":27,"Button":39,"TextInput":2,"Switch":2,"ScrollView":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\coin-detail.tsx
+Status: ❌
+Interactive elements: 38
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":18,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\earn-from-social-media.tsx
+Status: ❌
+Interactive elements: 44
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":26,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\earnings-history.tsx
+Status: ❌
+Interactive elements: 35
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":15,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\EventPage.tsx
+Status: ❌
+Interactive elements: 40
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":19,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\faq.tsx
+Status: ❌
+Interactive elements: 47
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":23,"Button":17,"TextInput":2,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\FashionPage.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"Button":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\feed\index.tsx
+Status: ❌
+Interactive elements: 35
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":14,"<Image[^>]*source=":1,"FlatList":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\games\index.tsx
+Status: ❌
+Interactive elements: 12
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\games\memory.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":13,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\games\quiz.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":15}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\games\slots.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":13,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\games\spin-wheel.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":8,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\games\trivia.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":15,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\gamification\index.tsx
+Status: ❌
+Interactive elements: 32
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":23,"Button":6,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\going-out.tsx
+Status: ❌
+Interactive elements: 12
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"TouchableWithoutFeedback":1,"Button":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\group-buy.tsx
+Status: ❌
+Interactive elements: 64
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":25,"Button":30,"TextInput":2,"ScrollView":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\help\index.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":6,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\home-delivery\section\[sectionId].tsx
+Status: ❌
+Interactive elements: 8
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\home-delivery.tsx
+Status: ❌
+Interactive elements: 12
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"TouchableWithoutFeedback":1,"Button":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\leaderboard\index.tsx
+Status: ❌
+Interactive elements: 26
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":15,"ScrollView":6}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\location\history.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":8,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\location\settings.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":9,"Switch":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\loyalty.tsx
+Status: ❌
+Interactive elements: 48
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":29,"Button":16,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\MainStorePage.tsx
+Status: ❌
+Interactive elements: 8
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\messages\index.tsx
+Status: ❌
+Interactive elements: 22
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":7,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\my-earnings.tsx
+Status: ❌
+Interactive elements: 26
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":14,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\my-products.tsx
+Status: ❌
+Interactive elements: 49
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":29,"<Image[^>]*source=":1,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\my-reviews.tsx
+Status: ❌
+Interactive elements: 35
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":17,"<Image[^>]*source=":2,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\my-services.tsx
+Status: ❌
+Interactive elements: 22
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":9,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\my-vouchers.tsx
+Status: ❌
+Interactive elements: 57
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":19,"Button":35,"<Image[^>]*source=":1,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\offers\index.tsx
+Status: ❌
+Interactive elements: 37
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":13,"<Image[^>]*source=":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\offers\view-all.tsx
+Status: ❌
+Interactive elements: 26
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":9,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\offers\[id].tsx
+Status: ❌
+Interactive elements: 77
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":29,"Button":43,"<Image[^>]*source=":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\onboarding\category-selection.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\onboarding\location-permission.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":8}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\onboarding\otp-verification.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":10,"TextInput":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\onboarding\registration.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":14}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\onboarding\rewards-intro.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":8}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\onboarding\transactions-preview.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\online-voucher.tsx
+Status: ❌
+Interactive elements: 35
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":19,"Button":7,"TextInput":3,"FlatList":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\order-confirmation.tsx
+Status: ❌
+Interactive elements: 27
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":15,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\order-history.tsx
+Status: ❌
+Interactive elements: 31
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":13,"TextInput":2,"FlatList":2,"ScrollView":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\orders\index.enhanced.tsx
+Status: ❌
+Interactive elements: 59
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":25,"Button":26,"TextInput":2,"<Image[^>]*source=":1,"FlatList":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\orders\index.tsx
+Status: ❌
+Interactive elements: 21
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":11,"<Image[^>]*source=":1,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\orders\[id].tsx
+Status: ❌
+Interactive elements: 41
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":26,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\orders\[orderId]\tracking.tsx
+Status: ❌
+Interactive elements: 26
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":14,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\OutletsPage.tsx
+Status: ❌
+Interactive elements: 35
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":19,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\payment-methods.tsx
+Status: ❌
+Interactive elements: 27
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":6,"TextInput":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\payment-razorpay.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":3,"TextInput":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\payment-success.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\payment.tsx
+Status: ❌
+Interactive elements: 42
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":18,"TextInput":6,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\product\[id].tsx
+Status: ❌
+Interactive elements: 60
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":29,"Button":28,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\ProductPage.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":13,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\products-videos.tsx
+Status: ❌
+Interactive elements: 32
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":12,"TextInput":2,"FlatList":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\profile\achievements.tsx
+Status: ❌
+Interactive elements: 38
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":19,"Button":16,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\profile\activity.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":2,"FlatList":2,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\profile\edit.tsx
+Status: ❌
+Interactive elements: 41
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":21,"Button":12,"TextInput":2,"<Image[^>]*source=":1,"FlatList":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\profile\index.tsx
+Status: ❌
+Interactive elements: 46
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":29,"Button":13,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\profile\partner.tsx
+Status: ❌
+Interactive elements: 43
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":26,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\profile\qr-code.tsx
+Status: ❌
+Interactive elements: 34
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":18,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\profile\store-promo-coins.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\project-detail.tsx
+Status: ❌
+Interactive elements: 27
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":14,"TextInput":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\projects.tsx
+Status: ❌
+Interactive elements: 43
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":15,"TextInput":2,"ScrollView":11}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\referral\dashboard.tsx
+Status: ❌
+Interactive elements: 32
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":20,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\ReviewPage.tsx
+Status: ❌
+Interactive elements: 25
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":11,"TextInput":2,"<Image[^>]*source=":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\ring-sizer.tsx
+Status: ❌
+Interactive elements: 48
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":30,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\scratch-card.tsx
+Status: ❌
+Interactive elements: 31
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":18}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\search.tsx
+Status: ❌
+Interactive elements: 44
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":19,"Button":16,"TextInput":2,"<Image[^>]*source=":2,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\settings.tsx
+Status: ❌
+Interactive elements: 12
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":2,"Switch":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\sign-in.tsx
+Status: ❌
+Interactive elements: 29
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":15,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\social-media.tsx
+Status: ❌
+Interactive elements: 49
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":23,"Button":21,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\Store.tsx
+Status: ❌
+Interactive elements: 19
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":1,"TextInput":2,"FlatList":2,"ScrollView":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreListPage.tsx
+Status: ❌
+Interactive elements: 22
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":8,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreSection\CombinedSection78.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreSection\InstagramCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreSection\ProductInfo.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":5,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreSection\Section1.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreSection\Section2.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreSection\Section3.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":9}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreSection\Section5.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreSection\Section6.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":11}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreSection\StoreHeader.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":4,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\submission-detail.tsx
+Status: ❌
+Interactive elements: 29
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":9,"<Image[^>]*source=":3,"ScrollView":10}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\subscription\benefits.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":8,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\subscription\billing.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":12,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\subscription\cancel-feedback.tsx
+Status: ❌
+Interactive elements: 62
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":23,"Button":32,"TextInput":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\subscription\downgrade-confirmation.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":12,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\subscription\manage.tsx
+Status: ❌
+Interactive elements: 26
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":12,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\subscription\payment-confirmation.tsx
+Status: ❌
+Interactive elements: 47
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":27,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\subscription\payment-success.tsx
+Status: ❌
+Interactive elements: 25
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":11,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\subscription\plans.tsx
+Status: ❌
+Interactive elements: 34
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":16,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\subscription\trial.tsx
+Status: ❌
+Interactive elements: 37
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":17,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\subscription\upgrade-confirmation.tsx
+Status: ❌
+Interactive elements: 30
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":16,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\support\chat.tsx
+Status: ❌
+Interactive elements: 39
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":14,"TextInput":2,"<Image[^>]*source=":2,"ScrollView":6}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\support\faq.tsx
+Status: ❌
+Interactive elements: 65
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":25,"Button":33,"TextInput":2,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\support\index.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":5,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\tracking\[orderId].tsx
+Status: ❌
+Interactive elements: 45
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":19,"Button":23,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\tracking.tsx
+Status: ❌
+Interactive elements: 49
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":21,"Button":25,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\transactions\incomplete.tsx
+Status: ❌
+Interactive elements: 19
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":10,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\transactions\index.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":8,"TextInput":1,"FlatList":2,"ScrollView":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\transactions\[id].tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":10,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\ugc\upload.tsx
+Status: ❌
+Interactive elements: 46
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":23,"TextInput":4,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\ugc\[id].tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":4,"<Image[^>]*source=":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\ugc-upload.tsx
+Status: ❌
+Interactive elements: 40
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":22,"TextInput":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\voucher\category\[slug].tsx
+Status: ❌
+Interactive elements: 20
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":8,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\voucher\[brandId].tsx
+Status: ❌
+Interactive elements: 48
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":30,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\WalletScreen.tsx
+Status: ❌
+Interactive elements: 59
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":19,"Button":37,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\wishlist.tsx
+Status: ❌
+Interactive elements: 78
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":35,"Button":35,"TextInput":3,"<Image[^>]*source=":1,"FlatList":3,"ScrollView":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\AboutModal.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"TouchableWithoutFeedback":5,"Button":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\account\AccountTabs.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\account\AddAddressModal.tsx
+Status: ❌
+Interactive elements: 44
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":21,"TextInput":9,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\account\EditAddressModal.tsx
+Status: ❌
+Interactive elements: 44
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":21,"TextInput":9,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\account\EditInstructionsModal.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":10,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\account\SettingsItem.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\BillImageUploader.example.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\BillImageUploader.test.tsx
+Status: ❌
+Interactive elements: 29
+Accessibility props: 0
+Coverage: 0%
+Elements: {"Button":29}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\BillImageUploader.tsx
+Status: ❌
+Interactive elements: 36
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":22,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\BillPreviewModal.tsx
+Status: ❌
+Interactive elements: 28
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":9,"TextInput":5,"<Image[^>]*source=":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\BillRequirements.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\BillUploadQueueDemo.tsx
+Status: ❌
+Interactive elements: 20
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":14,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\CashbackCalculator.tsx
+Status: ❌
+Interactive elements: 1
+Accessibility props: 0
+Coverage: 0%
+Elements: {"ScrollView":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\ImagePreview.tsx
+Status: ❌
+Interactive elements: 41
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":23,"<Image[^>]*source=":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\ImageQualityChecker.tsx
+Status: ❌
+Interactive elements: 34
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":20,"<Image[^>]*source=":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\ManualCorrectionForm.tsx
+Status: ❌
+Interactive elements: 33
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":9,"TextInput":6,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\bills\MerchantSelector.tsx
+Status: ❌
+Interactive elements: 35
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Pressable":1,"Button":11,"TextInput":2,"<Image[^>]*source=":1,"FlatList":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\cart\AddedToCartModal.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":7,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\cart\CartSyncStatus.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\cart\CartValidation.tsx
+Status: ❌
+Interactive elements: 15
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":2,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\cart\LockedItem.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":9,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\cart\PriceSection.tsx
+Status: ❌
+Interactive elements: 8
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\cart\StockWarningBanner.tsx
+Status: ❌
+Interactive elements: 10
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\CashbackModal.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":4,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\category\CategoryBanner.tsx
+Status: ❌
+Interactive elements: 10
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":4,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\category\CategoryCard.tsx
+Status: ❌
+Interactive elements: 38
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":21,"Button":14,"<Image[^>]*source=":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\category\CategoryCarousel.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":4,"Pressable":2,"Button":2,"<Image[^>]*source=":1,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\category\CategoryFilters.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":4,"Switch":2,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\category\CategoryGrid.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\challenges\ActivityTimeline.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\challenges\ClaimRewardModal.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":9}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\CoinInfoCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":2,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\Collapsible.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\AuthDebugger.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":8}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\CommentSystem.tsx
+Status: ❌
+Interactive elements: 34
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":13,"TextInput":3,"<Image[^>]*source=":1,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\ConnectionStatus.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\CrossPlatformAlert.tsx
+Status: ❌
+Interactive elements: 19
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":4,"Button":15}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\FileUploader.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":6,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\NotificationBell.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\OptimizedImage.tsx
+Status: ❌
+Interactive elements: 1
+Accessibility props: 0
+Coverage: 0%
+Elements: {"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\ReviewSystem.tsx
+Status: ❌
+Interactive elements: 54
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":25,"Button":21,"TextInput":3,"<Image[^>]*source=":3,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\Toast.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":6}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\DealCard.tsx
+Status: ❌
+Interactive elements: 21
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":12}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\DealCardSkeleton.tsx
+Status: ❌
+Interactive elements: 1
+Accessibility props: 0
+Coverage: 0%
+Elements: {"Button":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\DealComparisonModal.tsx
+Status: ❌
+Interactive elements: 32
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"TouchableWithoutFeedback":5,"Button":13,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\DealDetailsModal.tsx
+Status: ❌
+Interactive elements: 13
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"TouchableWithoutFeedback":5,"Button":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\DealFilterModal.tsx
+Status: ❌
+Interactive elements: 37
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"TouchableWithoutFeedback":5,"Button":12,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\DealList.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":8,"FlatList":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\DealSharingModal.tsx
+Status: ❌
+Interactive elements: 15
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"TouchableWithoutFeedback":5,"Button":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earn\OpportunityCard.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earn\TaskCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\EarningCard.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earnPage\CategoryGrid.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earnPage\CategoryTile.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earnPage\EarningOpportunities.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earnPage\EarningsCard.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":6}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earnPage\NotificationCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earnPage\ProjectCard.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earnPage\ProjectStatusCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earnPage\RecentProjectsSection.tsx
+Status: ❌
+Interactive elements: 12
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\earnPage\ReferralSection.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":13}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ErrorBoundary.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\events\EventBookingModal.tsx
+Status: ❌
+Interactive elements: 29
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":7,"TextInput":6,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\events\EventFilters.tsx
+Status: ❌
+Interactive elements: 34
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":19,"Button":8,"ScrollView":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\events\EventSearchBar.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":3,"TextInput":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\events\RelatedEventsSection.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":2,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\feed\ActivityCard.tsx
+Status: ❌
+Interactive elements: 31
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":14,"TextInput":2,"<Image[^>]*source=":2,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\AchievementToast.tsx
+Status: ❌
+Interactive elements: 8
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\AchievementUnlockModal.tsx
+Status: ❌
+Interactive elements: 21
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":8,"Button":13}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\CelebrationModal.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":6,"Button":10}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\ChallengeCard.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":11}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\CoinBalance.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\OptimizedGameCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\PointsNotification.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\QuizGame.tsx
+Status: ❌
+Interactive elements: 21
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":13,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\ScratchCardGame.tsx
+Status: ❌
+Interactive elements: 19
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":12}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\SpinHistory.tsx
+Status: ❌
+Interactive elements: 10
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\SpinWheel.tsx
+Status: ❌
+Interactive elements: 12
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":9}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\gamification\SpinWheelGame.tsx
+Status: ❌
+Interactive elements: 15
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":12}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\going-out\CashbackHubSection.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\going-out\CategoryTabs.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\going-out\FilterChips.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\going-out\GoingOutHeader.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":6,"TextInput":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\going-out\GoingOutProductCard.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":6,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\going-out\ProductGrid.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\group-buying\GroupCard.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":8,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\group-buying\GroupCreationModal.tsx
+Status: ❌
+Interactive elements: 28
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":12,"TextInput":3,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\group-buying\GroupMembersList.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\group-buying\GroupShareModal.tsx
+Status: ❌
+Interactive elements: 22
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":13}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\HapticTab.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"Pressable":2,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\home\QuickReorder.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":4,"<Image[^>]*source=":1,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\home-delivery\CategoryTabs.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\home-delivery\FilterChips.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\home-delivery\HomeDeliveryHeader.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":6,"TextInput":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\home-delivery\HomeDeliveryProductCard.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\home-delivery\ProductGrid.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\home-delivery\ProductSection.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\homepage\cards\BrandedStoreCard.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\homepage\cards\EventCard.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\homepage\cards\ProductCard.tsx
+Status: ❌
+Interactive elements: 33
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":19,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\homepage\cards\RecommendationCard.tsx
+Status: ❌
+Interactive elements: 33
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":19,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\homepage\cards\StoreCard.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\homepage\ErrorBoundary.tsx
+Status: ❌
+Interactive elements: 19
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":12}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\homepage\FeatureHighlights.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\homepage\HorizontalScrollSection.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\homepage\SkeletonLoader.tsx
+Status: ❌
+Interactive elements: 1
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\location\AddressSearch.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":5,"TextInput":2,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\location\GreetingDisplay.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\location\LocationAnalytics.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":8,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\location\LocationDisplay.tsx
+Status: ❌
+Interactive elements: 30
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":19}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\location\LocationDropdown.tsx
+Status: ❌
+Interactive elements: 10
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\location\LocationNotifications.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Switch":2,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\location\LocationPermission.tsx
+Status: ❌
+Interactive elements: 35
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":28}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\location\LocationSharing.tsx
+Status: ❌
+Interactive elements: 12
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":9}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\location\NearbyStores.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":4,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\location\TimeDisplay.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\loyalty\PointsExpiryBanner.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\loyalty\RedemptionHistory.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\loyalty\RedemptionModal.tsx
+Status: ❌
+Interactive elements: 31
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":17,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\loyalty\RewardCard.tsx
+Status: ❌
+Interactive elements: 12
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":4,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\loyalty\RewardCatalog.tsx
+Status: ❌
+Interactive elements: 29
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":14,"TextInput":2,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\loyalty\TierBenefitsCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\messages\ConversationList.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\messages\MessageBubble.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"<Image[^>]*source=":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\messages\MessageInput.tsx
+Status: ❌
+Interactive elements: 22
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":8,"TextInput":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\navigation\BottomNavigation.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\navigation\NavigationErrorBoundary.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":8,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\navigation\NavigationShortcuts.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\navigation\QuickAccessFAB.tsx
+Status: ❌
+Interactive elements: 8
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\navigation\SafeBackButton.tsx
+Status: ❌
+Interactive elements: 39
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":36}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\NotificationDemo.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\NotificationErrorBoundary.tsx
+Status: ❌
+Interactive elements: 13
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":8}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\onboarding\FormInput.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TextInput":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\order\OrderFilterModal.tsx
+Status: ❌
+Interactive elements: 28
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":14,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\order\OrderHistoryItem.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":8,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\orders\DeliveryMap.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":8,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\orders\ReorderButton.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":20}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\orders\ReorderModal.tsx
+Status: ❌
+Interactive elements: 30
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":16,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\orders\ReorderSuggestions.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":6,"<Image[^>]*source=":1,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ParallaxScrollView.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"ScrollView":6}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\partner\BenefitsTable.tsx
+Status: ❌
+Interactive elements: 12
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":6,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\partner\FAQAccordion.tsx
+Status: ❌
+Interactive elements: 42
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":26,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\partner\JackpotTimeline.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\partner\MilestoneTracker.tsx
+Status: ❌
+Interactive elements: 25
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":19,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\partner\OffersGrid.tsx
+Status: ❌
+Interactive elements: 26
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":15,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\partner\RewardTasks.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":6,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\paybill\PayBillEmptyState.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\paybill\PayBillFilterTabs.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\paybill\PayBillHeader.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\paybill\PayBillTransactionCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\paybill\PayBillTransactionList.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\payment\BankVerificationModal.tsx
+Status: ❌
+Interactive elements: 21
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":10,"TextInput":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\payment\CardVerificationModal.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":11}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\payment\KYCUploadModal.tsx
+Status: ❌
+Interactive elements: 26
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":10,"<Image[^>]*source=":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\payment\OTPVerificationModal.tsx
+Status: ❌
+Interactive elements: 21
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":11,"TextInput":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\payment\StripeCardForm.native.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":12,"TextInput":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\payment\StripeCardForm.web.tsx
+Status: ❌
+Interactive elements: 19
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":12}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\payment\StripeUpiForm.tsx
+Status: ❌
+Interactive elements: 31
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":20,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\payment\UPIVerificationModal.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":9,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\play\ChallengeCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\play\GameCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\ArticleCard.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\ArticleSection.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\CategoryHeader.tsx
+Status: ❌
+Interactive elements: 10
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\FeaturedVideoCard.tsx
+Status: ❌
+Interactive elements: 10
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\HorizontalVideoSection.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\MainContentSection.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\MerchantVideoSection.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\SectionHeader.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\ThumbnailVideoCard.tsx
+Status: ❌
+Interactive elements: 8
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":4,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\UGCVideoSection.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\VideoCard.tsx
+Status: ❌
+Interactive elements: 28
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":13}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\playPage\VideoGrid.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\PreferencesDemo.tsx
+Status: ❌
+Interactive elements: 15
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":8}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\AddToCartModal.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":8,"Button":14,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\CashbackRewardsCard.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":10,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\DeliveryInformation.tsx
+Status: ❌
+Interactive elements: 20
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":11,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\FrequentlyBoughtTogether.tsx
+Status: ❌
+Interactive elements: 13
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":4,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\ImageZoomModal.tsx
+Status: ❌
+Interactive elements: 27
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":10,"<Image[^>]*source=":2,"ScrollView":6}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\ProductImageGallery.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"<Image[^>]*source=":2,"ScrollView":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\ProductQASection.tsx
+Status: ❌
+Interactive elements: 42
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":22,"TextInput":3,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\ProductShareModal.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":10,"Button":7,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\ProductVariantSelector.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"Button":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\RelatedProductsSection.tsx
+Status: ❌
+Interactive elements: 15
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":4,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\ReturnPolicyCard.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\SellerInformation.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":11,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\SizeGuideModal.tsx
+Status: ❌
+Interactive elements: 46
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":16,"Button":19,"TextInput":4,"ScrollView":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\StockNotificationModal.tsx
+Status: ❌
+Interactive elements: 29
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":8,"Button":15,"TextInput":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\VariantOptionButton.tsx
+Status: ❌
+Interactive elements: 10
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\product\VideoPlayer.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":9}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\products\BundleDeals.tsx
+Status: ❌
+Interactive elements: 15
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":6,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\products\FrequentlyBoughtTogether.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":6,"Button":4,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\products\SimilarProducts.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":2,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\profile\MenuItemCard.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\profile\ProfileMenuModal.tsx
+Status: ❌
+Interactive elements: 19
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":7,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ProfileCompletionCard.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ProfileOptionsList.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\projects\ProjectSubmissionForm.tsx
+Status: ❌
+Interactive elements: 65
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":21,"Button":32,"TextInput":4,"<Image[^>]*source=":3,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\RechargeWalletCard.tsx
+Status: ❌
+Interactive elements: 21
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":12,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ReferAndEarnCard.tsx
+Status: ❌
+Interactive elements: 8
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\referral\PrivacyNotice.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\referral\ShareModal.tsx
+Status: ❌
+Interactive elements: 21
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":10,"Button":8,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\referral\TierUpgradeCelebration.tsx
+Status: ❌
+Interactive elements: 22
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":15}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ReviewActionButton.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ReviewCard.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":5,"<Image[^>]*source=":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ReviewList.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ReviewModal.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"TouchableWithoutFeedback":5,"Button":5,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\reviews\ProductReviewForm.tsx
+Status: ❌
+Interactive elements: 58
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":19,"Button":30,"TextInput":3,"<Image[^>]*source=":1,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\reviews\ProductReviewsSection.tsx
+Status: ❌
+Interactive elements: 32
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":18,"Button":12,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\reviews\RatingStars.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\reviews\ReviewForm.tsx
+Status: ❌
+Interactive elements: 34
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":16,"TextInput":3,"<Image[^>]*source=":1,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\reviews\ReviewItem.tsx
+Status: ❌
+Interactive elements: 29
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":11,"<Image[^>]*source=":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\reviews\ReviewList.tsx
+Status: ❌
+Interactive elements: 40
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":27,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ReviewTabs.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ScratchCardOffer.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\search\CategoryCard.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\search\FilterModal.tsx
+Status: ❌
+Interactive elements: 28
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":10,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\search\OptimizedCategoryCard.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\search\ProductResultCard.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\search\RecentSearches.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\search\SearchHeader.tsx
+Status: ❌
+Interactive elements: 19
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":8,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\search\SearchSection.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\search\SortModal.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\search\StoreResultCard.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":5,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\search\VirtualizedResultsList.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\social\FollowButton.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\StarRating.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store\ContactStoreModal.tsx
+Status: ❌
+Interactive elements: 13
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":8,"Button":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store\PayBillCard.native.tsx
+Status: ❌
+Interactive elements: 26
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":12,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store\PayBillCard.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":6,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store\PayBillCard.web.tsx
+Status: ❌
+Interactive elements: 31
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":14,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store\PayBillSuccessModal.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":14,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store\StoreComparison.tsx
+Status: ❌
+Interactive elements: 25
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":6,"<Image[^>]*source=":1,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store\StoreFilters.tsx
+Status: ❌
+Interactive elements: 29
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":10,"Switch":5,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store\StoreReviews.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":6,"<Image[^>]*source=":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store\StoreSearchBar.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":4,"TextInput":3,"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store-search\FilterChips.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":3,"FlatList":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\BenefitsModal.tsx
+Status: ❌
+Interactive elements: 20
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":10,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\BillingHistoryList.tsx
+Status: ❌
+Interactive elements: 15
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":10}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\PaymentMethodSelector.tsx
+Status: ❌
+Interactive elements: 26
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":14,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\PaymentSuccessModal.tsx
+Status: ❌
+Interactive elements: 16
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":11}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\PlanCard.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":14}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\PricingToggle.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\RazorpayPaymentForm.tsx
+Status: ❌
+Interactive elements: 20
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":13}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\RetentionOfferCard.tsx
+Status: ❌
+Interactive elements: 13
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":8}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\ROICalculator.tsx
+Status: ❌
+Interactive elements: 3
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\StripePaymentModal.tsx
+Status: ❌
+Interactive elements: 30
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":19}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\TrialBanner.tsx
+Status: ❌
+Interactive elements: 15
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":10}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\subscription\UpgradeBanner.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":6}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\support\AgentCard.tsx
+Status: ❌
+Interactive elements: 1
+Accessibility props: 0
+Coverage: 0%
+Elements: {"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\support\ChatHeader.tsx
+Status: ❌
+Interactive elements: 13
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":5,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\support\ChatRating.tsx
+Status: ❌
+Interactive elements: 31
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Pressable":2,"Button":15,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\support\FAQSuggestions.tsx
+Status: ❌
+Interactive elements: 34
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":20,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\CreatorInfo.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":5,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\ProductCarousel.tsx
+Status: ❌
+Interactive elements: 17
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":8,"FlatList":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\ProductChip.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\ProductSelectorExample.tsx
+Status: ❌
+Interactive elements: 59
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":39,"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\ReportModal.tsx
+Status: ❌
+Interactive elements: 38
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":10,"Button":23,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\ReportModalExample.tsx
+Status: ❌
+Interactive elements: 10
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\ShoppableProductCard.tsx
+Status: ❌
+Interactive elements: 23
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":14,"<Image[^>]*source=":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\SocialActions.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":9,"Button":9}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\SourcePicker.tsx
+Status: ❌
+Interactive elements: 25
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":13,"Button":10,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\UploadProgress.tsx
+Status: ❌
+Interactive elements: 8
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\VideoControls.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":9}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\UGCGrid.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":2,"<Image[^>]*source=":2,"FlatList":1,"ScrollView":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\voucher\OnlineRedemptionModal.tsx
+Status: ❌
+Interactive elements: 33
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":10,"Button":20,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\voucher\PurchaseModal.tsx
+Status: ❌
+Interactive elements: 58
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":18,"Button":37,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\voucher\RedemptionFlow.tsx
+Status: ❌
+Interactive elements: 36
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":29,"ScrollView":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\voucher\VoucherNavButton.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":7}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\voucher\VoucherSelectionModal.tsx
+Status: ❌
+Interactive elements: 32
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":17,"Button":10,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\vouchers\QRCodeModal.tsx
+Status: ❌
+Interactive elements: 28
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":17}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\WalkInDealsModal.tsx
+Status: ❌
+Interactive elements: 10
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"TouchableWithoutFeedback":5,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\wallet\SendMoneyModal.tsx
+Status: ❌
+Interactive elements: 50
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":28,"TextInput":4,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\wallet\TopupModal.tsx
+Status: ❌
+Interactive elements: 24
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":12,"TextInput":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\wallet\TransactionCard.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\wallet\TransactionHistory.tsx
+Status: ❌
+Interactive elements: 2
+Accessibility props: 0
+Coverage: 0%
+Elements: {"FlatList":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\wallet\TransactionTabs.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\WalletBalanceCard.tsx
+Status: ❌
+Interactive elements: 4
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\WalletErrorBoundary.tsx
+Status: ❌
+Interactive elements: 13
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":5,"Button":8}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\wishlist\PublicWishlistView.tsx
+Status: ❌
+Interactive elements: 48
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":15,"Button":25,"TextInput":2,"<Image[^>]*source=":3,"FlatList":2,"ScrollView":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\wishlist\ShareModal.tsx
+Status: ❌
+Interactive elements: 27
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":11,"Button":7,"Switch":6,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\wishlist\WishlistEmpty.tsx
+Status: ❌
+Interactive elements: 7
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":3,"Button":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\wishlist\WishlistItem.tsx
+Status: ❌
+Interactive elements: 13
+Accessibility props: 0
+Coverage: 0%
+Elements: {"TouchableOpacity":7,"Button":5,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\CoinPage.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 1
+Coverage: 11%
+Elements: {"TouchableOpacity":5,"<Image[^>]*source=":1,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\ugc\ProductSelector.tsx
+Status: ❌
+Interactive elements: 46
+Accessibility props: 5
+Coverage: 11%
+Elements: {"TouchableOpacity":18,"Button":23,"TextInput":2,"FlatList":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\ErrorBoundary.tsx
+Status: ❌
+Interactive elements: 8
+Accessibility props: 1
+Coverage: 13%
+Elements: {"TouchableOpacity":3,"Button":4,"ScrollView":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\StoreSection\StoreActionButtons.tsx
+Status: ❌
+Interactive elements: 29
+Accessibility props: 4
+Coverage: 14%
+Elements: {"TouchableOpacity":3,"Button":26}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\UGCDetailScreen.tsx
+Status: ❌
+Interactive elements: 19
+Accessibility props: 3
+Coverage: 16%
+Elements: {"TouchableOpacity":9,"Button":7,"Switch":1,"<Image[^>]*source=":1,"ScrollView":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\GameErrorBoundary.tsx
+Status: ❌
+Interactive elements: 11
+Accessibility props: 2
+Coverage: 18%
+Elements: {"TouchableOpacity":5,"Button":6}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\referral.tsx
+Status: ❌
+Interactive elements: 38
+Accessibility props: 8
+Coverage: 21%
+Elements: {"TouchableOpacity":13,"Button":20,"FlatList":2,"ScrollView":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\cart\CartItem.tsx
+Status: ❌
+Interactive elements: 18
+Accessibility props: 4
+Coverage: 22%
+Elements: {"TouchableOpacity":9,"Button":8,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\AccessibleButton.tsx
+Status: ❌
+Interactive elements: 27
+Accessibility props: 8
+Coverage: 30%
+Elements: {"TouchableOpacity":3,"Button":24}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store-search\ErrorState.tsx
+Status: ❌
+Interactive elements: 13
+Accessibility props: 4
+Coverage: 31%
+Elements: {"TouchableOpacity":5,"Button":8}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\category\CategoryHeader.tsx
+Status: ❌
+Interactive elements: 28
+Accessibility props: 9
+Coverage: 32%
+Elements: {"TouchableOpacity":13,"Button":13,"TextInput":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\cart\CartHeader.tsx
+Status: ❌
+Interactive elements: 6
+Accessibility props: 2
+Coverage: 33%
+Elements: {"TouchableOpacity":3,"Button":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\AccessibleInput.tsx
+Status: ❌
+Interactive elements: 21
+Accessibility props: 7
+Coverage: 33%
+Elements: {"TouchableOpacity":5,"Button":6,"TextInput":10}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\common\ReportToast.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 2
+Coverage: 40%
+Elements: {"TouchableOpacity":3,"Button":2}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\referral\PrivacyNotice.example.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 2
+Coverage: 40%
+Elements: {"ScrollView":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\referral\ReferralQRModal.tsx
+Status: ❌
+Interactive elements: 20
+Accessibility props: 8
+Coverage: 40%
+Elements: {"TouchableOpacity":8,"Button":12}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store-search\StoreInfo.tsx
+Status: ❌
+Interactive elements: 5
+Accessibility props: 2
+Coverage: 40%
+Elements: {"TouchableOpacity":4,"Button":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store-search\SearchHeader.tsx
+Status: ❌
+Interactive elements: 14
+Accessibility props: 6
+Coverage: 43%
+Elements: {"TouchableOpacity":5,"Button":6,"TextInput":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\MainStoreSection\ProductDisplay.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 4
+Coverage: 44%
+Elements: {"TouchableOpacity":5,"<Image[^>]*source=":1,"FlatList":3}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\MainStoreSection\VisitStoreButton.tsx
+Status: ❌
+Interactive elements: 9
+Accessibility props: 4
+Coverage: 44%
+Elements: {"TouchableOpacity":3,"Button":6}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store-search\EmptySearchResults.tsx
+Status: ⚠️
+Interactive elements: 12
+Accessibility props: 6
+Coverage: 50%
+Elements: {"TouchableOpacity":7,"Button":5}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\components\store-search\ProductCard.tsx
+Status: ⚠️
+Interactive elements: 4
+Accessibility props: 2
+Coverage: 50%
+Elements: {"TouchableOpacity":3,"<Image[^>]*source=":1}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\MainStoreSection\UGCSection.tsx
+Status: ⚠️
+Interactive elements: 15
+Accessibility props: 8
+Coverage: 53%
+Elements: {"TouchableOpacity":7,"Button":2,"<Image[^>]*source=":2,"FlatList":4}
+
+File: C:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\app\MainStoreSection\ProductDetails.tsx
+Status: ⚠️
+Interactive elements: 3
+Accessibility props: 2
+Coverage: 67%
+Elements: {"TouchableOpacity":3}
+

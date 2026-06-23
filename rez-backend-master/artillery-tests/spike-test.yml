@@ -1,0 +1,48 @@
+config:
+  target: "http://localhost:5001"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Baseline"
+    - duration: 30
+      arrivalRate: 500
+      name: "Spike!"
+    - duration: 120
+      arrivalRate: 10
+      name: "Recovery"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Health Check During Spike"
+    weight: 20
+    flow:
+      - get:
+          url: "/health"
+          expect:
+            - statusCode: 200
+
+  - name: "Products Read During Spike"
+    weight: 40
+    flow:
+      - get:
+          url: "/api/products"
+          qs:
+            page: "{{ $randomNumber(1, 10) }}"
+            limit: 20
+
+  - name: "Categories Read During Spike"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/categories"
+
+  - name: "Stores Read During Spike"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/stores"
+          qs:
+            page: 1
+            limit: 20

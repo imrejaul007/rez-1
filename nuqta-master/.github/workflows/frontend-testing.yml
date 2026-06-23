@@ -1,0 +1,67 @@
+name: Frontend Testing
+
+# Frontend CI: runs on every PR to main/develop, plus manual dispatch.
+# Steps: install -> typecheck -> lint -> unit tests.
+# Modeled on rez-backend-master/.github/workflows/ci.yml but adapted
+# for the Expo/React Native monorepo at nuqta-master/.
+
+on:
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+# Cancel in-flight runs for the same PR/branch.
+concurrency:
+  group: frontend-testing-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Required status check (used by branch protection) ────────────────────
+  test:
+    name: Frontend CI (typecheck + lint + test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        # `npm ci` for reproducible installs (uses package-lock.json).
+        run: npm ci
+
+      - name: TypeScript type check
+        # Catches type errors without producing build output.
+        run: npx tsc --noEmit
+
+      - name: Lint
+        # Non-blocking while we clean up existing warnings;
+        # flip `continue-on-error` to false once the repo is warning-free.
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Run tests
+        # Frontend uses Jest via cross-env to allow extra Node heap.
+        run: npm test -- --coverage=false --forceExit --testTimeout=20000
+        env:
+          CI: 'true'
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-output
+          path: |
+            coverage/
+            junit.xml
+          if-no-files-found: ignore
+          retention-days: 7

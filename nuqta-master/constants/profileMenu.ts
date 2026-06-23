@@ -1,0 +1,456 @@
+// Profile Menu Configuration
+// Static navigation structure for profile menus, icon grids, and menu lists.
+// This is UI configuration, NOT mock data.
+
+import { BRAND } from '@/constants/brand';
+import {
+  ProfileMenuSection,
+  ProfileIconGridItem,
+  ProfileMenuListItem,
+  PROFILE_COLORS,
+} from '@/types/profile.types';
+
+// Profile Menu Sections (sidebar/modal menu)
+export const profileMenuSections: ProfileMenuSection[] = [
+  {
+    id: 'main_menu',
+    items: [
+      {
+        id: 'wallet',
+        title: 'Wallet',
+        icon: 'wallet-outline',
+        route: '/wallet-screen',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'track_orders',
+        title: 'Track Orders',
+        icon: 'location-outline',
+        route: '/tracking',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'offers',
+        title: 'Offers',
+        icon: 'pricetag-outline',
+        route: '/offers',
+        badge: 'NEW',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'store',
+        title: 'Store',
+        icon: 'storefront-outline',
+        route: '/store',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'order_trx',
+        title: 'Order Trx',
+        icon: 'receipt-outline',
+        route: '/order-history',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'bookings',
+        title: 'My Bookings',
+        icon: 'calendar-outline',
+        route: '/my-bookings',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'my_events',
+        title: 'My Events',
+        icon: 'ticket-outline',
+        route: '/my-events',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'account',
+        title: 'Account',
+        icon: 'person-outline',
+        route: '/account',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'profile',
+        title: 'Profile',
+        icon: 'person-circle-outline',
+        route: '/profile',
+        isEnabled: true,
+        showArrow: true,
+        dividerAfter: true,
+      },
+    ],
+  },
+  {
+    id: 'premium_section',
+    items: [
+      {
+        id: 'subscription',
+        title: 'Premium Membership',
+        icon: 'diamond-outline',
+        route: '/subscription/plans',
+        badge: 'NEW',
+        description: 'Upgrade for 2x cashback & exclusive benefits',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'bill-upload',
+        title: 'Upload Bill',
+        icon: 'document-text-outline',
+        route: '/bill-upload',
+        badge: 'NEW',
+        description: 'Earn cashback from offline purchases',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'referrals',
+        title: 'Refer & Earn',
+        icon: 'gift-outline',
+        route: '/referral',
+        description: 'Share with friends, earn rewards',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'games',
+        title: 'Games',
+        icon: 'game-controller-outline',
+        route: '/games',
+        description: 'Play games and earn rewards',
+        isEnabled: false,
+        showArrow: true,
+      },
+      {
+        id: 'tasks',
+        title: 'Tasks',
+        icon: 'flag-outline',
+        route: '/challenges',
+        description: 'Complete tasks and earn coins',
+        isEnabled: false,
+        showArrow: true,
+      },
+      {
+        id: 'vouchers',
+        title: 'My Vouchers',
+        icon: 'ticket-outline',
+        route: '/my-vouchers',
+        description: 'View and redeem your vouchers',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'reviews',
+        title: 'My Reviews',
+        icon: 'star-outline',
+        route: '/my-reviews',
+        description: 'View your submitted reviews',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'badges',
+        title: 'Badges',
+        icon: 'trophy-outline',
+        route: '/profile/achievements',
+        description: 'View your achievements',
+        isEnabled: true,
+        showArrow: true,
+        dividerAfter: true,
+      },
+    ],
+  },
+  {
+    id: 'support_section',
+    items: [
+      {
+        id: 'change_password',
+        title: 'Change Password',
+        icon: 'key-outline',
+        route: '/account/change-password',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'help_support',
+        title: 'Help & Support',
+        icon: 'help-circle-outline',
+        route: '/support',
+        description: 'Get help and contact support',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'feedback',
+        title: 'Give Feedback',
+        icon: 'chatbox-outline',
+        route: '/support/feedback',
+        description: 'Share your thoughts with us',
+        isEnabled: true,
+        showArrow: true,
+        dividerAfter: true,
+      },
+    ],
+  },
+  {
+    id: 'legal_section',
+    items: [
+      {
+        id: 'about',
+        title: `About ${BRAND.APP_NAME}`,
+        icon: 'information-circle-outline',
+        route: '/legal/about',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'terms',
+        title: 'Terms & Conditions',
+        icon: 'document-text-outline',
+        route: '/legal/terms',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'privacy',
+        title: 'Privacy Policy',
+        icon: 'shield-checkmark-outline',
+        route: '/legal/privacy',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'refund_policy',
+        title: 'Refund Policy',
+        icon: 'refresh-circle-outline',
+        route: '/legal/refund-policy',
+        isEnabled: true,
+        showArrow: true,
+      },
+    ],
+  },
+];
+
+// Profile Page Icon Grid
+export const profileIconGridItems: ProfileIconGridItem[] = [
+  {
+    id: 'product',
+    title: 'Product',
+    icon: 'cube-outline',
+    color: PROFILE_COLORS.white,
+    backgroundColor: PROFILE_COLORS.primary,
+    route: '/products',
+    count: 0,
+  },
+  {
+    id: 'service',
+    title: 'Service',
+    icon: 'construct-outline',
+    color: PROFILE_COLORS.white,
+    backgroundColor: '#ffcd57',
+    route: '/services',
+    count: 0,
+  },
+  {
+    id: 'voucher',
+    title: 'Voucher',
+    icon: 'ticket-outline',
+    color: PROFILE_COLORS.white,
+    backgroundColor: '#F59E0B',
+    route: '/vouchers',
+    count: 0,
+  },
+  {
+    id: 'earns',
+    title: 'Earns',
+    icon: 'diamond-outline',
+    color: PROFILE_COLORS.white,
+    backgroundColor: '#EC4899',
+    route: '/prive/earnings',
+    count: 0,
+  },
+];
+
+// Profile Page Menu List
+export const profileMenuListItems: ProfileMenuListItem[] = [
+  {
+    id: 'categories',
+    title: 'Categories',
+    icon: 'grid-outline',
+    route: '/(tabs)/categories',
+    description: 'Browse all product and service categories',
+    showArrow: true,
+  },
+  {
+    id: 'play_and_earn',
+    title: 'Play & Earn',
+    icon: 'game-controller-outline',
+    route: '/playandearn',
+    description: 'Play games and earn rewards',
+    showArrow: true,
+  },
+  {
+    id: 'create_reel',
+    title: 'Create Reel',
+    icon: 'videocam-outline',
+    route: '/social/upload',
+    description: 'Share content & earn 50-200 coins',
+    showArrow: true,
+  },
+  {
+    id: 'order_transaction_history',
+    title: 'Order/Transaction History',
+    icon: 'time-outline',
+    route: '/earnings-history',
+    description: 'View all your past orders and transactions',
+    showArrow: true,
+  },
+  {
+    id: 'bookings',
+    title: 'My Bookings',
+    icon: 'calendar-outline',
+    route: '/BookingsPage',
+    description: 'View all your event bookings',
+    showArrow: true,
+  },
+  {
+    id: 'my_visits',
+    title: 'My Store Visits',
+    icon: 'storefront-outline',
+    route: '/my-visits',
+    description: 'View your scheduled and past store visits',
+    showArrow: true,
+  },
+  {
+    id: 'incomplete_transaction',
+    title: 'Incomplete Transaction',
+    icon: 'warning-outline',
+    route: '/transactions/incomplete',
+    badge: '2',
+    showArrow: true,
+  },
+  {
+    id: 'home_delivery',
+    title: 'Home Delivery',
+    icon: 'home-outline',
+    route: '/account/delivery',
+    showArrow: true,
+  },
+  {
+    id: 'group_buy',
+    title: 'Group Buy',
+    icon: 'people-outline',
+    route: '/group-buy',
+    isNew: true,
+    showArrow: true,
+  },
+  {
+    id: 'order_tracking',
+    title: 'Order Tracking',
+    icon: 'location-outline',
+    route: '/tracking',
+    showArrow: true,
+  },
+  {
+    id: 'nuqtacoin',
+    title: BRAND.COIN_NAME,
+    icon: 'diamond',
+    route: '/wallet',
+    showArrow: true,
+  },
+  {
+    id: 'store_promo_coins',
+    title: 'Store Promo Coins',
+    icon: 'diamond',
+    route: '/profile/store-promo-coins',
+    description: 'View your store-specific promo coins',
+    isNew: true,
+    showArrow: true,
+  },
+  {
+    id: 'review',
+    title: 'Review',
+    icon: 'star-outline',
+    route: '/reviews',
+    showArrow: true,
+  },
+  {
+    id: 'social_media',
+    title: 'Social media',
+    icon: 'share-social-outline',
+    route: '/social',
+    showArrow: true,
+  },
+  {
+    id: 'achievements',
+    title: 'Achievements & Badges',
+    icon: 'trophy-outline',
+    route: '/profile/achievements',
+    description: 'View your unlocked achievements and progress',
+    showArrow: true,
+  },
+  {
+    id: 'bill_upload',
+    title: 'Bill Upload',
+    icon: 'document-text-outline',
+    route: '/bill-upload',
+    description: 'Upload offline bills to earn cashback',
+    isNew: true,
+    showArrow: true,
+  },
+  {
+    id: 'subscription',
+    title: 'Premium Membership',
+    icon: 'diamond-outline',
+    route: '/subscription/plans',
+    description: 'Unlock exclusive benefits and rewards',
+    isNew: true,
+    showArrow: true,
+  },
+  {
+    id: 'saved_addresses',
+    title: 'Saved Addresses',
+    icon: 'location-outline',
+    route: '/account/addresses',
+    description: 'Manage your delivery addresses',
+    showArrow: true,
+  },
+  {
+    id: 'notification_preferences',
+    title: 'Notification Preferences',
+    icon: 'notifications-outline',
+    route: '/account/notifications',
+    description: 'Control what alerts you receive',
+    showArrow: true,
+  },
+];
+
+// Helper functions
+export const getUserInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map(part => part.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+export const formatJoinDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};

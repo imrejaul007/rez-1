@@ -1,0 +1,13 @@
+name: PR Guardrail
+on:
+  push:
+    branches: [main, production, master]
+jobs:
+  pr-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check push source
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "::warning::Direct push to protected branch detected. Use PR workflow."
+          fi

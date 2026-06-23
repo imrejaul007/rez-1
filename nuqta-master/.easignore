@@ -1,0 +1,4 @@
+# Exclude native folders - EAS runs prebuild on server to generate fresh
+# Prevents tar extraction errors from Windows-generated gradle/symlink issues
+android/
+ios/

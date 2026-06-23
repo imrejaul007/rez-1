@@ -1,0 +1,65 @@
+name: Deploy Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+permissions:
+  pull-requests: write
+  statuses: write
+
+jobs:
+  build-check:
+    name: Build Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        id: lint
+        run: npm run lint
+
+      - name: Run tests
+        id: tests
+        run: npm test -- --passWithNoTests
+
+      - name: Build
+        id: build
+        run: npm run build
+
+      - name: Post build success comment
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '**Build Status: PASSED**\n\nAll checks passed. This PR is safe to merge.\n\n- Lint: passed\n- Tests: passed\n- TypeScript build: passed'
+            })
+
+      - name: Post build failure comment
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '**Build Status: FAILED**\n\nOne or more checks failed. Merge is blocked until the build passes.\n\nPlease review the workflow logs for details.'
+            })

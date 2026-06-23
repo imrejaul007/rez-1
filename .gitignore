@@ -1,0 +1,66 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Editors
+.vscode/
+.idea/
+*.iml
+.DS_Store
+
+# Logs (any service)
+*.log
+logs/
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+# Keep .env.dev (committed for local dev consistency)
+
+# Build artifacts
+dist/
+build/
+out/
+.tsbuildinfo
+*.tsbuildinfo
+
+# Cache
+.cache/
+node_modules/.cache/
+.parcel-cache/
+.eslintcache
+
+# Coverage
+coverage/
+.nyc_output/
+
+# OS temp
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# Reuse build artifacts in nuqta-master
+nuqta-master/.expo/
+nuqta-master/web-build/
+nuqta-master/dist/
+
+# Build artifacts in each service
+rez-auth-service/dist/
+rez-api-gateway/.nginx-config-test/
+
+# Personal backups
+*.orig
+*.rej
+*.swp

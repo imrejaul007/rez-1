@@ -1,0 +1,232 @@
+services:
+  # ─── API Web Service ─────────────────────────────────────────────────────────
+  - type: web
+    name: rez-api
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    autoDeploy: true
+
+    healthCheckPath: /health
+
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REDIS_URL
+        value: 'redis://red-d760rlshg0os73bd8mp0:6379'
+      # Trust 2 proxy hops: Render edge LB → nginx gateway → backend.
+      # Without this, req.ip resolves to the LB IP and ALL users share one
+      # rate-limit bucket — 5 failed logins anywhere = global lockout.
+      - key: TRUST_PROXY_DEPTH
+        value: '2'
+      # Only critical workers run on the API process — keeps Redis connections
+      # under Valkey free limit (~20). Non-critical workers run on rez-worker.
+      - key: WORKER_ROLE
+        value: critical
+      - key: QUEUE_CASHBACK_SHARDS
+        value: '1'
+      - key: MONGO_MAX_POOL_SIZE
+        value: '10'
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_MERCHANT_SECRET
+        sync: false
+      - key: JWT_ADMIN_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      # Hotel OTA integration — coin credit webhook secret for stay completions.
+      - key: REZ_OTA_WEBHOOK_SECRET
+        sync: false
+      # Stay completion bonus percentage (default 20).
+      - key: REZ_STAY_COMPLETION_BONUS_PCT
+        value: "20"
+      # Travel partner webhook verification secret.
+      - key: TRAVEL_WEBHOOK_SECRET
+        sync: false
+      # AdBazaar webhook endpoint for coin attribution events.
+      - key: ADBAZAAR_WEBHOOK_URL
+        value: "https://ad-bazaar.vercel.app"
+      # AdBazaar HMAC secret — must match AdBazaar deployment config.
+      - key: ADBAZAAR_WEBHOOK_SECRET
+        sync: false
+      - key: MARKETING_SERVICE_URL
+        sync: false
+      - key: INTERNAL_SERVICE_TOKEN
+        sync: false
+      # INTERNAL_SERVICE_KEY — used by broadcasts.ts for outbound calls to marketing-service.
+      # Must match the value in INTERNAL_SERVICE_TOKENS_JSON['rez-backend'] on marketing-service.
+      - key: INTERNAL_SERVICE_KEY
+        sync: false
+      # OTP_HMAC_SECRET — required for OTP generation/verification (hard exit if missing).
+      - key: OTP_HMAC_SECRET
+        sync: false
+      # ENCRYPTION_KEY — required for PII encryption at rest (hard exit if missing).
+      - key: ENCRYPTION_KEY
+        sync: false
+      # TOTP_ENCRYPTION_KEY — required for admin TOTP 2FA (hard exit if missing).
+      - key: TOTP_ENCRYPTION_KEY
+        sync: false
+      # GAMIFICATION_SERVICE_URL — required by qrCheckinRoutes for coin award calls.
+      - key: GAMIFICATION_SERVICE_URL
+        value: "https://rez-gamification-service-3b5d.onrender.com"
+      - key: CATALOG_SERVICE_URL
+        sync: false
+      # CORS_ORIGIN — comma-separated list of all deployed front-end origins.
+      # Required in production: getAllowedOrigins() returns an empty list when
+      # this is unset and FRONTEND_URL / MERCHANT_FRONTEND_URL are also unset,
+      # which means every browser request will be blocked by CORS.
+      #
+      # Example value (set these in the Render dashboard, not here):
+      #   https://app.rez.in,https://merchant.rez.in,https://admin.rez.in
+      - key: CORS_ORIGIN
+        sync: false
+      # STRIPE_WEBHOOK_SECRET — required if Stripe webhooks are active.
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      # FRONTEND_URL / MERCHANT_FRONTEND_URL / ADMIN_FRONTEND_URL — fallback
+      # origins used when CORS_ORIGIN is not set. At least one of these OR
+      # CORS_ORIGIN must be set in production or all browser traffic is blocked.
+      - key: FRONTEND_URL
+        sync: false
+      - key: MERCHANT_FRONTEND_URL
+        sync: false
+      - key: ADMIN_FRONTEND_URL
+        sync: false
+  # ─── Background Worker Service ───────────────────────────────────────────────
+  - type: worker
+    name: rez-worker
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    autoDeploy: true
+
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:worker
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PROCESS_ROLE
+        value: worker
+      - key: ENABLE_CRON
+        value: 'true'
+      - key: WORKER_ROLE
+        value: noncritical
+      - key: NOTIFICATION_WORKER_EXTERNAL
+        value: 'true'
+      - key: QUEUE_CASHBACK_SHARDS
+        value: '1'
+      - key: MONGO_MAX_POOL_SIZE
+        value: '5'
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_MERCHANT_SECRET
+        sync: false
+      - key: JWT_ADMIN_SECRET
+        sync: false
+      - key: OTP_HMAC_SECRET
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: TOTP_ENCRYPTION_KEY
+        sync: false
+      - key: INTERNAL_SERVICE_TOKEN
+        sync: false
+      - key: INTERNAL_SERVICE_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: REZ_OTA_WEBHOOK_SECRET
+        sync: false
+      - key: REZ_STAY_COMPLETION_BONUS_PCT
+        value: "20"
+      - key: TRAVEL_WEBHOOK_SECRET
+        sync: false
+      - key: ADBAZAAR_WEBHOOK_URL
+        value: "https://ad-bazaar.vercel.app"
+      - key: ADBAZAAR_WEBHOOK_SECRET
+        sync: false
+      - key: MARKETING_SERVICE_URL
+        sync: false
+      - key: GAMIFICATION_SERVICE_URL
+        value: "https://rez-gamification-service-3b5d.onrender.com"
+      - key: CATALOG_SERVICE_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false
+      - key: WHATSAPP_APP_SECRET
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_STORE_ID
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: MERCHANT_FRONTEND_URL
+        sync: false
+      - key: ADMIN_FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

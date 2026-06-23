@@ -1,0 +1,96 @@
+appId: com.nuqta.app
+name: "Booking - Fitness store slot booking"
+tags:
+  - critical
+  - booking
+
+---
+
+# Launch app
+- launchApp
+
+# Wait for app to finish loading before checking auth state
+- waitForAnimationToEnd
+
+# Login if needed
+- runFlow:
+    when:
+      visible: "Mobile number"
+    file: helpers/login.yaml
+
+# Wait for home screen
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 10000
+
+# Navigate to Categories
+- tapOn:
+    id: "tab-categories"
+
+# Wait for categories screen
+- extendedWaitUntil:
+    visible:
+      id: "categories-screen"
+    timeout: 8000
+
+# Find and tap Fitness / Health & Fitness category
+- tapOn:
+    id: "category-fitness"
+    retryTapIfNoChange: true
+
+# Wait for fitness stores list
+- extendedWaitUntil:
+    visible:
+      id: "stores-list"
+    timeout: 8000
+
+# Tap first fitness store (retry if list still loading)
+- tapOn:
+    id: "store-card-0"
+    retryTapIfNoChange: true
+
+# Wait for store detail page
+- extendedWaitUntil:
+    visible:
+      id: "store-detail-screen"
+    timeout: 8000
+
+- takeScreenshot: "fitness_store"
+
+# Tap "Book Now" / "Book Service" button
+- tapOn:
+    id: "book-now-button"
+
+# Wait for booking screen
+- extendedWaitUntil:
+    visible:
+      id: "booking-screen"
+    timeout: 8000
+
+# --- SELECT DATE ---
+# Tap a date from the date picker (select tomorrow)
+- tapOn:
+    id: "date-option-1"
+
+# --- SELECT TIME SLOT ---
+# Tap an available time slot
+- tapOn:
+    id: "time-slot-0"
+
+- takeScreenshot: "booking_date_time_selected"
+
+# Tap Confirm / Book Now button
+- tapOn:
+    id: "confirm-booking-button"
+
+# Wait for booking confirmation
+- extendedWaitUntil:
+    visible:
+      id: "booking-confirmation-screen"
+    timeout: 15000
+
+# Verify booking confirmed
+- assertVisible:
+    id: "booking-success-icon"
+
+- takeScreenshot: "booking_confirmation"

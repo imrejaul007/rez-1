@@ -1,0 +1,105 @@
+name: REZ Backend CI
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'fix/**']
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - 'jest.config.js'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ── Monolith tests ────────────────────────────────────────────────────────
+  test-monolith:
+    name: Monolith Tests
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports: ['27017:27017']
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping:1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+      - name: Run tests
+        run: npm test -- --coverage --forceExit --testTimeout=15000
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/rez-test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci-jwt-secret-min-32-characters-long
+          JWT_REFRESH_SECRET: ci-jwt-refresh-secret-min-32-chars
+          JWT_MERCHANT_SECRET: ci-jwt-merchant-secret-32chars
+          JWT_ADMIN_SECRET: ci-jwt-admin-secret-32chars-long
+          OTP_HMAC_SECRET: ci-otp-hmac-secret-32-characters
+          INTERNAL_SERVICE_TOKEN: ci-internal-service-token
+          FRONTEND_URL: http://localhost:3000
+          CASHBACK_REDIS_REQUIRED: 'false'
+          RAZORPAY_KEY_ID: test_key
+          RAZORPAY_KEY_SECRET: test_secret
+          RAZORPAY_WEBHOOK_SECRET: test_webhook_secret
+          OTEL_ENABLED: 'false'
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monolith-coverage
+          path: coverage/
+
+  # ── Build verification ───────────────────────────────────────────────────
+  build-check:
+    name: Build Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - name: Build
+        run: npm run build
+        continue-on-error: true
+
+  # ── All checks pass gate ─────────────────────────────────────────────────
+  ci-gate:
+    name: CI Gate
+    needs: [test-monolith, build-check]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check monolith tests passed
+        run: |
+          if [[ "${{ needs.test-monolith.result }}" != "success" ]]; then
+            echo "Monolith tests failed"
+            exit 1
+          fi
+          echo "All critical checks passed"

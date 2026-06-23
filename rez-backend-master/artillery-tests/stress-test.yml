@@ -1,0 +1,64 @@
+config:
+  target: "http://localhost:5001"
+  phases:
+    - duration: 60
+      arrivalRate: 50
+      name: "Ramp up 1"
+    - duration: 60
+      arrivalRate: 150
+      name: "Ramp up 2"
+    - duration: 120
+      arrivalRate: 300
+      name: "Ramp up 3"
+    - duration: 120
+      arrivalRate: 500
+      name: "Ramp up 4"
+    - duration: 180
+      arrivalRate: 750
+      name: "Peak stress"
+    - duration: 120
+      arrivalRate: 1000
+      name: "Maximum stress"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+  ensure:
+    p95: 500  # 95th percentile should be under 500ms
+    p99: 1000 # 99th percentile should be under 1000ms
+
+scenarios:
+  - name: "Mixed Read Operations"
+    weight: 50
+    flow:
+      - get:
+          url: "/api/products"
+          qs:
+            page: "{{ $randomNumber(1, 50) }}"
+            limit: 20
+      - think: 1
+      - get:
+          url: "/api/categories"
+      - think: 1
+      - get:
+          url: "/api/stores"
+
+  - name: "Product Search Heavy"
+    weight: 30
+    flow:
+      - loop:
+          - get:
+              url: "/api/products/search"
+              qs:
+                q: "product"
+                limit: 10
+        count: 3
+
+  - name: "Homepage Data Load"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/homepage"
+      - get:
+          url: "/api/offers"
+      - get:
+          url: "/api/videos"

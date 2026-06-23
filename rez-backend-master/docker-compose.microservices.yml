@@ -1,0 +1,376 @@
+version: '3.8'
+
+# Microservices Docker Compose
+# Runs all 8 extracted BullMQ worker services alongside the monolith.
+# Each service connects to the SAME Redis + MongoDB as the monolith.
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.microservices.yml up -d
+#
+# Cutover:
+#   1. Deploy microservice alongside monolith (both consume from same queue)
+#   2. Verify correctness, then disable monolith worker for that queue
+
+x-common-env: &common-env
+  MONGODB_URI: ${MONGODB_URI}
+  REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379
+  NODE_ENV: ${NODE_ENV:-production}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+x-healthcheck: &healthcheck
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 15s
+
+services:
+  rez-notification-events:
+    build:
+      context: ../../rez-notification-events
+      dockerfile: Dockerfile
+    container_name: rez-notification-events
+    environment:
+      <<: *common-env
+      SERVICE_NAME: notification-events
+      PORT: 3001
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      MSG91_AUTH_KEY: ${MSG91_AUTH_KEY:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN:-}
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  analytics-events:
+    build:
+      context: ../../analytics-events
+      dockerfile: Dockerfile
+    container_name: analytics-events
+    environment:
+      <<: *common-env
+      SERVICE_NAME: analytics-events
+      PORT: 3002
+    ports:
+      - "3002:3002"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rez-gamification-service:
+    build:
+      context: ../../rez-gamification-service
+      dockerfile: Dockerfile
+    container_name: rez-gamification-service
+    environment:
+      <<: *common-env
+      SERVICE_NAME: gamification-events
+      PORT: 3003
+    ports:
+      - "3003:3003"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/health"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rez-merchant-service:
+    build:
+      context: ../../rez-merchant-service
+      dockerfile: Dockerfile
+    container_name: rez-merchant-service
+    environment:
+      <<: *common-env
+      SERVICE_NAME: merchant-events
+      PORT: 3007
+    ports:
+      - "3007:3007"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3007/health"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rez-catalog-service:
+    build:
+      context: ../../rez-catalog-service
+      dockerfile: Dockerfile
+    container_name: rez-catalog-service
+    environment:
+      <<: *common-env
+      SERVICE_NAME: catalog-events
+      PORT: 3005
+    ports:
+      - "3005:3005"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3005/health"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rez-order-service:
+    build:
+      context: ../../rez-order-service
+      dockerfile: Dockerfile
+    container_name: rez-order-service
+    environment:
+      <<: *common-env
+      SERVICE_NAME: order-events
+      PORT: 3006
+    ports:
+      - "3006:3006"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3006/health"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rez-wallet-service:
+    build:
+      context: ../../rez-wallet-service
+      dockerfile: Dockerfile
+    container_name: rez-wallet-service
+    environment:
+      <<: *common-env
+      SERVICE_NAME: wallet-events
+      PORT: 3007
+    ports:
+      - "3007:3007"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3007/health"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rez-media-events:
+    build:
+      context: ../../rez-media-events
+      dockerfile: Dockerfile
+    container_name: rez-media-events
+    environment:
+      <<: *common-env
+      SERVICE_NAME: media-events
+      PORT: 3008
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    ports:
+      - "3008:3008"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3008/health"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ─── Tier 1: HTTP API Microservices ───────────────────────────
+
+  rez-payment-service:
+    build:
+      context: ../../rez-payment-service
+      dockerfile: Dockerfile
+    container_name: rez-payment-service
+    environment:
+      <<: *common-env
+      SERVICE_NAME: payment-service
+      PORT: 4001
+      HEALTH_PORT: 4101
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_MERCHANT_SECRET: ${JWT_MERCHANT_SECRET:-}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    ports:
+      - "4001:4001"
+      - "4101:4101"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4101/"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rez-auth-service:
+    build:
+      context: ../../rez-auth-service
+      dockerfile: Dockerfile
+    container_name: rez-auth-service
+    environment:
+      <<: *common-env
+      SERVICE_NAME: auth-service
+      PORT: 4002
+      HEALTH_PORT: 4102
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_MERCHANT_SECRET: ${JWT_MERCHANT_SECRET:-}
+      JWT_ADMIN_SECRET: ${JWT_ADMIN_SECRET:-}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    ports:
+      - "4002:4002"
+      - "4102:4102"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4102/"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rez-search-service:
+    build:
+      context: ../../rez-search-service
+      dockerfile: Dockerfile
+    container_name: rez-search-service
+    environment:
+      <<: *common-env
+      SERVICE_NAME: search-service
+      PORT: 4003
+      HEALTH_PORT: 4103
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    ports:
+      - "4003:4003"
+      - "4103:4103"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4103/"]
+      <<: *healthcheck
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

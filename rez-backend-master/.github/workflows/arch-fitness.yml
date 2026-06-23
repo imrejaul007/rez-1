@@ -1,0 +1,59 @@
+name: Architecture Fitness Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+      - staging
+  push:
+    branches:
+      - main
+      - develop
+      - staging
+
+jobs:
+  fitness-tests:
+    name: Run Architecture Fitness Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run fitness test - no bespoke buttons
+        run: bash scripts/arch-fitness/no-bespoke-buttons.sh
+        continue-on-error: false
+
+      - name: Run fitness test - no console logs
+        run: bash scripts/arch-fitness/no-console-log.sh
+        continue-on-error: false
+
+      - name: Run fitness test - no bespoke idempotency
+        run: bash scripts/arch-fitness/no-bespoke-idempotency.sh
+        continue-on-error: false
+
+      - name: Run fitness test - no bespoke enums
+        run: bash scripts/arch-fitness/no-bespoke-enums.sh
+        continue-on-error: false
+
+      - name: Run fitness test - no Math.random() for IDs
+        run: bash scripts/arch-fitness/no-math-random-for-ids.sh
+        continue-on-error: false
+
+      - name: Check for drift violations
+        if: failure()
+        run: |
+          echo "Architecture fitness tests failed. See output above for violations."
+          exit 1

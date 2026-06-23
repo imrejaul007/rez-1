@@ -1,0 +1,77 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment files (NEVER include in Docker image)
+.env
+.env.*
+!.env.example
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+docs/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Coverage and testing
+coverage
+*.test.ts
+*.spec.ts
+__tests__
+test
+tests
+jest.config.*
+
+# Logs
+logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+uploads/temp
+tmp/
+temp/
+
+# Build artifacts (we build inside container)
+dist
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Config files not needed in production
+.eslintrc.*
+.prettierrc
+# tsconfig.json is REQUIRED for the build — don't ignore it (added during Phase 4 docker smoke test)
+# tsconfig.json
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+.dockerignore
+
+# Security - SSL certificates mounted at runtime
+nginx/ssl
+
+# Monitoring configs (mounted separately)
+monitoring/
+
+# Scripts not needed in container
+scripts/
+
+# Security reports
+security-reports/

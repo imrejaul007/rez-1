@@ -1,0 +1,441 @@
+{
+  "timestamp": "2025-11-14T15:10:41.955Z",
+  "summary": {
+    "totalAssets": 24,
+    "totalSize": 1588749,
+    "images": {
+      "total": 23,
+      "totalSize": 1495497,
+      "byExtension": {
+        ".png": {
+          "count": 22,
+          "size": 1362567,
+          "files": [
+            {
+              "path": "images\\adaptive-icon.png",
+              "name": "adaptive-icon.png",
+              "size": 17547,
+              "extension": ".png",
+              "modified": "1985-10-26T08:15:00.000Z"
+            },
+            {
+              "path": "images\\bag.png",
+              "name": "bag.png",
+              "size": 7808,
+              "extension": ".png",
+              "modified": "2025-08-15T17:15:09.515Z"
+            },
+            {
+              "path": "images\\card1.png",
+              "name": "card1.png",
+              "size": 264735,
+              "extension": ".png",
+              "modified": "2025-08-14T01:32:56.471Z"
+            },
+            {
+              "path": "images\\card2.png",
+              "name": "card2.png",
+              "size": 219900,
+              "extension": ".png",
+              "modified": "2025-08-14T01:33:49.713Z"
+            },
+            {
+              "path": "images\\card3.png",
+              "name": "card3.png",
+              "size": 347673,
+              "extension": ".png",
+              "modified": "2025-08-14T01:34:32.331Z"
+            },
+            {
+              "path": "images\\card4.png",
+              "name": "card4.png",
+              "size": 160889,
+              "extension": ".png",
+              "modified": "2025-08-14T01:35:24.120Z"
+            },
+            {
+              "path": "images\\coin-stack.png",
+              "name": "coin-stack.png",
+              "size": 38707,
+              "extension": ".png",
+              "modified": "2025-08-14T05:13:45.259Z"
+            },
+            {
+              "path": "images\\deal.png",
+              "name": "deal.png",
+              "size": 28583,
+              "extension": ".png",
+              "modified": "2025-08-20T05:19:25.761Z"
+            },
+            {
+              "path": "images\\favicon.png",
+              "name": "favicon.png",
+              "size": 1466,
+              "extension": ".png",
+              "modified": "1985-10-26T08:15:00.000Z"
+            },
+            {
+              "path": "images\\icon.png",
+              "name": "icon.png",
+              "size": 22380,
+              "extension": ".png",
+              "modified": "1985-10-26T08:15:00.000Z"
+            },
+            {
+              "path": "images\\order-now.png",
+              "name": "order-now.png",
+              "size": 3002,
+              "extension": ".png",
+              "modified": "2025-08-15T17:15:20.302Z"
+            },
+            {
+              "path": "images\\partial-react-logo.png",
+              "name": "partial-react-logo.png",
+              "size": 5075,
+              "extension": ".png",
+              "modified": "1985-10-26T08:15:00.000Z"
+            },
+            {
+              "path": "images\\promo-coin.png",
+              "name": "promo-coin.png",
+              "size": 3160,
+              "extension": ".png",
+              "modified": "2025-08-14T05:14:09.510Z"
+            },
+            {
+              "path": "images\\react-logo.png",
+              "name": "react-logo.png",
+              "size": 6341,
+              "extension": ".png",
+              "modified": "1985-10-26T08:15:00.000Z"
+            },
+            {
+              "path": "images\\react-logo@2x.png",
+              "name": "react-logo@2x.png",
+              "size": 14225,
+              "extension": ".png",
+              "modified": "1985-10-26T08:15:00.000Z"
+            },
+            {
+              "path": "images\\react-logo@3x.png",
+              "name": "react-logo@3x.png",
+              "size": 21252,
+              "extension": ".png",
+              "modified": "1985-10-26T08:15:00.000Z"
+            },
+            {
+              "path": "images\\scratch-offer.png",
+              "name": "scratch-offer.png",
+              "size": 9736,
+              "extension": ".png",
+              "modified": "2025-08-14T08:29:38.545Z"
+            },
+            {
+              "path": "images\\splash-icon.png",
+              "name": "splash-icon.png",
+              "size": 17547,
+              "extension": ".png",
+              "modified": "1985-10-26T08:15:00.000Z"
+            },
+            {
+              "path": "images\\wallet1.png",
+              "name": "wallet1.png",
+              "size": 55230,
+              "extension": ".png",
+              "modified": "2025-08-14T07:56:04.039Z"
+            },
+            {
+              "path": "images\\wallet2.png",
+              "name": "wallet2.png",
+              "size": 54657,
+              "extension": ".png",
+              "modified": "2025-08-14T07:56:40.353Z"
+            },
+            {
+              "path": "images\\wallet3.png",
+              "name": "wallet3.png",
+              "size": 58884,
+              "extension": ".png",
+              "modified": "2025-08-14T07:56:52.330Z"
+            },
+            {
+              "path": "images\\wasil-coin.png",
+              "name": "wasil-coin.png",
+              "size": 3770,
+              "extension": ".png",
+              "modified": "2025-08-14T05:14:01.282Z"
+            }
+          ]
+        },
+        ".jpg": {
+          "count": 1,
+          "size": 132930,
+          "files": [
+            {
+              "path": "images\\card.jpg",
+              "name": "card.jpg",
+              "size": 132930,
+              "extension": ".jpg",
+              "modified": "2025-08-13T06:32:58.243Z"
+            }
+          ]
+        }
+      },
+      "largeImages": [
+        {
+          "path": "images\\card3.png",
+          "name": "card3.png",
+          "size": 347673,
+          "extension": ".png",
+          "modified": "2025-08-14T01:34:32.331Z"
+        },
+        {
+          "path": "images\\card1.png",
+          "name": "card1.png",
+          "size": 264735,
+          "extension": ".png",
+          "modified": "2025-08-14T01:32:56.471Z"
+        },
+        {
+          "path": "images\\card2.png",
+          "name": "card2.png",
+          "size": 219900,
+          "extension": ".png",
+          "modified": "2025-08-14T01:33:49.713Z"
+        },
+        {
+          "path": "images\\card4.png",
+          "name": "card4.png",
+          "size": 160889,
+          "extension": ".png",
+          "modified": "2025-08-14T01:35:24.120Z"
+        },
+        {
+          "path": "images\\card.jpg",
+          "name": "card.jpg",
+          "size": 132930,
+          "extension": ".jpg",
+          "modified": "2025-08-13T06:32:58.243Z"
+        }
+      ],
+      "webpAdoption": "0.0",
+      "duplicates": 0
+    },
+    "fonts": {
+      "total": 1,
+      "totalSize": 93252,
+      "largeFonts": 0
+    },
+    "videos": {
+      "count": 0,
+      "totalSize": 0
+    },
+    "others": {
+      "count": 0,
+      "totalSize": 0
+    }
+  },
+  "inventory": {
+    "images": [
+      {
+        "path": "images\\adaptive-icon.png",
+        "name": "adaptive-icon.png",
+        "size": 17547,
+        "extension": ".png",
+        "modified": "1985-10-26T08:15:00.000Z"
+      },
+      {
+        "path": "images\\bag.png",
+        "name": "bag.png",
+        "size": 7808,
+        "extension": ".png",
+        "modified": "2025-08-15T17:15:09.515Z"
+      },
+      {
+        "path": "images\\card.jpg",
+        "name": "card.jpg",
+        "size": 132930,
+        "extension": ".jpg",
+        "modified": "2025-08-13T06:32:58.243Z"
+      },
+      {
+        "path": "images\\card1.png",
+        "name": "card1.png",
+        "size": 264735,
+        "extension": ".png",
+        "modified": "2025-08-14T01:32:56.471Z"
+      },
+      {
+        "path": "images\\card2.png",
+        "name": "card2.png",
+        "size": 219900,
+        "extension": ".png",
+        "modified": "2025-08-14T01:33:49.713Z"
+      },
+      {
+        "path": "images\\card3.png",
+        "name": "card3.png",
+        "size": 347673,
+        "extension": ".png",
+        "modified": "2025-08-14T01:34:32.331Z"
+      },
+      {
+        "path": "images\\card4.png",
+        "name": "card4.png",
+        "size": 160889,
+        "extension": ".png",
+        "modified": "2025-08-14T01:35:24.120Z"
+      },
+      {
+        "path": "images\\coin-stack.png",
+        "name": "coin-stack.png",
+        "size": 38707,
+        "extension": ".png",
+        "modified": "2025-08-14T05:13:45.259Z"
+      },
+      {
+        "path": "images\\deal.png",
+        "name": "deal.png",
+        "size": 28583,
+        "extension": ".png",
+        "modified": "2025-08-20T05:19:25.761Z"
+      },
+      {
+        "path": "images\\favicon.png",
+        "name": "favicon.png",
+        "size": 1466,
+        "extension": ".png",
+        "modified": "1985-10-26T08:15:00.000Z"
+      },
+      {
+        "path": "images\\icon.png",
+        "name": "icon.png",
+        "size": 22380,
+        "extension": ".png",
+        "modified": "1985-10-26T08:15:00.000Z"
+      },
+      {
+        "path": "images\\order-now.png",
+        "name": "order-now.png",
+        "size": 3002,
+        "extension": ".png",
+        "modified": "2025-08-15T17:15:20.302Z"
+      },
+      {
+        "path": "images\\partial-react-logo.png",
+        "name": "partial-react-logo.png",
+        "size": 5075,
+        "extension": ".png",
+        "modified": "1985-10-26T08:15:00.000Z"
+      },
+      {
+        "path": "images\\promo-coin.png",
+        "name": "promo-coin.png",
+        "size": 3160,
+        "extension": ".png",
+        "modified": "2025-08-14T05:14:09.510Z"
+      },
+      {
+        "path": "images\\react-logo.png",
+        "name": "react-logo.png",
+        "size": 6341,
+        "extension": ".png",
+        "modified": "1985-10-26T08:15:00.000Z"
+      },
+      {
+        "path": "images\\react-logo@2x.png",
+        "name": "react-logo@2x.png",
+        "size": 14225,
+        "extension": ".png",
+        "modified": "1985-10-26T08:15:00.000Z"
+      },
+      {
+        "path": "images\\react-logo@3x.png",
+        "name": "react-logo@3x.png",
+        "size": 21252,
+        "extension": ".png",
+        "modified": "1985-10-26T08:15:00.000Z"
+      },
+      {
+        "path": "images\\scratch-offer.png",
+        "name": "scratch-offer.png",
+        "size": 9736,
+        "extension": ".png",
+        "modified": "2025-08-14T08:29:38.545Z"
+      },
+      {
+        "path": "images\\splash-icon.png",
+        "name": "splash-icon.png",
+        "size": 17547,
+        "extension": ".png",
+        "modified": "1985-10-26T08:15:00.000Z"
+      },
+      {
+        "path": "images\\wallet1.png",
+        "name": "wallet1.png",
+        "size": 55230,
+        "extension": ".png",
+        "modified": "2025-08-14T07:56:04.039Z"
+      },
+      {
+        "path": "images\\wallet2.png",
+        "name": "wallet2.png",
+        "size": 54657,
+        "extension": ".png",
+        "modified": "2025-08-14T07:56:40.353Z"
+      },
+      {
+        "path": "images\\wallet3.png",
+        "name": "wallet3.png",
+        "size": 58884,
+        "extension": ".png",
+        "modified": "2025-08-14T07:56:52.330Z"
+      },
+      {
+        "path": "images\\wasil-coin.png",
+        "name": "wasil-coin.png",
+        "size": 3770,
+        "extension": ".png",
+        "modified": "2025-08-14T05:14:01.282Z"
+      }
+    ],
+    "fonts": [
+      {
+        "path": "fonts\\SpaceMono-Regular.ttf",
+        "name": "SpaceMono-Regular.ttf",
+        "size": 93252,
+        "extension": ".ttf",
+        "modified": "1985-10-26T08:15:00.000Z"
+      }
+    ],
+    "videos": [],
+    "others": []
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "category": "Images",
+      "issue": "Only 0.0% of images are WebP format",
+      "action": "Convert PNG/JPG images to WebP format",
+      "potentialSavings": 598198.8,
+      "impact": "~40% size reduction"
+    },
+    {
+      "priority": "HIGH",
+      "category": "Images",
+      "issue": "5 images over 100KB",
+      "action": "Compress and resize large images",
+      "potentialSavings": 337838.1,
+      "impact": "~30% size reduction"
+    },
+    {
+      "priority": "LOW",
+      "category": "Maintenance",
+      "issue": "8 assets not modified in 6+ months",
+      "action": "Review and remove unused assets",
+      "potentialSavings": 105833,
+      "impact": "Cleaner project"
+    }
+  ],
+  "potentialSavings": 1041869.9
+}

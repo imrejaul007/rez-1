@@ -1,0 +1,63 @@
+name: Frontend Web Build
+
+# Build the Expo web bundle and publish the dist/ directory as a
+# downloadable artifact on every push to main.
+#
+# Used by Render (or any static host) as the deploy source. Keep this
+# workflow in lock-step with the `npm run build:render` script.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+concurrency:
+  group: frontend-build-${{ github.ref }}
+  cancel-in-progress: false  # let in-flight builds finish
+
+jobs:
+  build:
+    name: Build Expo web bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web bundle
+        # `expo export --platform web` is what `npm run build:render` calls.
+        # Produces dist/ which the static host serves.
+        run: npx expo export --platform web
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-web-dist
+          path: dist/
+          retention-days: 14
+
+      - name: Print build summary
+        if: always()
+        run: |
+          echo "## Web build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          if [ -d dist ]; then
+            echo "- dist/ size: $(du -sh dist | cut -f1)" >> $GITHUB_STEP_SUMMARY
+            echo "- File count: $(find dist -type f | wc -l)" >> $GITHUB_STEP_SUMMARY
+          fi

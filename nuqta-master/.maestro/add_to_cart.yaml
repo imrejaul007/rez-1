@@ -1,0 +1,93 @@
+appId: com.nuqta.app
+name: "Add to Cart - Browse product and add to cart"
+tags:
+  - critical
+  - shopping
+
+---
+
+# Launch app and authenticate
+- launchApp
+
+# Wait for app to finish loading before checking auth state
+- waitForAnimationToEnd
+
+# Login if needed (skip if already on home)
+- runFlow:
+    when:
+      visible: "Mobile number"
+    file: helpers/login.yaml
+
+# Wait for home screen
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 10000
+
+# Navigate to Categories tab
+- tapOn:
+    id: "tab-categories"
+
+# Wait for categories to load
+- extendedWaitUntil:
+    visible:
+      id: "categories-screen"
+    timeout: 8000
+
+# Tap the first category (retry if UI still loading)
+- tapOn:
+    id: "category-item-0"
+    retryTapIfNoChange: true
+
+# Wait for products list
+- extendedWaitUntil:
+    visible:
+      id: "product-list"
+    timeout: 8000
+
+# Tap first product card (retry if list still rendering)
+- tapOn:
+    id: "product-card-0"
+    retryTapIfNoChange: true
+
+# Wait for product detail page to load
+- extendedWaitUntil:
+    visible:
+      id: "product-detail-screen"
+    timeout: 8000
+
+# Take screenshot of product page
+- takeScreenshot: "product_detail"
+
+# Tap the "Add to Cart" button (may also show as "ADD" on some product types)
+- tapOn:
+    id: "add-to-cart-button"
+
+# Verify "Added to Cart" modal appears
+- extendedWaitUntil:
+    visible: "Added to Cart"
+    timeout: 5000
+
+# Verify cart badge shows item count
+- assertVisible:
+    id: "cart-badge"
+
+# Take screenshot of confirmation
+- takeScreenshot: "added_to_cart_modal"
+
+# Tap "View Cart" to navigate to cart
+- tapOn: "View Cart"
+
+# Wait for cart screen
+- extendedWaitUntil:
+    visible:
+      id: "cart-screen"
+    timeout: 8000
+
+# Verify the product is in the cart
+- assertVisible:
+    id: "cart-item-0"
+
+# Verify cart has at least 1 item
+- assertVisible: "Buy Now"
+
+- takeScreenshot: "cart_with_item"

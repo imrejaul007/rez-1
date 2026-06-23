@@ -1,0 +1,29 @@
+src/config/queue.config.ts(31,23): error TS2769: No overload matches this call.
+src/controllers/merchant/priveCampaignMerchantController.ts(318,17): error TS18048: 'submission.user' is possibly 'undefined'.
+src/controllers/merchant/priveCampaignMerchantController.ts(336,52): error TS18048: 'submission.user' is possibly 'undefined'.
+src/controllers/posBillingController.ts(577,33): error TS2345: Argument of type '"pos_bill_paid"' is not assignable to parameter of type 'ActivityEventType'.
+src/events/__tests__/emitOrderPlaced.test.ts(22,47): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+src/events/__tests__/emitOrderPlaced.test.ts(135,39): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+src/events/__tests__/emitOrderPlaced.test.ts(136,39): error TS2493: Tuple type '[]' of length '0' has no element at index '1'.
+src/events/__tests__/emitOrderPlaced.test.ts(137,39): error TS2493: Tuple type '[]' of length '0' has no element at index '2'.
+src/events/__tests__/emitOrderPlaced.test.ts(189,56): error TS2352: Conversion of type 'undefined' to type '{ jobId: string; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/events/__tests__/emitOrderPlaced.test.ts(189,58): error TS2493: Tuple type '[]' of length '0' has no element at index '2'.
+src/events/gamificationQueue.ts(149,28): error TS2339: Property 'recordActivity' does not exist on type 'StreakService'.
+src/events/gamificationQueue.ts(160,33): error TS2339: Property 'recordActivity' does not exist on type 'StreakService'.
+src/jobs/expireWalletCoinBuckets.ts(177,17): error TS2322: Type '"rez"' is not assignable to type 'LedgerCoinType | undefined'.
+src/jobs/expireWalletCoinBuckets.ts(183,19): error TS2353: Object literal may only specify known properties, and 'walletId' does not exist in type '{ requestId?: string | undefined; idempotencyKey?: string | undefined; adminUserId?: string | undefined; description?: string | undefined; }'.
+src/jobs/opportunityNotificationJob.ts(212,56): error TS2339: Property 'notifyOpportunity' does not exist on type 'typeof NotificationService'.
+src/jobs/progressNudgeJob.ts(89,56): error TS2339: Property 'notifyProgress' does not exist on type 'typeof NotificationService'.
+src/jobs/slaMonitorJob.ts(68,15): error TS2339: Property 'readModelStaleness' does not exist on type 'typeof import("C:/Users/user/Downloads/rez-backend-master/rez-backend-master/src/config/prometheus") | { readModelStaleness: null; }'.
+src/jobs/slaMonitorJob.ts(102,15): error TS2339: Property 'merchantEventQueueBacklog' does not exist on type 'typeof import("C:/Users/user/Downloads/rez-backend-master/rez-backend-master/src/config/prometheus") | { merchantEventQueueBacklog: null; }'.
+src/middleware/eventLogger.ts(49,11): error TS2345: Argument of type 'number' is not assignable to parameter of type 'SortedSetMember | SortedSetMember[]'.
+src/scripts/migrations/007-dead-fields-cleanup.ts(103,69): error TS1117: An object literal cannot have multiple properties with the same name.
+src/scripts/migrations/008-remove-user-wallet-subdoc.ts(38,15): error TS18048: 'db' is possibly 'undefined'.
+src/seeds/bangaloreFullSeed.ts(542,26): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+src/seeds/bangaloreStoreSeed.ts(145,26): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+src/seeds/campaignTemplateSeeds.ts(16,87): error TS2304: Cannot find name 'Document'.
+src/services/redisService.ts(237,48): error TS2345: Argument of type 'number' is not assignable to parameter of type 'RedisArgument'.
+src/services/redisService.ts(241,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/utils/featureFlags.ts(115,27): error TS2345: Argument of type '{ expiresAt: number; enabled: boolean; percentage: number | undefined; }' is not assignable to parameter of type '{ enabled: boolean; percentage: number; expiresAt: number; }'.
+src/utils/featureFlags.ts(121,11): error TS18048: 'flag.rolloutPercentage' is possibly 'undefined'.
+src/utils/featureFlags.ts(123,29): error TS18048: 'flag.rolloutPercentage' is possibly 'undefined'.

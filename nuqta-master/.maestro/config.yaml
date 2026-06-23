@@ -1,0 +1,37 @@
+# Maestro full suite - runs all critical flows in order
+# Usage: maestro test .maestro/config.yaml
+#
+# To run individual flows:
+#   maestro test .maestro/onboarding.yaml
+#   maestro test .maestro/add_to_cart.yaml
+#
+# To run all flows in directory (alphabetical order):
+#   maestro test .maestro/
+
+appId: com.nuqta.app
+name: "Full E2E Suite"
+tags:
+  - suite
+
+env:
+  TEST_PHONE: "501234567"
+  TEST_OTP: "123456"
+  TEST_COUPON: "TESTCOUPON"
+  API_BASE_URL: "http://localhost:5000/api"
+
+---
+
+# 1. Auth flow
+- runFlow: onboarding.yaml
+
+# 2. Add to cart flow (reuses auth from step 1)
+- runFlow: add_to_cart.yaml
+
+# 3. Checkout flow (reuses cart from step 2)
+- runFlow: checkout.yaml
+
+# 4. Wallet flow (independent)
+- runFlow: wallet.yaml
+
+# 5. Booking flow (independent)
+- runFlow: booking.yaml

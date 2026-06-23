@@ -1,0 +1,31 @@
+        // Simply fetch and display wallet balance (coins are earned via games, achievements, daily check-in)
+        try {
+          const walletApi = (await import('@/services/walletApi')).default;
+          const walletResponse = await walletApi.getBalance();
+
+          if (walletResponse.success && walletResponse.data) {
+            const rezCoin = walletResponse.data.coins.find((c: any) => c.type === 'rez');
+            const actualWalletCoins = rezCoin?.amount || 0;
+
+            // Display the actual wallet balance (no calculation/sync - just show the real balance)
+            setUserPoints(actualWalletCoins);
+            setSyncStatus('success');
+
+            // Calculate total savings from wallet statistics
+            const walletStats = walletResponse.data.statistics;
+            if (walletStats) {
+              const cashback = walletStats.totalCashback || 0;
+              const refunds = walletStats.totalRefunds || 0;
+              const totalSavings = cashback + refunds;
+              setTotalSaved(totalSavings);
+            }
+          } else {
+            console.warn('⚠️ [HOME] Could not get wallet balance');
+            setUserPoints(0);
+            setTotalSaved(0);
+          }
+        } catch (walletError) {
+          console.error('❌ [HOME] Error fetching wallet:', walletError);
+          setUserPoints(0);
+          setTotalSaved(0);
+        }

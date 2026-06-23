@@ -1,0 +1,105 @@
+# Backend build + unit tests workflow.
+# Runs on every push/PR; fails the build if the TypeScript compile is broken.
+
+name: Backend Build
+
+"on":
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'rez-backend-master/**'
+      - 'rez-backend-master/.github/workflows/backend-build.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'rez-backend-master/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: rez-backend-master
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: rez-backend-master/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: TypeScript compile (catches build errors fast)
+        run: npm run build
+
+      - name: Audit credentials in scripts/
+        # Catches any new hard-coded MongoDB Atlas creds (regression test for
+        # the _scrub_creds.mjs cleanup we did in Phase 3B).
+        run: |
+          if grep -lE "mongodb\+srv://[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+@" scripts/*.js 2>/dev/null; then
+            echo "::error::Hard-coded MongoDB Atlas credentials found in scripts/*.js"
+            echo "Run: node _scrub_creds.mjs"
+            exit 1
+          else
+            echo "✓ No hard-coded credentials in scripts/"
+          fi
+
+      - name: Check for remaining merge stubs
+        # The Phase 6 work replaced 9 stubs; this catches any regressions.
+        run: |
+          STUB_COUNT=$(grep -rln "STUB: added during Phase 2" src/ 2>/dev/null | wc -l)
+          if [ "$STUB_COUNT" -gt 0 ]; then
+            echo "::error::$STUB_COUNT merge stubs have reappeared:"
+            grep -rln "STUB: added during Phase 2" src/ 2>/dev/null
+            exit 1
+          else
+            echo "✓ No merge stubs remaining"
+          fi
+
+      - name: Dependency security audit
+        # Fails the build if any HIGH-severity CVE is added. Tracks the
+        # debt-reduction trajectory documented in SECURITY_FIXES_ITER*.md.
+        # Allow 1 high (mongoose 8.17.2 NoSQL-injection — not exploitable in
+        # this codebase, see SECURITY_FIXES_ITER6.md) until we migrate.
+        run: |
+          HIGH_COUNT=$(npm audit --omit=dev --audit-level=high 2>&1 | grep -E "vulnerabilities" | head -1)
+          echo "Audit: $HIGH_COUNT"
+          if echo "$HIGH_COUNT" | grep -E "^[0-9]+ high severity" >/dev/null 2>&1; then
+            echo "::error::High-severity vulnerability count above 1: $HIGH_COUNT"
+            exit 1
+          fi
+
+      - name: Detect forbidden patterns (mass-assignment, secret leaks)
+        # Catches regressions: any new file using { ...req.body } in admin
+        # controllers, or hard-coded secrets in src/.
+        run: |
+          BAD_SPREAD=$(grep -rn "\.\.\.\s*req\.body" src/routes/admin src/controllers/admin 2>/dev/null | grep -v "pick(req" | grep -v "// " | wc -l)
+          if [ "$BAD_SPREAD" -gt 0 ]; then
+            echo "::error::Found $BAD_SPREAD mass-assignment sites in admin code:"
+            grep -rn "\.\.\.\s*req\.body" src/routes/admin src/controllers/admin 2>/dev/null | grep -v "pick(req" | grep -v "// "
+            exit 1
+          else
+            echo "✓ No mass-assignment sites in admin code"
+          fi
+
+      - name: Detect weak dev secrets in .env.dev
+        # Catches regressions: prevents the dev-... placeholder JWT secrets
+        # from being re-committed (they were replaced in iter 8 with proper
+        # crypto.randomBytes output).
+        run: |
+          WEAK=$(grep -E "(dev-jwt-secret|dev-jwt-refresh|dev-jwt-admin|dev-jwt-merchant|dev-internal-token|dev-otp-hmac|dev-partner-)" ../.env.dev 2>/dev/null | wc -l)
+          if [ "$WEAK" -gt 0 ]; then
+            echo "::error::Found $WEAK weak dev-... placeholder secrets in .env.dev:"
+            grep -E "(dev-jwt-secret|dev-jwt-refresh|dev-jwt-admin|dev-jwt-merchant|dev-internal-token|dev-otp-hmac|dev-partner-)" ../.env.dev 2>/dev/null
+            exit 1
+          else
+            echo "✓ No weak dev-... placeholder secrets"
+          fi

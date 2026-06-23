@@ -1,0 +1,19 @@
+{
+  "watch": ["src"],
+  "ext": "ts,json",
+  "ignore": ["src/**/*.test.ts"],
+  "exec": "ts-node --files src/server.ts",
+  "verbose": true,
+  "colours": true,
+  "legacyWatch": false,
+  "delay": 1000,
+  "stdout": true,
+  "stderr": true,
+  "env": {
+    "TS_NODE_FILES": "true"
+  },
+  "events": {
+    "restart": "echo '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🔄 Server restarting due to file changes...\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'",
+    "crash": "echo '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n❌ SERVER CRASHED! Check the error above ⬆️\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'"
+  }
+}

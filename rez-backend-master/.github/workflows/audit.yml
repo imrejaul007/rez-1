@@ -1,0 +1,66 @@
+name: Weekly Dependency Audit
+
+# Runs `npm audit --omit=dev` once a week (Monday 09:00 UTC) and fails
+# the job if any high or critical CVE is found. Surfaces the report as
+# a workflow artifact so security can review the JSON output offline.
+
+on:
+  schedule:
+    # 09:00 UTC on Monday → ~14:30 IST / ~02:00 PT.
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  audit:
+    name: npm audit (production deps)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Run npm audit (production only)
+        # `npm audit --omit=dev` ignores devDependency vulnerabilities —
+        # those are tracked separately. JSON output for downstream parsing.
+        id: audit
+        run: |
+          set +e
+          npm audit --omit=dev --json > audit-report.json
+          AUDIT_EXIT=$?
+          set -e
+          echo "audit_exit_code=$AUDIT_EXIT" >> "$GITHUB_OUTPUT"
+          cat audit-report.json
+          exit $AUDIT_EXIT
+
+      - name: Fail on high or critical CVE
+        if: steps.audit.outputs.audit_exit_code != '0'
+        run: |
+          HIGH=$(node -e "const r=require('./audit-report.json');const m=r.metadata?.vulnerabilities||{};console.log((m.high||0)+(m.critical||0))")
+          if [ "$HIGH" -gt 0 ]; then
+            echo "::error::$HIGH high/critical CVE(s) found in production dependencies"
+            node -e "const r=require('./audit-report.json');const m=r.metadata?.vulnerabilities||{};console.log(JSON.stringify({high:m.high,critical:m.critical,moderate:m.moderate,low:m.low,info:m.info},null,2))"
+            exit 1
+          else
+            echo "Only moderate/low advisories present — not failing the job."
+          fi
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: audit-report.json
+          retention-days: 90

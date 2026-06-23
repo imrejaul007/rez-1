@@ -1,0 +1,83 @@
+# Auth-service build + dependency-audit workflow.
+# Mirrors backend-build.yml: TS compile, dependency audit, secret/mass-assignment checks.
+
+name: Auth Service Build
+
+"on":
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'rez-auth-service/**'
+      - 'rez-auth-service/.github/workflows/auth-service-build.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'rez-auth-service/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: rez-auth-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: rez-auth-service/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: TypeScript compile
+        run: npm run build
+
+      - name: Dependency security audit
+        # Fails the build if any HIGH-severity CVE is added.
+        run: |
+          HIGH_COUNT=$(npm audit --omit=dev --audit-level=high 2>&1 | grep -E "vulnerabilities" | head -1)
+          echo "Audit: $HIGH_COUNT"
+          HIGH_NUM=$(echo "$HIGH_COUNT" | grep -oE "^[0-9]+ high" | grep -oE "^[0-9]+" || echo "0")
+          if [ "$HIGH_NUM" -gt 0 ]; then
+            echo "::error::High-severity vulnerability count: $HIGH_NUM"
+            exit 1
+          fi
+
+      - name: Detect forbidden patterns (mass-assignment, secret leaks)
+        run: |
+          # Mass-assignment sites in auth-service routes
+          BAD_SPREAD=$(grep -rn "\.\.\.\s*req\.body" src/routes 2>/dev/null | grep -v "pick(req" | grep -v "// " | grep -v "parsePhone" | wc -l)
+          if [ "$BAD_SPREAD" -gt 0 ]; then
+            echo "::error::Found $BAD_SPREAD mass-assignment sites in routes:"
+            grep -rn "\.\.\.\s*req\.body" src/routes 2>/dev/null | grep -v "pick(req" | grep -v "// " | grep -v "parsePhone"
+            exit 1
+          else
+            echo "✓ No mass-assignment sites in routes"
+          fi
+
+      - name: Check for hard-coded secrets
+        run: |
+          if grep -lE "mongodb\+srv://[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+@" src/ 2>/dev/null; then
+            echo "::error::Hard-coded MongoDB Atlas credentials found in src/"
+            exit 1
+          else
+            echo "✓ No hard-coded credentials in src/"
+          fi
+
+      - name: Detect weak dev secrets in .env.dev
+        run: |
+          WEAK=$(grep -E "(dev-jwt-secret|dev-jwt-refresh|dev-jwt-admin|dev-jwt-merchant|dev-internal-token|dev-otp-hmac|dev-partner-)" ../.env.dev 2>/dev/null | wc -l)
+          if [ "$WEAK" -gt 0 ]; then
+            echo "::error::Found $WEAK weak dev-... placeholder secrets in .env.dev"
+            exit 1
+          else
+            echo "✓ No weak dev-... placeholder secrets"
+          fi

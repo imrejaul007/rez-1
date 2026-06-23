@@ -1,0 +1,57 @@
+appId: com.nuqta.app
+name: "Onboarding - Phone OTP Login"
+tags:
+  - critical
+  - auth
+
+---
+
+# Launch the app fresh with cleared state
+- launchApp:
+    clearState: true
+
+# Wait for splash animation to finish
+- waitForAnimationToEnd
+
+# Wait for auth screen to appear
+- extendedWaitUntil:
+    visible: "Mobile number"
+    timeout: 10000
+
+# --- SIGN IN FLOW (existing user) ---
+# If we land on registration, tap "Sign In" link to go to login
+- runFlow:
+    when:
+      visible: "Already have an account?"
+    commands:
+      - tapOn: "Sign In"
+
+# Enter phone number
+- tapOn:
+    id: "phone-input"
+- inputText: "501234567"
+
+# Tap Send OTP / Continue button
+- tapOn:
+    id: "send-otp-button"
+
+# Wait for OTP screen
+- extendedWaitUntil:
+    visible:
+      id: "otp-input-0"
+    timeout: 10000
+
+# Enter 6-digit OTP (demo OTP: 123456)
+# Tap first input and type all 6 digits (auto-advance fills the rest)
+- tapOn:
+    id: "otp-input-0"
+- inputText: "123456"
+
+# Wait for verification and navigation to home
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 15000
+
+# Verify we're on the home screen
+- assertVisible: "Home"
+- takeScreenshot: "onboarding_complete"

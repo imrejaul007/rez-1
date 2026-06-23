@@ -1,0 +1,90 @@
+# Smoke-test workflow — verifies the full rez-app stack on every push and PR.
+#
+# Runs:
+#   1. Start Mongo + Redis + backend + auth-service + gateway via docker compose
+#   2. Wait for all 5 services to be HEALTHY
+#   3. Run smoke-test.sh (10 e2e tests)
+#   4. Tear down the stack
+#
+# Secrets required in GitHub repo settings:
+#   - JWT_SECRET, JWT_REFRESH_SECRET, JWT_MERCHANT_SECRET
+#     (these must match between auth-service and backend)
+#   - AUTH_SERVICE_URL, MONOLITH_URL (internal Docker DNS names)
+
+name: Smoke Test (e2e)
+
+"on":
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:  # manual trigger
+
+# Don't run multiple in parallel — they share port 27018/6380/4002/5001/10000.
+concurrency:
+  group: smoke-test
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-buildx-
+
+      - name: Build all 5 service images
+        run: |
+          docker compose -f docker-compose.dev.yml --env-file .env.dev build
+
+      - name: Start the stack
+        run: |
+          docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
+
+      - name: Wait for all services to be HEALTHY
+        run: |
+          for i in $(seq 1 60); do
+            UNHEALTHY=$(docker compose -f docker-compose.dev.yml ps --format json | jq -r '.Health // "unknown"' | grep -v healthy | wc -l)
+            if [ "$UNHEALTHY" -eq "0" ]; then
+              echo "All services HEALTHY"
+              docker compose -f docker-compose.dev.yml ps
+              exit 0
+            fi
+            echo "Waiting for services to be healthy... ($i/60)"
+            sleep 5
+          done
+          echo "Services did not become healthy in time"
+          docker compose -f docker-compose.dev.yml ps
+          docker compose -f docker-compose.dev.yml logs --tail=200
+          exit 1
+
+      - name: Run smoke test
+        run: |
+          chmod +x smoke-test.sh
+          bash smoke-test.sh
+
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          echo "===== Backend logs ====="
+          docker compose -f docker-compose.dev.yml logs --tail=300 backend || true
+          echo "===== Auth-service logs ====="
+          docker compose -f docker-compose.dev.yml logs --tail=300 auth-service || true
+          echo "===== Gateway logs ====="
+          docker compose -f docker-compose.dev.yml logs --tail=300 gateway || true
+
+      - name: Tear down
+        if: always()
+        run: |
+          docker compose -f docker-compose.dev.yml down -v

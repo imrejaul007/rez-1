@@ -1,0 +1,429 @@
+app/(tabs)/index.tsx(72,50): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(73,47): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(74,52): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(75,55): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(76,48): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(78,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(118,44): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(119,45): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(120,49): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(121,44): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(122,57): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(141,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(142,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(143,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(144,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(145,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(146,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(148,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(149,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(152,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(153,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(158,20): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(164,20): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(169,3): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(171,35): error TS2339: Property 'getCachedSections' does not exist on type 'HomepageDataService'.
+app/(tabs)/index.tsx(172,32): error TS2339: Property 'getCachedSections' does not exist on type 'HomepageDataService'.
+app/(tabs)/index.tsx(305,5): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(330,5): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(589,9): error TS2353: Object literal may only specify known properties, and 'neighbourhood' does not exist in type '{ city?: string | undefined; state?: string | undefined; pincode?: string | undefined; }'.
+app/(tabs)/index.tsx(865,13): error TS2353: Object literal may only specify known properties, and 'weekStartIso' does not exist in type 'WeeklyDigestSummary'.
+app/(tabs)/index.tsx(915,45): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/index.tsx(995,72): error TS2322: Type 'User | User | null' is not assignable to type 'User'.
+  Type 'null' is not assignable to type 'User'.
+app/(tabs)/play.tsx(28,47): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/play.tsx(29,41): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/(tabs)/play.tsx(30,42): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/article/[id].tsx(56,31): error TS18048: 'response.data' is possibly 'undefined'.
+app/article/[id].tsx(56,45): error TS2339: Property 'article' does not exist on type 'Article'.
+app/article/[id].tsx(58,20): error TS18048: 'response.data' is possibly 'undefined'.
+app/article/[id].tsx(58,34): error TS2339: Property 'article' does not exist on type 'Article'.
+app/bank-offers/[id].tsx(72,54): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+app/beauty/[category].tsx(445,24): error TS18048: 'item.reviewCount' is possibly 'undefined'.
+app/bus/[id].tsx(181,33): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/bus/[id].tsx(191,33): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/bus/[id].tsx(223,39): error TS2339: Property 'serviceDetails' does not exist on type 'Product'.
+app/bus/[id].tsx(253,25): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/bus/[id].tsx(253,66): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/bus/[id].tsx(254,25): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/bus/[id].tsx(254,81): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/bus/[id].tsx(255,35): error TS2339: Property 'maxCashback' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/bus/[id].tsx(255,76): error TS2339: Property 'maxCashback' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/bus/[id].tsx(256,32): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/bus/[id].tsx(256,74): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/bus/[id].tsx(261,46): error TS2339: Property 'selling' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/bus/[id].tsx(261,103): error TS2339: Property 'price' does not exist on type 'Product'.
+app/bus/[id].tsx(262,50): error TS2339: Property 'original' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/bus/[id].tsx(262,108): error TS2339: Property 'price' does not exist on type 'Product'.
+app/bus/[id].tsx(265,32): error TS2339: Property 'discount' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/bus/[id].tsx(267,80): error TS2339: Property 'barcode' does not exist on type 'Product'.
+app/bus/[id].tsx(268,92): error TS2339: Property '_id' does not exist on type 'Product'.
+app/bus/[id].tsx(289,43): error TS2339: Property '_id' does not exist on type 'Product'.
+app/bus/[id].tsx(322,61): error TS2551: Property 'shortDescription' does not exist on type 'Product'. Did you mean 'description'?
+app/bus/[id].tsx(332,59): error TS2339: Property '_id' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/bus/[id].tsx(334,36): error TS2339: Property 'logo' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/bus/[id].tsx(350,41): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/bus/[id].tsx(407,29): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Omit<WishlistItem, "id" | "addedAt">'.
+app/bus/[id].tsx(456,19): error TS2322: Type '{ source: string; style: { width: "100%"; height: "100%"; }; contentFit: "cover"; onError: () => void; onLoadStart: () => void; }' is not assignable to type 'IntrinsicAttributes & CachedImageProps'.
+  Property 'onLoadStart' does not exist on type 'IntrinsicAttributes & CachedImageProps'.
+app/bus/[id].tsx(510,24): error TS2719: Type 'BusDetails' is not assignable to type 'BusDetails'. Two different types with this name exist, but they are unrelated.
+  Types of property 'route' are incompatible.
+    Type '{ from: string; to: string; fromTerminal?: string | undefined; toTerminal?: string | undefined; } | undefined' is not assignable to type '{ from: string; to: string; fromTerminal?: string | undefined; toTerminal?: string | undefined; }'.
+      Type 'undefined' is not assignable to type '{ from: string; to: string; fromTerminal?: string | undefined; toTerminal?: string | undefined; }'.
+app/bus/[id].tsx(627,12): error TS2740: Type '{ productId: string; productName: string; reviews: Review[]; summary: { totalReviews: number; averageRating: number; ratingBreakdown: Record<number, number>; recommendationRate: number; verifiedReviews: number; featuredReviews: number; } | null; isLoading: boolean; onRefresh: () => Promise<...>; }' is missing the following properties from type 'ProductReviewsSectionProps': isRefreshing, hasMore, sortBy, filterRating, and 7 more.
+app/bus/[id].tsx(724,13): error TS2719: Type 'BusDetails' is not assignable to type 'BusDetails'. Two different types with this name exist, but they are unrelated.
+  Types of property 'route' are incompatible.
+    Type '{ from: string; to: string; fromTerminal?: string | undefined; toTerminal?: string | undefined; } | undefined' is not assignable to type '{ from: string; to: string; fromTerminal?: string | undefined; toTerminal?: string | undefined; }'.
+      Type 'undefined' is not assignable to type '{ from: string; to: string; fromTerminal?: string | undefined; toTerminal?: string | undefined; }'.
+app/cab/[id].tsx(180,33): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/cab/[id].tsx(191,33): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/cab/[id].tsx(218,39): error TS2339: Property 'serviceDetails' does not exist on type 'Product'.
+app/cab/[id].tsx(247,25): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/cab/[id].tsx(247,66): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/cab/[id].tsx(248,25): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/cab/[id].tsx(248,81): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/cab/[id].tsx(249,32): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/cab/[id].tsx(249,74): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/cab/[id].tsx(254,46): error TS2339: Property 'selling' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/cab/[id].tsx(254,103): error TS2339: Property 'price' does not exist on type 'Product'.
+app/cab/[id].tsx(255,50): error TS2339: Property 'original' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/cab/[id].tsx(255,108): error TS2339: Property 'price' does not exist on type 'Product'.
+app/cab/[id].tsx(258,32): error TS2339: Property 'discount' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/cab/[id].tsx(267,25): error TS2339: Property 'price' does not exist on type 'Product'.
+app/cab/[id].tsx(267,53): error TS2339: Property 'price' does not exist on type 'Product'.
+app/cab/[id].tsx(267,87): error TS2339: Property 'price' does not exist on type 'Product'.
+app/cab/[id].tsx(267,123): error TS2339: Property 'price' does not exist on type 'Product'.
+app/cab/[id].tsx(273,47): error TS2339: Property 'serviceDetails' does not exist on type 'Product'.
+app/cab/[id].tsx(274,34): error TS2339: Property 'serviceDetails' does not exist on type 'Product'.
+app/cab/[id].tsx(296,43): error TS2339: Property '_id' does not exist on type 'Product'.
+app/cab/[id].tsx(325,61): error TS2551: Property 'shortDescription' does not exist on type 'Product'. Did you mean 'description'?
+app/cab/[id].tsx(336,59): error TS2339: Property '_id' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/cab/[id].tsx(338,36): error TS2339: Property 'logo' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/cab/[id].tsx(351,41): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/cab/[id].tsx(408,29): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Omit<WishlistItem, "id" | "addedAt">'.
+app/cab/[id].tsx(457,19): error TS2322: Type '{ source: string; style: { width: "100%"; height: "100%"; }; contentFit: "cover"; onError: () => void; onLoadStart: () => void; }' is not assignable to type 'IntrinsicAttributes & CachedImageProps'.
+  Property 'onLoadStart' does not exist on type 'IntrinsicAttributes & CachedImageProps'.
+app/cab/[id].tsx(632,12): error TS2740: Type '{ productId: string; productName: string; reviews: Review[]; summary: { totalReviews: number; averageRating: number; ratingBreakdown: Record<number, number>; recommendationRate: number; verifiedReviews: number; featuredReviews: number; } | null; isLoading: boolean; onRefresh: () => Promise<...>; }' is missing the following properties from type 'ProductReviewsSectionProps': isRefreshing, hasMore, sortBy, filterRating, and 7 more.
+app/category/[slug]/index.tsx(177,32): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.
+app/category/[slug]/subcategory/[subSlug].tsx(169,84): error TS2339: Property 'products' does not exist on type 'never'.
+app/category/[slug]/subcategory/[subSlug].tsx(262,9): error TS2322: Type 'string | undefined' is not assignable to type 'string | number | { uri: string; }'.
+  Type 'undefined' is not assignable to type 'string | number | { uri: string; }'.
+app/category/[slug]/subcategory/[subSlug].tsx(311,9): error TS2322: Type 'string | undefined' is not assignable to type 'string | number | { uri: string; }'.
+app/category/[slug]/subcategory/[subSlug].tsx(447,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: RefreshControlProps): RefreshControl', gave the following error.
+    Type '{ refreshing: boolean; onRefresh: () => Promise<void>; tintColor: "#ffcd57"; colors: "#ffcd57"[]; estimatedItemSize: number; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<RefreshControl> & Readonly<RefreshControlProps>'.
+      Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<RefreshControl> & Readonly<RefreshControlProps>'.
+  Overload 2 of 2, '(props: RefreshControlProps, context: any): RefreshControl', gave the following error.
+    Type '{ refreshing: boolean; onRefresh: () => Promise<void>; tintColor: "#ffcd57"; colors: "#ffcd57"[]; estimatedItemSize: number; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<RefreshControl> & Readonly<RefreshControlProps>'.
+      Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<RefreshControl> & Readonly<RefreshControlProps>'.
+app/category/[slug]/subcategory/[subSlug].tsx(465,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: RefreshControlProps): RefreshControl', gave the following error.
+    Type '{ refreshing: boolean; onRefresh: () => Promise<void>; tintColor: "#ffcd57"; colors: "#ffcd57"[]; estimatedItemSize: number; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<RefreshControl> & Readonly<RefreshControlProps>'.
+      Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<RefreshControl> & Readonly<RefreshControlProps>'.
+  Overload 2 of 2, '(props: RefreshControlProps, context: any): RefreshControl', gave the following error.
+    Type '{ refreshing: boolean; onRefresh: () => Promise<void>; tintColor: "#ffcd57"; colors: "#ffcd57"[]; estimatedItemSize: number; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<RefreshControl> & Readonly<RefreshControlProps>'.
+      Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<RefreshControl> & Readonly<RefreshControlProps>'.
+app/challenges/[id].tsx(176,80): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Error'.
+app/creator/[id].tsx(166,38): error TS2551: Property 'isFollowing' does not exist on type 'FollowStatus'. Did you mean 'following'?
+app/deals/[campaignId]/[dealIndex].tsx(541,24): error TS2322: Type 'string | undefined' is not assignable to type 'string | number | { uri: string; }'.
+app/disputes/[id].tsx(57,11): error TS2339: Property 'isAuthenticated' does not exist on type 'AuthContextType'.
+app/disputes/[id].tsx(57,28): error TS2339: Property 'authLoading' does not exist on type 'AuthContextType'.
+app/events/[category].tsx(117,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+app/experience/[type].tsx(36,11): error TS2339: Property 'currentLocation' does not exist on type 'LocationContextType'.
+app/explore/reel/[id].tsx(267,7): error TS2345: Argument of type 'string' is not assignable to parameter of type '() => void'.
+app/explore/reel/[id].tsx(382,15): error TS2322: Type 'string' is not assignable to type 'AVPlaybackSource | undefined'.
+app/explore/reel/[id].tsx(393,24): error TS2322: Type 'string | undefined' is not assignable to type 'string | number | { uri: string; }'.
+app/explore/reel/[id].tsx(568,11): error TS2322: Type '{ contentContainerStyle: { paddingBottom: number; }; data: ReelComment[]; keyExtractor: (item: ReelComment) => string; showsVerticalScrollIndicator: false; refreshControl: Element; estimatedItemSize: number; ListEmptyComponent: Element; renderItem: ({ item }: { ...; }) => Element; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<ReelComment> & { ref?: Ref<FlashListRef<ReelComment>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<ReelComment> & { ref?: Ref<FlashListRef<ReelComment>> | undefined; }'.
+app/financial/[category].tsx(81,50): error TS2339: Property 'serviceCount' does not exist on type '{ _id: string; name: string; slug: string; icon: string; iconType: "url" | "emoji" | "icon-name"; description?: string | undefined; cashbackPercentage: number; maxCashback?: number | undefined; metadata?: { ...; } | undefined; }'.
+app/financial/[category].tsx(198,21): error TS2322: Type 'string | undefined' is not assignable to type 'string | number | { uri: string; }'.
+app/financial/service/[id].tsx(187,81): error TS2339: Property 'maxCashback' does not exist on type '{ _id: string; name: string; slug: string; icon: string; cashbackPercentage: number; }'.
+app/fitness/[category].tsx(448,19): error TS2322: Type 'string | undefined' is not assignable to type 'string | number | { uri: string; }'.
+app/flash-sales/[id].tsx(150,57): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+app/flash-sales/[id].tsx(241,49): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+app/flash-sales/[id].tsx(975,5): error TS2783: 'fontWeight' is specified more than once, so this usage will be overwritten.
+app/flight/[id].tsx(179,36): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/flight/[id].tsx(189,33): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/flight/[id].tsx(216,31): error TS2339: Property 'serviceDetails' does not exist on type 'Product'.
+app/flight/[id].tsx(236,39): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/flight/[id].tsx(237,24): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/flight/[id].tsx(238,34): error TS2339: Property 'maxCashback' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/flight/[id].tsx(239,32): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/flight/[id].tsx(239,68): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/flight/[id].tsx(241,46): error TS2339: Property 'selling' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/flight/[id].tsx(241,103): error TS2339: Property 'price' does not exist on type 'Product'.
+app/flight/[id].tsx(242,46): error TS2339: Property 'original' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/flight/[id].tsx(242,104): error TS2339: Property 'price' does not exist on type 'Product'.
+app/flight/[id].tsx(245,32): error TS2339: Property 'discount' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/flight/[id].tsx(288,43): error TS2339: Property '_id' does not exist on type 'Product'.
+app/flight/[id].tsx(292,78): error TS2339: Property '_id' does not exist on type 'Product'.
+app/flight/[id].tsx(297,61): error TS2551: Property 'shortDescription' does not exist on type 'Product'. Did you mean 'description'?
+app/flight/[id].tsx(306,59): error TS2339: Property '_id' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/flight/[id].tsx(308,36): error TS2339: Property 'logo' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/flight/[id].tsx(358,32): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Omit<WishlistItem, "id" | "addedAt">'.
+app/flight/[id].tsx(414,15): error TS2322: Type '{ source: string; style: { width: "100%"; height: "100%"; }; contentFit: "cover"; onError: () => void; onLoadStart: () => void; }' is not assignable to type 'IntrinsicAttributes & CachedImageProps'.
+  Property 'onLoadStart' does not exist on type 'IntrinsicAttributes & CachedImageProps'.
+app/flight/[id].tsx(693,14): error TS2740: Type '{ productId: string; reviews: Review[]; summary: { totalReviews: number; averageRating: number; ratingBreakdown: Record<number, number>; recommendationRate: number; verifiedReviews: number; featuredReviews: number; } | null; isLoading: boolean; onRefresh: () => Promise<...>; }' is missing the following properties from type 'ProductReviewsSectionProps': productName, isRefreshing, hasMore, sortBy, and 8 more.
+app/going-out/section/[sectionId].tsx(60,21): error TS2345: Argument of type '(prev: SectionProduct[]) => (Product | SectionProduct)[]' is not assignable to parameter of type 'SetStateAction<SectionProduct[]>'.
+  Type '(prev: SectionProduct[]) => (Product | SectionProduct)[]' is not assignable to type '(prevState: SectionProduct[]) => SectionProduct[]'.
+    Type '(Product | SectionProduct)[]' is not assignable to type 'SectionProduct[]'.
+      Type 'Product | SectionProduct' is not assignable to type 'SectionProduct'.
+        Property '_id' is missing in type 'Product' but required in type 'SectionProduct'.
+app/going-out/section/[sectionId].tsx(99,9): error TS2322: Type 'string | undefined' is not assignable to type 'string | number | { uri: string; }'.
+app/going-out/section/[sectionId].tsx(150,11): error TS2322: Type '{ data: SectionProduct[]; renderItem: ({ item }: { item: SectionProduct; }) => Element; keyExtractor: (item: SectionProduct) => string; ... 6 more ...; ListFooterComponent: Element | null; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<SectionProduct> & { ref?: Ref<FlashListRef<SectionProduct>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<SectionProduct> & { ref?: Ref<FlashListRef<SectionProduct>> | undefined; }'.
+app/grocery/[category].tsx(324,42): error TS2554: Expected 1 arguments, but got 2.
+app/grocery/[category].tsx(489,19): error TS2322: Type '(product: Product) => Promise<void>' is not assignable to type '(product: GroceryProduct) => void'.
+  Types of parameters 'product' and 'product' are incompatible.
+    Type 'GroceryProduct' is not assignable to type 'Product'.
+      Types of property 'id' are incompatible.
+        Type 'string | undefined' is not assignable to type 'string'.
+          Type 'undefined' is not assignable to type 'string'.
+app/grocery/[category].tsx(518,3): error TS2322: Type '{ id: string; name: string; description: string; images: { url: undefined; alt: string; }[]; pricing: { basePrice: number; salePrice: number; }; unit: string; rating: { average: number; count: number; }; cashback: { ...; }; store: { ...; }; inStock: true; tags: string[]; }[]' is not assignable to type 'Product[]'.
+  Type '{ id: string; name: string; description: string; images: { url: undefined; alt: string; }[]; pricing: { basePrice: number; salePrice: number; }; unit: string; rating: { average: number; count: number; }; cashback: { ...; }; store: { ...; }; inStock: true; tags: string[]; }' is not assignable to type 'Product'.
+    Types of property 'images' are incompatible.
+      Type '{ url: undefined; alt: string; }[]' is not assignable to type '{ url: string; alt?: string | undefined; }[]'.
+        Type '{ url: undefined; alt: string; }' is not assignable to type '{ url: string; alt?: string | undefined; }'.
+          Types of property 'url' are incompatible.
+            Type 'undefined' is not assignable to type 'string'.
+app/healthcare/[category].tsx(199,46): error TS2339: Property 'stores' does not exist on type '{}'.
+app/healthcare/[category].tsx(201,33): error TS2339: Property 'stores' does not exist on type '{}'.
+app/hotel/[id].tsx(173,35): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/hotel/[id].tsx(184,33): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/hotel/[id].tsx(200,25): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/hotel/[id].tsx(200,66): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/hotel/[id].tsx(201,25): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/hotel/[id].tsx(201,81): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/hotel/[id].tsx(202,35): error TS2339: Property 'maxCashback' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/hotel/[id].tsx(202,76): error TS2339: Property 'maxCashback' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/hotel/[id].tsx(203,32): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/hotel/[id].tsx(203,74): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/hotel/[id].tsx(208,46): error TS2339: Property 'selling' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/hotel/[id].tsx(208,103): error TS2339: Property 'price' does not exist on type 'Product'.
+app/hotel/[id].tsx(209,50): error TS2339: Property 'original' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/hotel/[id].tsx(209,108): error TS2339: Property 'price' does not exist on type 'Product'.
+app/hotel/[id].tsx(212,32): error TS2339: Property 'discount' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/hotel/[id].tsx(252,43): error TS2339: Property '_id' does not exist on type 'Product'.
+app/hotel/[id].tsx(256,39): error TS2339: Property 'location' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/hotel/[id].tsx(257,43): error TS2339: Property 'location' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/hotel/[id].tsx(277,61): error TS2551: Property 'shortDescription' does not exist on type 'Product'. Did you mean 'description'?
+app/hotel/[id].tsx(287,59): error TS2339: Property '_id' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/hotel/[id].tsx(289,36): error TS2339: Property 'logo' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/hotel/[id].tsx(306,41): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/hotel/[id].tsx(361,29): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Omit<WishlistItem, "id" | "addedAt">'.
+app/hotel/[id].tsx(409,19): error TS2322: Type '(error: any) => void' is not assignable to type '() => void'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0.
+app/hotel/[id].tsx(409,29): error TS7006: Parameter 'error' implicitly has an 'any' type.
+app/hotel/[id].tsx(657,12): error TS2740: Type '{ productId: string; reviews: Review[]; summary: { totalReviews: number; averageRating: number; ratingBreakdown: Record<number, number>; recommendationRate: number; verifiedReviews: number; featuredReviews: number; } | null; isLoading: boolean; onRefresh: () => Promise<...>; }' is missing the following properties from type 'ProductReviewsSectionProps': productName, isRefreshing, hasMore, sortBy, and 8 more.
+app/lock-deals/[id].tsx(87,29): error TS2554: Expected 3-5 arguments, but got 2.
+app/lock-deals/[id].tsx(92,10): error TS1345: An expression of type 'void' cannot be tested for truthiness.
+app/lock-deals/[id].tsx(466,3): error TS1117: An object literal cannot have multiple properties with the same name.
+app/MainCategory/[slug]/[subcategory].tsx(461,11): error TS2322: Type '{ data: any[]; keyExtractor: (item: any) => any; estimatedItemSize: number; renderItem: ({ item }: { item: any; }) => Element; contentContainerStyle: { paddingHorizontal: 16; paddingTop: 8; paddingBottom: number; }; ... 4 more ...; ListFooterComponent: Element | null; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+app/MainCategory/[slug]/loyalty/brands.tsx(186,9): error TS2322: Type '{ data: BrandLoyalty[]; keyExtractor: (item: BrandLoyalty) => string; renderItem: ({ item }: { item: BrandLoyalty; }) => Element; contentContainerStyle: { ...; }; showsVerticalScrollIndicator: false; refreshControl: Element; estimatedItemSize: number; ListEmptyComponent: Element; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<BrandLoyalty> & { ref?: Ref<FlashListRef<BrandLoyalty>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<BrandLoyalty> & { ref?: Ref<FlashListRef<BrandLoyalty>> | undefined; }'.
+app/MainCategory/[slug]/loyalty/coins.tsx(174,9): error TS2322: Type '{ data: CoinTransaction[]; keyExtractor: (_: CoinTransaction, i: number) => string; renderItem: ({ item }: { item: CoinTransaction; }) => Element; ... 5 more ...; ListEmptyComponent: Element; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<CoinTransaction> & { ref?: Ref<FlashListRef<CoinTransaction>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<CoinTransaction> & { ref?: Ref<FlashListRef<CoinTransaction>> | undefined; }'.
+app/MainCategory/[slug]/loyalty/missions.tsx(220,9): error TS2322: Type '{ data: Mission[]; keyExtractor: (item: Mission) => string; renderItem: ({ item }: { item: Mission; }) => Element; contentContainerStyle: { paddingHorizontal: 16; paddingTop: 12; paddingBottom: number; }; showsVerticalScrollIndicator: false; refreshControl: Element; estimatedItemSize: number; ListEmptyComponent: Ele...' is not assignable to type 'IntrinsicAttributes & FlashListProps<Mission> & { ref?: Ref<FlashListRef<Mission>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<Mission> & { ref?: Ref<FlashListRef<Mission>> | undefined; }'.
+app/MainCategory/[slug]/offers/index.tsx(284,11): error TS2322: Type '{ data: any[]; keyExtractor: (item: any, index: number) => any; renderItem: ({ item }: { item: any; }) => Element; contentContainerStyle: { padding: number; paddingBottom: number; }; showsVerticalScrollIndicator: false; refreshControl: Element; estimatedItemSize: number; ListEmptyComponent: Element; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+app/MainCategory/[slug]/search.tsx(222,9): error TS2322: Type '{ source: any; style: { width: number; height: number; borderRadius: 12; backgroundColor: "#E8DCC4"; }; contentFit: "cover"; defaultSource: undefined; }' is not assignable to type 'IntrinsicAttributes & CachedImageProps'.
+  Property 'defaultSource' does not exist on type 'IntrinsicAttributes & CachedImageProps'.
+app/MainCategory/[slug]/search.tsx(398,15): error TS2322: Type '{ data: any[]; keyExtractor: (item: any) => any; renderItem: ({ item }: { item: any; }) => Element; contentContainerStyle: { paddingHorizontal: 16; paddingTop: 8; paddingBottom: number; }; showsVerticalScrollIndicator: false; estimatedItemSize: number; ListEmptyComponent: Element; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+app/MainCategory/[slug]/search.tsx(414,15): error TS2322: Type '{ data: any[]; keyExtractor: (item: any) => any; renderItem: ({ item }: { item: any; }) => Element; contentContainerStyle: { paddingHorizontal: 16; paddingTop: 8; paddingBottom: number; }; showsVerticalScrollIndicator: false; estimatedItemSize: number; ListEmptyComponent: Element; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+app/MainCategory/[slug]/stories.tsx(286,11): error TS2322: Type '{ data: UGCItem[]; keyExtractor: (item: UGCItem) => string; renderItem: ({ item }: { item: UGCItem; }) => Element; contentContainerStyle: { padding: 16; paddingBottom: number; }; showsVerticalScrollIndicator: false; refreshControl: Element; estimatedItemSize: number; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<UGCItem> & { ref?: Ref<FlashListRef<UGCItem>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<UGCItem> & { ref?: Ref<FlashListRef<UGCItem>> | undefined; }'.
+app/MainCategory/[slug]/top-rated.tsx(306,9): error TS2322: Type '{ data: any[]; keyExtractor: (item: any) => any; renderItem: ({ item }: { item: any; }) => Element; contentContainerStyle: { paddingHorizontal: 16; paddingTop: 12; paddingBottom: number; }; showsVerticalScrollIndicator: false; refreshControl: Element; estimatedItemSize: number; ListEmptyComponent: Element; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+app/mall/category/[slug].tsx(401,11): error TS2322: Type '{ data: any[]; renderItem: ({ item, index }: { item: any; index: number; }) => Element; keyExtractor: (item: any) => any; contentContainerStyle: { paddingBottom: number; }; showsVerticalScrollIndicator: false; ... 6 more ...; onEndReachedThreshold: number; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<any> & { ref?: Ref<FlashListRef<any>> | undefined; }'.
+app/mall/collection/[slug].tsx(253,11): error TS2322: Type '{ data: MallBrand[]; renderItem: ({ item }: { item: MallBrand; }) => Element; keyExtractor: (item: MallBrand) => string; contentContainerStyle: { paddingBottom: number; }; ... 7 more ...; estimatedItemSize: number; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<MallBrand> & { ref?: Ref<FlashListRef<MallBrand>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<MallBrand> & { ref?: Ref<FlashListRef<MallBrand>> | undefined; }'.
+app/mall/collection/[slug].tsx(320,3): error TS1117: An object literal cannot have multiple properties with the same name.
+app/menu/[storeId].tsx(179,29): error TS2554: Expected 3-5 arguments, but got 2.
+app/menu/[storeId].tsx(185,10): error TS1345: An expression of type 'void' cannot be tested for truthiness.
+app/menu/[storeId].tsx(523,9): error TS2322: Type '{ data: MenuItem[]; renderItem: ({ item }: { item: MenuItem; }) => Element; keyExtractor: (item: MenuItem) => string; contentContainerStyle: { paddingHorizontal: 16; }; ... 4 more ...; estimatedItemSize: number; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<MenuItem> & { ref?: Ref<FlashListRef<MenuItem>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<MenuItem> & { ref?: Ref<FlashListRef<MenuItem>> | undefined; }'.
+app/offers/[id].tsx(136,52): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+app/offers/[id].tsx(155,69): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+app/offers/[id].tsx(224,78): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+app/offers/[id].tsx(331,44): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+app/offers/[id].tsx(352,44): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+app/orders/[id].tsx(76,7): error TS2345: Argument of type 'string' is not assignable to parameter of type '() => void'.
+app/orders/[id].tsx(251,37): error TS2339: Property 'image' does not exist on type 'OrderItem'.
+app/orders/[id].tsx(252,36): error TS2339: Property 'name' does not exist on type 'OrderItem'.
+app/orders/[id].tsx(253,34): error TS2339: Property 'store' does not exist on type 'OrderItem'.
+app/orders/[id].tsx(270,72): error TS2339: Property 'price' does not exist on type 'OrderItem'.
+app/orders/[id].tsx(273,68): error TS2339: Property 'subtotal' does not exist on type 'OrderItem'.
+app/orders/[id].tsx(337,35): error TS2532: Object is possibly 'undefined'.
+app/orders/[orderId]/tracking.tsx(51,7): error TS2345: Argument of type 'string' is not assignable to parameter of type '() => void'.
+app/orders/[orderId]/tracking.tsx(64,7): error TS2345: Argument of type 'string' is not assignable to parameter of type '() => void'.
+app/orders/[orderId]/tracking.tsx(156,53): error TS2783: 'fontWeight' is specified more than once, so this usage will be overwritten.
+app/orders/[orderId]/tracking.tsx(169,51): error TS2783: 'fontWeight' is specified more than once, so this usage will be overwritten.
+app/package/[id].tsx(169,37): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/package/[id].tsx(180,33): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/package/[id].tsx(236,25): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/package/[id].tsx(236,66): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/package/[id].tsx(237,25): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/package/[id].tsx(237,81): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/package/[id].tsx(238,35): error TS2339: Property 'maxCashback' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/package/[id].tsx(238,76): error TS2339: Property 'maxCashback' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/package/[id].tsx(239,32): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/package/[id].tsx(239,74): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/package/[id].tsx(244,46): error TS2339: Property 'selling' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/package/[id].tsx(244,103): error TS2339: Property 'price' does not exist on type 'Product'.
+app/package/[id].tsx(245,50): error TS2339: Property 'original' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/package/[id].tsx(245,108): error TS2339: Property 'price' does not exist on type 'Product'.
+app/package/[id].tsx(248,32): error TS2339: Property 'discount' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/package/[id].tsx(267,43): error TS2339: Property '_id' does not exist on type 'Product'.
+app/package/[id].tsx(287,61): error TS2551: Property 'shortDescription' does not exist on type 'Product'. Did you mean 'description'?
+app/package/[id].tsx(294,59): error TS2339: Property '_id' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/package/[id].tsx(296,36): error TS2339: Property 'logo' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/package/[id].tsx(310,41): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/package/[id].tsx(370,29): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Omit<WishlistItem, "id" | "addedAt">'.
+app/package/[id].tsx(419,19): error TS2322: Type '{ source: string; style: { width: "100%"; height: "100%"; }; contentFit: "cover"; onError: () => void; onLoadStart: () => void; }' is not assignable to type 'IntrinsicAttributes & CachedImageProps'.
+  Property 'onLoadStart' does not exist on type 'IntrinsicAttributes & CachedImageProps'.
+app/package/[id].tsx(589,12): error TS2740: Type '{ productId: string; productName: string; reviews: Review[]; summary: { totalReviews: number; averageRating: number; ratingBreakdown: Record<number, number>; recommendationRate: number; verifiedReviews: number; featuredReviews: number; } | null; isLoading: boolean; onRefresh: () => Promise<...>; }' is missing the following properties from type 'ProductReviewsSectionProps': isRefreshing, hasMore, sortBy, filterRating, and 7 more.
+app/picks/[id].tsx(588,11): error TS2322: Type '{ horizontal: true; data: CreatorPick[]; renderItem: ({ item }: { item: CreatorPick; }) => Element; keyExtractor: (item: CreatorPick) => string; estimatedItemSize: number; showsHorizontalScrollIndicator: false; contentContainerStyle: { ...; }; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<CreatorPick> & { ref?: Ref<FlashListRef<CreatorPick>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<CreatorPick> & { ref?: Ref<FlashListRef<CreatorPick>> | undefined; }'.
+app/reviews/[storeId].tsx(94,22): error TS2345: Argument of type 'Review[]' is not assignable to parameter of type 'SetStateAction<Review[]>'.
+  Type 'import("C:/Users/user/Downloads/rez-backend-master/nuqta-master/services/reviewsApi").Review[]' is not assignable to type 'Review[]'.
+    Type 'Review' is missing the following properties from type 'Review': _id, comment, verified
+app/reviews/[storeId].tsx(97,22): error TS2345: Argument of type '(prev: Review[]) => (Review | Review)[]' is not assignable to parameter of type 'SetStateAction<Review[]>'.
+  Type '(prev: Review[]) => (Review | Review)[]' is not assignable to type '(prevState: Review[]) => Review[]'.
+    Type '(Review | Review)[]' is not assignable to type 'Review[]'.
+      Type 'Review | Review' is not assignable to type 'Review'.
+        Type 'import("C:/Users/user/Downloads/rez-backend-master/nuqta-master/services/reviewsApi").Review' is not assignable to type 'Review'.
+app/reviews/[storeId].tsx(100,32): error TS2339: Property 'stats' does not exist on type 'ReviewsResponse'.
+app/reviews/[storeId].tsx(294,9): error TS2322: Type '{ data: Review[]; keyExtractor: (item: Review) => string; renderItem: ({ item }: { item: Review; }) => Element; contentContainerStyle: { paddingBottom: number; }; ... 6 more ...; ListFooterComponent: Element | null; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<Review> & { ref?: Ref<FlashListRef<Review>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<Review> & { ref?: Ref<FlashListRef<Review>> | undefined; }'.
+app/social/comments/[postId].tsx(221,51): error TS2339: Property 'fullName' does not exist on type 'User'.
+app/social/comments/[postId].tsx(222,56): error TS2339: Property 'fullName' does not exist on type 'User'.
+app/social/comments/[postId].tsx(349,9): error TS2322: Type '{ data: Comment[]; renderItem: ({ item }: { item: Comment; }) => Element; keyExtractor: (item: Comment) => string; contentContainerStyle: { padding: 16; paddingBottom: number; }; ... 6 more ...; ListEmptyComponent: Element; }' is not assignable to type 'IntrinsicAttributes & FlashListProps<Comment> & { ref?: Ref<FlashListRef<Comment>> | undefined; }'.
+  Property 'estimatedItemSize' does not exist on type 'IntrinsicAttributes & FlashListProps<Comment> & { ref?: Ref<FlashListRef<Comment>> | undefined; }'.
+app/store/[id].tsx(188,33): error TS2339: Property 'deal' does not exist on type 'DealRedemption'.
+app/store/[id].tsx(276,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+app/store/[id].tsx(279,30): error TS2339: Property 'deal' does not exist on type 'DealRedemption'.
+app/store/[id].tsx(280,54): error TS2339: Property 'deal' does not exist on type 'DealRedemption'.
+app/store/[id].tsx(282,30): error TS2339: Property 'deal' does not exist on type 'DealRedemption'.
+app/store/[id].tsx(283,51): error TS2339: Property 'deal' does not exist on type 'DealRedemption'.
+app/store/[id].tsx(285,30): error TS2339: Property 'deal' does not exist on type 'DealRedemption'.
+app/store/[id].tsx(286,54): error TS2339: Property 'deal' does not exist on type 'DealRedemption'.
+app/store/[id].tsx(307,46): error TS2339: Property 'deal' does not exist on type 'DealRedemption'.
+app/store/[id].tsx(353,51): error TS2448: Block-scoped variable 'colors' used before its declaration.
+app/store/[id].tsx(353,51): error TS2454: Variable 'colors' is used before being assigned.
+app/store/[id].tsx(353,64): error TS2339: Property 'amberDark' does not exist on type '{ bg: string; text: string; }'.
+app/store/[id].tsx(586,59): error TS2339: Property 'deal' does not exist on type 'DealRedemption'.
+app/store/[id].tsx(609,39): error TS2551: Property 'campaign' does not exist on type 'DealRedemption'. Did you mean 'campaignId'?
+app/survey/[id].tsx(158,7): error TS2345: Argument of type 'string' is not assignable to parameter of type '() => void'.
+app/survey/[id].tsx(350,41): error TS2339: Property 'maxLength' does not exist on type 'SurveyQuestion'.
+app/survey/[id].tsx(353,104): error TS2339: Property 'maxLength' does not exist on type 'SurveyQuestion'.
+app/survey/[id].tsx(354,31): error TS2339: Property 'minLength' does not exist on type 'SurveyQuestion'.
+app/survey/[id].tsx(354,62): error TS2339: Property 'minLength' does not exist on type 'SurveyQuestion'.
+app/survey/[id]/complete.tsx(68,67): error TS2322: Type 'string' is not assignable to type 'number'.
+app/survey/[id]/complete.tsx(68,75): error TS2322: Type 'string' is not assignable to type 'number'.
+app/survey/[id]/complete.tsx(102,15): error TS2322: Type '{ transform: ({ scale: SharedValue<number>; } | { rotate: number; })[]; }' is not assignable to type 'false | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | ... 10 more ... | undefined'.
+  Types of property 'transform' are incompatible.
+    Type '({ scale: SharedValue<number>; } | { rotate: number; })[]' is not assignable to type '(({ scale: AnimatableNumericValue; } & { perspective?: undefined; rotate?: undefined; rotateX?: undefined; rotateY?: undefined; rotateZ?: undefined; scaleX?: undefined; ... 5 more ...; matrix?: undefined; }) | ... 11 more ... | ({ ...; } & { ...; }))[] | MaybeSharedValue<...> | SharedValue<...> | (({ ...; } & { ...;...'.
+      Type '({ scale: SharedValue<number>; } | { rotate: number; })[]' is not assignable to type '(({ scale: AnimatableNumericValue; } & { perspective?: undefined; rotate?: undefined; rotateX?: undefined; rotateY?: undefined; rotateZ?: undefined; scaleX?: undefined; ... 5 more ...; matrix?: undefined; }) | ... 11 more ... | ({ ...; } & { ...; }))[]'.
+        Type '{ scale: SharedValue<number>; }' is not assignable to type '({ scale: AnimatableNumericValue; } & { perspective?: undefined; rotate?: undefined; rotateX?: undefined; rotateY?: undefined; rotateZ?: undefined; scaleX?: undefined; ... 5 more ...; matrix?: undefined; }) | ... 11 more ... | ({ ...; } & { ...; })'.
+          Types of property 'scale' are incompatible.
+            Type 'SharedValue<number>' is not assignable to type 'AnimatableNumericValue | undefined'.
+              Type 'SharedValue<number>' is missing the following properties from type 'AnimatedNode': removeAllListeners, hasListeners
+app/survey/[id]/index.tsx(74,19): error TS2345: Argument of type '`/survey/${string}/take`' is not assignable to parameter of type 'Href<`/survey/${string}/take`>'.
+app/survey/[id]/take.tsx(130,9): error TS2322: Type '`/survey/${string}/complete`' is not assignable to type '"/products" | "/cart" | "/categories" | "/stores" | "/orders" | "/projects" | "/wishlist" | "/" | "/(tabs)" | "/(tabs)/" | "/(tabs)/categories" | "/(tabs)/earn" | "/(tabs)/play" | ... 584 more ... | "/wallet/transaction/[id]"'.
+app/tracking/[orderId].tsx(187,7): error TS2345: Argument of type 'string' is not assignable to parameter of type '() => void'.
+app/train/[id].tsx(173,35): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/train/[id].tsx(185,33): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/train/[id].tsx(217,31): error TS2339: Property 'serviceDetails' does not exist on type 'Product'.
+app/train/[id].tsx(248,25): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/train/[id].tsx(248,66): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/train/[id].tsx(249,25): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/train/[id].tsx(249,81): error TS2339: Property 'serviceCategory' does not exist on type 'Product'.
+app/train/[id].tsx(250,35): error TS2339: Property 'maxCashback' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/train/[id].tsx(250,76): error TS2339: Property 'maxCashback' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/train/[id].tsx(251,32): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/train/[id].tsx(251,74): error TS2339: Property 'cashback' does not exist on type 'Product'.
+app/train/[id].tsx(256,46): error TS2339: Property 'selling' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/train/[id].tsx(256,103): error TS2339: Property 'price' does not exist on type 'Product'.
+app/train/[id].tsx(257,50): error TS2339: Property 'original' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/train/[id].tsx(257,108): error TS2339: Property 'price' does not exist on type 'Product'.
+app/train/[id].tsx(260,32): error TS2339: Property 'discount' does not exist on type '{ basePrice: number; salePrice?: number | undefined; cost?: number | undefined; taxable: boolean; }'.
+app/train/[id].tsx(263,84): error TS2339: Property 'barcode' does not exist on type 'Product'.
+app/train/[id].tsx(264,92): error TS2339: Property '_id' does not exist on type 'Product'.
+app/train/[id].tsx(287,43): error TS2339: Property '_id' does not exist on type 'Product'.
+app/train/[id].tsx(320,61): error TS2551: Property 'shortDescription' does not exist on type 'Product'. Did you mean 'description'?
+app/train/[id].tsx(332,59): error TS2339: Property '_id' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/train/[id].tsx(334,36): error TS2339: Property 'logo' does not exist on type '{ id: string; name: string; slug: string; }'.
+app/train/[id].tsx(352,41): error TS2339: Property 'specifications' does not exist on type 'Product'.
+app/train/[id].tsx(417,29): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Omit<WishlistItem, "id" | "addedAt">'.
+app/train/[id].tsx(465,19): error TS2322: Type '(error: any) => void' is not assignable to type '() => void'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0.
+app/train/[id].tsx(465,29): error TS7006: Parameter 'error' implicitly has an 'any' type.
+app/train/[id].tsx(712,12): error TS2740: Type '{ productId: string; reviews: Review[]; summary: { totalReviews: number; averageRating: number; ratingBreakdown: Record<number, number>; recommendationRate: number; verifiedReviews: number; featuredReviews: number; } | null; isLoading: boolean; onRefresh: () => Promise<...>; }' is missing the following properties from type 'ProductReviewsSectionProps': productName, isRefreshing, hasMore, sortBy, and 8 more.
+app/train/[id].tsx(1139,38): error TS2339: Property 'primary' does not exist on type '{ readonly light: "#faf1e0"; readonly default: "#E8DCC4"; readonly medium: "#E8DCC4"; readonly dark: "#D4C9B0"; readonly accent: "#FFE799"; }'.
+app/train/[id].tsx(1168,32): error TS2339: Property 'primary' does not exist on type '{ readonly light: "#faf1e0"; readonly default: "#E8DCC4"; readonly medium: "#E8DCC4"; readonly dark: "#D4C9B0"; readonly accent: "#FFE799"; }'.
+app/train/[id].tsx(1198,35): error TS2339: Property 'primary' does not exist on type '{ readonly light: "#faf1e0"; readonly default: "#E8DCC4"; readonly medium: "#E8DCC4"; readonly dark: "#D4C9B0"; readonly accent: "#FFE799"; }'.
+app/train/[id].tsx(1260,35): error TS2339: Property 'primary' does not exist on type '{ readonly light: "#faf1e0"; readonly default: "#E8DCC4"; readonly medium: "#E8DCC4"; readonly dark: "#D4C9B0"; readonly accent: "#FFE799"; }'.
+app/transactions/[id].tsx(364,41): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(367,14): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(367,57): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(367,78): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(371,16): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(382,47): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(390,52): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(391,42): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(392,46): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(393,53): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(401,55): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(401,84): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(402,54): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(402,82): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(403,14): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(403,34): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(404,47): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(404,67): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(406,14): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(407,53): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(407,78): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(413,10): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(417,44): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(418,16): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(419,53): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(421,49): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(427,10): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(427,40): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(431,16): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(450,10): error TS18047: 'transaction' is possibly 'null'.
+app/transactions/[id].tsx(454,43): error TS18047: 'transaction' is possibly 'null'.
+app/voucher/[brandId].tsx(261,36): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'false | { boxShadow: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Object literal may only specify known properties, and 'boxShadow' does not exist in type 'ViewStyle | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | Falsy | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'false | { boxShadow: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Object literal may only specify known properties, and 'boxShadow' does not exist in type 'ViewStyle | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | Falsy | RegisteredStyle<...>)[]'.
+app/voucher/[brandId].tsx(282,36): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'false | { boxShadow: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Object literal may only specify known properties, and 'boxShadow' does not exist in type 'ViewStyle | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | Falsy | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'false | { boxShadow: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Object literal may only specify known properties, and 'boxShadow' does not exist in type 'ViewStyle | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | Falsy | RegisteredStyle<...>)[]'.
+app/voucher/[brandId].tsx(313,36): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'false | { boxShadow: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Object literal may only specify known properties, and 'boxShadow' does not exist in type 'ViewStyle | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | Falsy | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'false | { boxShadow: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Object literal may only specify known properties, and 'boxShadow' does not exist in type 'ViewStyle | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | Falsy | RegisteredStyle<...>)[]'.
+app/voucher/category/[slug].tsx(255,13): error TS2322: Type 'false | { boxShadow: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Object literal may only specify known properties, and 'boxShadow' does not exist in type 'ViewStyle | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | Falsy | RegisteredStyle<...>)[]'.
+app/vouchers/brand/[id].tsx(210,48): error TS2339: Property 'clientSecret' does not exist on type '{ voucher: UserVoucher; transaction: any; wallet: { balance: number; available: number; }; }'.
+app/vouchers/brand/[id].tsx(212,47): error TS2339: Property 'clientSecret' does not exist on type '{ voucher: UserVoucher; transaction: any; wallet: { balance: number; available: number; }; }'.
+hooks/useSafeNavigation.ts(70,11): error TS2590: Expression produces a union type that is too complex to represent.

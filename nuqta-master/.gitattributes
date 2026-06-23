@@ -1,0 +1,5 @@
+# Force LF line endings for EAS Build compatibility (Linux server)
+# Prevents tar extraction failures from CRLF/Windows line endings
+* text=auto eol=lf
+*.{cmd,[cC][mM][dD]} text eol=crlf
+*.{bat,[bB][aA][tT]} text eol=crlf

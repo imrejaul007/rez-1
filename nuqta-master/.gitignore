@@ -1,0 +1,56 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.production.example
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+app-example
+
+# Sensitive files with API keys
+contexts/STRIPE_KEYS_FIXED.md
+google-services.json
+google-play-key.json
+android/app/rez-release.keystore
+
+# Temp/junk files
+tmpclaude-*
+test-results.txt
+patch-*.js
+typescript-check.log
+typescript_errors.log

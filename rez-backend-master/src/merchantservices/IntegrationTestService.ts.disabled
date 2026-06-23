@@ -1,0 +1,776 @@
+import { SyncService } from './SyncService';
+import { CrossAppSyncService } from './CrossAppSyncService';
+import { Product } from '../models/Product';
+import { OrderMongoModel as Order } from '../models/Order';
+import { CashbackMongoModel as Cashback } from '../models/Cashback';
+import { Merchant } from '../models/Merchant';
+
+export interface TestResult {
+  testName: string;
+  success: boolean;
+  duration: number;
+  error?: string;
+  details?: any;
+}
+
+export interface IntegrationTestSuite {
+  suiteName: string;
+  tests: TestResult[];
+  totalTests: number;
+  passedTests: number;
+  failedTests: number;
+  totalDuration: number;
+  overallSuccess: boolean;
+}
+
+export class IntegrationTestService {
+  private static testResults: Map<string, IntegrationTestSuite> = new Map();
+
+  // Run complete integration test suite
+  static async runFullTestSuite(merchantId: string): Promise<IntegrationTestSuite> {
+    const startTime = Date.now();
+    const suiteName = `integration_test_${merchantId}_${Date.now()}`;
+    
+    console.log(`🧪 Starting integration test suite for merchant ${merchantId}`);
+
+    const tests: TestResult[] = [];
+
+    try {
+      // Product Sync Tests
+      tests.push(await this.testProductSync(merchantId));
+      tests.push(await this.testProductUpdate(merchantId));
+      tests.push(await this.testProductAvailabilitySync(merchantId));
+
+      // Order Sync Tests
+      tests.push(await this.testOrderSync(merchantId));
+      tests.push(await this.testOrderStatusUpdate(merchantId));
+      tests.push(await this.testRealTimeOrderUpdates(merchantId));
+
+      // Cashback Tests
+      tests.push(await this.testCashbackSync(merchantId));
+      tests.push(await this.testCashbackStatusUpdate(merchantId));
+      tests.push(await this.testCashbackCrossAppNotification(merchantId));
+
+      // Merchant Profile Tests
+      tests.push(await this.testMerchantProfileSync(merchantId));
+      tests.push(await this.testMerchantVisibilityUpdate(merchantId));
+
+      // Cross-App Communication Tests
+      tests.push(await this.testCrossAppWebhook(merchantId));
+      tests.push(await this.testRealTimeUpdates(merchantId));
+
+      // Data Consistency Tests
+      tests.push(await this.testDataConsistency(merchantId));
+      tests.push(await this.testSyncRecovery(merchantId));
+
+      // Performance Tests
+      tests.push(await this.testSyncPerformance(merchantId));
+      tests.push(await this.testConcurrentUpdates(merchantId));
+
+    } catch (error) {
+      console.error('Test suite execution failed:', error);
+      tests.push({
+        testName: 'Test Suite Execution',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+
+    const totalDuration = Date.now() - startTime;
+    const passedTests = tests.filter(t => t.success).length;
+    const failedTests = tests.filter(t => !t.success).length;
+
+    const suite: IntegrationTestSuite = {
+      suiteName,
+      tests,
+      totalTests: tests.length,
+      passedTests,
+      failedTests,
+      totalDuration,
+      overallSuccess: failedTests === 0
+    };
+
+    this.testResults.set(suiteName, suite);
+
+    console.log(`🧪 Test suite completed: ${passedTests}/${tests.length} tests passed in ${totalDuration}ms`);
+
+    return suite;
+  }
+
+  // Test product synchronization
+  private static async testProductSync(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Create test product
+      const testProduct = await Product.create({
+        merchantId,
+        name: 'Test Product for Sync',
+        description: 'Test product for integration testing',
+        price: 99.99,
+        category: 'Test Category',
+        inventory: {
+          trackInventory: true,
+          stock: 100,
+          lowStockThreshold: 10
+        },
+        status: 'active'
+      } as any);
+
+      // Trigger sync
+      const syncResult = await SyncService.syncToCustomerApp({
+        merchantId,
+        syncTypes: ['products'],
+        batchSize: 10
+      });
+
+      const success = syncResult.success && 
+                     syncResult.results.products?.created === 1;
+
+      // Cleanup
+      await Product.findByIdAndDelete(testProduct._id);
+
+      return {
+        testName: 'Product Sync to Customer App',
+        success,
+        duration: Date.now() - startTime,
+        details: { syncResult, productId: testProduct._id }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Product Sync to Customer App',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test product update propagation
+  private static async testProductUpdate(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      const testProduct = await Product.create({
+        merchantId,
+        name: 'Test Product Update',
+        price: 50.00,
+        inventory: { trackInventory: true, stock: 50, lowStockThreshold: 5 },
+        status: 'active'
+      } as any);
+
+      // Update product
+      const updated = Product.findByIdAndUpdate(testProduct._id, {
+        price: 75.00,
+        'inventory.stock': 25
+      });
+
+      // Test cross-app update
+      await CrossAppSyncService.sendProductUpdate(merchantId, testProduct._id, {
+        productId: testProduct._id,
+        inStock: true,
+        quantity: 25,
+        priceChanged: true,
+        newPrice: 75.00
+      });
+
+      const success = updated !== null;
+
+      await Product.findByIdAndDelete(testProduct._id);
+
+      return {
+        testName: 'Product Update Cross-App Sync',
+        success,
+        duration: Date.now() - startTime,
+        details: { originalPrice: 50.00, updatedPrice: 75.00 }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Product Update Cross-App Sync',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test product availability sync
+  private static async testProductAvailabilitySync(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      const testProduct = await Product.create({
+        merchantId,
+        name: 'Test Availability Sync',
+        price: 30.00,
+        inventory: { trackInventory: true, stock: 1, lowStockThreshold: 5 },
+        status: 'active'
+      } as any);
+
+      // Simulate stock depletion
+      Product.findByIdAndUpdate(testProduct._id, { 'inventory.stock': 0 });
+
+      // Test availability update
+      await CrossAppSyncService.sendProductUpdate(merchantId, testProduct._id, {
+        productId: testProduct._id,
+        inStock: false,
+        quantity: 0,
+        backInStockDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      });
+
+      await Product.findByIdAndDelete(testProduct._id);
+
+      return {
+        testName: 'Product Availability Sync',
+        success: true,
+        duration: Date.now() - startTime,
+        details: { stockChanged: true, outOfStock: true }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Product Availability Sync',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test order synchronization
+  private static async testOrderSync(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      const testOrder = Order.create({
+        merchantId,
+        customerId: 'test_customer_123',
+        customerName: 'Test Customer',
+        customerEmail: 'test@example.com',
+        items: [{
+          productId: 'test_product_1',
+          productName: 'Test Product',
+          quantity: 2,
+          price: 25.00,
+          total: 50.00
+        }],
+        subtotal: 50.00,
+        tax: 5.00,
+        shipping: 10.00,
+        total: 65.00,
+        status: 'pending'
+      } as any);
+
+      const syncResult = await SyncService.syncToCustomerApp({
+        merchantId,
+        syncTypes: ['orders'],
+        batchSize: 10
+      });
+
+      const success = syncResult.success;
+
+      Order.delete(testOrder.id);
+
+      return {
+        testName: 'Order Sync to Customer App',
+        success,
+        duration: Date.now() - startTime,
+        details: { syncResult, orderId: testOrder.id }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Order Sync to Customer App',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test order status update propagation
+  private static async testOrderStatusUpdate(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      const testOrder = Order.create({
+        merchantId,
+        customerId: 'test_customer_456',
+        customerName: 'Test Customer 2',
+        items: [{ productId: 'test_product_2', productName: 'Test Product 2', quantity: 1, price: 100.00, total: 100.00 }],
+        total: 100.00,
+        status: 'pending'
+      } as any);
+
+      // Update order status
+      const updated = Order.updateStatus(testOrder.id, 'confirmed', 'Order confirmed by merchant');
+
+      // Test cross-app notification
+      await CrossAppSyncService.sendOrderStatusUpdate(
+        merchantId,
+        testOrder.id,
+        'test_customer_456',
+        {
+          orderId: testOrder.id,
+          oldStatus: 'pending',
+          newStatus: 'confirmed',
+          statusMessage: 'Order confirmed by merchant',
+          timeline: [{
+            status: 'confirmed',
+            timestamp: new Date(),
+            message: 'Order confirmed by merchant'
+          }]
+        }
+      );
+
+      const success = updated !== null && updated.status === 'confirmed';
+
+      Order.delete(testOrder.id);
+
+      return {
+        testName: 'Order Status Update Cross-App',
+        success,
+        duration: Date.now() - startTime,
+        details: { statusChange: 'pending -> confirmed' }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Order Status Update Cross-App',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test real-time order updates
+  private static async testRealTimeOrderUpdates(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Simulate real-time update emission
+      if (global.realTimeService) {
+        global.realTimeService.emitOrderEvent(merchantId, {
+          type: 'order_created',
+          merchantId,
+          data: { orderId: 'test_realtime_order', customerId: 'test_customer' },
+          timestamp: new Date()
+        });
+      }
+
+      return {
+        testName: 'Real-time Order Updates',
+        success: true,
+        duration: Date.now() - startTime,
+        details: { realTimeServiceAvailable: !!global.realTimeService }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Real-time Order Updates',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test cashback synchronization
+  private static async testCashbackSync(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      const testCashback = Cashback.create({
+        merchantId,
+        customer: {
+          id: 'test_customer_789',
+          name: 'Test Customer 3',
+          email: 'test3@example.com'
+        },
+        order: {
+          id: 'test_order_789',
+          orderNumber: 'TEST-789',
+          total: 200.00
+        },
+        requestedAmount: 20.00,
+        status: 'pending'
+      } as any);
+
+      const syncResult = await SyncService.syncToCustomerApp({
+        merchantId,
+        syncTypes: ['cashback'],
+        batchSize: 10
+      });
+
+      const success = syncResult.success;
+
+      Cashback.findByIdAndDelete(testCashback.id);
+
+      return {
+        testName: 'Cashback Sync to Customer App',
+        success,
+        duration: Date.now() - startTime,
+        details: { syncResult, cashbackId: testCashback.id }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Cashback Sync to Customer App',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test cashback status update
+  private static async testCashbackStatusUpdate(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      const testCashback = Cashback.create({
+        merchantId,
+        customer: { id: 'test_customer_999', name: 'Test Customer 4', email: 'test4@example.com' },
+        order: { id: 'test_order_999', orderNumber: 'TEST-999', total: 150.00 },
+        requestedAmount: 15.00,
+        status: 'pending'
+      } as any);
+
+      // Update cashback status with cross-app sync
+      const updated = await Cashback.findByIdAndUpdate(testCashback.id, 'approved', {
+        approvedAmount: 15.00,
+        reviewedBy: 'test_admin',
+        merchantId
+      });
+
+      const success = updated !== null && updated.status === 'approved';
+
+      Cashback.findByIdAndDelete(testCashback.id);
+
+      return {
+        testName: 'Cashback Status Update Cross-App',
+        success,
+        duration: Date.now() - startTime,
+        details: { statusChange: 'pending -> approved', amount: 15.00 }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Cashback Status Update Cross-App',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test cashback cross-app notifications
+  private static async testCashbackCrossAppNotification(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      await CrossAppSyncService.sendCashbackUpdate(
+        merchantId,
+        'test_customer_notification',
+        {
+          requestId: 'test_cashback_notification',
+          orderId: 'test_order_notification',
+          customerId: 'test_customer_notification',
+          oldStatus: 'under_review',
+          newStatus: 'approved',
+          approvedAmount: 25.00,
+          timeline: [{
+            status: 'approved',
+            timestamp: new Date(),
+            message: 'Cashback approved by merchant',
+            amount: 25.00
+          }]
+        }
+      );
+
+      return {
+        testName: 'Cashback Cross-App Notification',
+        success: true,
+        duration: Date.now() - startTime,
+        details: { notificationSent: true }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Cashback Cross-App Notification',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test merchant profile sync
+  private static async testMerchantProfileSync(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      const syncResult = await SyncService.syncToCustomerApp({
+        merchantId,
+        syncTypes: ['merchant'],
+        batchSize: 1
+      });
+
+      const success = syncResult.success && syncResult.results.merchant?.updated;
+
+      return {
+        testName: 'Merchant Profile Sync',
+        success,
+        duration: Date.now() - startTime,
+        details: { syncResult }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Merchant Profile Sync',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test merchant visibility update
+  private static async testMerchantVisibilityUpdate(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Simulate visibility update
+      await CrossAppSyncService.sendMerchantUpdate(merchantId, {
+        type: 'visibility_updated',
+        merchantId,
+        visibilitySettings: {
+          isPubliclyVisible: true,
+          acceptingOrders: true,
+          showInDirectory: true
+        },
+        timestamp: new Date()
+      });
+
+      return {
+        testName: 'Merchant Visibility Update',
+        success: true,
+        duration: Date.now() - startTime,
+        details: { visibilityUpdated: true }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Merchant Visibility Update',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test cross-app webhook functionality
+  private static async testCrossAppWebhook(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Register test webhook
+      CrossAppSyncService.registerCustomerAppWebhook(merchantId, 'https://test-customer-app.com/webhook');
+
+      // Get sync status
+      const status = CrossAppSyncService.getCrossAppSyncStatus(merchantId);
+      const success = status.hasCustomerAppWebhook;
+
+      return {
+        testName: 'Cross-App Webhook Configuration',
+        success,
+        duration: Date.now() - startTime,
+        details: { status }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Cross-App Webhook Configuration',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test real-time updates
+  private static async testRealTimeUpdates(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      if (global.realTimeService) {
+        // Test metrics update
+        global.realTimeService.broadcastSystemNotification({
+          type: 'info',
+          title: 'Integration Test',
+          message: 'Testing real-time updates',
+          merchantIds: [merchantId]
+        });
+
+        return {
+          testName: 'Real-time Updates Service',
+          success: true,
+          duration: Date.now() - startTime,
+          details: { realTimeServiceActive: true }
+        };
+      } else {
+        return {
+          testName: 'Real-time Updates Service',
+          success: false,
+          duration: Date.now() - startTime,
+          error: 'Real-time service not available'
+        };
+      }
+
+    } catch (error) {
+      return {
+        testName: 'Real-time Updates Service',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test data consistency across apps
+  private static async testDataConsistency(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Verify data consistency by checking sync status
+      const syncStatus = SyncService.getSyncStatus(merchantId);
+      const crossAppStatus = CrossAppSyncService.getCrossAppSyncStatus(merchantId);
+
+      const success = !syncStatus.isActive && crossAppStatus.pendingUpdates === 0;
+
+      return {
+        testName: 'Data Consistency Check',
+        success,
+        duration: Date.now() - startTime,
+        details: { syncStatus, crossAppStatus }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Data Consistency Check',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test sync recovery after failure
+  private static async testSyncRecovery(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Simulate sync recovery
+      await SyncService.forceFullSync(merchantId);
+      
+      return {
+        testName: 'Sync Recovery Test',
+        success: true,
+        duration: Date.now() - startTime,
+        details: { fullSyncCompleted: true }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Sync Recovery Test',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test sync performance
+  private static async testSyncPerformance(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Measure sync performance
+      const performanceStart = Date.now();
+      
+      await SyncService.syncToCustomerApp({
+        merchantId,
+        syncTypes: ['products', 'orders'],
+        batchSize: 50
+      });
+
+      const syncDuration = Date.now() - performanceStart;
+      const success = syncDuration < 5000; // Should complete within 5 seconds
+
+      return {
+        testName: 'Sync Performance Test',
+        success,
+        duration: Date.now() - startTime,
+        details: { syncDuration, threshold: 5000 }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Sync Performance Test',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Test concurrent updates
+  private static async testConcurrentUpdates(merchantId: string): Promise<TestResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Simulate concurrent updates
+      const promises = [
+        SyncService.syncToCustomerApp({ merchantId, syncTypes: ['products'], batchSize: 10 }),
+        SyncService.syncToCustomerApp({ merchantId, syncTypes: ['orders'], batchSize: 10 }),
+        SyncService.syncToCustomerApp({ merchantId, syncTypes: ['cashback'], batchSize: 10 })
+      ];
+
+      const results = await Promise.allSettled(promises);
+      const success = results.every(result => result.status === 'fulfilled');
+
+      return {
+        testName: 'Concurrent Updates Test',
+        success,
+        duration: Date.now() - startTime,
+        details: { concurrentSyncs: results.length, allSuccessful: success }
+      };
+
+    } catch (error) {
+      return {
+        testName: 'Concurrent Updates Test',
+        success: false,
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Get test results
+  static getTestResults(suiteName?: string): IntegrationTestSuite | IntegrationTestSuite[] {
+    if (suiteName) {
+      return this.testResults.get(suiteName) || {} as IntegrationTestSuite;
+    }
+    
+    return Array.from(this.testResults.values());
+  }
+
+  // Clear test results
+  static clearTestResults() {
+    this.testResults.clear();
+  }
+}

@@ -1,0 +1,106 @@
+# Prometheus Alerting Rules for REZ Backend
+
+groups:
+  - name: rez-api-alerts
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High error rate detected
+          description: "Error rate is {{ $value }} errors/second over the last 5 minutes"
+
+      # High latency
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High API latency detected
+          description: "95th percentile latency is {{ $value }}s"
+
+      # API down
+      - alert: APIDown
+        expr: up{job="rez-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: REZ API is down
+          description: "REZ API has been down for more than 1 minute"
+
+      # High request rate
+      - alert: HighRequestRate
+        expr: rate(http_requests_total[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Unusually high request rate
+          description: "Request rate is {{ $value }} req/s"
+
+      # Database connection issues
+      - alert: DatabaseConnectionLow
+        expr: db_connections_active < 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: No active database connections
+          description: "Database connections have been at 0 for 2 minutes"
+
+      # High database query time
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Slow database queries detected
+          description: "95th percentile database query time is {{ $value }}s"
+
+      # High memory usage (if node_exporter is available)
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High memory usage
+          description: "Memory usage is above 90%"
+
+      # High CPU usage (if node_exporter is available)
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High CPU usage
+          description: "CPU usage is above 80%"
+
+  - name: rez-business-alerts
+    rules:
+      # Low order rate (potential issue)
+      - alert: LowOrderRate
+        expr: rate(orders_total{status="completed"}[1h]) < 0.01
+        for: 1h
+        labels:
+          severity: info
+        annotations:
+          summary: Low order completion rate
+          description: "Order completion rate is unusually low"
+
+      # High failed payment rate
+      - alert: HighPaymentFailureRate
+        expr: rate(orders_total{status="failed"}[1h]) / rate(orders_total[1h]) > 0.1
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: High payment failure rate
+          description: "Payment failure rate is above 10%"

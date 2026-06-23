@@ -1,0 +1,384 @@
+{
+  "info": {
+    "name": "REZ API",
+    "description": "REZ Platform API — User Authentication, Wallet, and Orders.\n\nSetup:\n1. Send OTP to your phone number\n2. Verify OTP — the access token is auto-saved to {{accessToken}}\n3. All subsequent requests use Bearer {{accessToken}} automatically",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "1. Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+919876543210\",\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/auth/send-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "auth", "send-otp"]
+            },
+            "description": "Send a 6-digit OTP to the phone number. In dev mode, the OTP is returned in the response."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data.tokens) {",
+                  "  pm.collectionVariables.set('accessToken', res.data.tokens.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.tokens.refreshToken);",
+                  "  console.log('Tokens saved to collection variables');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+919876543210\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/auth/verify-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "auth", "verify-otp"]
+            },
+            "description": "Verify OTP and get JWT tokens. The access token is automatically saved to {{accessToken}} via the test script."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data.tokens) {",
+                  "  pm.collectionVariables.set('accessToken', res.data.tokens.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.tokens.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "auth", "refresh-token"]
+            },
+            "description": "Refresh expired access token using the refresh token. New tokens are auto-saved."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "auth", "me"]
+            },
+            "description": "Get the authenticated user's full profile."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"profile\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"gender\": \"male\"\n  },\n  \"preferences\": {\n    \"language\": \"en\",\n    \"notifications\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "auth", "profile"]
+            },
+            "description": "Update user profile fields and preferences."
+          },
+          "response": []
+        },
+        {
+          "name": "6. Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "auth", "logout"]
+            },
+            "description": "Blacklist current tokens and end the session."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        {
+          "name": "7. Get Wallet Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "balance"]
+            },
+            "description": "Get comprehensive wallet balance including rez coins, branded coins, promo coins, limits, and status."
+          },
+          "response": []
+        },
+        {
+          "name": "8. Get Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/transactions?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "transactions"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "type", "value": "", "disabled": true },
+                { "key": "category", "value": "", "disabled": true },
+                { "key": "status", "value": "", "disabled": true },
+                { "key": "dateFrom", "value": "", "disabled": true },
+                { "key": "dateTo", "value": "", "disabled": true }
+              ]
+            },
+            "description": "List wallet transactions with pagination and filters. Enable optional query params as needed."
+          },
+          "response": []
+        },
+        {
+          "name": "9. Initiate Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 500,\n  \"currency\": \"NC\",\n  \"paymentMethod\": \"stripe\",\n  \"paymentMethodType\": \"card\",\n  \"purpose\": \"wallet_topup\",\n  \"metadata\": {\n    \"fiatCurrency\": \"AED\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/initiate-payment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "initiate-payment"]
+            },
+            "description": "Initiate a payment via payment gateway (Stripe/Razorpay/PayPal). Returns clientSecret for Stripe."
+          },
+          "response": []
+        },
+        {
+          "name": "10. Confirm Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentIntentId\": \"pi_xxx\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/confirm-payment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "confirm-payment"]
+            },
+            "description": "Confirm a Stripe payment intent. Idempotent — safe to retry."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "11. Create Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data.order) {",
+                  "  pm.collectionVariables.set('orderId', res.data.order._id);",
+                  "  console.log('Order ID saved: ' + res.data.order._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryAddress\": {\n    \"name\": \"John Doe\",\n    \"phone\": \"+919876543210\",\n    \"addressLine1\": \"123 Main Street\",\n    \"city\": \"Dubai\",\n    \"state\": \"Dubai\",\n    \"pincode\": \"123456\"\n  },\n  \"paymentMethod\": \"wallet\",\n  \"fulfillmentType\": \"delivery\",\n  \"idempotencyKey\": \"unique-key-here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            },
+            "description": "Create an order from the user's cart. The order ID is auto-saved to {{orderId}}."
+          },
+          "response": []
+        },
+        {
+          "name": "12. List Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders?page=1&limit=20&statusGroup=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "statusGroup", "value": "active" },
+                { "key": "status", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "sort", "value": "newest", "disabled": true },
+                { "key": "cursor", "value": "", "disabled": true }
+              ]
+            },
+            "description": "List user orders with pagination. Supports both offset (page/limit) and cursor-based pagination."
+          },
+          "response": []
+        },
+        {
+          "name": "13. Get Order Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "{{orderId}}"]
+            },
+            "description": "Get full order details with populated items, store info, progress tracking, and ETA."
+          },
+          "response": []
+        },
+        {
+          "name": "14. Cancel Order",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Changed my mind\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "{{orderId}}", "cancel"]
+            },
+            "description": "Cancel an order. Only works for orders in placed/confirmed/preparing status. Restores stock and refunds coins/payment."
+          },
+          "response": []
+        },
+        {
+          "name": "15. Rate Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"review\": \"Great food and fast delivery!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/rate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "{{orderId}}", "rate"]
+            },
+            "description": "Rate and review a completed order. Rating: 1-5, review: max 1000 chars."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+appId: com.nuqta.app
+name: "Wallet - Add money flow"
+tags:
+  - critical
+  - wallet
+
+---
+
+# Launch app
+- launchApp
+
+# Wait for app to finish loading before checking auth state
+- waitForAnimationToEnd
+
+# Login if needed
+- runFlow:
+    when:
+      visible: "Mobile number"
+    file: helpers/login.yaml
+
+# Wait for home screen
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 10000
+
+# Navigate to wallet - tap the wallet icon/coin chip on home
+- tapOn:
+    id: "wallet-balance-chip"
+
+# Wait for wallet screen
+- extendedWaitUntil:
+    visible:
+      id: "wallet-screen"
+    timeout: 8000
+
+# Take screenshot of wallet
+- takeScreenshot: "wallet_home"
+
+# Verify balance is visible
+- assertVisible:
+    id: "wallet-balance-display"
+
+# --- ADD MONEY FLOW ---
+# Tap Add Money / Recharge button
+- tapOn:
+    id: "add-money-button"
+
+# Wait for recharge screen/modal
+- extendedWaitUntil:
+    visible:
+      id: "recharge-screen"
+    timeout: 5000
+
+# Select a preset amount (500 NC)
+- tapOn:
+    id: "amount-option-500"
+
+# Or enter custom amount
+# - tapOn:
+#     id: "custom-amount-input"
+# - inputText: "100"
+
+- takeScreenshot: "add_money_amount_selected"
+
+# Select UPI as payment method
+- tapOn:
+    id: "payment-method-upi"
+
+# Tap Pay / Proceed button
+- tapOn:
+    id: "pay-button"
+
+# Wait for payment processing (UPI redirect or success)
+# In test/staging env, this should auto-succeed
+- extendedWaitUntil:
+    visible:
+      id: "payment-success"
+    timeout: 20000
+
+# Verify balance updated
+- assertVisible:
+    id: "wallet-balance-display"
+
+- takeScreenshot: "wallet_after_recharge"

@@ -1,0 +1,51 @@
+name: TypeScript Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  typecheck:
+    name: TypeScript type check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit 2>&1 | tee tsc-output.txt
+
+      - name: Count errors
+        id: count
+        run: |
+          ERRORS=$(npx tsc --noEmit 2>&1 | grep -c "error TS" || true)
+          echo "errors=$ERRORS" >> "$GITHUB_OUTPUT"
+          echo "::notice::TypeScript errors found: $ERRORS"
+
+      - name: Upload error log
+        if: steps.count.outputs.errors != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsc-errors
+          path: tsc-output.txt
+          retention-days: 7
+
+      - name: Fail on errors
+        if: steps.count.outputs.errors != '0'
+        run: |
+          echo "::error::Build failed with TypeScript errors"
+          npx tsc --noEmit 2>&1 | head -20
+          exit 1

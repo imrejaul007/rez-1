@@ -1,0 +1,15 @@
+# Grafana Dashboard Provider Configuration
+# Auto-loads dashboards from the dashboards directory
+
+apiVersion: 1
+
+providers:
+  - name: 'REZ Dashboards'
+    orgId: 1
+    folder: 'REZ'
+    folderUid: 'rez'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

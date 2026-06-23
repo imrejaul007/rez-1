@@ -1,0 +1,2 @@
+- remember when u need more context for this project go to this folder & 'c:\Users\Mukul raj\Downloads\rez-new\rez-app\.claude\context'
+- whenever u need more context u can read these folder & 'c:\Users\Mukul raj\Downloads\rez-new\rez-app\.claude\context'& 'c:\Users\Mukul raj\Downloads\rez-new\rez-app\frontend\.claude\context'& 'c:\Users\Mukul raj\Downloads\rez-new\rez-app\user-backend\.claude\context'

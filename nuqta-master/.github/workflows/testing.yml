@@ -1,0 +1,317 @@
+name: Testing Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Manual trigger
+
+env:
+  NODE_VERSION: '18.x'
+  COVERAGE_THRESHOLD: 70
+
+jobs:
+  # Fast tests - required for all PRs
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run unit tests
+        working-directory: ./frontend
+        run: npm test -- --testPathPattern="__tests__/(services|hooks|components|utils)" --coverage=false
+
+      - name: Test summary
+        if: always()
+        run: echo "✅ Unit tests completed"
+
+  # Integration tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: unit-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run integration tests
+        working-directory: ./frontend
+        run: npm test -- --testPathPattern="__tests__/integration" --coverage=false
+
+      - name: Test summary
+        if: always()
+        run: echo "✅ Integration tests completed"
+
+  # Coverage reporting
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [unit-tests, integration-tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Generate coverage report
+        working-directory: ./frontend
+        run: npm run test:coverage
+
+      - name: Check coverage threshold
+        working-directory: ./frontend
+        run: |
+          COVERAGE=$(node -pe "Math.min(...Object.values(require('./coverage/coverage-summary.json').total).map(m => m.pct))")
+          echo "Overall coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < $COVERAGE_THRESHOLD" | bc -l) )); then
+            echo "❌ Coverage $COVERAGE% is below threshold $COVERAGE_THRESHOLD%"
+            exit 1
+          else
+            echo "✅ Coverage $COVERAGE% meets threshold $COVERAGE_THRESHOLD%"
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: frontend/coverage/
+          retention-days: 30
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: orgoro/coverage@v3.1
+        with:
+          coverageFile: frontend/coverage/lcov.info
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Linting and type checking
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Run TypeScript compiler
+        working-directory: ./frontend
+        run: npx tsc --noEmit
+
+      - name: Code quality summary
+        if: always()
+        run: echo "✅ Code quality checks completed"
+
+  # E2E tests (only on main branch or manual trigger)
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    needs: [unit-tests, integration-tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Setup E2E environment
+        run: echo "Setting up E2E test environment..."
+
+      - name: Run E2E tests
+        working-directory: ./frontend
+        run: |
+          echo "⚠️ E2E tests require Detox setup"
+          echo "Configure Detox before enabling E2E tests"
+          # npm run e2e:test
+
+      - name: Upload E2E artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: |
+            frontend/e2e/screenshots/
+            frontend/e2e/videos/
+          retention-days: 7
+
+  # Performance tests (nightly only)
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event.schedule == '0 2 * * *'
+    needs: [unit-tests, integration-tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run performance tests
+        working-directory: ./frontend
+        run: node scripts/test-automation.js performance
+
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: frontend/test-reports/
+          retention-days: 30
+
+  # Summary job
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, coverage, code-quality]
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Unit Tests: ${{ needs.unit-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Integration Tests: ${{ needs.integration-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Coverage: ${{ needs.coverage.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Code Quality: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: All tests passed
+        if: needs.unit-tests.result == 'success' && needs.integration-tests.result == 'success' && needs.coverage.result == 'success' && needs.code-quality.result == 'success'
+        run: echo "🎉 All tests passed!"
+
+      - name: Some tests failed
+        if: needs.unit-tests.result == 'failure' || needs.integration-tests.result == 'failure' || needs.coverage.result == 'failure' || needs.code-quality.result == 'failure'
+        run: |
+          echo "❌ Some tests failed"
+          exit 1
+
+  # Security checks (mirrors backend/auth-service CI)
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect weak dev-... secrets in .env
+        # Catches regressions: prevents dev-... placeholder secrets from
+        # being re-committed to the frontend .env.
+        run: |
+          WEAK=$(grep -E "(dev-jwt-secret|dev-internal-token|dev-.*-placeholder|dev-.*-change-me)" .env 2>/dev/null | wc -l)
+          if [ "$WEAK" -gt 0 ]; then
+            echo "::error::Found $WEAK weak dev-... placeholder secrets in .env"
+            exit 1
+          else
+            echo "✓ No weak dev-... placeholder secrets"
+          fi
+
+      - name: Detect mass-assignment sites
+        # Catches regressions: any new file using { ...req.body } in
+        # service code that talks to the backend.
+        run: |
+          BAD_SPREAD=$(grep -rn "\.\.\.\s*req\.body" services/ 2>/dev/null | grep -v "pick(req" | grep -v "// " | wc -l)
+          if [ "$BAD_SPREAD" -gt 0 ]; then
+            echo "::error::Found $BAD_SPREAD mass-assignment sites in services/:"
+            grep -rn "\.\.\.\s*req\.body" services/ 2>/dev/null | grep -v "pick(req" | grep -v "// "
+            exit 1
+          else
+            echo "✓ No mass-assignment sites"
+          fi
+
+      - name: Verify deleted dead code is gone
+        # The dead code was removed in iter 7 (notificationsApi push methods).
+        # If anyone re-introduces them, fail the build.
+        run: |
+          DEAD=$(grep -rn "/notifications/push/subscribe" services/ 2>/dev/null | wc -l)
+          if [ "$DEAD" -gt 0 ]; then
+            echo "::error::Found $DEAD references to deleted /notifications/push/subscribe endpoint"
+            exit 1
+          else
+            echo "✓ No dead-code references"
+          fi

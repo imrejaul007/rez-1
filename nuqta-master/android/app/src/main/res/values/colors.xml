@@ -1,0 +1,6 @@
+<resources>
+  <color name="iconBackground">#1a3a52</color>
+  <color name="colorPrimary">#023c69</color>
+  <color name="colorPrimaryDark">#ffffff</color>
+  <color name="notification_icon_color">#1a3a52</color>
+</resources>

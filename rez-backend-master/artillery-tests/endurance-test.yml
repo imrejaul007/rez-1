@@ -1,0 +1,87 @@
+config:
+  target: "http://localhost:5001"
+  phases:
+    - duration: 1800  # 30 minutes
+      arrivalRate: 200
+      name: "Endurance test - sustained load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+  ensure:
+    p95: 400
+    maxErrorRate: 1  # Max 1% error rate
+
+scenarios:
+  - name: "Typical User Journey"
+    weight: 40
+    flow:
+      # Browse products
+      - get:
+          url: "/api/products"
+          qs:
+            page: 1
+            limit: 20
+      - think: 2
+
+      # View product detail
+      - get:
+          url: "/api/products"
+          qs:
+            limit: 1
+          capture:
+            - json: "$[0]._id"
+              as: "productId"
+      - get:
+          url: "/api/products/{{ productId }}"
+      - think: 3
+
+      # View related categories
+      - get:
+          url: "/api/categories"
+      - think: 2
+
+  - name: "Search and Browse"
+    weight: 30
+    flow:
+      # Search products
+      - get:
+          url: "/api/products/search"
+          qs:
+            q: "product"
+            limit: 10
+      - think: 2
+
+      # Browse stores
+      - get:
+          url: "/api/stores"
+          qs:
+            page: 1
+            limit: 10
+      - think: 3
+
+  - name: "Content Consumer"
+    weight: 30
+    flow:
+      # View videos
+      - get:
+          url: "/api/videos"
+          qs:
+            page: 1
+            limit: 10
+      - think: 2
+
+      # View articles
+      - get:
+          url: "/api/articles"
+          qs:
+            page: 1
+            limit: 10
+      - think: 3
+
+      # Check offers
+      - get:
+          url: "/api/offers"
+          qs:
+            page: 1
+            limit: 10
+      - think: 2

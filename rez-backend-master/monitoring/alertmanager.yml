@@ -1,0 +1,111 @@
+global:
+  resolve_timeout: 5m
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+
+route:
+  receiver: 'default'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+
+  routes:
+    # Payment critical alerts
+    - match:
+        severity: critical
+        team: payments
+      receiver: 'payments-critical'
+      group_wait: 5s
+      repeat_interval: 1h
+
+    # Database critical alerts
+    - match:
+        severity: critical
+        team: database
+      receiver: 'database-critical'
+      group_wait: 5s
+      repeat_interval: 1h
+
+    # Infrastructure warnings
+    - match:
+        severity: warning
+        team: infrastructure
+      receiver: 'infrastructure-warnings'
+      group_wait: 15s
+      repeat_interval: 4h
+
+    # Backend warnings
+    - match:
+        severity: warning
+        team: backend
+      receiver: 'backend-warnings'
+      group_wait: 15s
+      repeat_interval: 4h
+
+receivers:
+  # Default receiver: all alerts to Slack
+  - name: 'default'
+    slack_configs:
+      - channel: '#alerts'
+        title: '{{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        send_resolved: true
+
+  # Critical payment alerts: urgent Slack + PagerDuty
+  - name: 'payments-critical'
+    slack_configs:
+      - channel: '#payments-critical'
+        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}\nRunbook: {{ .Annotations.runbook }}{{ end }}'
+        color: 'danger'
+        send_resolved: true
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY_PAYMENTS}'
+        description: '{{ .GroupLabels.alertname }}'
+
+  # Critical database alerts: urgent Slack + PagerDuty
+  - name: 'database-critical'
+    slack_configs:
+      - channel: '#database-critical'
+        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}\nRunbook: {{ .Annotations.runbook }}{{ end }}'
+        color: 'danger'
+        send_resolved: true
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY_DATABASE}'
+        description: '{{ .GroupLabels.alertname }}'
+
+  # Infrastructure warnings
+  - name: 'infrastructure-warnings'
+    slack_configs:
+      - channel: '#infrastructure'
+        title: '⚠️ {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}\nRunbook: {{ .Annotations.runbook }}{{ end }}'
+        color: 'warning'
+        send_resolved: true
+
+  # Backend warnings
+  - name: 'backend-warnings'
+    slack_configs:
+      - channel: '#backend'
+        title: '⚠️ {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}\nRunbook: {{ .Annotations.runbook }}{{ end }}'
+        color: 'warning'
+        send_resolved: true
+
+inhibit_rules:
+  # Don't alert on warning if critical alert is already firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
+
+  # Suppress payment warnings if payment critical alert is active
+  - source_match:
+      severity: 'critical'
+      team: 'payments'
+    target_match:
+      severity: 'warning'
+      team: 'payments'

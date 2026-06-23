@@ -1,0 +1,12 @@
+/**
+ * ErrorBoundary — backward-compatible re-export of FeatureErrorBoundary.
+ *
+ * All new code should import FeatureErrorBoundary directly:
+ *   import FeatureErrorBoundary from '@/components/common/FeatureErrorBoundary';
+ *
+ * This file exists so existing consumers that do
+ *   import ErrorBoundary from '@/components/common/ErrorBoundary';
+ * continue to work without changes.
+ */
+
+export { FeatureErrorBoundary as default } from './FeatureErrorBoundary';

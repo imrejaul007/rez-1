@@ -1,0 +1,76 @@
+groups:
+  - name: rez-ecosystem
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+          / sum(rate(http_requests_total[5m])) > 0.01
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate ({{ $value | humanizePercentage }})"
+          description: "Service {{ $labels.service }} has >1% 5xx errors for 2+ minutes"
+
+      # High p99 latency
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High p99 latency ({{ $value }}s)"
+          description: "Service {{ $labels.service }} p99 latency exceeds 2s"
+
+      # BullMQ queue depth
+      - alert: BullMQQueueBacklog
+        expr: bull_queue_size > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue {{ $labels.queue }} has {{ $value }} pending jobs"
+          description: "Queue backlog persists for 5+ minutes"
+
+      # BullMQ job failures
+      - alert: BullMQJobFailures
+        expr: |
+          sum(rate(bull_queue_jobs_total{status="failed"}[5m]))
+          / sum(rate(bull_queue_jobs_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Queue {{ $labels.queue }} has >5% failure rate"
+          description: "Job failure rate persists for 5+ minutes"
+
+      # Service down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          process_resident_memory_bytes / process_max_memory_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service {{ $labels.service }} memory usage >85%"
+
+      # Circuit breaker open
+      - alert: CircuitBreakerOpen
+        expr: circuit_breaker_state == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Circuit breaker OPEN for {{ $labels.service }}"
+          description: "Service {{ $labels.service }} is not accepting traffic"

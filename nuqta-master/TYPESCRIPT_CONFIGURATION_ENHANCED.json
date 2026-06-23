@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    // ============================================
+    // STRICT MODE (Currently Enabled)
+    // ============================================
+    "strict": true,
+    // When true, enables:
+    // - noImplicitAny
+    // - strictNullChecks
+    // - strictFunctionTypes
+    // - strictBindCallApply
+    // - strictPropertyInitialization
+    // - noImplicitThis
+    // - alwaysStrict
+
+    // ============================================
+    // PHASE 1: Enable These (Quick Wins)
+    // ============================================
+    "noUnusedLocals": true,
+    // Recommended: true
+    // Report errors on unused local variables
+    // Example: const unusedVar = 5; // Error!
+
+    "noUnusedParameters": true,
+    // Recommended: true
+    // Report errors on unused function parameters
+    // Use _prefix for intentionally unused: function foo(_unused: string) {}
+
+    "noImplicitReturns": true,
+    // Recommended: true
+    // Ensure all code paths in function return a value
+    // Example: function foo(x: number) {
+    //   if (x > 0) return x; // Error: not all paths return
+    // }
+
+    "noFallthroughCasesInSwitch": true,
+    // Recommended: true
+    // Prevent accidental fallthrough in switch statements
+    // Requires explicit 'break' or 'return'
+
+    // ============================================
+    // PHASE 3: Enable These (Advanced)
+    // ============================================
+    // "noUncheckedIndexedAccess": true,
+    // When enabled: arr[0] has type T | undefined
+    // Prevents undefined access bugs
+    // WARNING: Will create many errors initially
+
+    // "noImplicitOverride": true,
+    // Requires 'override' keyword for class methods
+    // Only useful if using classes extensively
+
+    // "exactOptionalPropertyTypes": true,
+    // Distinguishes { key?: string } from { key: string | undefined }
+    // Advanced feature, may break existing code
+
+    // ============================================
+    // PROJECT CONFIGURATION
+    // ============================================
+    "paths": {
+      "@/*": ["./*"]
+    },
+    // Path aliases for clean imports
+    // Usage: import { User } from '@/types/user';
+    // Instead of: import { User } from '../../../types/user';
+
+    // ============================================
+    // PERFORMANCE
+    // ============================================
+    "incremental": true,
+    // Recommended: true
+    // Enables incremental compilation for faster rebuilds
+    // Creates .tsbuildinfo file for caching
+
+    // "skipLibCheck": true,
+    // Already enabled via expo/tsconfig.base
+    // Skips type checking of declaration files (*.d.ts)
+    // Improves compilation speed
+
+    // ============================================
+    // MODULE RESOLUTION (Inherited from Expo)
+    // ============================================
+    // "moduleResolution": "node",
+    // "esModuleInterop": true,
+    // "allowSyntheticDefaultImports": true,
+    // "resolveJsonModule": true,
+
+    // ============================================
+    // JSX CONFIGURATION (Inherited from Expo)
+    // ============================================
+    // "jsx": "react-native",
+
+    // ============================================
+    // ADDITIONAL RECOMMENDATIONS
+    // ============================================
+    "forceConsistentCasingInFileNames": true,
+    // Recommended: true
+    // Enforce consistent file name casing
+    // Prevents issues when deploying from Mac/Windows to Linux
+
+    "allowUnreachableCode": false,
+    // Recommended: false
+    // Error on unreachable code
+    // Example: return x; console.log('never runs'); // Error!
+
+    "allowUnusedLabels": false,
+    // Recommended: false
+    // Error on unused labels
+    // Catches typos and unused code
+
+    // ============================================
+    // TYPE ACQUISITION (Optional)
+    // ============================================
+    "types": [
+      "node",
+      "jest",
+      "react",
+      "react-native"
+    ]
+    // Explicitly include types
+    // Useful if skipLibCheck is false
+  },
+
+  // ============================================
+  // FILES TO INCLUDE
+  // ============================================
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "src",
+    "components"
+  ],
+
+  // ============================================
+  // FILES TO EXCLUDE
+  // ============================================
+  "exclude": [
+    "node_modules",
+    "tests.bak",
+    "tests",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "coverage",
+    "dist",
+    "build"
+  ],
+
+  // ============================================
+  // TYPE ACQUISITION
+  // ============================================
+  "typeAcquisition": {
+    "enable": true,
+    "include": [],
+    "exclude": []
+  },
+
+  // ============================================
+  // MIGRATION NOTES
+  // ============================================
+  // Phase 1 (Weeks 2-3):
+  // - Enable noUnusedLocals, noUnusedParameters
+  // - Enable noImplicitReturns, noFallthroughCasesInSwitch
+  // - Fix resulting ~50-100 errors
+
+  // Phase 2 (Weeks 4-7):
+  // - Keep strict mode enabled
+  // - Focus on reducing 'any' usage in code
+  // - No config changes needed
+
+  // Phase 3 (Weeks 8-11):
+  // - Consider enabling noUncheckedIndexedAccess
+  // - Evaluate if exactOptionalPropertyTypes is needed
+  // - May need to disable temporarily and fix gradually
+
+  // Phase 4 (Weeks 12-16):
+  // - All recommended options enabled
+  // - Zero tolerance for new 'any' types
+  // - CI enforces type checking
+
+  // ============================================
+  // TROUBLESHOOTING
+  // ============================================
+  // If compilation is too slow:
+  // - Ensure incremental: true
+  // - Consider skipLibCheck: true (already enabled)
+  // - Use project references for monorepos
+
+  // If you get too many errors:
+  // - Enable options one at a time
+  // - Use // @ts-expect-error with explanation
+  // - Create issue to track and fix later
+
+  // If third-party types are wrong:
+  // - Create custom .d.ts file in types/
+  // - Use module augmentation
+  // - File issue with library maintainer
+
+  // ============================================
+  // RECOMMENDED COMMANDS
+  // ============================================
+  // Check types: npx tsc --noEmit
+  // Watch mode: npx tsc --noEmit --watch
+  // Generate declaration files: npx tsc --declaration --emitDeclarationOnly
+  // Show config: npx tsc --showConfig
+}

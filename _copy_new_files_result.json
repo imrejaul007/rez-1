@@ -1,0 +1,37 @@
+{
+  "attempted": 943,
+  "copied": 923,
+  "skipped_excluded": 20,
+  "skipped_existed": 0,
+  "skipped_env": 0,
+  "errors": 0,
+  "excluded_breakdown": {
+    "pattern": 20,
+    "lockfile": 0,
+    "env": 0
+  },
+  "existed_paths": [],
+  "error_paths": [],
+  "excluded_paths_sample": [
+    ".claude-flow/data/auto-memory-store.json",
+    ".claude-flow/data/graph-state.json",
+    ".claude-flow/data/intelligence-snapshot.json",
+    ".claude-flow/data/pending-insights.jsonl",
+    ".claude-flow/data/ranked-context.json",
+    ".claude-flow/sessions/session-1775066127685.json",
+    ".claude-flow/sessions/session-1775500494177.json",
+    ".claude-flow/sessions/session-1775812364903.json",
+    ".claude-flow/sessions/session-1775815708684.json",
+    ".claude-flow/sessions/session-1775939000450.json",
+    ".claude-flow/sessions/session-1775979767747.json",
+    ".claude-flow/sessions/session-1775981559842.json",
+    "src/.claude-flow/data/auto-memory-store.json",
+    "src/.claude-flow/data/graph-state.json",
+    "src/.claude-flow/data/intelligence-snapshot.json",
+    "src/.claude-flow/data/pending-insights.jsonl",
+    "src/.claude-flow/data/ranked-context.json",
+    "src/.claude-flow/sessions/current.json",
+    "src/.claude-flow/sessions/session-1775608919799.json",
+    "src/merchantroutes/.claude-flow/data/pending-insights.jsonl"
+  ]
+}

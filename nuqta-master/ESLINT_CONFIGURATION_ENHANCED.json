@@ -1,0 +1,351 @@
+{
+  "// ENHANCED ESLINT CONFIGURATION": "For Rez App Frontend - React Native + Expo + TypeScript",
+  "// REVIEW REQUIRED": "This configuration requires team review before implementation",
+  "// VERSION": "ESLint 8.x Legacy Format",
+
+  "root": true,
+
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true,
+    "react-native/react-native": true
+  },
+
+  "extends": [
+    "expo",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:react-native/all",
+    "plugin:jsx-a11y/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript",
+    "plugin:security/recommended"
+  ],
+
+  "parser": "@typescript-eslint/parser",
+
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "project": "./tsconfig.json"
+  },
+
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "react-hooks",
+    "react-native",
+    "jsx-a11y",
+    "import",
+    "security"
+  ],
+
+  "settings": {
+    "react": {
+      "version": "detect"
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true,
+        "project": "./tsconfig.json"
+      },
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
+  },
+
+  "ignorePatterns": [
+    "dist",
+    "build",
+    "node_modules",
+    ".expo",
+    ".expo-shared",
+    "coverage",
+    "__tests__",
+    "__mocks__",
+    "tests.bak",
+    "*.test.ts",
+    "*.test.tsx",
+    "*.spec.ts",
+    "*.spec.tsx",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js",
+    "jest.setup.js",
+    "eslint.config.js",
+    ".eslintrc.temp.js",
+    "eslint-full-report.json",
+    "analyze-eslint.js"
+  ],
+
+  "rules": {
+    "// ==========================================": "",
+    "// TYPESCRIPT RULES - Enhanced Type Safety": "",
+    "// ==========================================": "",
+
+    "@typescript-eslint/no-explicit-any": ["error", {
+      "fixToUnknown": true,
+      "ignoreRestArgs": false
+    }],
+    "@typescript-eslint/no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_",
+      "caughtErrorsIgnorePattern": "^_",
+      "destructuredArrayIgnorePattern": "^_"
+    }],
+    "@typescript-eslint/no-var-requires": "error",
+    "@typescript-eslint/explicit-function-return-type": ["warn", {
+      "allowExpressions": true,
+      "allowTypedFunctionExpressions": true,
+      "allowHigherOrderFunctions": true
+    }],
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/ban-ts-comment": ["error", {
+      "ts-expect-error": "allow-with-description",
+      "ts-ignore": true,
+      "ts-nocheck": true,
+      "minimumDescriptionLength": 10
+    }],
+    "@typescript-eslint/array-type": ["warn", {
+      "default": "array-simple"
+    }],
+    "@typescript-eslint/consistent-type-imports": ["warn", {
+      "prefer": "type-imports",
+      "disallowTypeAnnotations": false
+    }],
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/no-misused-promises": "error",
+    "@typescript-eslint/await-thenable": "error",
+    "@typescript-eslint/no-unnecessary-type-assertion": "warn",
+    "@typescript-eslint/prefer-nullish-coalescing": "warn",
+    "@typescript-eslint/prefer-optional-chain": "warn",
+    "@typescript-eslint/no-unsafe-assignment": "warn",
+    "@typescript-eslint/no-unsafe-member-access": "warn",
+    "@typescript-eslint/no-unsafe-call": "warn",
+    "@typescript-eslint/no-unsafe-return": "warn",
+
+    "// ==========================================": "",
+    "// REACT RULES - Component Best Practices": "",
+    "// ==========================================": "",
+
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "react/display-name": "warn",
+    "react/jsx-no-undef": "error",
+    "react/jsx-uses-react": "off",
+    "react/jsx-uses-vars": "error",
+    "react/no-array-index-key": "warn",
+    "react/no-deprecated": "warn",
+    "react/no-direct-mutation-state": "error",
+    "react/no-unescaped-entities": "warn",
+    "react/self-closing-comp": ["warn", {
+      "component": true,
+      "html": true
+    }],
+    "react/jsx-boolean-value": ["warn", "never"],
+    "react/jsx-curly-brace-presence": ["warn", {
+      "props": "never",
+      "children": "never"
+    }],
+    "react/jsx-fragments": ["warn", "syntax"],
+    "react/jsx-no-duplicate-props": "error",
+    "react/jsx-no-target-blank": ["error", {
+      "allowReferrer": false,
+      "enforceDynamicLinks": "always"
+    }],
+
+    "// ==========================================": "",
+    "// REACT HOOKS RULES - Critical for Stability": "",
+    "// ==========================================": "",
+
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": ["warn", {
+      "additionalHooks": "(useAnimatedStyle|useAnimatedProps|useSharedValue|useDerivedValue)"
+    }],
+
+    "// ==========================================": "",
+    "// REACT NATIVE RULES": "",
+    "// ==========================================": "",
+
+    "react-native/no-unused-styles": "warn",
+    "react-native/no-inline-styles": "off",
+    "react-native/no-color-literals": "off",
+    "react-native/no-raw-text": ["warn", {
+      "skip": ["ThemedText"]
+    }],
+    "react-native/split-platform-components": "warn",
+
+    "// ==========================================": "",
+    "// ACCESSIBILITY RULES - a11y": "",
+    "// ==========================================": "",
+
+    "jsx-a11y/accessible-emoji": "off",
+    "jsx-a11y/alt-text": "warn",
+    "jsx-a11y/anchor-is-valid": "warn",
+    "jsx-a11y/aria-props": "warn",
+    "jsx-a11y/aria-role": "warn",
+    "jsx-a11y/aria-unsupported-elements": "warn",
+    "jsx-a11y/heading-has-content": "warn",
+    "jsx-a11y/no-autofocus": "off",
+    "jsx-a11y/no-static-element-interactions": "off",
+    "jsx-a11y/click-events-have-key-events": "off",
+
+    "// ==========================================": "",
+    "// IMPORT RULES - Module Organization": "",
+    "// ==========================================": "",
+
+    "import/no-unresolved": ["error", {
+      "ignore": ["^@/"]
+    }],
+    "import/named": "error",
+    "import/default": "error",
+    "import/namespace": "error",
+    "import/no-absolute-path": "error",
+    "import/no-self-import": "error",
+    "import/no-cycle": ["warn", {
+      "maxDepth": 3
+    }],
+    "import/no-useless-path-segments": "warn",
+    "import/no-duplicates": "warn",
+    "import/first": "warn",
+    "import/newline-after-import": "warn",
+    "import/order": ["warn", {
+      "groups": [
+        "builtin",
+        "external",
+        "internal",
+        "parent",
+        "sibling",
+        "index",
+        "type"
+      ],
+      "pathGroups": [
+        {
+          "pattern": "react",
+          "group": "external",
+          "position": "before"
+        },
+        {
+          "pattern": "react-native",
+          "group": "external",
+          "position": "before"
+        },
+        {
+          "pattern": "expo-*",
+          "group": "external",
+          "position": "before"
+        },
+        {
+          "pattern": "@/**",
+          "group": "internal",
+          "position": "before"
+        }
+      ],
+      "pathGroupsExcludedImportTypes": ["react", "react-native"],
+      "alphabetize": {
+        "order": "asc",
+        "caseInsensitive": true
+      },
+      "newlines-between": "always"
+    }],
+
+    "// ==========================================": "",
+    "// SECURITY RULES": "",
+    "// ==========================================": "",
+
+    "security/detect-object-injection": "off",
+    "security/detect-non-literal-require": "warn",
+    "security/detect-non-literal-regexp": "warn",
+    "security/detect-unsafe-regex": "error",
+    "security/detect-buffer-noassert": "error",
+    "security/detect-eval-with-expression": "error",
+    "security/detect-no-csrf-before-method-override": "warn",
+    "security/detect-possible-timing-attacks": "warn",
+    "security/detect-pseudoRandomBytes": "warn",
+
+    "// ==========================================": "",
+    "// GENERAL CODE QUALITY RULES": "",
+    "// ==========================================": "",
+
+    "no-console": ["warn", {
+      "allow": ["warn", "error"]
+    }],
+    "no-debugger": "error",
+    "no-alert": "warn",
+    "no-var": "error",
+    "prefer-const": "error",
+    "prefer-arrow-callback": "warn",
+    "prefer-template": "warn",
+    "no-unused-expressions": ["error", {
+      "allowShortCircuit": true,
+      "allowTernary": true
+    }],
+    "no-duplicate-imports": "error",
+    "no-useless-rename": "warn",
+    "object-shorthand": "warn",
+    "prefer-destructuring": ["warn", {
+      "array": false,
+      "object": true
+    }],
+    "eqeqeq": ["error", "always", {
+      "null": "ignore"
+    }],
+    "no-nested-ternary": "warn",
+    "no-unneeded-ternary": "warn",
+    "no-else-return": "warn",
+    "curly": ["warn", "all"],
+    "brace-style": ["warn", "1tbs", {
+      "allowSingleLine": true
+    }],
+    "comma-dangle": ["warn", {
+      "arrays": "always-multiline",
+      "objects": "always-multiline",
+      "imports": "always-multiline",
+      "exports": "always-multiline",
+      "functions": "never"
+    }],
+    "semi": ["warn", "always"],
+    "quotes": ["warn", "single", {
+      "avoidEscape": true,
+      "allowTemplateLiterals": true
+    }]
+  },
+
+  "overrides": [
+    {
+      "files": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx", "__tests__/**/*", "__mocks__/**/*"],
+      "env": {
+        "jest": true
+      },
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "security/detect-non-literal-require": "off"
+      }
+    },
+    {
+      "files": ["*.config.js", "*.config.ts", "babel.config.js", "metro.config.js"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off",
+        "import/no-commonjs": "off"
+      }
+    },
+    {
+      "files": ["scripts/**/*"],
+      "rules": {
+        "no-console": "off",
+        "@typescript-eslint/no-var-requires": "off"
+      }
+    }
+  ]
+}
