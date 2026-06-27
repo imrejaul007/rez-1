@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useOffersTheme } from '@/contexts/OffersThemeContext';
 import { OffersTabType } from '@/types/offers.types';
 import { Spacing, BorderRadius, Typography, Colors, Shadows } from '@/constants/DesignSystem';

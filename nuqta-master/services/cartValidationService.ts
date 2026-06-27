@@ -1,4 +1,3 @@
-// @ts-nocheck
 // services/cartValidationService.ts
 // Cart Validation Service - Handles stock validation API calls
 

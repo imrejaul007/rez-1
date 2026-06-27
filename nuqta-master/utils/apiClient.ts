@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Re-export the canonical singleton client from services/apiClient.ts.
 // This module existed historically as a parallel API client implementation;
 // now it just forwards to the single source of truth so existing

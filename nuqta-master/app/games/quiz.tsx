@@ -7,7 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import { router, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import QuizGame from '@/components/gamification/QuizGame';
 import { ThemedView } from '@/components/ThemedView';

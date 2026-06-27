@@ -1,7 +1,7 @@
 import React, { memo, useState, useCallback } from 'react';
 import { View, StyleSheet, Dimensions, Pressable, Platform, LayoutAnimation, UIManager } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { triggerImpact } from '@/utils/haptics';
 import {

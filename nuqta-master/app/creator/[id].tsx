@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import creatorsApi, { CreatorProfile, CreatorPick } from '@/services/creatorsApi';
 import { toggleFollow, checkFollowStatus } from '@/services/followApi';
@@ -345,7 +345,7 @@ function CreatorProfilePage() {
           {creator.tags && creator.tags.length > 0 && (
             <View style={styles.tagsContainer}>
               {creator.tags.map((tag, index) => (
-                <View key={index} style={styles.tagPill}>
+                <View key={tag} style={styles.tagPill}>
                   <Text style={styles.tagPillText}>{tag}</Text>
                 </View>
               ))}
@@ -411,7 +411,7 @@ function CreatorProfilePage() {
             <View style={styles.socialLinks}>
               {creator.socialLinks.map((link, index) => (
                 <Pressable
-                  key={index}
+                  key={link.platform}
                   style={styles.socialLink}
                   onPress={() => { if (link.url) { try { Linking.openURL(link.url); } catch (e) { catchAndWarn(e, 'CreatorProfile/openURL'); } } }}
                  

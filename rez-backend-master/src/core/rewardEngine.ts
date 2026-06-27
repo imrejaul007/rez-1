@@ -12,6 +12,15 @@ import redisService from '../services/redisService';
 import { CURRENCY_RULES } from '../config/currencyRules';
 import { getCachedWalletConfig } from '../services/walletCacheService';
 import { createServiceLogger } from '../config/logger';
+import type {
+  LeanWallet,
+  LeanCoinTransaction,
+  LeanUserLoyalty,
+  LeanUserStreak,
+  LeanWalletConfig,
+  CoinUsageOrderItem,
+  ProgramBonus,
+} from '../types/lean-results';
 
 const logger = createServiceLogger('reward-engine');
 
@@ -164,13 +173,13 @@ class RewardEngine {
 
     // Step 0: Global reward kill-switch (checked via cached WalletConfig)
     try {
-      const config = await getCachedWalletConfig();
-      if (config && (config as any).rewardIssuanceEnabled === false) {
+      const config = await getCachedWalletConfig() as LeanWalletConfig | null;
+      if (config && config.rewardIssuanceEnabled === false) {
         logger.warn('Reward issuance DISABLED via kill-switch', { userId, amount, source });
         return this.emptyResult(source, description, category || null, `killswitch:${userId}:${Date.now()}`);
       }
       // Step 0b: Per-coin-type kill switch
-      const killSwitch = (config as any)?.coinManagement?.globalKillSwitch;
+      const killSwitch = config?.coinManagement?.globalKillSwitch;
       if (killSwitch?.active && killSwitch?.pausedTypes?.length) {
         if (killSwitch.pausedTypes.includes(coinType)) {
           logger.warn(`[KILL_SWITCH] Coin issuance blocked for type: ${coinType}`, { reason: killSwitch.reason, userId, amount });
@@ -202,9 +211,9 @@ class RewardEngine {
       return this.emptyResult(source, description, category, idempotencyKey);
     }
 
-    const wallet = await Wallet.findOne({ user: userId }).lean();
-    if (wallet && (wallet as any).isFrozen) {
-      throw new RewardError('WALLET_FROZEN', `Wallet is frozen: ${(wallet as any).frozenReason || 'unknown'}`);
+    const wallet = await Wallet.findOne({ user: userId }).lean() as LeanWallet | null;
+    if (wallet && wallet.isFrozen) {
+      throw new RewardError('WALLET_FROZEN', `Wallet is frozen: ${wallet.frozenReason || 'unknown'}`);
     }
 
     // Step 4a: Savings Streak Multiplier (non-blocking, fail-open)
@@ -216,9 +225,9 @@ class RewardEngine {
         const savingsStreak = await UserStreak.findOne({
           user: userId,
           type: 'savings',
-        }).select('currentStreak').lean();
+        }).select('currentStreak').lean() as LeanUserStreak | null;
 
-        const days = (savingsStreak as any)?.currentStreak ?? 0;
+        const days = savingsStreak?.currentStreak ?? 0;
         if (days >= 60) { streakMultiplier = 1.20; streakTierName = 'Smart Saver Elite'; }
         else if (days >= 21) { streakMultiplier = 1.15; streakTierName = 'Gold Saver'; }
         else if (days >= 7) { streakMultiplier = 1.10; streakTierName = 'Silver Saver'; }
@@ -231,10 +240,10 @@ class RewardEngine {
     // Step 4b: Apply earning cap (fail-open)
     let adjustedAmount = streakMultiplier > 1 ? Math.floor(amount * streakMultiplier) : amount;
     if (streakMultiplier > 1) {
-      (metadata as any).streakMultiplier = streakMultiplier;
-      (metadata as any).streakTierName = streakTierName;
-      (metadata as any).baseAmount = amount;
-      (metadata as any).bonusCoins = adjustedAmount - amount;
+      metadata.streakMultiplier = streakMultiplier;
+      metadata.streakTierName = streakTierName;
+      metadata.baseAmount = amount;
+      metadata.bonusCoins = adjustedAmount - amount;
     }
     let cappedReason: string | undefined;
     if (!skipCap) {
@@ -245,7 +254,7 @@ class RewardEngine {
             success: true,
             transactionId: null,
             amount: 0,
-            newBalance: wallet ? (wallet as any).balance?.available ?? 0 : 0,
+            newBalance: wallet ? wallet.balance?.available ?? 0 : 0,
             source, description,
             category: category || null,
             cappedReason: capCheck.reason,
@@ -277,13 +286,13 @@ class RewardEngine {
     const existingTx = await CoinTransaction.findOne({
       user: userId,
       'metadata.idempotencyKey': idempotencyKey,
-    }).lean();
+    }).lean() as LeanCoinTransaction | null;
     if (existingTx) {
       const dupeResult: RewardResult = {
         success: true,
-        transactionId: (existingTx as any)._id,
-        amount: (existingTx as any).amount,
-        newBalance: (existingTx as any).balance,
+        transactionId: existingTx._id as Types.ObjectId,
+        amount: existingTx.amount,
+        newBalance: existingTx.balance,
         source, description,
         category: category || null,
         idempotencyKey,
@@ -317,7 +326,7 @@ class RewardEngine {
           success: true,
           transactionId: null,
           amount: adjustedAmount,
-          newBalance: wallet ? (wallet as any).balance?.available ?? 0 : 0,
+          newBalance: wallet ? wallet.balance?.available ?? 0 : 0,
           source, description,
           category: category || null,
           idempotencyKey,
@@ -333,7 +342,7 @@ class RewardEngine {
       try {
         const { bonus, programBonuses } = await specialProgramService.calculateMultiplierBonus(userId, adjustedAmount, source);
         if (bonus > 0) {
-          const slugLabel = programBonuses.map((pb: any) => pb.slug).join('+');
+          const slugLabel = programBonuses.map((pb: ProgramBonus) => pb.slug).join('+');
           await walletService.credit({
             userId,
             amount: bonus,
@@ -380,7 +389,7 @@ class RewardEngine {
     // Step 10: Emit REWARD_ISSUED event
     setImmediate(() => {
       try {
-        gamificationEventBus.emit('reward_issued' as any, {
+        gamificationEventBus.emit('reward_issued', {
           userId,
           entityId: referenceId,
           entityType: rewardType,
@@ -394,7 +403,7 @@ class RewardEngine {
             transactionId: result.transactionId?.toString(),
           },
           source: { controller: 'rewardEngine', action: 'issue' },
-        });
+        } as Parameters<typeof gamificationEventBus.emit>[1]);
       } catch (err) {
         logger.error('Failed to emit reward_issued event', err as Error);
       }
@@ -439,9 +448,9 @@ class RewardEngine {
   ): Promise<RedemptionResult> {
     const wallet = await Wallet.findOne({ user: userId });
     if (!wallet) throw new RewardError('NO_WALLET', 'Wallet not found');
-    if ((wallet as any).isFrozen) throw new RewardError('WALLET_FROZEN', 'Wallet is frozen');
+    if (wallet.isFrozen) throw new RewardError('WALLET_FROZEN', 'Wallet is frozen');
 
-    const coinOrder = (wallet as any).getCoinUsageOrder() as Array<{ type: string; amount: number; merchantId?: string }>;
+    const coinOrder = wallet.getCoinUsageOrder() as CoinUsageOrderItem[];
     let remaining = totalAmount;
     const steps: RedemptionStep[] = [];
     const transactionIds: Types.ObjectId[] = [];
@@ -505,12 +514,12 @@ class RewardEngine {
       );
     }
 
-    const updatedWallet = await Wallet.findOne({ user: userId }).lean();
+    const updatedWallet = await Wallet.findOne({ user: userId }).lean() as LeanWallet | null;
     return {
       success: true,
       totalDeducted: totalAmount,
       steps,
-      newBalance: updatedWallet ? (updatedWallet as any).balance?.available ?? 0 : 0,
+      newBalance: updatedWallet ? updatedWallet.balance?.available ?? 0 : 0,
       transactionIds,
     };
   }
@@ -525,45 +534,45 @@ class RewardEngine {
     options?: { session?: ClientSession; partialAmount?: number }
   ): Promise<ReversalResult> {
     // 1. Find the original transaction
-    const original = await CoinTransaction.findById(originalTransactionId).lean();
+    const original = await CoinTransaction.findById(originalTransactionId).lean() as LeanCoinTransaction | null;
     if (!original) {
       throw new RewardError('TX_NOT_FOUND', `Transaction ${originalTransactionId} not found`);
     }
 
     // 2. Only earned/bonus/refunded can be reversed
-    if (!['earned', 'bonus', 'refunded'].includes((original as any).type)) {
-      throw new RewardError('INVALID_REVERSAL', `Cannot reverse transaction of type: ${(original as any).type}`);
+    if (!['earned', 'bonus', 'refunded'].includes(original.type)) {
+      throw new RewardError('INVALID_REVERSAL', `Cannot reverse transaction of type: ${original.type}`);
     }
 
     // 3. Check idempotency (prevent double reversal)
     const alreadyReversed = await CoinTransaction.findOne({
-      user: (original as any).user,
+      user: original.user,
       'metadata.reversedTransactionId': originalTransactionId,
       type: 'spent',
-    }).lean();
+    }).lean() as LeanCoinTransaction | null;
 
     if (alreadyReversed) {
       return {
         success: true,
-        reversalTransactionId: (alreadyReversed as any)._id as Types.ObjectId,
-        amount: (alreadyReversed as any).amount,
-        newBalance: (alreadyReversed as any).balance,
+        reversalTransactionId: alreadyReversed._id as Types.ObjectId,
+        amount: alreadyReversed.amount,
+        newBalance: alreadyReversed.balance,
         originalTransactionId,
         reason,
       };
     }
 
     // 4. Determine reversal amount
-    const reversalAmount = options?.partialAmount ?? (original as any).amount;
-    if (reversalAmount > (original as any).amount) {
-      throw new RewardError('AMOUNT_EXCEEDED', `Reversal amount ${reversalAmount} exceeds original ${(original as any).amount}`);
+    const reversalAmount = options?.partialAmount ?? original.amount;
+    if (reversalAmount > original.amount) {
+      throw new RewardError('AMOUNT_EXCEEDED', `Reversal amount ${reversalAmount} exceeds original ${original.amount}`);
     }
 
     // 5. Debit the wallet
     const debitResult = await walletService.debit({
-      userId: (original as any).user.toString(),
+      userId: original.user.toString(),
       amount: reversalAmount,
-      source: (original as any).source,
+      source: original.source,
       description: `Reversed: ${reason}`,
       operationType: 'cashback_reversal',
       referenceId: `reversal:${originalTransactionId}`,
@@ -571,11 +580,11 @@ class RewardEngine {
       metadata: {
         reversedTransactionId: originalTransactionId,
         reversalReason: reason,
-        originalSource: (original as any).source,
-        originalAmount: (original as any).amount,
+        originalSource: original.source,
+        originalAmount: original.amount,
         idempotencyKey: `reversal:${originalTransactionId}`,
       },
-      category: (original as any).category || null,
+      category: original.category || null,
       session: options?.session,
     });
 
@@ -647,16 +656,22 @@ class RewardEngine {
     userId: string, category: MainCategorySlug, amount: number,
   ): Promise<void> {
     try {
-      const loyalty = await UserLoyalty.findOne({ userId });
+      const loyalty = await UserLoyalty.findOne({ userId }) as LeanUserLoyalty | null;
       if (loyalty) {
-        const catCoins = loyalty.categoryCoins?.get(category) || { available: 0, expiring: 0 };
-        catCoins.available += amount;
-        if (!loyalty.categoryCoins) {
-          (loyalty as any).categoryCoins = new Map();
+        // If loyalty is from lean(), it won't have instance methods
+        // We need to use the document version for updates
+        const loyaltyDoc = await UserLoyalty.findOne({ userId });
+        if (loyaltyDoc) {
+          const categoryCoinsMap = loyaltyDoc.categoryCoins as Map<string, { available: number; expiring: number }> | undefined;
+          const catCoins = categoryCoinsMap?.get(category) || { available: 0, expiring: 0 };
+          catCoins.available += amount;
+          if (!categoryCoinsMap) {
+            loyaltyDoc.categoryCoins = new Map();
+          }
+          (loyaltyDoc.categoryCoins as Map<string, { available: number; expiring: number }>).set(category, catCoins);
+          loyaltyDoc.markModified('categoryCoins');
+          await loyaltyDoc.save();
         }
-        loyalty.categoryCoins!.set(category, catCoins);
-        loyalty.markModified('categoryCoins');
-        await loyalty.save();
       }
     } catch (err) {
       logger.error('Failed to update UserLoyalty categoryCoins', err as Error, { userId, category });
@@ -664,26 +679,28 @@ class RewardEngine {
   }
 
   private async reverseMultiplierBonus(
-    original: any, originalTransactionId: string,
-    reason: string, session?: ClientSession,
+    original: LeanCoinTransaction,
+    originalTransactionId: string,
+    reason: string,
+    session?: ClientSession,
   ): Promise<void> {
     const bonusTx = await CoinTransaction.findOne({
       user: original.user,
       source: 'program_multiplier_bonus',
       'metadata.originalTransactionId': original._id,
-    }).lean();
+    }).lean() as LeanCoinTransaction | null;
 
-    if (bonusTx && (bonusTx as any).amount > 0) {
+    if (bonusTx && bonusTx.amount > 0) {
       await walletService.debit({
         userId: original.user.toString(),
-        amount: (bonusTx as any).amount,
+        amount: bonusTx.amount,
         source: 'program_multiplier_bonus',
         description: `Multiplier bonus reversed: ${reason}`,
         operationType: 'cashback_reversal',
         referenceId: `reversal-bonus:${originalTransactionId}`,
         referenceModel: 'CoinTransaction',
         metadata: {
-          reversedTransactionId: (bonusTx as any)._id,
+          reversedTransactionId: bonusTx._id.toString(),
           reversalReason: reason,
           idempotencyKey: `reversal-bonus:${originalTransactionId}`,
         },

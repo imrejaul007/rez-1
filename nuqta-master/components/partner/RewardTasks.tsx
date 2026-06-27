@@ -8,7 +8,7 @@ import {
   ScrollView} from 'react-native';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { RewardTask } from '@/types/partner.types';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { colors } from '@/constants/theme';

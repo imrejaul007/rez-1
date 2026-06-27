@@ -1,4 +1,3 @@
-// @ts-nocheck
 // What's New Stories API Service
 // API service for What's New stories functionality
 

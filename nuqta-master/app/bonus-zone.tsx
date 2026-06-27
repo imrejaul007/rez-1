@@ -12,7 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import { CardGridSkeleton } from '@/components/skeletons';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Stack, useRouter } from 'expo-router';
 import bonusZoneApi, { BonusZoneCampaign, BonusCampaignType } from '@/services/bonusZoneApi';
 import BonusZoneCard from '@/components/earn/BonusZoneCard';
@@ -265,7 +265,7 @@ function BonusZonePage() {
         {/* Claim History Link */}
         <Pressable
           style={styles.historyLink}
-          onPress={() => router.push('/bonus-zone-history' as any)}
+          onPress={() => router.push('/bonus-zone-history')}
         >
           <Ionicons name="receipt-outline" size={18} color={Colors.text.tertiary} />
           <Text style={styles.historyLinkText}>View Claim History</Text>

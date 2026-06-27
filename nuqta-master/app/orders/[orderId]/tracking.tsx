@@ -3,7 +3,7 @@ import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable, ActivityIndicator, Linking, Platform } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useOrderTracking } from '@/hooks/useOrderTracking';
 import { DetailPageSkeleton } from '@/components/skeletons';
 import OrderTimeline from '@/components/orders/OrderTimeline';

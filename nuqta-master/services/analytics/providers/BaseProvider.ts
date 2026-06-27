@@ -4,26 +4,14 @@
  * Abstract base class for all analytics providers
  */
 
-import { AnalyticsProvider, PurchaseTransaction } from '../types';
+export class BaseAnalyticsProvider {
+  enabled: boolean = true;
+  debug: boolean = false;
+  sessionId: string = '';
+  userId: string | null = null;
+  name: string = 'BaseAnalyticsProvider';
 
-export abstract class BaseAnalyticsProvider implements AnalyticsProvider {
-  abstract name: string;
-  protected enabled: boolean = true;
-  protected debug: boolean = false;
-
-  abstract initialize(config: any): Promise<void>;
-
-  abstract trackEvent(name: string, properties?: Record<string, any>): void;
-
-  abstract trackScreen(name: string, properties?: Record<string, any>): void;
-
-  abstract setUserId(userId: string): void;
-
-  abstract setUserProperties(properties: Record<string, any>): void;
-
-  abstract trackPurchase(transaction: PurchaseTransaction): void;
-
-  trackError(error: Error, context?: Record<string, any>): void {
+  trackError(error: Error, context?: Record<string, any>) {
     this.trackEvent('error_occurred', {
       error_message: error.message,
       error_name: error.name,
@@ -32,30 +20,51 @@ export abstract class BaseAnalyticsProvider implements AnalyticsProvider {
     });
   }
 
-  async flush(): Promise<void> {
+  async flush() {
     // Default implementation - override if provider supports batching
   }
 
-  setEnabled(enabled: boolean): void {
+  setEnabled(enabled: boolean) {
     this.enabled = enabled;
   }
 
-  setDebug(debug: boolean): void {
+  setDebug(debug: boolean) {
     this.debug = debug;
   }
 
-  protected log(...args: any[]): void {
-    if (this.debug || __DEV__) {
+  log(...args: any[]) {
+    if (this.debug || (typeof __DEV__ !== 'undefined' && __DEV__)) {
       console.log(`[${this.name}]`, ...args);
     }
   }
 
-  protected warn(...args: any[]): void {
-    if (this.debug || __DEV__) {
+  warn(...args: any[]) {
+    if (this.debug || (typeof __DEV__ !== 'undefined' && __DEV__)) {
       console.warn(`[${this.name}]`, ...args);
     }
   }
 
-  protected error(...args: any[]): void {
+  error(...args: any[]) {}
+
+  setUserId(userId: string) {
+    this.userId = userId;
+  }
+
+  // Subclasses should override these:
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  trackEvent(_eventName: string, _properties?: Record<string, any>) {
+    // to be overridden
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  trackScreen(_screenName: string, _properties?: Record<string, any>) {
+    // to be overridden
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setUserProperties(_properties: Record<string, any>) {
+    // to be overridden
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  trackPurchase(_transaction: any) {
+    // to be overridden
   }
 }

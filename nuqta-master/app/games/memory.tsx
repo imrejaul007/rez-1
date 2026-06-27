@@ -22,7 +22,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { router, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { ThemedView } from '@/components/ThemedView';

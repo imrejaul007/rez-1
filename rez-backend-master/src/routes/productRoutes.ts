@@ -36,7 +36,6 @@ router.use(generalLimiter);
 
 // Get all products with filtering
 router.get('/',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(productSchemas.getProducts),
   cacheMiddleware({ ttl: CacheTTL.PRODUCT_LIST, keyPrefix: 'products:list', condition: () => true }),
@@ -45,7 +44,6 @@ router.get('/',
 
 // Get featured products - FOR FRONTEND "Just for You" SECTION
 router.get('/featured',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(Joi.object({
     limit: Joi.number().integer().min(1).max(20).default(10)
@@ -56,7 +54,6 @@ router.get('/featured',
 
 // Get new arrival products - FOR FRONTEND "New Arrivals" SECTION
 router.get('/new-arrivals',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(Joi.object({
     limit: Joi.number().integer().min(1).max(20).default(10)
@@ -67,7 +64,6 @@ router.get('/new-arrivals',
 
 // Search products
 router.get('/search',
-  // searchLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(Joi.object({
     q: Joi.string().required().trim().min(1).max(100),
@@ -86,7 +82,6 @@ router.get('/search',
 
 // Get search suggestions - FOR FRONTEND SEARCH AUTOCOMPLETE
 router.get('/suggestions',
-  // searchLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(Joi.object({
     q: Joi.string().required().trim().min(1).max(100)
@@ -97,7 +92,6 @@ router.get('/suggestions',
 
 // Get popular searches - FOR FRONTEND SEARCH
 router.get('/popular-searches',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(Joi.object({
     limit: Joi.number().integer().min(1).max(20).default(10)
@@ -108,7 +102,6 @@ router.get('/popular-searches',
 
 // Get trending products - FOR FRONTEND TRENDING SECTION
 router.get('/trending',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(Joi.object({
     category: commonSchemas.objectId(),
@@ -122,7 +115,6 @@ router.get('/trending',
 
 // Get popular products - FOR FRONTEND "Popular" SECTION (v2)
 router.get('/popular',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(Joi.object({
     category: Joi.string().trim().max(100),
@@ -135,7 +127,6 @@ router.get('/popular',
 
 // Get nearby products - FOR FRONTEND "In Your Area" SECTION
 router.get('/nearby',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(Joi.object({
     lat: Joi.number().min(-90).max(90),
@@ -153,7 +144,6 @@ router.get('/nearby',
 
 // Get hot deals - FOR FRONTEND "Hot Deals" SECTION
 router.get('/hot-deals',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(Joi.object({
     category: Joi.string().trim().max(100),
@@ -166,7 +156,6 @@ router.get('/hot-deals',
 
 // Get similar products - FOR FRONTEND EMPTY STATE
 router.get('/similar',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateQuery(Joi.object({
     query: Joi.string().trim().max(100),
@@ -179,7 +168,6 @@ router.get('/similar',
 
 // Get products by category slug - FOR FRONTEND HOMEPAGE CATEGORY SECTIONS
 router.get('/category-section/:categorySlug',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     categorySlug: Joi.string().required()
@@ -193,7 +181,6 @@ router.get('/category-section/:categorySlug',
 
 // Get single product by ID
 router.get('/:id',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     id: commonSchemas.objectId().required()
@@ -204,7 +191,6 @@ router.get('/:id',
 
 // Get product recommendations
 router.get('/:productId/recommendations',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     productId: commonSchemas.objectId().required()
@@ -218,7 +204,6 @@ router.get('/:productId/recommendations',
 
 // Get products by category
 router.get('/category/:categorySlug',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     categorySlug: Joi.string().required()
@@ -240,7 +225,6 @@ router.get('/category/:categorySlug',
 
 // Get products by subcategory slug - FOR BROWSE CATEGORIES SLIDER
 router.get('/subcategory/:subcategorySlug',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     subcategorySlug: Joi.string().required()
@@ -254,7 +238,6 @@ router.get('/subcategory/:subcategorySlug',
 
 // Get products by store
 router.get('/store/:storeId',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     // Accept both ObjectId format and string IDs (for mock data compatibility)
@@ -273,7 +256,6 @@ router.get('/store/:storeId',
 
 // Track product view
 router.post('/:id/track-view',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     id: commonSchemas.objectId().required()
@@ -283,7 +265,6 @@ router.post('/:id/track-view',
 
 // Get product analytics
 router.get('/:id/analytics',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     id: commonSchemas.objectId().required()
@@ -297,7 +278,6 @@ router.get('/:id/analytics',
 
 // Get frequently bought together products
 router.get('/:id/frequently-bought',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     id: commonSchemas.objectId().required()
@@ -311,7 +291,6 @@ router.get('/:id/frequently-bought',
 
 // Get bundle products
 router.get('/:id/bundles',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     id: commonSchemas.objectId().required()
@@ -322,7 +301,6 @@ router.get('/:id/bundles',
 
 // Get related products - FOR FRONTEND PRODUCT DETAILS PAGE
 router.get('/:id/related',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     id: commonSchemas.objectId().required()
@@ -336,7 +314,6 @@ router.get('/:id/related',
 
 // Check product availability - FOR FRONTEND CART/CHECKOUT
 router.get('/:id/availability',
-  // generalLimiter,, // Disabled for development
   optionalAuth,
   validateParams(Joi.object({
     id: commonSchemas.objectId().required()

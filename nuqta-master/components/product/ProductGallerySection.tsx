@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import productGalleryApi, { ProductGalleryItem, ProductGalleryCategory } from '@/services/productGalleryApi';
 import GalleryViewerModal from '@/components/store/GalleryViewerModal';
@@ -287,7 +287,7 @@ function ProductGallerySection({ productId, variantId }: ProductGallerySectionPr
         >
           <View style={styles.categoryCardContent}>
             <Text style={styles.categoryCardTitle}>
-              {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
+              {(category.name || '').charAt(0).toUpperCase() + (category.name || '').slice(1)}
             </Text>
             <View style={styles.categoryCardMeta}>
               <Ionicons name="images" size={14} color={colors.background.primary} />
@@ -406,7 +406,7 @@ function ProductGallerySection({ productId, variantId }: ProductGallerySectionPr
                     selectedCategory === category.name && styles.categoryChipTextActive,
                   ]}
                 >
-                  {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
+                  {(category.name || '').charAt(0).toUpperCase() + (category.name || '').slice(1)}
                 </Text>
                 <View style={styles.categoryCount}>
                   <Text style={styles.categoryCountText}>{category.count}</Text>

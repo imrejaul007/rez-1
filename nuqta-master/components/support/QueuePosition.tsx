@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { QueueInfo } from '@/types/supportChat.types';
 import { colors } from '@/constants/theme';
 

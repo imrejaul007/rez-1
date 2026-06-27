@@ -1754,7 +1754,8 @@ export const getNearbyProducts = asyncHandler(async (req: Request, res: Response
     longitude,
     latitude,
     radius = 10, // default 10km
-    limit = 10
+    page = 1,
+    limit = 20
   } = req.query;
 
   try {
@@ -1766,7 +1767,9 @@ export const getNearbyProducts = asyncHandler(async (req: Request, res: Response
     const lng = parseFloat(longitude as string);
     const lat = parseFloat(latitude as string);
     const radiusKm = parseFloat(radius as string);
-    const limitNum = parseInt(limit as string);
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 20;
+    const skip = (pageNum - 1) * limitNum;
 
     if (isNaN(lng) || isNaN(lat)) {
       return sendError(res, 'Invalid coordinates', 400);
@@ -1793,26 +1796,37 @@ export const getNearbyProducts = asyncHandler(async (req: Request, res: Response
           distance: { $divide: ['$distance', 1000] } // Convert to km
         }
       },
-      { $limit: 50 } // Get up to 50 nearby stores
+      { $limit: 200 } // Increase limit to get enough stores for pagination
     ]);
 
     if (nearbyStores.length === 0) {
-      return sendSuccess(res, [], 'No nearby products found');
+      return sendSuccess(res, {
+        products: [],
+        pagination: { page: pageNum, limit: limitNum, total: 0, totalPages: 0 }
+      }, 'No nearby products found');
     }
 
-    // Step 2: Get products from nearby stores
+    // Step 2: Get products from nearby stores with pagination
     const storeIds = nearbyStores.map(s => s._id);
     const storeMap = new Map(nearbyStores.map(s => [s._id.toString(), s]));
 
-    const products = await Product.find({
-      store: { $in: storeIds },
-      isActive: true,
-      'inventory.isAvailable': true
-    })
-      .populate('category', 'name slug')
-      .sort({ 'analytics.purchases': -1 })
-      .limit(limitNum)
-      .lean();
+    const [products, total] = await Promise.all([
+      Product.find({
+        store: { $in: storeIds },
+        isActive: true,
+        'inventory.isAvailable': true
+      })
+        .populate('category', 'name slug')
+        .sort({ 'analytics.purchases': -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      Product.countDocuments({
+        store: { $in: storeIds },
+        isActive: true,
+        'inventory.isAvailable': true
+      })
+    ]);
 
     // Transform data with distance info
     const transformedProducts = products.map((product: any) => {
@@ -1857,7 +1871,15 @@ export const getNearbyProducts = asyncHandler(async (req: Request, res: Response
       return a.store.distance - b.store.distance;
     });
 
-    sendSuccess(res, transformedProducts, 'Nearby products retrieved successfully');
+    sendSuccess(res, {
+      products: transformedProducts,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum)
+      }
+    }, 'Nearby products retrieved successfully');
 
   } catch (error) {
     logger.error('❌ [NEARBY PRODUCTS] Error:', error);
@@ -1867,38 +1889,60 @@ export const getNearbyProducts = asyncHandler(async (req: Request, res: Response
 
 // Get hot deals products - FOR FRONTEND "Hot Deals" SECTION
 export const getHotDeals = asyncHandler(async (req: Request, res: Response) => {
-  const { limit = 10 } = req.query;
+  const { page = 1, limit = 20 } = req.query;
 
   try {
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 20;
+    const skip = (pageNum - 1) * limitNum;
+
     // Step 1: Try to find products with 'hot-deal' tag
-    let products = await Product.find({
+    const query = {
       tags: 'hot-deal',
       isActive: true,
       'inventory.isAvailable': true
-    })
-      .populate('category', 'name slug')
-      .populate('store', 'name logo operationalInfo location')
-      .sort({ 'cashback.percentage': -1 })
-      .limit(Number(limit))
-      .lean();
+    };
+
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate('category', 'name slug')
+        .populate('store', 'name logo operationalInfo location')
+        .sort({ 'cashback.percentage': -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      Product.countDocuments(query)
+    ]);
 
     // Step 2: Fallback to high-cashback products if no tagged products
+    let fallbackProducts: any[] = [];
+    let fallbackTotal = 0;
     if (products.length === 0) {
-      products = await Product.find({
+      const fallbackQuery = {
         isActive: true,
         'inventory.isAvailable': true,
         'cashback.percentage': { $gte: 15 },
         'cashback.isActive': true
-      })
-        .populate('category', 'name slug')
-        .populate('store', 'name logo operationalInfo location')
-        .sort({ 'cashback.percentage': -1 })
-        .limit(Number(limit))
-        .lean();
+      };
+      const [fbProducts, fbTotal] = await Promise.all([
+        Product.find(fallbackQuery)
+          .populate('category', 'name slug')
+          .populate('store', 'name logo operationalInfo location')
+          .sort({ 'cashback.percentage': -1 })
+          .skip(skip)
+          .limit(limitNum)
+          .lean(),
+        Product.countDocuments(fallbackQuery)
+      ]);
+      fallbackProducts = fbProducts;
+      fallbackTotal = fbTotal;
     }
 
+    const finalProducts = products.length > 0 ? products : fallbackProducts;
+    const finalTotal = products.length > 0 ? total : fallbackTotal;
+
     // Transform data for frontend
-    const transformedProducts = products.map((product: any) => {
+    const transformedProducts = finalProducts.map((product: any) => {
       let productImage = '';
       if (Array.isArray(product.images) && product.images.length > 0) {
         const firstImage = product.images[0];
@@ -1928,7 +1972,15 @@ export const getHotDeals = asyncHandler(async (req: Request, res: Response) => {
       };
     });
 
-    sendSuccess(res, transformedProducts, 'Hot deals retrieved successfully');
+    sendSuccess(res, {
+      products: transformedProducts,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: finalTotal,
+        totalPages: Math.ceil(finalTotal / limitNum)
+      }
+    }, 'Hot deals retrieved successfully');
 
   } catch (error) {
     logger.error('❌ [HOT DEALS] Error:', error);

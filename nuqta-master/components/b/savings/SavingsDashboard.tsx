@@ -252,7 +252,7 @@ function SavingsRecommendationsRow({
             style={({ pressed }) => [styles.recCard, pressed && styles.recCardPressed]}
           >
             <Text style={styles.recType} numberOfLines={1}>
-              {rec.type.replace(/_/g, ' ').toUpperCase()}
+              {(rec.type || '').replace(/_/g, ' ').toUpperCase() || '—'}
             </Text>
             <Text style={styles.recTitle} numberOfLines={2}>
               {rec.title}

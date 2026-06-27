@@ -183,7 +183,7 @@ export const updateProgramConfig = asyncHandler(async (req: Request, res: Respon
 
   const walletConfig = await WalletConfig.getOrCreate();
   const previousState = walletConfig.priveProgramConfig
-    ? JSON.parse(JSON.stringify(walletConfig.priveProgramConfig))
+    ? structuredClone(walletConfig.priveProgramConfig)
     : {};
 
   // Apply all provided fields
@@ -221,7 +221,7 @@ export const updateProgramConfig = asyncHandler(async (req: Request, res: Respon
     adminId,
     { section: 'priveProgramConfig', operation: 'full_update' },
     previousState,
-    JSON.parse(JSON.stringify(walletConfig.priveProgramConfig)),
+    structuredClone(walletConfig.priveProgramConfig),
   );
 
   return sendSuccess(res, {
@@ -249,7 +249,7 @@ export const updateTierThresholds = asyncHandler(async (req: Request, res: Respo
   }
 
   const walletConfig = await WalletConfig.getOrCreate();
-  const previousState = JSON.parse(JSON.stringify(walletConfig.priveProgramConfig.tierThresholds));
+  const previousState = structuredClone(walletConfig.priveProgramConfig.tierThresholds);
 
   walletConfig.priveProgramConfig.tierThresholds = tierThresholds;
   walletConfig.markModified('priveProgramConfig');
@@ -288,7 +288,7 @@ export const updatePillarWeights = asyncHandler(async (req: Request, res: Respon
   }
 
   const walletConfig = await WalletConfig.getOrCreate();
-  const previousState = JSON.parse(JSON.stringify(walletConfig.priveProgramConfig.pillarWeights));
+  const previousState = structuredClone(walletConfig.priveProgramConfig.pillarWeights);
 
   walletConfig.priveProgramConfig.pillarWeights = pillarWeights;
   walletConfig.markModified('priveProgramConfig');
@@ -322,7 +322,7 @@ export const updateFeatureFlags = asyncHandler(async (req: Request, res: Respons
   }
 
   const walletConfig = await WalletConfig.getOrCreate();
-  const previousState = JSON.parse(JSON.stringify(walletConfig.priveProgramConfig.featureFlags));
+  const previousState = structuredClone(walletConfig.priveProgramConfig.featureFlags);
 
   walletConfig.priveProgramConfig.featureFlags = {
     ...walletConfig.priveProgramConfig.featureFlags,
@@ -364,7 +364,7 @@ export const updateTiers = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const walletConfig = await WalletConfig.getOrCreate();
-  const previousState = JSON.parse(JSON.stringify(walletConfig.priveProgramConfig.tiers));
+  const previousState = structuredClone(walletConfig.priveProgramConfig.tiers);
 
   walletConfig.priveProgramConfig.tiers = tiers;
   walletConfig.markModified('priveProgramConfig');

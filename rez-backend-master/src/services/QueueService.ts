@@ -13,6 +13,17 @@
  * - Data exports
  * - Job retries with exponential backoff
  * - Job monitoring and health checks
+ *
+ * ── Phase 6.24 TODO: Bull v3 → BullMQ v5 migration ──────────────
+ * This file uses Bull v3 (queues named `email`, `sms`, `report`, etc.).
+ * A parallel BullMQ v5 setup exists in `src/config/bullmq-queues.ts`
+ * (queues named `emails`, `sms`, `analytics`, etc.). Two queue systems
+ * running side-by-side causes:
+ *   - duplicate job processing (some events fire on Bull, others on BullMQ)
+ *   - ~2× Redis connection usage (Render Valkey free tier caps at ~20)
+ *   - ops confusion ("which queue processed my job?")
+ * Migrate all producers/consumers from Bull v3 → BullMQ v5, then delete
+ * this file. Out of scope for this loop iteration; tracked for follow-up.
  */
 
 import Bull, { Queue, Job, JobOptions } from 'bull';

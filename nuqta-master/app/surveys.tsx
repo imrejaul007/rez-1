@@ -15,7 +15,7 @@ import {
 import { CardGridSkeleton } from '@/components/skeletons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import surveyApiService, { Survey, SurveyCategory, UserSurveyStats } from '@/services/surveysApi';
 

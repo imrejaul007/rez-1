@@ -12,10 +12,11 @@ import {
   Share,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { showAlert } from '@/components/common/CrossPlatformAlert';
 import { colors } from '@/constants/theme';
+import { safeCallPhone, safeOpenURL } from '@/utils/linking';
 
 interface QuickAction {
   id: string;
@@ -93,7 +94,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
     Linking.canOpenURL(url)
       .then((supported) => {
         if (supported) {
-          return Linking.openURL(url);
+          return safeCallPhone(phoneNumber);
         } else {
           showAlert('Error', 'Phone dialer is not available', undefined, 'error');
         }
@@ -121,10 +122,10 @@ const QuickActions: React.FC<QuickActionsProps> = ({
       Linking.canOpenURL(url)
         .then((supported) => {
           if (supported) {
-            return Linking.openURL(url);
+            return safeOpenURL(url);
           } else {
             const webUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
-            return Linking.openURL(webUrl);
+            return safeOpenURL(webUrl);
           }
         })
         .catch((err) => {
@@ -132,8 +133,10 @@ const QuickActions: React.FC<QuickActionsProps> = ({
         });
     } else if (location?.address) {
       const webUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}`;
-      Linking.openURL(webUrl).catch(() => {
-        showAlert('Error', 'Failed to open maps', undefined, 'error');
+      safeOpenURL(webUrl).then((result) => {
+        if (!result.ok) {
+          showAlert('Error', 'Failed to open maps', undefined, 'error');
+        }
       });
     }
   };

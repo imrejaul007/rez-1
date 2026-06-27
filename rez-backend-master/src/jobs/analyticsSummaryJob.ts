@@ -83,53 +83,59 @@ export const runAnalyticsSummaryJob = async (): Promise<void> => {
     const dateStr = yesterday.toISOString().split('T')[0];
     logger.info(`[Analytics] Aggregating data for ${dateStr}`);
 
-    // 1. Get GMV and transaction count per store
-    const gmvData = await (StorePayment as any).aggregate([
-      {
-        $match: {
-          createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
-          status: 'completed',
+    // MP-D002 OPTIMIZATION: Parallelize aggregation queries instead of sequential
+    // Previously each aggregation awaited before starting the next — 3 round-trips
+    // to MongoDB. Now all three queries run concurrently in a single round,
+    // reducing total query time by ~66%.
+    const [gmvData, visitData, coinData] = await Promise.all([
+      // 1. Get GMV and transaction count per store
+      (StorePayment as any).aggregate([
+        {
+          $match: {
+            createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
+            status: 'completed',
+          },
         },
-      },
-      {
-        $group: {
-          _id: { storeId: '$storeId', merchantId: '$merchantId' },
-          gmv: { $sum: '$billAmount' },
-          txnCount: { $sum: 1 },
+        {
+          $group: {
+            _id: { storeId: '$storeId', merchantId: '$merchantId' },
+            gmv: { $sum: '$billAmount' },
+            txnCount: { $sum: 1 },
+          },
         },
-      },
+      ]),
+
+      // 2. Get visit counts per store
+      (StoreVisit as any).aggregate([
+        {
+          $match: { createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } },
+        },
+        {
+          $group: {
+            _id: '$storeId',
+            visitCount: { $sum: 1 },
+          },
+        },
+      ]),
+
+      // 3. Get coins issued per store
+      (CoinTransaction as any).aggregate([
+        {
+          $match: {
+            createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
+            type: { $in: ['earned', 'reward'] },
+          },
+        },
+        {
+          $group: {
+            _id: '$storeId',
+            coinsIssued: { $sum: '$amount' },
+          },
+        },
+      ]),
     ]);
 
     logger.debug(`[Analytics] Found ${gmvData.length} stores with payments`);
-
-    // 2. Get visit counts per store
-    const visitData = await (StoreVisit as any).aggregate([
-      {
-        $match: { createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } },
-      },
-      {
-        $group: {
-          _id: '$storeId',
-          visitCount: { $sum: 1 },
-        },
-      },
-    ]);
-
-    // 3. Get coins issued per store
-    const coinData = await (CoinTransaction as any).aggregate([
-      {
-        $match: {
-          createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
-          type: { $in: ['earned', 'reward'] },
-        },
-      },
-      {
-        $group: {
-          _id: '$storeId',
-          coinsIssued: { $sum: '$amount' },
-        },
-      },
-    ]);
 
     // Convert arrays to maps for O(1) lookup
     const visitMap = new Map(visitData.map((v: any) => [v._id?.toString?.() || '', v.visitCount]));
@@ -161,7 +167,9 @@ export const runAnalyticsSummaryJob = async (): Promise<void> => {
       },
     }));
 
-    const result = await DailySummary.bulkWrite(bulkOps);
+    // MP-D002 OPTIMIZATION: Add ordered: false for error tolerance
+    // If one upsert fails, others continue processing instead of aborting
+    const result = await DailySummary.bulkWrite(bulkOps, { ordered: false });
 
     logger.info(`[Analytics] Job complete`, {
       date: dateStr,

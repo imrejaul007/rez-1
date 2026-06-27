@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '@/constants/theme';
 
@@ -51,7 +51,7 @@ const BusInfoCard: React.FC<BusInfoCardProps> = ({ bus }) => {
           <View style={styles.routeItem}>
             <View style={styles.terminalCode}>
               <Text style={styles.terminalCodeText}>
-                {bus.route.from.substring(0, 3).toUpperCase()}
+                {(bus.route?.from || '').substring(0, 3).toUpperCase() || '---'}
               </Text>
             </View>
             <View style={styles.terminalInfo}>
@@ -69,7 +69,7 @@ const BusInfoCard: React.FC<BusInfoCardProps> = ({ bus }) => {
           <View style={styles.routeItem}>
             <View style={styles.terminalCode}>
               <Text style={styles.terminalCodeText}>
-                {bus.route.to.substring(0, 3).toUpperCase()}
+                {(bus.route?.to || '').substring(0, 3).toUpperCase() || '---'}
               </Text>
             </View>
             <View style={styles.terminalInfo}>

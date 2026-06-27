@@ -17,7 +17,7 @@ import {
   Share,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import CachedImage from '@/components/ui/CachedImage';
@@ -29,6 +29,7 @@ import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert
 import { generateIdempotencyKey } from '@/utils/idempotencyKey';
 import { handleWalletError } from '@/utils/walletErrorHandler';
 import { BRAND } from '@/constants/brand';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 type Step = 'amount' | 'friends' | 'split' | 'review' | 'status';
 
@@ -63,6 +64,7 @@ const QUICK_AMOUNTS = [500, 1000, 2000, 5000];
 
 function BillSplitPage() {
   const router = useRouter();
+  const handleDone = useSafeBack();
   const nuqtaBalance = useRezBalance();
   const refreshWallet = useRefreshWallet();
   const isAuthenticated = useIsAuthenticated();
@@ -327,9 +329,7 @@ function BillSplitPage() {
     }
   };
 
-  const handleDone = () => {
-    router.canGoBack() ? router.back() : router.replace('/(tabs)');
-  };
+  // handleDone defined via useSafeBack above
 
   const handleBack = () => {
     switch (step) {

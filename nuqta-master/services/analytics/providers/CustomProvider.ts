@@ -5,12 +5,21 @@
  */
 
 import { Platform } from 'react-native';
-import { BaseAnalyticsProvider } from './BaseProvider';
-import { PurchaseTransaction, AnalyticsEvent } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BaseAnalyticsProvider } from './BaseProvider';
+
+interface AnalyticsEvent {
+  name: string;
+  properties?: Record<string, any>;
+  timestamp: number;
+  userId?: string | null;
+  sessionId?: string;
+  platform?: string;
+  appVersion?: string;
+}
 
 interface CustomProviderConfig {
-  apiUrl: string;
+  apiUrl?: string;
   apiKey?: string;
   batchSize?: number;
   flushInterval?: number;
@@ -18,29 +27,26 @@ interface CustomProviderConfig {
 
 export class CustomAnalyticsProvider extends BaseAnalyticsProvider {
   name = 'CustomAnalytics';
-  private config: CustomProviderConfig;
   private eventQueue: AnalyticsEvent[] = [];
-  private userId?: string;
-  private sessionId: string;
-  private flushTimer?: NodeJS.Timeout;
   private readonly BATCH_SIZE = 50;
   private readonly FLUSH_INTERVAL = 30000; // 30 seconds
   private readonly STORAGE_KEY = '@analytics:custom:queue';
   private static readonly MAX_QUEUE_SIZE = 500;
-  private flushFailedAt: number = 0;
-  private flushBackoffMs: number = 0;
+  private flushFailedAt = 0;
+  private flushBackoffMs = 0;
+  private flushTimer: ReturnType<typeof setInterval> | undefined;
+  private config: CustomProviderConfig;
 
   constructor() {
     super();
     this.sessionId = this.generateSessionId();
     this.config = {
-      apiUrl: '',
       batchSize: this.BATCH_SIZE,
       flushInterval: this.FLUSH_INTERVAL,
     };
   }
 
-  async initialize(config: CustomProviderConfig): Promise<void> {
+  async initialize(config: CustomProviderConfig = {}) {
     this.config = { ...this.config, ...config };
     this.log('Initializing with config:', config);
 
@@ -49,53 +55,55 @@ export class CustomAnalyticsProvider extends BaseAnalyticsProvider {
 
     // Start auto-flush timer
     this.startFlushTimer();
-
     this.log('Initialized successfully');
   }
 
-  trackEvent(name: string, properties?: Record<string, any>): void {
+  trackEvent(name: string, properties?: Record<string, any>) {
     if (!this.enabled) return;
-
     const event: AnalyticsEvent = {
       name,
       properties,
       timestamp: Date.now(),
       userId: this.userId,
       sessionId: this.sessionId,
-      platform: Platform.OS as any,
+      platform: Platform.OS,
       appVersion: '1.0.0', // TODO: Get from app config
     };
-
     this.log('Tracking event:', name, properties);
     this.eventQueue.push(event);
 
     // Flush if batch size reached (skip if in backoff from previous failure)
-    if (this.eventQueue.length >= (this.config.batchSize || this.BATCH_SIZE)) {
+    if (this.eventQueue.length >= (this.config.batchSize ?? this.BATCH_SIZE)) {
       if (Date.now() - this.flushFailedAt > this.flushBackoffMs) {
         this.flush();
       }
     }
   }
 
-  trackScreen(name: string, properties?: Record<string, any>): void {
-    this.trackEvent('screen_viewed', {
-      screen_name: name,
-      ...properties,
-    });
+  trackScreen(name: string, properties?: Record<string, any>) {
+    this.trackEvent('screen_viewed', { screen_name: name, ...(properties || {}) });
   }
 
-  setUserId(userId: string): void {
+  setUserId(userId: string) {
     this.userId = userId;
     this.log('User ID set:', userId);
   }
 
-  setUserProperties(properties: Record<string, any>): void {
-    this.trackEvent('user_properties_updated', {
-      ...properties,
-    });
+  setUserProperties(properties: Record<string, any>) {
+    this.trackEvent('user_properties_updated', { ...properties });
   }
 
-  trackPurchase(transaction: PurchaseTransaction): void {
+  trackPurchase(transaction: {
+    transactionId: string;
+    revenue: number;
+    tax?: number;
+    shipping?: number;
+    currency: string;
+    items: any[];
+    coupon?: string;
+    discount?: number;
+    paymentMethod?: string;
+  }) {
     this.trackEvent('purchase_completed', {
       transaction_id: transaction.transactionId,
       revenue: transaction.revenue,
@@ -109,20 +117,17 @@ export class CustomAnalyticsProvider extends BaseAnalyticsProvider {
     });
   }
 
-  async flush(): Promise<void> {
+  async flush() {
     if (this.eventQueue.length === 0) return;
-
     const eventsToSend = [...this.eventQueue];
     this.eventQueue = [];
-
     this.log(`Flushing ${eventsToSend.length} events`);
-
     try {
       const response = await fetch(`${this.config.apiUrl}/t/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(this.config.apiKey && { 'X-API-Key': this.config.apiKey }),
+          ...(this.config.apiKey ? { 'X-API-Key': this.config.apiKey } : {}),
         },
         body: JSON.stringify({
           events: eventsToSend,
@@ -130,19 +135,17 @@ export class CustomAnalyticsProvider extends BaseAnalyticsProvider {
           userId: this.userId,
         }),
       });
-
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-
       this.log('Events sent successfully');
       this.flushBackoffMs = 0;
       this.flushFailedAt = 0;
 
       // Clear persisted events
       await AsyncStorage.removeItem(this.STORAGE_KEY);
-    } catch (error) {
-      this.error('Failed to send events:', error);
+    } catch (err) {
+      this.error('Failed to send events:', err);
 
       // Exponential backoff: 30s, 60s, 120s, max 5min
       this.flushFailedAt = Date.now();
@@ -154,50 +157,49 @@ export class CustomAnalyticsProvider extends BaseAnalyticsProvider {
     }
   }
 
-  private startFlushTimer(): void {
+  private startFlushTimer() {
     if (this.flushTimer) {
       clearInterval(this.flushTimer);
     }
-
     this.flushTimer = setInterval(() => {
       if (this.eventQueue.length > 0 && Date.now() - this.flushFailedAt > this.flushBackoffMs) {
         this.flush();
       }
-    }, this.config.flushInterval || this.FLUSH_INTERVAL);
+    }, this.config.flushInterval ?? this.FLUSH_INTERVAL);
   }
 
-  private stopFlushTimer(): void {
+  private stopFlushTimer() {
     if (this.flushTimer) {
       clearInterval(this.flushTimer);
       this.flushTimer = undefined;
     }
   }
 
-  private generateSessionId(): string {
+  private generateSessionId() {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private async persistEvents(): Promise<void> {
+  private async persistEvents() {
     try {
       await AsyncStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.eventQueue));
-    } catch (error) {
-      this.error('Failed to persist events:', error);
+    } catch (err) {
+      this.error('Failed to persist events:', err);
     }
   }
 
-  private async loadPersistedEvents(): Promise<void> {
+  private async loadPersistedEvents() {
     try {
       const stored = await AsyncStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         this.eventQueue = JSON.parse(stored);
         this.log(`Loaded ${this.eventQueue.length} persisted events`);
       }
-    } catch (error) {
-      this.error('Failed to load persisted events:', error);
+    } catch (err) {
+      this.error('Failed to load persisted events:', err);
     }
   }
 
-  async destroy(): Promise<void> {
+  async destroy() {
     this.stopFlushTimer();
     await this.flush();
   }

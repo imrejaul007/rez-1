@@ -24,7 +24,7 @@ import ScreenSkeleton from '@/components/common/ScreenSkeleton';
 import ScreenError from '@/components/common/ScreenError';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { achievementApi, Achievement as ApiAchievement } from '@/services/achievementApi';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';

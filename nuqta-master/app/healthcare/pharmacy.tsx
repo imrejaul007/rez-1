@@ -18,7 +18,7 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { getImagePicker } from '@/utils/lazyImports';
 import apiClient from '@/services/apiClient';
@@ -28,6 +28,7 @@ import { colors } from '@/constants/theme';
 import { CLOUDINARY_CONFIG, getCloudinaryUploadUrl } from '@/config/cloudinary.config';
 import healthRecordsApi from '@/services/healthRecordsApi';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 const { width } = Dimensions.get('window');
 
@@ -109,6 +110,7 @@ const medicineCategories: MedicineCategory[] = [
 function PharmacyPage() {
   const isMounted = useIsMounted();
   const router = useRouter();
+  const handleBack = useSafeBack();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -282,6 +284,13 @@ function PharmacyPage() {
     try {
       setIsUploading(true);
 
+      // NOTE: This raw fetch uploads directly to Cloudinary with custom `upload_preset`
+      // and `folder` (images/prescriptions). The current `services/imageUploadService.ts`
+      // only exports `uploadProfileImage`, hardcoded to the backend's `/user/auth/upload-avatar`
+      // endpoint with an `avatar` form field — it does not support direct Cloudinary uploads
+      // or the Cloudinary response shape (`secure_url`, `bytes`, `original_filename`) this
+      // caller passes into `healthRecordsApi.uploadRecord`. Skipping migration until the
+      // service is generalized.
       // 1. Upload the prescription image to Cloudinary
       const uploadUrl = getCloudinaryUploadUrl('image');
       const formData = new FormData();
@@ -497,7 +506,7 @@ function PharmacyPage() {
       {/* Header */}
       <LinearGradient colors={[colors.brand.cyan, colors.cyanDark]} style={styles.header}>
         <View style={styles.headerContent}>
-          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} style={styles.backButton}>
+          <Pressable onPress={handleBack} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={colors.background.primary} />
           </Pressable>
           <View style={styles.headerTitleContainer}>

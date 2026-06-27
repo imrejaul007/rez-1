@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { BonusZoneCampaign, UserCampaignState } from '@/services/bonusZoneApi';
 import { colors } from '@/constants/theme';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * App-level service initialization, lifecycle management, and cache warming.
  * Extracts all side-effect logic from _layout.tsx into a single hook.

@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { FormPageSkeleton } from '@/components/skeletons';
 import notificationService from '../../services/notificationService';
 import { platformAlertSimple } from '@/utils/platformAlert';

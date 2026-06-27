@@ -361,19 +361,69 @@ class WalletService {
   }
 
   /**
-   * Topup wallet
+   * Initiate a wallet top-up via the payment gateway.
+   *
+   * IMPORTANT: Backend (walletRoutes.ts) gates `POST /wallet/topup` behind
+   * `requireSeniorAdmin` — regular users calling this would get a 403.
+   * The user-facing flow is:
+   *   1. `POST /wallet/initiate-payment` → returns a payment intent + clientSecret
+   *   2. confirm with the gateway SDK on the device
+   *   3. `POST /wallet/confirm-payment` with `{ paymentIntentId }` → credits wallet
+   *
+   * This method is step 1. Pair it with `confirmPayment` (alias of `confirmTopup`).
    */
-  async topup(data: TopupRequest): Promise<ApiResponse<TopupResponse>> {
+  async topup(data: TopupRequest): Promise<ApiResponse<{
+    paymentIntentId: string;
+    clientSecret?: string;
+    amount: number;
+    currency: string;
+    paymentMethod: string;
+    status: string;
+  }>> {
     try {
-      return await apiClient.post('/wallet/topup', data);
+      return await apiClient.post('/wallet/initiate-payment', {
+        amount: data.amount,
+        paymentMethod: data.paymentMethod || 'razorpay',
+      });
     } catch (error: any) {
-      if (__DEV__) console.warn('[WalletAPI] topup failed:', error?.message);
-      return { success: false, message: error?.message || 'Failed to topup wallet', data: null } as any;
+      if (__DEV__) console.warn('[WalletAPI] topup (initiate-payment) failed:', error?.message);
+      return { success: false, message: error?.message || 'Failed to initiate topup', data: null } as any;
     }
   }
 
   /**
-   * Withdraw funds from wallet
+   * Confirm a wallet top-up after the gateway SDK has confirmed payment.
+   *
+   * `paymentIntentId` is the value returned from `topup()` (initiate-payment).
+   * Backend credit the wallet once it sees the intent in a succeeded state.
+   */
+  async confirmTopup(paymentIntentId: string): Promise<ApiResponse<{
+    transaction: TransactionResponse;
+    wallet: { balance: { total: number; available: number; pending: number }; currency: string };
+  }>> {
+    try {
+      return await apiClient.post('/wallet/confirm-payment', { paymentIntentId });
+    } catch (error: any) {
+      if (__DEV__) console.warn('[WalletAPI] confirmTopup failed:', error?.message);
+      return { success: false, message: error?.message || 'Failed to confirm topup', data: null } as any;
+    }
+  }
+
+  /**
+   * Backwards-compatible alias used by older callers (tests, screens that
+   * imported `confirmPayment` before the rename).
+   */
+  async confirmPayment(paymentIntentId: string): Promise<ApiResponse<any>> {
+    return this.confirmTopup(paymentIntentId);
+  }
+
+  /**
+   * Withdraw funds from wallet.
+   *
+   * Backend exposes a user-accessible `POST /wallet/withdraw` (gated by
+   * re-auth + wallet feature flag) that accepts `{ amount, method,
+   * accountDetails }`. We forward the full payload so the server can run
+   * its own validation (Joi) — the frontend doesn't need to pre-shape it.
    */
   async withdraw(
     data: WithdrawalRequest

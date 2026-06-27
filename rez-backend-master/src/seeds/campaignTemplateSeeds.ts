@@ -134,13 +134,20 @@ export const TEMPLATES: SeedTemplate[] = [
  * In prod, run explicitly via a migration job so rollout is observable.
  */
 export async function seedCampaignTemplates(): Promise<{ upserted: number; matched: number }> {
-  let upserted = 0;
-  let matched = 0;
-  for (const t of TEMPLATES) {
-    const result = await CampaignTemplate.updateOne({ templateId: t.templateId }, { $set: t }, { upsert: true });
-    if (result.upsertedCount > 0) upserted++;
-    else matched++;
-  }
+  // Batch all upserts into a single bulkWrite operation for better performance
+  const operations = TEMPLATES.map((t) => ({
+    updateOne: {
+      filter: { templateId: t.templateId },
+      update: { $set: t },
+      upsert: true,
+    },
+  }));
+
+  const result = await CampaignTemplate.bulkWrite(operations);
+
+  const upserted = result.upsertedCount ?? 0;
+  const matched = result.matchedCount ?? 0;
+
   logger.info('[campaignTemplateSeeds] upserted', {
     upserted,
     matched,

@@ -1,7 +1,7 @@
 import React, { useEffect} from 'react';
 import { View, StyleSheet} from 'react-native';
 import Animated, { useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { useStockStatus } from '@/hooks/useStockStatus';
 import { colors } from '@/constants/theme';

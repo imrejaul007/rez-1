@@ -19,7 +19,7 @@ import {
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, withRepeat } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { MallOffer } from '../../types/mall.types';
 import { FlashList } from '@shopify/flash-list';
 import { colors } from '@/constants/theme';

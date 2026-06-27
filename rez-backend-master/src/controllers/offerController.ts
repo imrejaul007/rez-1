@@ -250,6 +250,9 @@ export const getFeaturedOffers = asyncHandler(async (req: Request, res: Response
 
     redisService.set(cacheKey, offers, 300).catch((err) => logger.warn('[OfferCtrl] Redis cache set failed for featured offers', { error: err.message })); // 5min cache
 
+    if (process.env.NODE_ENV === 'production') {
+      res.setHeader('Cache-Control', 'public, max-age=300');
+    }
     sendSuccess(res, offers, 'Featured offers fetched successfully');
 });
 
@@ -271,6 +274,9 @@ export const getTrendingOffers = asyncHandler(async (req: Request, res: Response
 
     redisService.set(cacheKey, offers, 300).catch((err) => logger.warn('[OfferCtrl] Redis cache set failed for trending offers', { error: err.message })); // 5min cache
 
+    if (process.env.NODE_ENV === 'production') {
+      res.setHeader('Cache-Control', 'public, max-age=300');
+    }
     sendSuccess(res, offers, 'Trending offers fetched successfully');
 });
 
@@ -960,6 +966,9 @@ export const getMegaOffers = asyncHandler(async (req: Request, res: Response) =>
     const offers = await Offer.findMegaOffers();
     const limitedOffers = offers.slice(0, Number(limit));
 
+    if (process.env.NODE_ENV === 'production') {
+      res.setHeader('Cache-Control', 'public, max-age=300');
+    }
     sendSuccess(res, limitedOffers, 'Mega offers fetched successfully');
 });
 
@@ -973,6 +982,9 @@ export const getStudentOffers = asyncHandler(async (req: Request, res: Response)
     const offers = await Offer.findStudentOffers();
     const limitedOffers = offers.slice(0, Number(limit));
 
+    if (process.env.NODE_ENV === 'production') {
+      res.setHeader('Cache-Control', 'public, max-age=300');
+    }
     sendSuccess(res, limitedOffers, 'Student offers fetched successfully');
 });
 
@@ -985,31 +997,50 @@ export const getNewArrivalOffers = asyncHandler(async (req: Request, res: Respon
 
     const offers = await Offer.findNewArrivals(Number(limit));
 
+    if (process.env.NODE_ENV === 'production') {
+      res.setHeader('Cache-Control', 'public, max-age=300');
+    }
     sendSuccess(res, offers, 'New arrival offers fetched successfully');
 });
 
 /**
  * GET /api/offers/nearby
- * Get nearby offers based on user location
+ * Get nearby offers based on user location with pagination
  */
 export const getNearbyOffers = asyncHandler(async (req: Request, res: Response) => {
-    const { lat, lng, maxDistance = 10, limit = 20 } = req.query;
+    const { lat, lng, maxDistance = 10, page = 1, limit = 20 } = req.query;
 
     if (!lat || !lng) {
       return sendError(res, 'Latitude and longitude are required', 400);
     }
 
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 20;
+    const skip = (pageNum - 1) * limitNum;
+
     const userLocation: [number, number] = [Number(lng), Number(lat)];
     const offers = await Offer.findNearbyOffers(userLocation, Number(maxDistance));
-    const limitedOffers = offers.slice(0, Number(limit));
 
     // Calculate distances for each offer
-    const offersWithDistance = limitedOffers.map(offer => ({
+    const offersWithDistance = offers.map(offer => ({
       ...offer.toObject(),
       distance: offer.calculateDistance(userLocation)
     }));
 
-    sendSuccess(res, offersWithDistance, 'Nearby offers fetched successfully');
+    // Sort by distance and apply pagination
+    offersWithDistance.sort((a, b) => a.distance - b.distance);
+    const total = offersWithDistance.length;
+    const paginatedOffers = offersWithDistance.slice(skip, skip + limitNum);
+
+    sendSuccess(res, {
+      offers: paginatedOffers,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum)
+      }
+    }, 'Nearby offers fetched successfully');
 });
 
 /**

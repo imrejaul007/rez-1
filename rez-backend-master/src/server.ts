@@ -217,15 +217,13 @@ app.get('/api-info', (req, res) => {
 const server = createServer(app);
 const io = setupSocket(server);
 
-// Generic error handler (before routes)
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  logger.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
-  });
-});
+// NOTE: The pre-routes error handler that used to live here was removed
+// (Phase 6.24 cleanup). It shadowed the real `globalErrorHandler` registered
+// post-routes in config/routes.ts and unconditionally logged `err.stack` even
+// in production. Express 4-argument error middleware registered before routes
+// only catches synchronous throws during middleware execution, not errors
+// from route handlers — the post-routes globalErrorHandler is the only one
+// that matters.
 
 // ── Register all routes ──
 registerRoutes(app);
@@ -265,12 +263,6 @@ async function startServer() {
     await redisService.connect();
     logger.info(redisService.isReady() ? 'Redis connected' : 'Redis unavailable - app will continue without caching');
 
-    // Warm up public caches after Redis connects (non-blocking)
-    if (redisService.isReady()) {
-      const { warmUpPublicCaches } = await import('./utils/cacheWarmup');
-      setImmediate(() => warmUpPublicCaches().catch(err => logger.warn('[CACHE-WARMUP]', err)));
-    }
-
     // Attach Socket.IO Redis adapter (needs Redis to be connected first)
     await attachSocketRedisAdapter(io);
 
@@ -286,12 +278,17 @@ async function startServer() {
       logger.warn('Cloudinary not configured. Bill upload features will not work.');
     }
 
-    // Initialize cron jobs (skip if worker process handles them)
-    if (process.env.DISABLE_CRON_IN_API === 'true') {
-      logger.info('Cron jobs disabled in API process (DISABLE_CRON_IN_API=true) — use worker process');
-    } else {
-      logger.info('Initializing cron jobs and background services...');
+    // Initialize cron jobs (only on the dedicated worker process).
+    // The actual gate is inside initializeCronJobs() — it checks ENABLE_CRON.
+    // We just log the intent here for ops visibility.
+    if (process.env.ENABLE_CRON === 'true') {
+      logger.info('ENABLE_CRON=true — initializing cron jobs (worker process mode)');
       await initializeCronJobs();
+    } else {
+      logger.info(
+        'ENABLE_CRON not set — skipping cron jobs in this process. ' +
+        'Crons should run on the rez-worker service (set ENABLE_CRON=true there).'
+      );
     }
 
     // All services initialized

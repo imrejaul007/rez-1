@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { SearchHeaderProps } from '@/types/store-search';
 import { COLORS, TYPOGRAPHY, SPACING, DEFAULTS } from '@/constants/search-constants';

@@ -314,87 +314,101 @@ export const borderRadius = {
 // ============================================================================
 // SHADOWS
 // ============================================================================
+// Native styles use the iOS/Android `shadow*` + `elevation` props. On web,
+// react-native-web deprecated `shadow*` in favor of `boxShadow`, so each
+// entry is wrapped in Platform.select — native stays on the old API, web
+// emits a CSS boxShadow string. Spreading `...shadows.subtle` at a call
+// site therefore produces the correct shape for every platform.
+
+// Combined shadow style that is compatible with ViewStyle on all platforms
+type ShadowStyle = {
+  // Native shadows
+  shadowColor?: string;
+  shadowOffset?: { width: number; height: number };
+  shadowOpacity?: number;
+  shadowRadius?: number;
+  elevation?: number;
+  // Web shadow
+  boxShadow?: string;
+};
+
+const nativeShadow = (
+  color: string,
+  offsetWidth: number,
+  offsetHeight: number,
+  opacity: number,
+  radius: number,
+  elevation: number,
+): ShadowStyle => ({
+  shadowColor: color,
+  shadowOffset: { width: offsetWidth, height: offsetHeight },
+  shadowOpacity: opacity,
+  shadowRadius: radius,
+  elevation,
+});
+
+const webShadow = (
+  offsetHeight: number,
+  blur: number,
+  cssColor: string,
+): ShadowStyle => ({
+  boxShadow: `0px ${offsetHeight}px ${blur}px ${cssColor}`,
+});
+
+const createShadow = (web: ShadowStyle, native: ShadowStyle): ShadowStyle => {
+  if (Platform.OS === 'web') {
+    return web;
+  }
+  return native;
+};
 
 export const shadows = {
-  none: {
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  subtle: {
-    shadowColor: colors.midnightNavy,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  medium: {
-    shadowColor: colors.midnightNavy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  strong: {
-    shadowColor: colors.midnightNavy,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 8,
-  },
+  none: createShadow(
+    { boxShadow: 'none' },
+    nativeShadow('transparent', 0, 0, 0, 0, 0)
+  ),
+  subtle: createShadow(
+    webShadow(1, 2, 'rgba(10, 25, 47, 0.05)'),
+    nativeShadow(colors.midnightNavy, 0, 1, 0.05, 2, 1)
+  ),
+  medium: createShadow(
+    webShadow(4, 12, 'rgba(10, 25, 47, 0.08)'),
+    nativeShadow(colors.midnightNavy, 0, 4, 0.08, 12, 4)
+  ),
+  strong: createShadow(
+    webShadow(8, 24, 'rgba(10, 25, 47, 0.12)'),
+    nativeShadow(colors.midnightNavy, 0, 8, 0.12, 24, 8)
+  ),
   // Branded shadows
-  purpleSubtle: {
-    shadowColor: colors.primary[600],
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  purpleMedium: {
-    shadowColor: colors.primary[600],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  purpleStrong: {
-    shadowColor: colors.primary[600],
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 8,
-  },
+  purpleSubtle: createShadow(
+    webShadow(2, 4, 'rgba(255, 205, 87, 0.15)'),
+    nativeShadow(colors.primary[600], 0, 2, 0.15, 4, 2)
+  ),
+  purpleMedium: createShadow(
+    webShadow(4, 12, 'rgba(255, 205, 87, 0.25)'),
+    nativeShadow(colors.primary[600], 0, 4, 0.25, 12, 4)
+  ),
+  purpleStrong: createShadow(
+    webShadow(8, 20, 'rgba(255, 205, 87, 0.3)'),
+    nativeShadow(colors.primary[600], 0, 8, 0.3, 20, 8)
+  ),
   // DesignTokens backward compat aliases (sm/md/lg/xl)
-  sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  xl: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 16,
-  },
+  sm: createShadow(
+    webShadow(1, 2, 'rgba(0, 0, 0, 0.05)'),
+    nativeShadow('#000', 0, 1, 0.05, 2, 2)
+  ),
+  md: createShadow(
+    webShadow(2, 4, 'rgba(0, 0, 0, 0.1)'),
+    nativeShadow('#000', 0, 2, 0.1, 4, 4)
+  ),
+  lg: createShadow(
+    webShadow(4, 8, 'rgba(0, 0, 0, 0.15)'),
+    nativeShadow('#000', 0, 4, 0.15, 8, 8)
+  ),
+  xl: createShadow(
+    webShadow(8, 16, 'rgba(0, 0, 0, 0.2)'),
+    nativeShadow('#000', 0, 8, 0.2, 16, 16)
+  ),
 } as const;
 
 // ============================================================================
@@ -918,27 +932,18 @@ export const darkGradients = {
 // Dark mode shadows (lighter shadow colors for dark backgrounds)
 export const darkShadows = {
   ...shadows,
-  subtle: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  medium: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  strong: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 24,
-    elevation: 8,
-  },
+  subtle: createShadow(
+    webShadow(1, 2, 'rgba(0, 0, 0, 0.3)'),
+    nativeShadow('#000', 0, 1, 0.3, 2, 1)
+  ),
+  medium: createShadow(
+    webShadow(4, 12, 'rgba(0, 0, 0, 0.4)'),
+    nativeShadow('#000', 0, 4, 0.4, 12, 4)
+  ),
+  strong: createShadow(
+    webShadow(8, 24, 'rgba(0, 0, 0, 0.5)'),
+    nativeShadow('#000', 0, 8, 0.5, 24, 8)
+  ),
 } as const;
 
 // Dark mode glassmorphism

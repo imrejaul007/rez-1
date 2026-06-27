@@ -1,0 +1,58 @@
+{
+  "name": "@rez/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities for REZ backend services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    },
+    "./response": {
+      "import": "./dist/response.js",
+      "types": "./dist/response.d.ts",
+      "require": "./dist/response.js"
+    },
+    "./errors": {
+      "import": "./dist/errors.js",
+      "types": "./dist/errors.d.ts",
+      "require": "./dist/errors.js"
+    },
+    "./validators": {
+      "import": "./dist/validators.js",
+      "types": "./dist/validators.d.ts",
+      "require": "./dist/validators.js"
+    },
+    "./sanitization": {
+      "import": "./dist/sanitization.js",
+      "types": "./dist/sanitization.d.ts",
+      "require": "./dist/sanitization.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "rez",
+    "backend",
+    "utilities",
+    "shared"
+  ],
+  "author": "REZ Team",
+  "license": "ISC",
+  "peerDependencies": {
+    "express": "^4.18.0 || ^5.0.0",
+    "validator": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/validator": "^13.11.0",
+    "express": "^4.18.2",
+    "typescript": "^5.3.0",
+    "validator": "^13.11.0"
+  }
+}

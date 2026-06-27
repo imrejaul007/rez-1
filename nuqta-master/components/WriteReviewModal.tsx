@@ -7,7 +7,7 @@ import {
   TouchableWithoutFeedback,
   Dimensions,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import { Review } from '@/types/review.types';

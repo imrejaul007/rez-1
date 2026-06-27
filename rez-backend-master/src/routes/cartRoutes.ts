@@ -14,7 +14,9 @@ import {
   moveLockedToCart,
   getLockedItems,
   lockItemWithPayment,
-  getLockFeeOptions
+  getLockFeeOptions,
+  getCartValidationSummary,
+  autoFixCart
 } from '../controllers/cartController';
 import { authenticate } from '../middleware/auth';
 import { validate, validateParams, cartSchemas, commonSchemas } from '../middleware/validation';
@@ -28,33 +30,28 @@ router.use(generalLimiter);
 router.use(authenticate);
 
 // Get user's cart
-router.get('/', 
-  // generalLimiter,, // Disabled for development
+router.get('/',
   getCart
 );
 
 // Get cart summary
-router.get('/summary', 
-  // generalLimiter,, // Disabled for development
+router.get('/summary',
   getCartSummary
 );
 
 // Validate cart
-router.get('/validate', 
-  // generalLimiter,, // Disabled for development
+router.get('/validate',
   validateCart
 );
 
 // Add item to cart
-router.post('/add', 
-  // generalLimiter,, // Disabled for development
+router.post('/add',
   validate(cartSchemas.addToCart),
   addToCart
 );
 
 // Update cart item
-router.put('/item/:productId', 
-  // generalLimiter,, // Disabled for development
+router.put('/item/:productId',
   validateParams(Joi.object({
     productId: commonSchemas.objectId().required()
   })),
@@ -63,8 +60,7 @@ router.put('/item/:productId',
 );
 
 // Update cart item with variant
-router.put('/item/:productId/:variant', 
-  // generalLimiter,, // Disabled for development
+router.put('/item/:productId/:variant',
   validateParams(Joi.object({
     productId: commonSchemas.objectId().required(),
     variant: Joi.string().required()
@@ -74,8 +70,7 @@ router.put('/item/:productId/:variant',
 );
 
 // Remove item from cart
-router.delete('/item/:productId', 
-  // generalLimiter,, // Disabled for development
+router.delete('/item/:productId',
   validateParams(Joi.object({
     productId: commonSchemas.objectId().required()
   })),
@@ -83,8 +78,7 @@ router.delete('/item/:productId',
 );
 
 // Remove item from cart with variant
-router.delete('/item/:productId/:variant', 
-  // generalLimiter,, // Disabled for development
+router.delete('/item/:productId/:variant',
   validateParams(Joi.object({
     productId: commonSchemas.objectId().required(),
     variant: Joi.string().required()
@@ -93,39 +87,33 @@ router.delete('/item/:productId/:variant',
 );
 
 // Clear entire cart
-router.delete('/clear', 
-  // generalLimiter,, // Disabled for development
+router.delete('/clear',
   clearCart
 );
 
 // Apply coupon
-router.post('/coupon', 
-  // generalLimiter,, // Disabled for development
+router.post('/coupon',
   validate(cartSchemas.applyCoupon),
   applyCoupon
 );
 
 // Remove coupon
 router.delete('/coupon',
-  // generalLimiter,, // Disabled for development
   removeCoupon
 );
 
 // Lock item at current price
 router.post('/lock',
-  // generalLimiter,, // Disabled for development
   lockItem
 );
 
 // Get locked items
 router.get('/locked',
-  // generalLimiter,, // Disabled for development
   getLockedItems
 );
 
 // Unlock item
 router.delete('/lock/:productId',
-  // generalLimiter,, // Disabled for development
   validateParams(Joi.object({
     productId: commonSchemas.objectId().required()
   })),
@@ -134,7 +122,6 @@ router.delete('/lock/:productId',
 
 // Move locked item to cart
 router.post('/lock/:productId/move-to-cart',
-  // generalLimiter,, // Disabled for development
   validateParams(Joi.object({
     productId: commonSchemas.objectId().required()
   })),
@@ -143,14 +130,22 @@ router.post('/lock/:productId/move-to-cart',
 
 // Lock item with payment (MakeMyTrip style)
 router.post('/lock-with-payment',
-  // generalLimiter,, // Disabled for development
   lockItemWithPayment
 );
 
 // Get lock fee options for a product
 router.get('/lock-fee-options',
-  // generalLimiter,, // Disabled for development
   getLockFeeOptions
+);
+
+// Get cart validation summary (summary of all validation issues)
+router.get('/validate/summary',
+  getCartValidationSummary
+);
+
+// Auto-fix cart by removing invalid items
+router.post('/validate/auto-fix',
+  autoFixCart
 );
 
 export default router;

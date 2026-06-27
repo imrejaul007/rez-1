@@ -6,14 +6,29 @@
 
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import mainApiClient from '../apiClient';
-import { AnalyticsProvider, AnalyticsConfig, PurchaseTransaction, UserProperties, AnalyticsEvent } from './types';
-import { CustomAnalyticsProvider } from './providers/CustomProvider';
+import apiClient from '../apiClient';
 import { ANALYTICS_EVENTS } from './events';
+import { CustomAnalyticsProvider } from './providers/CustomProvider';
+
+interface ProviderConfig {
+  name: string;
+  enabled: boolean;
+  config: Record<string, any>;
+}
+
+interface AnalyticsConfig {
+  enabled: boolean;
+  debug: boolean;
+  providers: ProviderConfig[];
+  batchSize: number;
+  flushInterval: number;
+  offlineQueueEnabled: boolean;
+  privacyMode: boolean;
+}
 
 const DEFAULT_CONFIG: AnalyticsConfig = {
   enabled: true,
-  debug: __DEV__,
+  debug: typeof __DEV__ !== 'undefined' ? __DEV__ : false,
   providers: [
     { name: 'custom', enabled: true, config: {} },
     { name: 'firebase', enabled: true, config: {} },
@@ -26,18 +41,18 @@ const DEFAULT_CONFIG: AnalyticsConfig = {
 
 export class AnalyticsService {
   private static instance: AnalyticsService;
-  private providers: AnalyticsProvider[] = [];
-  private config: AnalyticsConfig;
-  private sessionId: string;
-  private userId?: string;
-  private userProperties: UserProperties = {};
-  private sessionStartTime: number;
-  private consentGranted: boolean = true;
+  private providers: BaseAnalyticsProviderLite[] = [];
+  private userProperties: Record<string, any> = {};
+  private userId: string | null = null;
+  private consentGranted = true;
   private readonly CONSENT_KEY = '@analytics:consent';
   private readonly SESSION_KEY = '@analytics:session';
   private initialized = false;
   private lastScreenName: string | null = null;
-  private lastScreenTime: number = 0;
+  private lastScreenTime = 0;
+  private config: AnalyticsConfig;
+  private sessionId: string;
+  private sessionStartTime: number;
 
   private constructor() {
     this.config = DEFAULT_CONFIG;
@@ -55,15 +70,13 @@ export class AnalyticsService {
   /**
    * Initialize analytics with configuration
    */
-  async initialize(config?: Partial<AnalyticsConfig>): Promise<void> {
+  async initialize(config?: Partial<AnalyticsConfig>) {
     if (this.initialized) return;
     this.initialized = true;
-
     this.config = { ...DEFAULT_CONFIG, ...config };
 
     // Load consent
     await this.loadConsent();
-
     if (!this.consentGranted) {
       this.config.enabled = false;
       return;
@@ -75,28 +88,24 @@ export class AnalyticsService {
     // Track session start
     this.trackEvent(ANALYTICS_EVENTS.SESSION_STARTED, {
       platform: Platform.OS,
-      platform_version: Platform.Version,
+      platform_version: String(Platform.Version),
       session_id: this.sessionId,
     });
-
   }
 
   /**
    * Initialize configured providers
    */
-  private async initializeProviders(): Promise<void> {
+  private async initializeProviders() {
     this.providers = [];
-
     for (const providerConfig of this.config.providers) {
       if (!providerConfig.enabled) continue;
-
-      let provider: AnalyticsProvider | null = null;
-
+      let provider: BaseAnalyticsProviderLite | null = null;
       switch (providerConfig.name) {
         case 'custom':
           provider = new CustomAnalyticsProvider();
           await provider.initialize({
-            apiUrl: mainApiClient.getBaseURL(),
+            apiUrl: apiClient.getBaseURL(),
             ...providerConfig.config,
           });
           break;
@@ -106,10 +115,9 @@ export class AnalyticsService {
         case 'mixpanel':
         case 'amplitude':
           break;
-
         default:
+          break;
       }
-
       if (provider) {
         this.providers.push(provider);
       }
@@ -119,21 +127,20 @@ export class AnalyticsService {
   /**
    * Track a custom event
    */
-  trackEvent(eventName: string, properties?: Record<string, any>): void {
+  trackEvent(eventName: string, properties?: Record<string, any>) {
     if (!this.config.enabled || !this.consentGranted) return;
-
     const enrichedProperties = {
-      ...properties,
       timestamp: Date.now(),
       session_id: this.sessionId,
       user_id: this.userId,
       platform: Platform.OS,
+      ...(properties || {}),
     };
-
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
+      console.log(`[Analytics] ${eventName}`, enrichedProperties);
     }
-
-    this.providers.forEach(provider => {
+    this.providers.forEach((provider) => {
       try {
         provider.trackEvent(eventName, enrichedProperties);
       } catch (_error) {
@@ -145,7 +152,7 @@ export class AnalyticsService {
   /**
    * Track screen view
    */
-  trackScreen(screenName: string, properties?: Record<string, any>): void {
+  trackScreen(screenName: string, properties?: Record<string, any>) {
     if (!this.config.enabled || !this.consentGranted) return;
 
     // Deduplicate: skip if same screen within 10 seconds
@@ -155,17 +162,16 @@ export class AnalyticsService {
     }
     this.lastScreenName = screenName;
     this.lastScreenTime = now;
-
     const enrichedProperties = {
-      ...properties,
       screen_name: screenName,
       timestamp: Date.now(),
+      ...(properties || {}),
     };
-
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
+      console.log(`[Analytics] screen_viewed ${screenName}`, enrichedProperties);
     }
-
-    this.providers.forEach(provider => {
+    this.providers.forEach((provider) => {
       try {
         provider.trackScreen(screenName, enrichedProperties);
       } catch (_error) {
@@ -177,15 +183,14 @@ export class AnalyticsService {
   /**
    * Set user ID
    */
-  setUserId(userId: string): void {
+  setUserId(userId: string) {
     this.userId = userId;
-
     if (!this.config.enabled || !this.consentGranted) return;
-
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
+      console.log('[Analytics] setUserId', userId);
     }
-
-    this.providers.forEach(provider => {
+    this.providers.forEach((provider) => {
       try {
         provider.setUserId(userId);
       } catch (_error) {
@@ -197,15 +202,14 @@ export class AnalyticsService {
   /**
    * Set user properties
    */
-  setUserProperties(properties: UserProperties): void {
+  setUserProperties(properties: Record<string, any>) {
     this.userProperties = { ...this.userProperties, ...properties };
-
     if (!this.config.enabled || !this.consentGranted) return;
-
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
+      console.log('[Analytics] setUserProperties', properties);
     }
-
-    this.providers.forEach(provider => {
+    this.providers.forEach((provider) => {
       try {
         provider.setUserProperties(properties);
       } catch (_error) {
@@ -217,13 +221,23 @@ export class AnalyticsService {
   /**
    * Track purchase transaction
    */
-  trackPurchase(transaction: PurchaseTransaction): void {
+  trackPurchase(transaction: {
+    transactionId: string;
+    revenue: number;
+    currency: string;
+    items: any[];
+    tax?: number;
+    shipping?: number;
+    coupon?: string;
+    discount?: number;
+    paymentMethod?: string;
+  }) {
     if (!this.config.enabled || !this.consentGranted) return;
-
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
+      console.log('[Analytics] trackPurchase', transaction);
     }
-
-    this.providers.forEach(provider => {
+    this.providers.forEach((provider) => {
       try {
         provider.trackPurchase(transaction);
       } catch (_error) {
@@ -243,20 +257,20 @@ export class AnalyticsService {
   /**
    * Track error
    */
-  trackError(error: Error, context?: Record<string, any>): void {
+  trackError(error: Error, context?: Record<string, any>) {
     if (!this.config.enabled) return; // Track errors even without consent
 
     const errorData = {
       error_message: error.message,
       error_name: error.name,
       error_stack: error.stack,
-      ...context,
+      ...(context || {}),
     };
-
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
+      console.log('[Analytics] trackError', errorData);
     }
-
-    this.providers.forEach(provider => {
+    this.providers.forEach((provider) => {
       try {
         provider.trackError(error, context);
       } catch (_err) {
@@ -268,14 +282,14 @@ export class AnalyticsService {
   /**
    * Flush all pending events
    */
-  async flush(): Promise<void> {
+  async flush() {
     if (!this.config.enabled) return;
-
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
+      console.log('[Analytics] flush');
     }
-
     await Promise.all(
-      this.providers.map(async provider => {
+      this.providers.map(async (provider) => {
         try {
           await provider.flush();
         } catch (_error) {
@@ -288,10 +302,12 @@ export class AnalyticsService {
   /**
    * Set analytics consent
    */
-  async setConsent(granted: boolean): Promise<void> {
+  async setConsent(granted: boolean) {
     this.consentGranted = granted;
-    await AsyncStorage.setItem(this.CONSENT_KEY, JSON.stringify({ granted, timestamp: Date.now() }));
-
+    await AsyncStorage.setItem(
+      this.CONSENT_KEY,
+      JSON.stringify({ granted, timestamp: Date.now() })
+    );
     if (!granted) {
       // Disable analytics and clear data
       this.config.enabled = false;
@@ -299,20 +315,19 @@ export class AnalyticsService {
     } else {
       this.config.enabled = true;
     }
-
   }
 
   /**
    * Get current consent status
    */
-  async getConsent(): Promise<boolean> {
+  async getConsent() {
     return this.consentGranted;
   }
 
   /**
    * Load consent from storage
    */
-  private async loadConsent(): Promise<void> {
+  private async loadConsent() {
     try {
       const stored = await AsyncStorage.getItem(this.CONSENT_KEY);
       if (stored) {
@@ -327,10 +342,10 @@ export class AnalyticsService {
   /**
    * Clear all analytics data
    */
-  private async clearAllData(): Promise<void> {
+  private async clearAllData() {
     try {
       const keys = await AsyncStorage.getAllKeys();
-      const analyticsKeys = keys.filter(key => key.startsWith('@analytics:'));
+      const analyticsKeys = keys.filter((key) => key.startsWith('@analytics:'));
       await AsyncStorage.multiRemove(analyticsKeys);
     } catch (_error) {
       // silently handle
@@ -340,14 +355,12 @@ export class AnalyticsService {
   /**
    * Track session end
    */
-  async trackSessionEnd(): Promise<void> {
+  async trackSessionEnd() {
     const sessionDuration = Date.now() - this.sessionStartTime;
-
     this.trackEvent(ANALYTICS_EVENTS.SESSION_ENDED, {
       session_id: this.sessionId,
       duration: sessionDuration,
     });
-
     await this.flush();
   }
 
@@ -367,23 +380,35 @@ export class AnalyticsService {
   /**
    * Generate unique session ID
    */
-  private generateSessionId(): string {
+  private generateSessionId() {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
    * Enable/disable analytics
    */
-  setEnabled(enabled: boolean): void {
+  setEnabled(enabled: boolean) {
     this.config.enabled = enabled;
   }
 
   /**
    * Check if analytics is enabled
    */
-  isEnabled(): boolean {
+  isEnabled() {
     return this.config.enabled && this.consentGranted;
   }
+}
+
+// Minimal interface to avoid a circular import of BaseProvider types
+interface BaseAnalyticsProviderLite {
+  initialize(config?: Record<string, any>): Promise<void>;
+  trackEvent(name: string, properties?: Record<string, any>): void;
+  trackScreen(name: string, properties?: Record<string, any>): void;
+  setUserId(userId: string): void;
+  setUserProperties(properties: Record<string, any>): void;
+  trackPurchase(transaction: any): void;
+  trackError(error: Error, context?: Record<string, any>): void;
+  flush(): Promise<void>;
 }
 
 // Export singleton instance

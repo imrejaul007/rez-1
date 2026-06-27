@@ -169,7 +169,7 @@ function ForYouActionCardBase({ action, onPress }: ForYouActionCardProps) {
             accessibilityElementsHidden
             importantForAccessibility="no"
           >
-            {typeLabel(action.type).toUpperCase()}
+            {typeLabel(action.type || '').toUpperCase()}
           </Text>
           <Text style={[styles.title, { color: theme.title }]} numberOfLines={2}>
             {action.title}

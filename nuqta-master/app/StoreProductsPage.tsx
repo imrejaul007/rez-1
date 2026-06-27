@@ -21,7 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter, usePathname } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useCartState } from '@/stores/selectors';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { triggerImpact } from '@/utils/haptics';

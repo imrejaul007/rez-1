@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { ImageProcessingService } from './ImageProcessingService';
 import { logger } from '../config/logger';
 import { cloudinaryCircuit } from '../utils/circuitBreaker';
+import { publishMediaEvent } from '../events/mediaQueue';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -35,6 +36,24 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): P
   }
 }
 
+/**
+ * Upload result with fallback tracking.
+ * When upload fails or circuit is open, returns placeholder info
+ * so user operations are not blocked.
+ */
+export interface CloudinaryUploadResult extends Partial<UploadApiResponse> {
+  /** Flag indicating this is a fallback/placeholder response */
+  isPlaceholder?: boolean;
+  /** Original local file path (for retry queue) */
+  localPath?: string;
+  /** Reason for fallback (circuit_open, upload_error, timeout) */
+  fallbackReason?: string;
+  /** Circuit state at time of fallback */
+  circuitState?: string;
+  /** Timestamp when fallback was triggered */
+  fallbackTimestamp?: number;
+}
+
 export interface CloudinaryUploadOptions {
   folder?: string;
   width?: number;
@@ -47,26 +66,50 @@ export interface CloudinaryUploadOptions {
 
 export class CloudinaryService {
   /**
-   * Upload a single file to Cloudinary
+   * Upload a single file to Cloudinary with circuit breaker and fallback.
+   *
+   * When circuit breaker is open or upload fails:
+   * - Returns a placeholder response (doesn't block user operations)
+   * - Queues the file for retry via mediaQueue
+   * - Logs the fallback for monitoring
+   *
+   * @param filePath - Local file path to upload
+   * @param options - Cloudinary upload options
+   * @param options.disableFallback - If true, throws on failure instead of fallback
+   * @returns CloudinaryUploadResult with cloud URL or placeholder
    */
   static async uploadFile(
     filePath: string,
-    options: CloudinaryUploadOptions = {}
-  ): Promise<UploadApiResponse> {
-    try {
-      const defaultOptions = {
-        folder: options.folder || 'merchant-uploads',
-        quality: options.quality || 'auto',
-        fetch_format: 'auto',
-        ...options,
-      };
+    options: CloudinaryUploadOptions & { disableFallback?: boolean } = {}
+  ): Promise<CloudinaryUploadResult> {
+    const { disableFallback, ...uploadOptions } = options;
+    const circuitState = cloudinaryCircuit.getState();
+    const fallbackReason: string[] = [];
 
-      const result = await cloudinaryCircuit.exec(() =>
-        withTimeout(
-          cloudinary.uploader.upload(filePath, defaultOptions),
-          CLOUDINARY_UPLOAD_TIMEOUT_MS,
-          `uploader.upload(${filePath})`
-        )
+    const defaultOptions = {
+      folder: uploadOptions.folder || 'merchant-uploads',
+      quality: uploadOptions.quality || 'auto',
+      fetch_format: 'auto',
+      ...uploadOptions,
+    };
+
+    // Define the upload function
+    const doUpload = async (): Promise<CloudinaryUploadResult> => {
+      const result = await cloudinaryCircuit.execute(
+        () =>
+          withTimeout(
+            cloudinary.uploader.upload(filePath, defaultOptions),
+            CLOUDINARY_UPLOAD_TIMEOUT_MS,
+            `uploader.upload(${filePath})`
+          ),
+        // Fallback: return placeholder response when circuit is open
+        () => ({
+          secure_url: '',
+          public_id: '',
+          url: '',
+          isPlaceholder: true,
+          localPath: filePath,
+        } as CloudinaryUploadResult)
       );
 
       // Delete local file after successful upload
@@ -76,23 +119,97 @@ export class CloudinaryService {
 
       logger.info('[CLOUDINARY] Uploaded to Cloudinary', { url: result.secure_url });
       return result;
+    };
+
+    try {
+      const result = await doUpload();
+
+      // If we got a placeholder response, queue for retry
+      if (result.isPlaceholder && result.localPath) {
+        fallbackReason.push('circuit_open');
+        logger.warn('[CLOUDINARY] Circuit open - file queued for retry', {
+          filePath: result.localPath,
+          circuitState,
+        });
+
+        // Queue for async retry via media queue
+        try {
+          await publishMediaEvent({
+            eventId: `retry-upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            operation: 'retry-upload',
+            localPath: result.localPath,
+            folder: defaultOptions.folder as string,
+            source: 'cloudinary-circuit-breaker',
+            createdAt: new Date().toISOString(),
+          });
+        } catch (queueError) {
+          logger.error('[CLOUDINARY] Failed to queue retry event', { error: (queueError as Error).message });
+        }
+
+        return {
+          ...result,
+          fallbackReason: fallbackReason.join(','),
+          circuitState,
+          fallbackTimestamp: Date.now(),
+        };
+      }
+
+      return result;
     } catch (error: any) {
-      logger.error('[CLOUDINARY] Upload error', { error: error.message });
-      throw new Error(`Failed to upload to Cloudinary: ${error.message}`);
+      const errorMessage = error.message || String(error);
+
+      if (disableFallback) {
+        throw new Error(`Failed to upload to Cloudinary: ${errorMessage}`);
+      }
+
+      // Log the failure and return placeholder
+      logger.error('[CLOUDINARY] Upload failed - using fallback', {
+        error: errorMessage,
+        circuitState,
+        filePath,
+      });
+
+      fallbackReason.push('upload_error');
+      const stats = cloudinaryCircuit.getStats();
+      logger.warn('[CLOUDINARY] Circuit stats', {
+        failures: stats.consecutiveFailures,
+        failureRate: stats.failureRate?.toFixed(2),
+      });
+
+      // Return a placeholder response so user operations aren't blocked
+      return {
+        secure_url: '',
+        public_id: '',
+        url: '',
+        isPlaceholder: true,
+        localPath: filePath,
+        fallbackReason: fallbackReason.join(','),
+        circuitState,
+        fallbackTimestamp: Date.now(),
+      };
     }
   }
 
   /**
-   * Upload multiple files to Cloudinary
+   * Upload multiple files with fallback support.
+   * Individual file failures return placeholders rather than failing the batch.
    */
   static async uploadMultipleFiles(
     filePaths: string[],
-    options: CloudinaryUploadOptions = {}
-  ): Promise<UploadApiResponse[]> {
-    const uploadPromises = filePaths.map((filePath) =>
-      this.uploadFile(filePath, options)
+    options: CloudinaryUploadOptions & { disableFallback?: boolean } = {}
+  ): Promise<CloudinaryUploadResult[]> {
+    const results = await Promise.all(
+      filePaths.map((filePath) => this.uploadFile(filePath, options))
     );
-    return Promise.all(uploadPromises);
+
+    const successCount = results.filter((r) => !r.isPlaceholder).length;
+    logger.info('[CLOUDINARY] Batch upload completed', {
+      total: filePaths.length,
+      successful: successCount,
+      placeholders: filePaths.length - successCount,
+    });
+
+    return results;
   }
 
   /**
@@ -189,26 +306,37 @@ export class CloudinaryService {
   }
 
   /**
-   * Upload video
+   * Upload video with circuit breaker and fallback.
+   * Videos are larger and may take longer, so we use the configured timeout.
    */
   static async uploadVideo(
     filePath: string,
     merchantId: string,
-    resourceType: 'product' | 'store' = 'product'
-  ): Promise<UploadApiResponse> {
+    resourceType: 'product' | 'store' = 'product',
+    options: { disableFallback?: boolean } = {}
+  ): Promise<CloudinaryUploadResult> {
     const folder = `merchants/${merchantId}/${resourceType}/videos`;
+    const circuitState = cloudinaryCircuit.getState();
 
     try {
-      const result = await cloudinaryCircuit.exec(() =>
-        withTimeout(
-          cloudinary.uploader.upload(filePath, {
-            folder,
-            resource_type: 'video',
-            quality: 'auto',
-          }),
-          CLOUDINARY_UPLOAD_TIMEOUT_MS,
-          `uploader.upload_video(${filePath})`
-        )
+      const result = await cloudinaryCircuit.execute(
+        () =>
+          withTimeout(
+            cloudinary.uploader.upload(filePath, {
+              folder,
+              resource_type: 'video',
+              quality: 'auto',
+            }),
+            CLOUDINARY_UPLOAD_TIMEOUT_MS,
+            `uploader.upload_video(${filePath})`
+          ),
+        () => ({
+          secure_url: '',
+          public_id: '',
+          url: '',
+          isPlaceholder: true,
+          localPath: filePath,
+        } as CloudinaryUploadResult)
       );
 
       // Delete local file
@@ -219,8 +347,28 @@ export class CloudinaryService {
       logger.info('[CLOUDINARY] Uploaded video to Cloudinary', { url: result.secure_url });
       return result;
     } catch (error: any) {
-      logger.error('[CLOUDINARY] Video upload error', { error: error.message });
-      throw new Error(`Failed to upload video: ${error.message}`);
+      const errorMessage = error.message || String(error);
+
+      if (options.disableFallback) {
+        throw new Error(`Failed to upload video: ${errorMessage}`);
+      }
+
+      logger.error('[CLOUDINARY] Video upload failed - using fallback', {
+        error: errorMessage,
+        circuitState,
+        filePath,
+      });
+
+      return {
+        secure_url: '',
+        public_id: '',
+        url: '',
+        isPlaceholder: true,
+        localPath: filePath,
+        fallbackReason: 'upload_error',
+        circuitState,
+        fallbackTimestamp: Date.now(),
+      };
     }
   }
 
@@ -250,26 +398,36 @@ export class CloudinaryService {
   }
 
   /**
-   * Upload store gallery video
+   * Upload store gallery video with circuit breaker and fallback.
    */
   static async uploadStoreGalleryVideo(
     filePath: string,
     merchantId: string,
-    storeId: string
-  ): Promise<UploadApiResponse> {
+    storeId: string,
+    options: { disableFallback?: boolean } = {}
+  ): Promise<CloudinaryUploadResult> {
     const folder = `merchants/${merchantId}/stores/${storeId}/gallery/videos`;
+    const circuitState = cloudinaryCircuit.getState();
 
     try {
-      const result = await cloudinaryCircuit.exec(() =>
-        withTimeout(
-          cloudinary.uploader.upload(filePath, {
-            folder,
-            resource_type: 'video',
-            quality: 'auto',
-          }),
-          CLOUDINARY_UPLOAD_TIMEOUT_MS,
-          `uploader.upload_video(${filePath})`
-        )
+      const result = await cloudinaryCircuit.execute(
+        () =>
+          withTimeout(
+            cloudinary.uploader.upload(filePath, {
+              folder,
+              resource_type: 'video',
+              quality: 'auto',
+            }),
+            CLOUDINARY_UPLOAD_TIMEOUT_MS,
+            `uploader.upload_video(${filePath})`
+          ),
+        () => ({
+          secure_url: '',
+          public_id: '',
+          url: '',
+          isPlaceholder: true,
+          localPath: filePath,
+        } as CloudinaryUploadResult)
       );
 
       // Delete local file
@@ -279,7 +437,28 @@ export class CloudinaryService {
 
       return result;
     } catch (error: any) {
-      throw new Error(`Failed to upload gallery video: ${error.message}`);
+      const errorMessage = error.message || String(error);
+
+      if (options.disableFallback) {
+        throw new Error(`Failed to upload gallery video: ${errorMessage}`);
+      }
+
+      logger.error('[CLOUDINARY] Gallery video upload failed - using fallback', {
+        error: errorMessage,
+        circuitState,
+        filePath,
+      });
+
+      return {
+        secure_url: '',
+        public_id: '',
+        url: '',
+        isPlaceholder: true,
+        localPath: filePath,
+        fallbackReason: 'upload_error',
+        circuitState,
+        fallbackTimestamp: Date.now(),
+      };
     }
   }
 
@@ -364,6 +543,32 @@ export class CloudinaryService {
       process.env.CLOUDINARY_API_KEY &&
       process.env.CLOUDINARY_API_SECRET
     );
+  }
+
+  /**
+   * Get circuit breaker state for monitoring
+   */
+  static getCircuitState(): { state: string; stats: any } {
+    const stats = cloudinaryCircuit.getStats();
+    return {
+      state: cloudinaryCircuit.getState(),
+      stats,
+    };
+  }
+
+  /**
+   * Check if circuit allows requests (for health checks)
+   */
+  static isCircuitHealthy(): boolean {
+    return cloudinaryCircuit.isAllowingRequests();
+  }
+
+  /**
+   * Force reset the circuit breaker (for manual intervention)
+   */
+  static resetCircuit(): void {
+    cloudinaryCircuit.reset();
+    logger.info('[CLOUDINARY] Circuit breaker manually reset');
   }
 }
 

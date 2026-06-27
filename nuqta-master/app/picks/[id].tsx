@@ -19,7 +19,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import creatorsApi, { CreatorPick } from '@/services/creatorsApi';
 import { VideoPlayer } from '@/components/product/VideoPlayer';

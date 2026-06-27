@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Flash Sale API Service
 // Handles flash sales data fetching for homepage and flash sale pages
 

@@ -23,7 +23,7 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getCategoryTheme, SHARED_COLORS } from '@/config/categoryThemeConfig';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { storesApi } from '@/services/storesApi';
@@ -31,6 +31,41 @@ import { useGetCurrencySymbol } from '@/stores/selectors';
 import { getCategoryConfig } from '@/config/categoryConfig';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+
+// ── Action-page dispatch ──────────────────────────────────────────────────
+// 26 stub files were consolidated here. When the second URL segment
+// (`subcategory`) matches a known action slug, render the corresponding
+// `@/components/action-pages/*` component instead of the store list.
+// We use lazy `require()` so action-page chunks are only loaded when a user
+// actually visits that page (matters most for the bulky Stories component).
+const ACTION_MAP: Record<string, React.ComponentType<any>> = {
+  'apply-service': require('@/components/action-pages/ApplyService').default,
+  'beauty-stories': require('@/components/action-pages/Stories').default,
+  'book-appointment': require('@/components/action-pages/BookAppointment').default,
+  'book-class': require('@/components/action-pages/BookClass').default,
+  'book-doctor': require('@/components/action-pages/BookDoctor').default,
+  'book-service': require('@/components/action-pages/BookService').default,
+  'book-table': require('@/components/action-pages/BookTable').default,
+  'book-tickets': require('@/components/action-pages/BookTickets').default,
+  'challenges': require('@/components/action-pages/Challenges').default,
+  'compare': require('@/components/action-pages/Compare').default,
+  'compare-devices': require('@/components/action-pages/CompareDevices').default,
+  'enroll-class': require('@/components/action-pages/EnrollClass').default,
+  'fan-stories': require('@/components/action-pages/Stories').default,
+  'fashion-stories': require('@/components/action-pages/Stories').default,
+  'fast-delivery': require('@/components/action-pages/FastDelivery').default,
+  'fitness-stories': require('@/components/action-pages/Stories').default,
+  'food-stories': require('@/components/action-pages/Stories').default,
+  'grocery-stories': require('@/components/action-pages/Stories').default,
+  'health-stories': require('@/components/action-pages/Stories').default,
+  'learning-stories': require('@/components/action-pages/Stories').default,
+  'plan-trip': require('@/components/action-pages/PlanTrip').default,
+  'service-stories': require('@/components/action-pages/Stories').default,
+  'smart-savers': require('@/components/action-pages/Stories').default,
+  'tech-stories': require('@/components/action-pages/Stories').default,
+  'travel-stories': require('@/components/action-pages/Stories').default,
+  'try-and-buy': require('@/components/action-pages/TryAndBuy').default,
+};
 
 // Subcategory metadata for icons and colors
 const SUBCATEGORY_META: Record<string, { title: string; description: string; icon: string; color: string; emoji: string; filterTags: string[] }> = {
@@ -233,6 +268,14 @@ function SharedCategoryPage() {
   const getCurrencySymbol = useGetCurrencySymbol();
   const currencySymbol = getCurrencySymbol();
 
+  // Action-page short-circuit: if the second URL segment is one of the
+  // consolidated action slugs, render its page component and skip the
+  // store list entirely. This replaces 26 individual stub files.
+  if (subcategory && ACTION_MAP[subcategory]) {
+    const ActionPage = ACTION_MAP[subcategory];
+    return <ActionPage slug={slug} />;
+  }
+
   const [stores, setStores] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -400,7 +443,7 @@ function SharedCategoryPage() {
             <Text style={styles.headerSubtitle}>{filteredStores.length} stores</Text>
           </View>
         </View>
-        <Pressable onPress={() => router.push('/MainCategory/[slug]/search' as any)}>
+        <Pressable onPress={() => router.push(`/MainCategory/${slug}/search` as any)}>
           <Ionicons name="search-outline" size={22} color={SHARED_COLORS.textPrimary} />
         </Pressable>
       </View>

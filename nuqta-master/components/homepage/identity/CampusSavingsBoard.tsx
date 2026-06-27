@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { View, StyleSheet, Pressable, Share } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { colors, spacing, borderRadius, shadows } from '@/constants/theme';
 import analyticsService, { IdentityAnalyticsEvents } from '@/services/analyticsService';

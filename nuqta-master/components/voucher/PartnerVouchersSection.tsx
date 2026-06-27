@@ -11,7 +11,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
 import partnerApi, { ClaimableOffer } from '@/services/partnerApi';
 import { colors } from '@/constants/theme';

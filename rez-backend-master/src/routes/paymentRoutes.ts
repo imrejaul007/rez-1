@@ -10,6 +10,7 @@ import {
 import { authenticate } from '../middleware/auth';
 import { idempotencyMiddleware } from '../middleware/idempotency';
 import { validate, validateParams, Joi } from '../middleware/validation';
+import { financialLimiter } from '../middleware/rateLimiter';
 
 // Payment validation schemas
 const createOrderSchema = Joi.object({
@@ -54,23 +55,23 @@ const router = express.Router();
 // ==================== RAZORPAY ROUTES ====================
 
 // Create Razorpay order for payment (requires authentication)
-router.post('/create-order', authenticate, idempotencyMiddleware({ ttlSeconds: 600 }), validate(createOrderSchema), createPaymentOrder);
+router.post('/create-order', authenticate, financialLimiter, idempotencyMiddleware({ ttlSeconds: 600 }), validate(createOrderSchema), createPaymentOrder);
 
 // Verify Razorpay payment signature (requires authentication)
-router.post('/verify', authenticate, idempotencyMiddleware({ ttlSeconds: 600 }), validate(verifyPaymentSchema), verifyPayment);
+router.post('/verify', authenticate, financialLimiter, idempotencyMiddleware({ ttlSeconds: 600 }), validate(verifyPaymentSchema), verifyPayment);
 
 // Razorpay webhook: mounted in server.ts with express.raw() BEFORE JSON parser
 
 // ==================== STRIPE ROUTES ====================
 
 // Create Stripe Checkout Session for subscription or one-time payment (requires authentication)
-router.post('/create-checkout-session', authenticate, validate(createCheckoutSessionSchema), createCheckoutSession);
+router.post('/create-checkout-session', authenticate, financialLimiter, validate(createCheckoutSessionSchema), createCheckoutSession);
 
 // Verify Stripe checkout session after payment (requires authentication)
-router.post('/verify-stripe-session', authenticate, validate(verifyStripeSessionSchema), verifyStripeSession);
+router.post('/verify-stripe-session', authenticate, financialLimiter, validate(verifyStripeSessionSchema), verifyStripeSession);
 
 // Verify Stripe payment intent (requires authentication)
-router.post('/verify-stripe-payment', authenticate, validate(verifyStripePaymentSchema), verifyStripePayment);
+router.post('/verify-stripe-payment', authenticate, financialLimiter, validate(verifyStripePaymentSchema), verifyStripePayment);
 
 // Stripe webhook: mounted in server.ts with express.raw() BEFORE JSON parser
 

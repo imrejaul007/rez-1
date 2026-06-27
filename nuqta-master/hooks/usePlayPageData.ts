@@ -15,12 +15,7 @@ import { categoryTabs as defaultCategoryTabs } from '@/data/playPageData';
 import realVideosApi from '@/services/realVideosApi';
 import { transformVideosToUGC, getFeaturedVideo } from '@/utils/videoTransformers';
 import { useAuthUser, useIsAuthenticated, useAuthLoading } from '@/stores/selectors';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // Maximum videos to keep in memory to prevent memory leaks
 const MAX_VIDEOS_IN_MEMORY = 60;

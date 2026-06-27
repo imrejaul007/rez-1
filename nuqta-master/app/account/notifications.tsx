@@ -8,7 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/DesignSystem';
 
 function NotificationsScreen() {
@@ -35,7 +35,7 @@ function NotificationsScreen() {
         {/* Push Notifications */}
         <Pressable
           style={styles.notificationSection}
-          onPress={() => router.push('/account/push-notifications' as any)}
+          onPress={() => router.push('/account/push-notifications')}
           accessibilityLabel="Push notifications settings"
           accessibilityRole="button"
           accessibilityHint="Navigate to manage push notification preferences"
@@ -53,7 +53,7 @@ function NotificationsScreen() {
         {/* Email Notifications */}
         <Pressable
           style={styles.notificationSection}
-          onPress={() => router.push('/account/email-notifications' as any)}
+          onPress={() => router.push('/account/email-notifications')}
           accessibilityLabel="Email notifications settings"
           accessibilityRole="button"
           accessibilityHint="Navigate to manage email notification settings"
@@ -71,7 +71,7 @@ function NotificationsScreen() {
         {/* SMS Notifications */}
         <Pressable
           style={styles.notificationSection}
-          onPress={() => router.push('/account/sms-notifications' as any)}
+          onPress={() => router.push('/account/sms-notifications')}
           accessibilityLabel="SMS notifications settings"
           accessibilityRole="button"
           accessibilityHint="Navigate to manage SMS notification preferences"
@@ -89,7 +89,7 @@ function NotificationsScreen() {
         {/* Notification History */}
         <Pressable
           style={styles.notificationSection}
-          onPress={() => router.push('/account/notification-history' as any)}
+          onPress={() => router.push('/account/notification-history')}
           accessibilityLabel="Notification history"
           accessibilityRole="button"
           accessibilityHint="Navigate to view all past notifications"

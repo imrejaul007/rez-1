@@ -2,7 +2,7 @@ import React, { useState, useEffect, memo } from 'react';
 import { View, Pressable, StyleSheet, ActivityIndicator, Platform, Animated, Modal, ScrollView, Dimensions } from 'react-native';
 import { CardGridSkeleton } from '@/components/skeletons';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { triggerImpact, triggerNotification } from "@/utils/haptics";
 import discountsApi, { Discount } from '@/services/discountsApi';

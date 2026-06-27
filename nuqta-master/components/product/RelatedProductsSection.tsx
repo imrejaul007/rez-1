@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { useRouter } from 'expo-router';
 import { useRelatedProducts, RelatedProduct } from '@/hooks/useRelatedProducts';

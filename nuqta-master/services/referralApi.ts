@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Referral API Service
 // Handles referral and earning functionality
 

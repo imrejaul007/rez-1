@@ -20,7 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { DetailPageSkeleton } from '@/components/skeletons';
 import { router, Stack, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import apiClient from '@/services/apiClient';
 import { useIsAuthenticated, useRezBalance, useRefreshWallet } from '@/stores/selectors';
@@ -485,7 +485,7 @@ function ChallengeDetailPage() {
                 {Array.from({ length: challenge.requirements.target }).map((_, index) => {
                   const isDone = index < (userProgress?.progress || 0);
                   return (
-                    <View key={index} style={styles.checklistItem}>
+                    <View key={`checklist-${index}`} style={styles.checklistItem}>
                       <Ionicons
                         name={isDone ? 'checkmark-circle' : 'ellipse-outline'}
                         size={20}

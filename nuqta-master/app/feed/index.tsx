@@ -20,7 +20,7 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSocial } from '../../contexts/SocialContext';
 import { useAuthUser } from '@/stores/selectors';
 import { useFollowSystem } from '../../hooks/useFollowSystem';

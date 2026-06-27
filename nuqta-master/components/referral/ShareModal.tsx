@@ -13,7 +13,7 @@ import {
   Linking} from 'react-native';
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import QRCode from 'react-native-qrcode-svg';
 import { ThemedText } from '@/components/ThemedText';
 import referralService from '@/services/referralApi';
@@ -22,6 +22,7 @@ import analyticsService from '@/services/analyticsService';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { safeOpenURL } from '@/utils/linking';
 
 interface ShareModalProps {
   visible: boolean;
@@ -135,27 +136,27 @@ function ShareModal({
       switch (platform.type) {
         case 'whatsapp':
           const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message)}`;
-          await Linking.openURL(whatsappUrl);
+          await safeOpenURL(whatsappUrl);
           break;
 
         case 'facebook':
           const fbUrl = `fb://facewebmodal/f?href=${encodeURIComponent(referralLink)}`;
-          await Linking.openURL(fbUrl);
+          await safeOpenURL(fbUrl);
           break;
 
         case 'telegram':
           const telegramUrl = `tg://msg?text=${encodeURIComponent(message)}`;
-          await Linking.openURL(telegramUrl);
+          await safeOpenURL(telegramUrl);
           break;
 
         case 'email':
           const emailUrl = `mailto:?subject=${encodeURIComponent(platform.subject || '')}&body=${encodeURIComponent(message)}`;
-          await Linking.openURL(emailUrl);
+          await safeOpenURL(emailUrl);
           break;
 
         case 'sms':
           const smsUrl = `sms:?body=${encodeURIComponent(message)}`;
-          await Linking.openURL(smsUrl);
+          await safeOpenURL(smsUrl);
           break;
 
         default:

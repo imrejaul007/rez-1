@@ -6,6 +6,8 @@ import { logger } from '../config/logger';
  * 1. Google Cloud Vision API (Recommended - 90%+ accuracy)
  * 2. AWS Textract (Alternative)
  *
+ * Protected by circuit breaker to prevent cascading failures when OCR provider is unavailable.
+ *
  * Setup Instructions:
  *
  * GOOGLE CLOUD VISION:
@@ -25,6 +27,14 @@ import { logger } from '../config/logger';
 
 import axios from 'axios';
 import { IExtractedData } from '../models/Bill';
+import { getCircuitBreaker } from '../utils/circuitBreaker';
+import { withTimeout } from '../utils/timeout';
+
+// Circuit breaker for OCR providers
+const ocrCircuit = getCircuitBreaker('ocr-provider');
+
+// OCR timeout (30 seconds for image processing)
+const OCR_TIMEOUT_MS = parseInt(process.env.OCR_TIMEOUT_MS || '30000', 10);
 
 interface OCRResult {
   success: boolean;
@@ -50,11 +60,7 @@ class OCRService {
     if (this.googleApiKey) {
       this.provider = 'google';
       logger.info('✅ [OCR SERVICE] Using Google Cloud Vision API');
-    } else if (
-      process.env.AWS_ACCESS_KEY_ID &&
-      process.env.AWS_SECRET_ACCESS_KEY &&
-      process.env.AWS_REGION
-    ) {
+    } else if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_REGION) {
       this.provider = 'aws';
       this.awsConfig = {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -69,7 +75,7 @@ class OCRService {
   }
 
   /**
-   * Extract text from bill image
+   * Extract text from bill image (with circuit breaker protection)
    */
   async extractTextFromBill(imageUrl: string): Promise<OCRResult> {
     const startTime = Date.now();
@@ -82,10 +88,24 @@ class OCRService {
 
       switch (this.provider) {
         case 'google':
-          result = await this.extractWithGoogleVision(imageUrl);
+          result = await ocrCircuit.execute(
+            () =>
+              withTimeout(this.extractWithGoogleVision(imageUrl), {
+                timeout: OCR_TIMEOUT_MS,
+                operation: 'google-vision',
+              }),
+            () => this.manualExtraction(), // Fallback when circuit is open
+          );
           break;
         case 'aws':
-          result = await this.extractWithAWSTextract(imageUrl);
+          result = await ocrCircuit.execute(
+            () =>
+              withTimeout(this.extractWithAWSTextract(imageUrl), {
+                timeout: OCR_TIMEOUT_MS,
+                operation: 'aws-textract',
+              }),
+            () => this.manualExtraction(), // Fallback when circuit is open
+          );
           break;
         default:
           result = this.manualExtraction();
@@ -113,30 +133,27 @@ class OCRService {
     try {
       logger.info('📤 [GOOGLE VISION] Sending request...');
 
-      const response = await axios.post(
-        `https://vision.googleapis.com/v1/images:annotate?key=${this.googleApiKey}`,
-        {
-          requests: [
-            {
-              image: {
-                source: {
-                  imageUri: imageUrl,
-                },
+      const response = await axios.post(`https://vision.googleapis.com/v1/images:annotate?key=${this.googleApiKey}`, {
+        requests: [
+          {
+            image: {
+              source: {
+                imageUri: imageUrl,
               },
-              features: [
-                {
-                  type: 'TEXT_DETECTION',
-                  maxResults: 1,
-                },
-                {
-                  type: 'DOCUMENT_TEXT_DETECTION',
-                  maxResults: 1,
-                },
-              ],
             },
-          ],
-        }
-      );
+            features: [
+              {
+                type: 'TEXT_DETECTION',
+                maxResults: 1,
+              },
+              {
+                type: 'DOCUMENT_TEXT_DETECTION',
+                maxResults: 1,
+              },
+            ],
+          },
+        ],
+      });
 
       const annotations = response.data.responses[0];
 
@@ -362,9 +379,7 @@ class OCRService {
     }
 
     // Extract discount amount
-    const discountPatterns = [
-      /(?:discount|off|savings)[:\s]*(?:rs\.?|₹)?\s*([\d,]+\.?\d*)/i,
-    ];
+    const discountPatterns = [/(?:discount|off|savings)[:\s]*(?:rs\.?|₹)?\s*([\d,]+\.?\d*)/i];
 
     for (const pattern of discountPatterns) {
       const match = text.match(pattern);
@@ -403,7 +418,7 @@ class OCRService {
       amount: number;
       billDate: Date;
       merchantName?: string;
-    }
+    },
   ): {
     isValid: boolean;
     warnings: string[];
@@ -416,21 +431,17 @@ class OCRService {
       const percentVariance = (variance / userInput.amount) * 100;
 
       if (percentVariance > 10) {
-        warnings.push(
-          `Amount mismatch: OCR detected ₹${extracted.amount}, but user entered ₹${userInput.amount}`
-        );
+        warnings.push(`Amount mismatch: OCR detected ₹${extracted.amount}, but user entered ₹${userInput.amount}`);
       }
     }
 
     // Check date mismatch (allow 7 days variance)
     if (extracted.date) {
-      const daysDiff = Math.abs(
-        (extracted.date.getTime() - userInput.billDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysDiff = Math.abs((extracted.date.getTime() - userInput.billDate.getTime()) / (1000 * 60 * 60 * 24));
 
       if (daysDiff > 7) {
         warnings.push(
-          `Date mismatch: OCR detected ${extracted.date.toDateString()}, but user entered ${userInput.billDate.toDateString()}`
+          `Date mismatch: OCR detected ${extracted.date.toDateString()}, but user entered ${userInput.billDate.toDateString()}`,
         );
       }
     }
@@ -439,12 +450,12 @@ class OCRService {
     if (extracted.merchantName && userInput.merchantName) {
       const similarity = this.calculateStringSimilarity(
         extracted.merchantName.toLowerCase(),
-        userInput.merchantName.toLowerCase()
+        userInput.merchantName.toLowerCase(),
       );
 
       if (similarity < 0.5) {
         warnings.push(
-          `Merchant name mismatch: OCR detected "${extracted.merchantName}", but user selected "${userInput.merchantName}"`
+          `Merchant name mismatch: OCR detected "${extracted.merchantName}", but user selected "${userInput.merchantName}"`,
         );
       }
     }
@@ -486,11 +497,7 @@ class OCRService {
         if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
           matrix[i][j] = matrix[i - 1][j - 1];
         } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
+          matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
         }
       }
     }

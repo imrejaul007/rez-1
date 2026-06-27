@@ -9,7 +9,7 @@ import {
   Modal,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { FilterChipsProps, SearchFilters, FilterOption } from '@/types/store-search';
 import {

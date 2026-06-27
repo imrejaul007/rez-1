@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SectionListSkeleton } from '@/components/skeletons';
 
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import userLoyaltyApi, { UserLoyalty } from '@/services/userLoyaltyApi';

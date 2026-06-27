@@ -28,7 +28,7 @@ const router = Router();
  */
 router.post(
   '/razorpay',
-  express.json(), // Parse JSON body for signature verification
+  express.raw({ type: 'application/json' }), // FIX [HIGH-4]: Must use raw body for Razorpay signature verification
   handleRazorpayWebhook
 );
 

@@ -33,19 +33,16 @@ router.use(authenticate);
 
 // Get user's order statistics
 router.get('/stats',
-  // generalLimiter,, // Disabled for development
   getOrderStats
 );
 
 // Get reorder suggestions
 router.get('/reorder/suggestions',
-  // generalLimiter,, // Disabled for development
   getReorderSuggestions
 );
 
 // Get frequently ordered items
 router.get('/reorder/frequently-ordered',
-  // generalLimiter,, // Disabled for development
   validateQuery(Joi.object({
     limit: Joi.number().integer().min(1).max(50).default(10)
   })),
@@ -54,13 +51,11 @@ router.get('/reorder/frequently-ordered',
 
 // Get order counts (lightweight, for header display)
 router.get('/counts',
-  // generalLimiter,, // Disabled for development
   getOrderCounts
 );
 
 // Get user's orders (supports server-side search, filter, sort)
 router.get('/',
-  // generalLimiter,, // Disabled for development
   validateQuery(Joi.object({
     status: Joi.string().valid(
       'all', 'placed', 'confirmed', 'preparing', 'ready',
@@ -112,10 +107,19 @@ router.get('/refunds/:refundId',
 
 // Get single order by ID
 router.get('/:orderId',
-  // generalLimiter,, // Disabled for development
   validateParams(Joi.object({
     orderId: commonSchemas.objectId().required()
   })),
+  // IDOR protection: verify order ownership before controller access
+  async (req, res, next) => {
+    const { Order } = await import('../models/Order');
+    const order = await Order.findById(req.params.orderId).select('_id user').lean();
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (order.user.toString() !== req.userId) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    next();
+  },
   getOrderById
 );
 
@@ -124,12 +128,21 @@ router.get('/:orderId/financial',
   validateParams(Joi.object({
     orderId: commonSchemas.objectId().required()
   })),
+  // IDOR protection: verify order ownership before controller access
+  async (req, res, next) => {
+    const { Order } = await import('../models/Order');
+    const order = await Order.findById(req.params.orderId).select('_id user').lean();
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (order.user.toString() !== req.userId) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    next();
+  },
   getOrderFinancialDetails
 );
 
 // Cancel order
 router.patch('/:orderId/cancel',
-  // generalLimiter,, // Disabled for development
   validateParams(Joi.object({
     orderId: commonSchemas.objectId().required()
   })),
@@ -141,7 +154,6 @@ router.patch('/:orderId/cancel',
 
 // Get order tracking
 router.get('/:orderId/tracking',
-  // generalLimiter,, // Disabled for development
   validateParams(Joi.object({
     orderId: commonSchemas.objectId().required()
   })),
@@ -150,7 +162,6 @@ router.get('/:orderId/tracking',
 
 // Rate and review order
 router.post('/:orderId/rate',
-  // generalLimiter,, // Disabled for development
   validateParams(Joi.object({
     orderId: commonSchemas.objectId().required()
   })),
@@ -163,7 +174,6 @@ router.post('/:orderId/rate',
 
 // Validate reorder (check availability and prices)
 router.get('/:orderId/reorder/validate',
-  // generalLimiter,, // Disabled for development
   validateParams(Joi.object({
     orderId: commonSchemas.objectId().required()
   })),
@@ -178,7 +188,6 @@ router.get('/:orderId/reorder/validate',
 
 // Re-order full order
 router.post('/:orderId/reorder',
-  // generalLimiter,, // Disabled for development
   validateParams(Joi.object({
     orderId: commonSchemas.objectId().required()
   })),
@@ -187,7 +196,6 @@ router.post('/:orderId/reorder',
 
 // Re-order selected items
 router.post('/:orderId/reorder/items',
-  // generalLimiter,, // Disabled for development
   validateParams(Joi.object({
     orderId: commonSchemas.objectId().required()
   })),
@@ -218,7 +226,6 @@ router.post('/:orderId/refund-request',
 // Admin/Store Owner Routes
 // Update order status
 router.patch('/:orderId/status',
-  // generalLimiter,, // Disabled for development
   requireAdmin,
   validateParams(Joi.object({
     orderId: commonSchemas.objectId().required()

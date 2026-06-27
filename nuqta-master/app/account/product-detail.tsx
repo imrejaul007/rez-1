@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import userProductService, { UserProduct } from '../../services/userProductApi';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { platformAlertSimple } from '@/utils/platformAlert';

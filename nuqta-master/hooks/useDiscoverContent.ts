@@ -1,4 +1,3 @@
-// @ts-nocheck
 // useDiscoverContent.ts - Hook for fetching Discover & Shop content
 import { useState, useCallback } from 'react';
 import { realVideosApi } from '@/services/realVideosApi';

@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { FormPageSkeleton } from '@/components/skeletons';
 import apiClient from '../../services/apiClient';
 import { platformAlertSimple } from '@/utils/platformAlert';

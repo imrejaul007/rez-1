@@ -10,7 +10,7 @@ import {
   Text,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { Deal, DealCategory } from '@/types/deals';
 import DealCard from '@/components/DealCard';

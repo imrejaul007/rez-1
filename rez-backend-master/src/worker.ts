@@ -23,9 +23,18 @@ import { initializeCronJobs } from './config/cronJobs';
 import { ScheduledJobService } from './services/ScheduledJobService';
 import { logger } from './config/logger';
 import { QueueService } from './services/QueueService';
+// Phase 6.24: initialize Sentry for the worker so background job errors
+// are captured instead of silently dying in the logs. The worker doesn't
+// serve HTTP, so we use the Express-free init path.
+import { initSentryWorker } from './config/sentry';
 
 async function startWorker() {
   logger.info('[WORKER] Starting background worker process...');
+
+  // Phase 6.24: initialize Sentry FIRST so any subsequent startup error is
+  // captured. Must be before DB/Redis connection so connection failures
+  // surface in Sentry.
+  initSentryWorker();
 
   // Connect to database (same pool config as server.ts)
   logger.info('[WORKER] Connecting to database...');

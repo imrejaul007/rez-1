@@ -13,7 +13,7 @@ import Animated, {
   useSharedValue,
   withSpring } from 'react-native-reanimated';
 import { CardGridSkeleton } from '@/components/skeletons';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import exploreApi, { ExploreStats } from '@/services/exploreApi';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { useGetCurrencySymbol } from '@/stores/selectors';

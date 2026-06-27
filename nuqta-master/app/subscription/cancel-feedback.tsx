@@ -6,7 +6,7 @@ import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, StatusBar, TextInput, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';

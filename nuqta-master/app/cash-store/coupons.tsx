@@ -25,7 +25,7 @@ import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { platformAlertSimple } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import couponService, { Coupon } from '@/services/couponApi';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { CardGridSkeleton } from '@/components/skeletons';

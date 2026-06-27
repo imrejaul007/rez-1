@@ -18,7 +18,7 @@ import Animated, {
   SlideInRight,
   SlideOutLeft,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { IWhatsNewStory } from '@/types/whatsNew.types';
 import whatsNewApi from '@/services/whatsNewApi';

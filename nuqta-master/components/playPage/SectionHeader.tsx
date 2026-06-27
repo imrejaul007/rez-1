@@ -2,7 +2,7 @@ import { colors } from '@/constants/theme';
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SectionHeaderProps, PLAY_PAGE_COLORS } from '@/types/playPage.types';
 
 // ReZ Design System Colors

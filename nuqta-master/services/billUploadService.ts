@@ -2,14 +2,8 @@
 // Handles all bill upload and verification API calls with progress tracking and retry mechanism
 
 import apiClient, { ApiResponse } from './apiClient';
-
-// Dev-only logger to prevent string accumulation in production
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
 import { Platform } from 'react-native';
+import { devLog } from '@/utils/devLogger';
 import {
   OCRExtractedData,
   BillVerificationResult,

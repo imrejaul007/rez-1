@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Store Payment API Service
  *

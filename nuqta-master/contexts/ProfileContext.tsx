@@ -11,8 +11,6 @@ import {
   UserPreferences
 } from '@/types/profile.types';
 import { useAuthUser, useIsAuthenticated, useAuthLoading, useAuthActions } from '@/stores/selectors';
-import authService, { User as BackendUser, ProfileUpdate } from '@/services/authApi';
-import { saveUser as saveUserToStorage } from '@/utils/authStorage';
 import profileApi from '@/services/profileApi';
 import walletApi from '@/services/walletApi';
 import { mapBackendUserToProfileUser } from '@/utils/profileMapper';
@@ -99,7 +97,7 @@ export const ProfileProvider = ({ children }: ProfileProviderProps) => {
     }
   }, [user, isAuthenticated, refreshCompletionStatus]);
 
-  // User data functions - delegate to AuthContext
+  // User data functions - delegate to AuthContext (has optimistic updates built-in)
   const updateUser = useCallback(async (userData: Partial<User>) => {
     if (!user) return;
 
@@ -132,26 +130,12 @@ export const ProfileProvider = ({ children }: ProfileProviderProps) => {
         },
       };
 
-      // Call the correct authService method directly instead of going through AuthContext
-      const response = await authService.updateProfile(profileUpdateData);
+      // Use authActions.updateProfile which has optimistic updates built-in
+      // This will apply changes immediately and rollback on failure
+      await authActions.updateProfile(profileUpdateData);
 
-      // Check for API errors and throw with descriptive message
-      if (!response.success) {
-        // Extract field-specific validation errors if available
-        const errors = response.errors as any;
-        if (Array.isArray(errors) && errors.length > 0) {
-          const messages = errors.map((e: any) => e.message || e).join('\n');
-          throw new Error(messages);
-        }
-        throw new Error(response.error || response.message || 'Failed to update profile');
-      }
-
-      // Persist updated user to storage so checkAuthStatus picks it up
-      if (response.data) {
-        await saveUserToStorage(response.data as any);
-        await authActions.checkAuthStatus();
-        refreshCompletionStatus();
-      }
+      // Refresh profile completion status after successful update
+      refreshCompletionStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update user profile');
       throw err;

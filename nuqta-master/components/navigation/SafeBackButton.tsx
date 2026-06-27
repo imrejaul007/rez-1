@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { platformAlertConfirm } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Href } from 'expo-router';
 import { useSafeNavigation } from '@/hooks/useSafeNavigation';
 import { BackButtonConfig } from '@/types/navigation.types';

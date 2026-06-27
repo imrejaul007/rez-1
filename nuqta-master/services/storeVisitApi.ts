@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Store Visit API Service
 // Handles store visit scheduling and queue management
 

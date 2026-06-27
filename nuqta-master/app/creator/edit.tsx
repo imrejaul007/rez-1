@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FormPageSkeleton } from '@/components/skeletons';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import creatorsApi from '@/services/creatorsApi';
 import { platformAlert } from '@/utils/platformAlert';
@@ -316,7 +316,7 @@ function CreatorEditProfilePage() {
             </View>
 
             {socialLinks.map((link, index) => (
-              <View key={index} style={styles.socialLinkRow}>
+              <View key={link.platform} style={styles.socialLinkRow}>
                 <View style={styles.platformBadge}>
                   <Ionicons
                     name={

@@ -21,7 +21,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import CoinIcon from '@/components/ui/CoinIcon';
 import { platformAlertConfirm, platformAlertSimple } from '@/utils/platformAlert';
 import lockDealApi, { UserLockDeal, UserLockDealStatus } from '@/services/lockDealApi';

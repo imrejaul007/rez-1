@@ -14,7 +14,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import { CardGridSkeleton } from '@/components/skeletons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import socialImpactApi, { UserEnrollment } from '@/services/socialImpactApi';
 

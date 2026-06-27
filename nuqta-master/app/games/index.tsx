@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { router, Stack, useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthUser, useIsAuthenticated, useAuthLoading, useRezBalance, useRefreshWallet } from '@/stores/selectors';
 import FeatureErrorBoundary from '@/components/common/FeatureErrorBoundary';

@@ -28,7 +28,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useTotalBalance, useWalletLoading, useIsAuthenticated, useAuthLoading } from '@/stores/selectors';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
@@ -321,7 +321,7 @@ const CoinSystemPage = () => {
   // ============================================
 
   const renderCoinTypeCard = (coin: CoinTypeInfo, index: number) => (
-    <View key={index} style={[styles.coinCard, { borderLeftColor: coin.color }]}>
+    <View key={coin.name ?? `coin-${index}`} style={[styles.coinCard, { borderLeftColor: coin.color }]}>
       <View style={styles.coinCardHeader}>
         <View style={[styles.coinIconContainer, { backgroundColor: coin.backgroundColor }]}>
           <Ionicons name={coin.icon} size={24} color={coin.color} />
@@ -349,7 +349,7 @@ const CoinSystemPage = () => {
   );
 
   const renderEarningMethod = (method: EarningMethod, index: number) => (
-    <View key={index} style={styles.earningCard}>
+    <View key={method.title ?? `earn-${index}`} style={styles.earningCard}>
       <View style={[styles.earningIconContainer, { backgroundColor: method.backgroundColor }]}>
         <Ionicons name={method.icon} size={22} color={method.color} />
       </View>
@@ -364,7 +364,7 @@ const CoinSystemPage = () => {
   const renderSpendingPriority = () => (
     <View style={styles.priorityContainer}>
       {SPENDING_PRIORITY.map((item, index) => (
-        <React.Fragment key={index}>
+        <React.Fragment key={item.name ?? `priority-${index}`}>
           <View style={styles.priorityItem}>
             <View style={[styles.priorityNumber, { backgroundColor: item.color }]}>
               <Text style={styles.priorityNumberText}>{item.priority}</Text>
@@ -399,7 +399,7 @@ const CoinSystemPage = () => {
       </View>
       {COIN_TYPES.map((coin, index) => (
         <View
-          key={index}
+          key={coin.name ?? `expiry-${index}`}
           style={[
             styles.expiryTableRow,
             index % 2 === 0 ? styles.expiryTableRowEven : null,
@@ -418,7 +418,7 @@ const CoinSystemPage = () => {
 
   const renderFAQItem = (faq: FAQItem, index: number) => (
     <FAQItemComponent
-      key={index}
+      key={faq.question ?? `faq-${index}`}
       faq={faq}
       index={index}
       isExpanded={expandedFAQ === index}

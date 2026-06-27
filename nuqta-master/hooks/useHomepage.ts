@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { platformAlertSimple } from '@/utils/platformAlert';
@@ -328,7 +327,7 @@ export function useHomepageNavigation() {
             router.push({ pathname: '/EventPage', params: { id: item.id } } as any);
             break;
           case 'store':
-            router.push('/StorePage' as any);
+            router.push(`/MainStorePage?storeId=${item.id}` as any);
             break;
           case 'product':
             router.push({

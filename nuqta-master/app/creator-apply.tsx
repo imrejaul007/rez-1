@@ -18,7 +18,7 @@ import {
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FormPageSkeleton } from '@/components/skeletons';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import creatorsApi, { EligibilityResult } from '@/services/creatorsApi';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/DesignSystem';
@@ -253,7 +253,7 @@ function CreatorApplyPage() {
 
             <View style={styles.requirementsList}>
               {eligibility.requirements.map((req, index) => (
-                <View key={index} style={[styles.requirementRow, { backgroundColor: req.met ? Colors.successScale[50] : Colors.warningScale[50] }]}>
+                <View key={req.label ?? `req-${index}`} style={[styles.requirementRow, { backgroundColor: req.met ? Colors.successScale[50] : Colors.warningScale[50] }]}>
                   <Ionicons
                     name={req.met ? 'checkmark-circle' : 'ellipse-outline'}
                     size={22}

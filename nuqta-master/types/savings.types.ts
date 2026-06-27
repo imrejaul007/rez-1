@@ -115,6 +115,20 @@ export interface SavingsGoal {
   createdAt: string;
   updatedAt: string;
   isCompleted: boolean;
+  /** Goal status (active, paused, completed). */
+  status?: 'active' | 'paused' | 'completed';
+  /** Progress percentage (0-100). */
+  progress?: number;
+  /** Milestones for this goal. */
+  milestones?: Array<{
+    id: string;
+    title: string;
+    targetAmountPaise: number;
+    isCompleted: boolean;
+    completedAt?: string;
+  }>;
+  /** Flag indicating this is an optimistic/predicted goal. */
+  isOptimistic?: boolean;
 }
 
 // ---------------------------------------------------------------------------

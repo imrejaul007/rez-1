@@ -3,7 +3,7 @@ import { colors } from '@/constants/theme';
 import React, { useState, useCallback } from 'react';
 import { View, Pressable, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import StarRating from '@/components/StarRating';
 import RatingBreakdown from '@/components/RatingBreakdown';

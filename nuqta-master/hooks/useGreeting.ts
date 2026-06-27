@@ -1,26 +1,17 @@
-// @ts-nocheck
+// Consolidated greeting hooks - delegates to GreetingContext
+// Use useGreetingDisplay, useTimeBasedGreeting from GreetingContext directly
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useGreeting as useGreetingContext } from '@/contexts/GreetingContext';
+import { useGreeting as useGreetingContext, useTimeBasedGreeting as useTimeBasedGreetingCtx } from '@/contexts/GreetingContext';
 import { useLocation } from '@/contexts/LocationContext';
 import { useAuthUser } from '@/stores/selectors';
-import {
-  getCurrentGreeting,
-  getGreetingForTime,
-  getSmartGreeting,
-  formatTimeForDisplay,
-} from '@/utils/greetingUtils';
-import {
-  GreetingData,
-  GreetingConfig,
-  TimeOfDay,
-} from '@/types/greeting.types';
+import { getSmartGreeting, formatTimeForDisplay } from '@/utils/greetingUtils';
+import type { GreetingConfig, TimeOfDay } from '@/types/greeting.types';
 
 /**
- * Hook for greeting display
+ * Hook for greeting display - delegates to context
  */
 export function useGreetingDisplay() {
   const { state } = useGreetingContext();
-  
   return {
     greeting: state.currentGreeting,
     isLoading: state.isLoading,
@@ -30,43 +21,11 @@ export function useGreetingDisplay() {
 }
 
 /**
- * Hook for time-based greeting
+ * Hook for time-based greeting - delegates to context
  */
 export function useTimeBasedGreeting() {
-  const { getGreetingForTime } = useGreetingContext();
-  const { state: locationState } = useLocation();
-  const authUser = useAuthUser();
-  
-  const getGreetingForCurrentTime = useCallback((config?: GreetingConfig) => {
-    const greetingConfig: GreetingConfig = {
-      userName: authUser?.profile?.firstName || undefined,
-      timezone: locationState.currentLocation?.timezone || 'Asia/Kolkata',
-      language: 'en',
-      includeEmoji: true,
-      personalized: true,
-      ...config,
-    };
-
-    return getGreetingForTime(new Date(), greetingConfig);
-  }, [getGreetingForTime, authUser, locationState.currentLocation]);
-
-  const getGreetingForSpecificTime = useCallback((date: Date, config?: GreetingConfig) => {
-    const greetingConfig: GreetingConfig = {
-      userName: authUser?.profile?.firstName || undefined,
-      timezone: locationState.currentLocation?.timezone || 'Asia/Kolkata',
-      language: 'en',
-      includeEmoji: true,
-      personalized: true,
-      ...config,
-    };
-
-    return getGreetingForTime(date, greetingConfig);
-  }, [getGreetingForTime, authUser, locationState.currentLocation]);
-
-  return {
-    getGreetingForCurrentTime,
-    getGreetingForSpecificTime,
-  };
+  // Use context implementation to avoid duplication
+  return useTimeBasedGreetingCtx();
 }
 
 /**

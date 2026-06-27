@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import subscriptionApi from '@/services/subscriptionApi';
 import type { CurrentSubscription, SubscriptionTier } from '@/services/subscriptionApi';
+import { useToastStore } from './toastStore';
 
 // Feature flags for gradual rollout
 const FEATURE_FLAGS = {
@@ -16,6 +17,7 @@ interface SubscriptionState {
   currentSubscription: CurrentSubscription | null;
   availableTiers: SubscriptionTier[];
   isLoading: boolean;
+  isSubscribing: boolean;
   error: string | null;
   lastFetched: string | null;
   featureFlags: typeof FEATURE_FLAGS;
@@ -27,6 +29,12 @@ interface SubscriptionStoreState {
     loadSubscription: (forceRefresh?: boolean) => Promise<void>;
     refreshSubscription: () => Promise<void>;
     clearError: () => void;
+    subscribe: (tier: 'premium' | 'vip', billingCycle: 'monthly' | 'yearly', paymentMethod?: string, promoCode?: string, source?: string) => Promise<{ subscription: CurrentSubscription; paymentUrl: string }>;
+    upgrade: (newTier: 'premium' | 'vip', billingCycle?: string, paymentGateway?: string) => Promise<{ upgradeId: string; fromTier: string; toTier: string; proratedAmount: number; newTierPrice: number; creditFromCurrentPlan: number; billingCycle: string; expiresAt: string }>;
+    confirmUpgrade: (upgradeId: string, paymentId?: string, paymentIntentId?: string) => Promise<{ subscription: CurrentSubscription; upgrade: { fromTier: string; toTier: string; proratedAmount: number } }>;
+    cancelSubscription: (options?: { reason?: string; feedback?: string; cancelImmediately?: boolean }) => Promise<{ subscription: CurrentSubscription; accessUntil: string; reactivationEligibleUntil: string }>;
+    renewSubscription: () => Promise<CurrentSubscription>;
+    toggleAutoRenew: (autoRenew: boolean) => Promise<CurrentSubscription>;
   };
   computed: {
     isSubscribed: boolean;
@@ -45,6 +53,7 @@ const initialState: SubscriptionState = {
   currentSubscription: null,
   availableTiers: [],
   isLoading: false,
+  isSubscribing: false,
   error: null,
   lastFetched: null,
   featureFlags: FEATURE_FLAGS,
@@ -181,6 +190,211 @@ export const useSubscriptionStore = create<SubscriptionStoreState>((set, get) =>
 
     clearError: () => {
       set(s => ({ state: { ...s.state, error: null } }));
+    },
+
+    subscribe: async (tier, billingCycle, paymentMethod, promoCode, source) => {
+      const prev = get().state;
+      // Optimistic update: set subscribing flag
+      set(s => ({
+        state: {
+          ...s.state,
+          isSubscribing: true,
+          error: null,
+        },
+      }));
+      try {
+        const result = await subscriptionApi.subscribeToPlan(tier, billingCycle, paymentMethod, promoCode, source);
+        // Update subscription with new data
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: result.subscription,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showSuccess('Successfully subscribed!');
+        return result;
+      } catch (error) {
+        // Rollback to previous state
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: prev.currentSubscription,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showError('Failed to subscribe. Please try again.');
+        throw error;
+      }
+    },
+
+    upgrade: async (newTier, billingCycle, paymentGateway) => {
+      const prev = get().state;
+      // Optimistic update: mark as subscribing
+      set(s => ({
+        state: {
+          ...s.state,
+          isSubscribing: true,
+          error: null,
+        },
+      }));
+      try {
+        const result = await subscriptionApi.initiateUpgrade(newTier, billingCycle, paymentGateway);
+        set(s => ({
+          state: {
+            ...s.state,
+            isSubscribing: false,
+          },
+        }));
+        return result;
+      } catch (error) {
+        // Rollback
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: prev.currentSubscription,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showError('Failed to initiate upgrade. Please try again.');
+        throw error;
+      }
+    },
+
+    confirmUpgrade: async (upgradeId, paymentId, paymentIntentId) => {
+      const prev = get().state;
+      // Optimistic update
+      set(s => ({
+        state: {
+          ...s.state,
+          isSubscribing: true,
+          error: null,
+        },
+      }));
+      try {
+        const result = await subscriptionApi.confirmUpgrade(upgradeId, paymentId, paymentIntentId);
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: result.subscription,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showSuccess('Upgrade successful!');
+        return result;
+      } catch (error) {
+        // Rollback
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: prev.currentSubscription,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showError('Failed to confirm upgrade. Please contact support.');
+        throw error;
+      }
+    },
+
+    cancelSubscription: async (options) => {
+      const prev = get().state;
+      // Optimistic update: mark as cancelling
+      set(s => ({
+        state: {
+          ...s.state,
+          isSubscribing: true,
+          error: null,
+        },
+      }));
+      try {
+        const result = await subscriptionApi.cancelSubscription(options || {});
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: result.subscription,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showSuccess('Subscription cancelled successfully.');
+        return result;
+      } catch (error) {
+        // Rollback
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: prev.currentSubscription,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showError('Failed to cancel subscription. Please try again.');
+        throw error;
+      }
+    },
+
+    renewSubscription: async () => {
+      const prev = get().state;
+      set(s => ({
+        state: {
+          ...s.state,
+          isSubscribing: true,
+          error: null,
+        },
+      }));
+      try {
+        const result = await subscriptionApi.renewSubscription();
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: result,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showSuccess('Subscription renewed!');
+        return result;
+      } catch (error) {
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: prev.currentSubscription,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showError('Failed to renew subscription. Please try again.');
+        throw error;
+      }
+    },
+
+    toggleAutoRenew: async (autoRenew) => {
+      const prev = get().state;
+      set(s => ({
+        state: {
+          ...s.state,
+          isSubscribing: true,
+          error: null,
+        },
+      }));
+      try {
+        const result = await subscriptionApi.toggleAutoRenew(autoRenew);
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: result,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showSuccess(autoRenew ? 'Auto-renewal enabled.' : 'Auto-renewal disabled.');
+        return result;
+      } catch (error) {
+        set(s => ({
+          state: {
+            ...s.state,
+            currentSubscription: prev.currentSubscription,
+            isSubscribing: false,
+          },
+        }));
+        useToastStore.getState().showError('Failed to update auto-renewal. Please try again.');
+        throw error;
+      }
     },
   },
 

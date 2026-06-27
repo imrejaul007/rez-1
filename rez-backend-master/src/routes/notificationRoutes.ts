@@ -39,8 +39,7 @@ router.get('/unread-count', getUnreadCount);
 
 // Get user notifications
 router.get('/',
-  // generalLimiter,, // Disabled for development
-  validateQuery(Joi.object({
+    validateQuery(Joi.object({
     type: Joi.string().valid('order', 'promotion', 'social', 'system'),
     isRead: Joi.boolean(),
     page: Joi.number().integer().min(1).default(1),
@@ -51,15 +50,13 @@ router.get('/',
 
 // Mark notifications as read
 router.patch('/read', 
-  // generalLimiter,, // Disabled for development
-  validate(notificationSchemas.markAsRead),
+    validate(notificationSchemas.markAsRead),
   markAsRead
 );
 
 // Delete notification
 router.delete('/:notificationId',
-  // generalLimiter,, // Disabled for development
-  validateParams(Joi.object({
+    validateParams(Joi.object({
     notificationId: commonSchemas.objectId().required()
   })),
   deleteNotification

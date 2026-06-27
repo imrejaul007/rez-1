@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Payment Service
 // Handles payment gateway integration for wallet topup
 

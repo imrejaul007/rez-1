@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { useRouter, usePathname } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 // Import the Pay in Store icon (Nuqta animated coin)

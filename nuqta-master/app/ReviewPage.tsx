@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';

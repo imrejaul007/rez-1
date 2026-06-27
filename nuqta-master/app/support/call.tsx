@@ -16,7 +16,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { DetailPageSkeleton } from '@/components/skeletons';
@@ -30,6 +30,7 @@ import analyticsService from '@/services/analyticsService';
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { Colors, Spacing, BorderRadius, Shadows, Typography, Gradients } from '@/constants/DesignSystem';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { safeCallPhone } from '@/utils/linking';
 
 type PageState = 'loading' | 'error' | 'form' | 'submitting' | 'success';
 
@@ -212,7 +213,7 @@ function CallSupportPage() {
     try {
       const canOpen = await Linking.canOpenURL(telUrl);
       if (canOpen) {
-        await Linking.openURL(telUrl);
+        await safeCallPhone(primaryPhone.number);
       } else {
         platformAlertSimple('Call Support', `Please dial ${primaryPhone.displayNumber} to reach our support team.`);
       }

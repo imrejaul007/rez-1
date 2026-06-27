@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, withRepeat } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { MallOffer } from '../../types/mall.types';
 import MallOfferCard from './cards/MallOfferCard';
 import { FlashList } from '@shopify/flash-list';

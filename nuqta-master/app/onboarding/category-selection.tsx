@@ -5,7 +5,7 @@ import analyticsService from '@/services/analyticsService';
 import { useRouter } from 'expo-router';
 import { useBackButton } from '@/hooks/useSafeNavigation';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { navigationDebugger } from '@/utils/navigationDebug';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';

@@ -11,12 +11,7 @@ import analytics from '@/services/analytics/AnalyticsService';
 import { ANALYTICS_EVENTS } from '@/services/analytics/events';
 import { useAuthUser, useIsAuthenticated, useAuthLoading } from '@/stores/selectors';
 import { useCartStore } from '@/stores/cartStore';
-
-// Dev-only logger to prevent string accumulation in production
-const devLog = {
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // Lazy-loaded heavy deps (not in synchronous dependency chain)
 const getNetInfo = async () => (await import('@react-native-community/netinfo')).default;

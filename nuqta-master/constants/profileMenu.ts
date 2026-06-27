@@ -203,6 +203,40 @@ export const profileMenuSections: ProfileMenuSection[] = [
       },
     ],
   },
+  // Admin section - visible only to admin users
+  {
+    id: 'admin_section',
+    items: [
+      {
+        id: 'admin_hero_slides',
+        title: 'Hero Slides',
+        icon: 'images-outline',
+        route: '/admin/hero-slides',
+        description: 'Manage hero banner slides',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'admin_campaigns',
+        title: 'Campaigns',
+        icon: 'megaphone-outline',
+        route: '/admin/campaigns',
+        description: 'Manage campaigns and deals',
+        isEnabled: true,
+        showArrow: true,
+      },
+      {
+        id: 'admin_social_media',
+        title: 'Social Media Posts',
+        icon: 'share-social-outline',
+        route: '/admin/social-media-posts',
+        description: 'Review social media submissions',
+        isEnabled: true,
+        showArrow: true,
+        dividerAfter: true,
+      },
+    ],
+  },
   {
     id: 'legal_section',
     items: [
@@ -259,7 +293,7 @@ export const profileIconGridItems: ProfileIconGridItem[] = [
     icon: 'construct-outline',
     color: PROFILE_COLORS.white,
     backgroundColor: '#ffcd57',
-    route: '/services',
+    route: '/my-services',
     count: 0,
   },
   {
@@ -432,6 +466,31 @@ export const profileMenuListItems: ProfileMenuListItem[] = [
     icon: 'notifications-outline',
     route: '/account/notifications',
     description: 'Control what alerts you receive',
+    showArrow: true,
+  },
+  // Admin menu items
+  {
+    id: 'admin_hero_slides',
+    title: 'Hero Slides',
+    icon: 'images-outline',
+    route: '/admin/hero-slides',
+    description: 'Manage hero banner slides',
+    showArrow: true,
+  },
+  {
+    id: 'admin_campaigns',
+    title: 'Campaigns (Admin)',
+    icon: 'megaphone-outline',
+    route: '/admin/campaigns',
+    description: 'Manage campaigns and deals',
+    showArrow: true,
+  },
+  {
+    id: 'admin_social_media',
+    title: 'Social Media (Admin)',
+    icon: 'share-social-outline',
+    route: '/admin/social-media-posts',
+    description: 'Review social media submissions',
     showArrow: true,
   },
 ];

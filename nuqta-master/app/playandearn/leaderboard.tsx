@@ -22,7 +22,7 @@ import Animated, {
 import CachedImage from '@/components/ui/CachedImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import leaderboardApi, { LeaderboardEntry } from '../../services/leaderboardApi';
 import { useLeaderboardRealtime } from '@/hooks/useLeaderboardRealtime';
@@ -763,7 +763,7 @@ const Leaderboard = () => {
             </Pressable>
 
             <Pressable
-              onPress={() => router.push('/refer' as any)}
+              onPress={() => router.push('/referral' as any)}
               accessibilityLabel="Refer friends"
               accessibilityRole="button"
             >

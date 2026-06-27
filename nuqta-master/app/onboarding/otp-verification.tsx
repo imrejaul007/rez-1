@@ -5,7 +5,7 @@ import { View, Text, TextInput, Pressable, StyleSheet, Platform } from 'react-na
 import analyticsService from '@/services/analyticsService';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuthUser, useAuthLoading, useAuthError, useAuthActions } from '@/stores/selectors';
 import { platformAlertSimple } from '@/utils/platformAlert';
 

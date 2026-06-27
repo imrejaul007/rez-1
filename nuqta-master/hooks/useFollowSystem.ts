@@ -1,11 +1,11 @@
-// @ts-nocheck
 /**
  * useFollowSystem Hook
  * Manages follow/unfollow functionality with optimistic updates
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useIsAuthenticated, useAuthLoading } from '@/stores/selectors';
+import { useToastStore } from '@/stores/toastStore';
 import * as followApi from '@/services/followApi';
 import type { FollowUser, FollowStatus, FollowCounts, FollowRequest } from '@/services/followApi';
 
@@ -13,6 +13,8 @@ interface UseFollowSystemOptions {
   userId?: string;
   onFollowChange?: (userId: string, isFollowing: boolean) => void;
   onFollowersChange?: (count: number) => void;
+  /** Show toast notifications for actions */
+  showToasts?: boolean;
 }
 
 interface FollowSystemState {
@@ -23,10 +25,17 @@ interface FollowSystemState {
   followingCount: number;
   mutualCount: number;
   isLoading: boolean;
+  isUpdating: boolean;
   error: string | null;
 }
 
 export function useFollowSystem(targetUserId?: string, options: UseFollowSystemOptions = {}) {
+  const {
+    onFollowChange,
+    onFollowersChange,
+    showToasts = true,
+  } = options;
+
   const isAuthenticated = useIsAuthenticated();
   const authLoading = useAuthLoading();
   const [state, setState] = useState<FollowSystemState>({
@@ -37,6 +46,7 @@ export function useFollowSystem(targetUserId?: string, options: UseFollowSystemO
     followingCount: 0,
     mutualCount: 0,
     isLoading: false,
+    isUpdating: false,
     error: null,
   });
 
@@ -45,6 +55,13 @@ export function useFollowSystem(targetUserId?: string, options: UseFollowSystemO
   const [following, setFollowing] = useState<FollowUser[]>([]);
   const [mutuals, setMutuals] = useState<FollowUser[]>([]);
   const [pendingRequests, setPendingRequests] = useState<FollowRequest[]>([]);
+
+  // Toast notifications
+  const showSuccess = useToastStore((state) => state.showSuccess);
+  const showError = useToastStore((state) => state.showError);
+
+  // Ref for request race condition prevention
+  const requestIdRef = useRef(0);
 
   // Load follow status
   const loadFollowStatus = useCallback(async () => {
@@ -88,51 +105,100 @@ export function useFollowSystem(targetUserId?: string, options: UseFollowSystemO
   }, [targetUserId, loadFollowStatus, authLoading, isAuthenticated]);
 
   // Follow user with optimistic update
-  const follow = useCallback(async (userId: string) => {
+  const follow = useCallback(async (userId: string): Promise<boolean> => {
+    if (state.isUpdating) return false;
+
+    const currentRequestId = ++requestIdRef.current;
+    const previousState = {
+      isFollowing: state.isFollowing,
+      followersCount: state.followersCount,
+      followingCount: state.followingCount,
+    };
+
     try {
-      // Optimistic update
+      // Set updating state
+      setState(prev => ({ ...prev, isUpdating: true, error: null }));
+
+      // Optimistic update - immediate UI feedback
       setState(prev => ({
         ...prev,
         isFollowing: true,
-        followingCount: prev.followingCount + 1,
+        followersCount: prev.followersCount + 1,
       }));
 
       const response = await followApi.followUser(userId);
+
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return false;
+      }
 
       if (response.success) {
         setState(prev => ({
           ...prev,
           followersCount: response.data.followersCount,
           followingCount: response.data.followingCount,
+          isUpdating: false,
         }));
 
-        // Trigger callback
-        if (options.onFollowChange) {
-          options.onFollowChange(userId, true);
+        // Trigger callbacks
+        if (onFollowChange) {
+          onFollowChange(userId, true);
         }
-        if (options.onFollowersChange) {
-          options.onFollowersChange(response.data.followersCount);
+        if (onFollowersChange) {
+          onFollowersChange(response.data.followersCount);
+        }
+
+        // Show success toast
+        if (showToasts) {
+          showSuccess('Following', 2000);
         }
 
         return true;
+      } else {
+        throw new Error(response.error || 'Failed to follow user');
       }
-      return false;
     } catch (error: any) {
-      // Revert optimistic update
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return false;
+      }
+
+      // Rollback optimistic update
       setState(prev => ({
         ...prev,
-        isFollowing: false,
-        followingCount: Math.max(0, prev.followingCount - 1),
+        isFollowing: previousState.isFollowing,
+        followersCount: previousState.followersCount,
+        followingCount: previousState.followingCount,
         error: error.message || 'Failed to follow user',
+        isUpdating: false,
       }));
+
+      // Show error toast
+      if (showToasts) {
+        showError('Failed to follow user', 3000);
+      }
+
       return false;
     }
-  }, [options]);
+  }, [state.isUpdating, state.isFollowing, state.followersCount, state.followingCount, onFollowChange, onFollowersChange, showToasts, showSuccess, showError]);
 
   // Unfollow user with optimistic update
-  const unfollow = useCallback(async (userId: string) => {
+  const unfollow = useCallback(async (userId: string): Promise<boolean> => {
+    if (state.isUpdating) return false;
+
+    const currentRequestId = ++requestIdRef.current;
+    const previousState = {
+      isFollowing: state.isFollowing,
+      followersCount: state.followersCount,
+      followingCount: state.followingCount,
+    };
+
     try {
-      // Optimistic update
+      // Set updating state
+      setState(prev => ({ ...prev, isUpdating: true, error: null }));
+
+      // Optimistic update - immediate UI feedback
       setState(prev => ({
         ...prev,
         isFollowing: false,
@@ -141,44 +207,71 @@ export function useFollowSystem(targetUserId?: string, options: UseFollowSystemO
 
       const response = await followApi.unfollowUser(userId);
 
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return false;
+      }
+
       if (response.success) {
         setState(prev => ({
           ...prev,
           followersCount: response.data.followersCount,
           followingCount: response.data.followingCount,
+          isUpdating: false,
         }));
 
-        // Trigger callback
-        if (options.onFollowChange) {
-          options.onFollowChange(userId, false);
+        // Trigger callbacks
+        if (onFollowChange) {
+          onFollowChange(userId, false);
         }
-        if (options.onFollowersChange) {
-          options.onFollowersChange(response.data.followersCount);
+        if (onFollowersChange) {
+          onFollowersChange(response.data.followersCount);
+        }
+
+        // Show success toast
+        if (showToasts) {
+          showSuccess('Unfollowed', 2000);
         }
 
         return true;
+      } else {
+        throw new Error(response.error || 'Failed to unfollow user');
       }
-      return false;
     } catch (error: any) {
-      // Revert optimistic update
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return false;
+      }
+
+      // Rollback optimistic update
       setState(prev => ({
         ...prev,
-        isFollowing: true,
-        followingCount: prev.followingCount + 1,
+        isFollowing: previousState.isFollowing,
+        followersCount: previousState.followersCount,
+        followingCount: previousState.followingCount,
         error: error.message || 'Failed to unfollow user',
+        isUpdating: false,
       }));
+
+      // Show error toast
+      if (showToasts) {
+        showError('Failed to unfollow user', 3000);
+      }
+
       return false;
     }
-  }, [options]);
+  }, [state.isUpdating, state.isFollowing, state.followersCount, state.followingCount, onFollowChange, onFollowersChange, showToasts, showSuccess, showError]);
 
   // Toggle follow/unfollow
-  const toggleFollow = useCallback(async (userId: string) => {
+  const toggleFollow = useCallback(async (userId: string): Promise<boolean> => {
+    if (state.isUpdating) return false;
+
     if (state.isFollowing) {
       return await unfollow(userId);
     } else {
       return await follow(userId);
     }
-  }, [state.isFollowing, follow, unfollow]);
+  }, [state.isUpdating, state.isFollowing, follow, unfollow]);
 
   // Load follow suggestions
   const loadSuggestions = useCallback(async (limit: number = 10) => {

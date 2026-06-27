@@ -5,7 +5,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { SupportAgent } from '@/types/supportChat.types';
 import { colors } from '@/constants/theme';
 
@@ -68,7 +68,7 @@ function AgentCard({ agent, showDetails = false }: AgentCardProps) {
         ) : (
           <View style={styles.avatarPlaceholder}>
             <ThemedText style={styles.avatarText}>
-              {agent.name.charAt(0).toUpperCase()}
+              {(agent.name || '?').charAt(0).toUpperCase()}
             </ThemedText>
           </View>
         )}

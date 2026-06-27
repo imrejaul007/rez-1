@@ -7,17 +7,9 @@ const FIXED_FILES: string[] = [
   'components/cart/CartSocketIntegration.tsx',
   'components/cart/CartSyncStatus.tsx',
   'components/events/EventFilters.tsx',
-  'components/events/EventSearchBar.tsx',
-  'components/home/QuickReorder.tsx',
-  'components/offers/FlashSaleTimer.tsx',
-  'components/PreferencesDemo.tsx',
   'components/referral/ShareModal.tsx',
   'components/referral/TierUpgradeCelebration.tsx',
-  'components/ui/IconSymbol.ios.tsx',
-  'components/ui/TabBarBackground.ios.tsx',
-  'components/voucher/RedemptionFlow.tsx',
   'components/voucher/VoucherSelectionModal.tsx',
-  'components/wallet/TransactionHistory.tsx',
   'components/wallet/TransactionTabs.tsx',
   'services/paymentOrchestratorService.ts',
 ];
@@ -30,8 +22,8 @@ describe('Fixed component files resolve from project root', () => {
     });
   });
 
-  it('all 16 fixed files are accounted for', () => {
-    expect(FIXED_FILES).toHaveLength(16);
+  it('all 8 fixed files are accounted for', () => {
+    expect(FIXED_FILES).toHaveLength(8);
   });
 
   it('project root contains expected marker files', () => {
@@ -130,7 +122,7 @@ describe('tsconfig.json exclude pattern', () => {
   });
 
   it('does NOT exclude regular component source files', () => {
-    const rel = 'components/cart/CartSocketIntegration.tsx';
+    const rel = 'components/cart/CartItem.tsx';
     expect(isExcluded(rel, excludeGlobs)).toBe(false);
   });
 

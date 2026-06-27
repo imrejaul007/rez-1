@@ -17,7 +17,7 @@ import Animated, {
   withTiming } from 'react-native-reanimated';
 import { platformAlertSimple, platformAlertDestructive } from '@/utils/platformAlert';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { ThemedText } from '@/components/ThemedText';

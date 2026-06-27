@@ -1,6 +1,25 @@
 import { logger } from '../config/logger';
 import sgMail from '@sendgrid/mail';
 import { BRAND } from '../config/brand';
+import { getCircuitBreaker } from '../utils/circuitBreaker';
+import { withTimeout } from '../utils/timeout';
+
+// Circuit breaker for SendGrid email service
+const emailCircuit = getCircuitBreaker('sendgrid');
+
+// Default email timeout (15s — SendGrid API typically responds in <3s)
+const EMAIL_TIMEOUT_MS = parseInt(process.env.SENDGRID_HTTP_TIMEOUT_MS || '15000', 10);
+
+// In-memory queue for failed emails (simple implementation)
+// In production, consider Redis or a proper job queue
+interface QueuedEmail {
+  options: EmailOptions;
+  attempts: number;
+  queuedAt: Date;
+}
+const emailQueue: QueuedEmail[] = [];
+const MAX_EMAIL_QUEUE_SIZE = 100;
+const MAX_RETRY_ATTEMPTS = 3;
 
 // Configure SendGrid - only if valid API key is provided
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
@@ -27,10 +46,126 @@ export class EmailService {
   private static readonly FROM_NAME = process.env.SENDGRID_FROM_NAME || 'Your Store';
 
   /**
+   * Queue an email for retry (non-blocking)
+   * Emails are stored in memory and processed by processEmailQueue
+   */
+  private static queueEmail(options: EmailOptions): void {
+    if (emailQueue.length >= MAX_EMAIL_QUEUE_SIZE) {
+      logger.warn('[EmailService] Email queue full, dropping oldest email', {
+        queuedCount: emailQueue.length,
+        droppedTo: options.to,
+      });
+      emailQueue.shift(); // Remove oldest
+    }
+
+    emailQueue.push({
+      options,
+      attempts: 0,
+      queuedAt: new Date(),
+    });
+
+    logger.info('[EmailService] Email queued for retry', {
+      to: options.to,
+      subject: options.subject,
+      queueSize: emailQueue.length,
+    });
+  }
+
+  /**
+   * Process queued emails (should be called periodically)
+   * Non-blocking: logs errors but doesn't throw
+   */
+  static async processEmailQueue(): Promise<{ processed: number; sent: number; failed: number }> {
+    if (emailQueue.length === 0) {
+      return { processed: 0, sent: 0, failed: 0 };
+    }
+
+    let processed = 0;
+    let sent = 0;
+    let failed = 0;
+
+    // Process up to 10 emails at a time
+    const toProcess = emailQueue.splice(0, 10);
+
+    for (const item of toProcess) {
+      processed++;
+      item.attempts++;
+
+      try {
+        await EmailService.sendImmediate(item.options);
+        sent++;
+        logger.info('[EmailService] Queued email sent successfully', {
+          to: item.options.to,
+          attempts: item.attempts,
+        });
+      } catch (error: any) {
+        failed++;
+        if (item.attempts < MAX_RETRY_ATTEMPTS) {
+          // Re-queue for another attempt
+          emailQueue.push(item);
+          logger.warn('[EmailService] Queued email failed, will retry', {
+            to: item.options.to,
+            attempt: item.attempts,
+            maxAttempts: MAX_RETRY_ATTEMPTS,
+          });
+        } else {
+          // Max retries reached, drop the email
+          logger.error('[EmailService] Queued email dropped after max retries', {
+            to: item.options.to,
+            subject: item.options.subject,
+            attempts: item.attempts,
+          });
+        }
+      }
+    }
+
+    return { processed, sent, failed };
+  }
+
+  /**
+   * Get queue status for monitoring
+   */
+  static getQueueStatus(): { queueSize: number; oldestEmail: Date | null } {
+    return {
+      queueSize: emailQueue.length,
+      oldestEmail: emailQueue.length > 0 ? emailQueue[0].queuedAt : null,
+    };
+  }
+
+  /**
+   * Internal method to actually send email via SendGrid (with circuit breaker + timeout)
+   */
+  private static async sendImmediate(options: EmailOptions): Promise<void> {
+    const msg: any = {
+      to: options.to,
+      from: {
+        email: options.from || this.FROM_EMAIL,
+        name: this.FROM_NAME,
+      },
+      subject: options.subject,
+      text: options.text,
+      html: options.html,
+      ...(options.templateId && {
+        templateId: options.templateId,
+        dynamicTemplateData: options.dynamicTemplateData,
+      }),
+    };
+
+    // Wrap with circuit breaker and timeout
+    await emailCircuit.exec(() =>
+      withTimeout(sgMail.send(msg), {
+        timeout: EMAIL_TIMEOUT_MS,
+        operation: `send-email-to-${Array.isArray(options.to) ? options.to[0] : options.to}`,
+      })
+    );
+  }
+
+  /**
    * Send an email
    *
    * Behavior matrix:
-   *   - SendGrid configured + valid key: send via SendGrid
+   *   - SendGrid configured + valid key: send via SendGrid with circuit breaker + timeout
+   *   - Circuit breaker OPEN: queue for retry (non-blocking)
    *   - SendGrid configured + invalid key: log error, fail loudly
    *   - SendGrid NOT configured:
    *       * In production: throw — never silently drop customer emails
@@ -73,29 +208,54 @@ export class EmailService {
         return;
       }
 
-      const msg: any = {
-        to: options.to,
-        from: {
-          email: options.from || this.FROM_EMAIL,
-          name: this.FROM_NAME,
-        },
-        subject: options.subject,
-        text: options.text,
-        html: options.html,
-        ...(options.templateId && {
-          templateId: options.templateId,
-          dynamicTemplateData: options.dynamicTemplateData,
-        }),
-      };
+      // Check circuit breaker state before attempting
+      if (emailCircuit.getState() === 'OPEN') {
+        logger.warn('[EmailService] Circuit breaker OPEN, queuing email for retry', {
+          to: options.to,
+          subject: options.subject,
+        });
+        this.queueEmail(options);
+        return; // Non-blocking: don't throw
+      }
 
-      await sgMail.send(msg);
+      await this.sendImmediate(options);
       logger.info(`✅ Email sent successfully to ${options.to}`);
+
     } catch (error: any) {
-      logger.error('❌ Email send error:', error);
+      // Check if it's a circuit breaker rejection
+      if (error.message?.includes('Circuit is OPEN')) {
+        logger.warn('[EmailService] Circuit breaker OPEN during send, queuing email', {
+          to: options.to,
+          subject: options.subject,
+        });
+        this.queueEmail(options);
+        return; // Non-blocking: queue and don't throw
+      }
+
+      // Check if it's a timeout error
+      if (error.name === 'TimeoutError' || error.message?.includes('timed out')) {
+        logger.error('❌ Email send timeout — queuing for retry', {
+          to: options.to,
+          subject: options.subject,
+          error: error.message,
+        });
+        this.queueEmail(options);
+        return; // Non-blocking: queue and don't throw
+      }
+
+      // Log SendGrid specific errors
       if (error.response) {
         logger.error('SendGrid error response:', error.response.body);
       }
-      throw new Error(`Failed to send email: ${error.message}`);
+
+      // For other errors, queue for retry
+      logger.error('❌ Email send error — queuing for retry', {
+        to: options.to,
+        subject: options.subject,
+        error: error?.message || String(error),
+      });
+      this.queueEmail(options);
+      return; // Non-blocking: queue and don't throw
     }
   }
 
@@ -1793,6 +1953,124 @@ export class EmailService {
    */
   static isConfigured(): boolean {
     return isValidSendGridKey;
+  }
+
+  /**
+   * Send provider/merchant analytics digest email
+   */
+  static async sendProviderAnalyticsDigest(params: {
+    email: string;
+    merchantName: string;
+    businessName: string;
+    gmv: number;
+    txnCount: number;
+    visitCount: number;
+    coinsIssued: number;
+    newUsers: number;
+    dateStr: string;
+    dashboardUrl: string;
+  }): Promise<void> {
+    const { email, merchantName, businessName, gmv, txnCount, visitCount, coinsIssued, newUsers, dateStr, dashboardUrl } = params;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+    .content { padding: 20px; background: #f9f9f9; }
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+    .stat-card { background: white; border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .stat-value { font-size: 28px; font-weight: bold; color: #667eea; }
+    .stat-label { color: #666; font-size: 14px; margin-top: 5px; }
+    .period-badge { background: #e3f2fd; color: #1976d2; padding: 5px 15px; border-radius: 20px; display: inline-block; margin: 10px 0; }
+    .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+    .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Your Daily Analytics Digest</h1>
+      <p style="margin: 10px 0 0 0; font-size: 16px;">Here's how ${businessName} performed yesterday</p>
+    </div>
+    <div class="content">
+      <p>Hi ${merchantName},</p>
+      <p style="text-align: center;">
+        <span class="period-badge">${dateStr}</span>
+      </p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">&#8377;${gmv.toFixed(0)}</div>
+          <div class="stat-label">Gross Merchandise Value</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${txnCount}</div>
+          <div class="stat-label">Transactions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${visitCount}</div>
+          <div class="stat-label">Store Visits</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${coinsIssued}</div>
+          <div class="stat-label">Coins Issued</div>
+        </div>
+      </div>
+
+      ${newUsers > 0 ? `
+      <p style="background: #d4edda; padding: 10px; border-radius: 5px; text-align: center;">
+        <strong>${newUsers} new customers</strong> visited your store!
+      </p>
+      ` : ''}
+
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${dashboardUrl}" class="button">View Full Analytics</a>
+      </p>
+
+      <p>Keep up the great work! Consistent engagement leads to more loyal customers.</p>
+      <p>Best regards,<br>Your Analytics Team</p>
+    </div>
+    <div class="footer">
+      <p>This is an automated email sent daily at 9:00 AM.</p>
+      <p>To manage your email preferences, visit your account settings.</p>
+      <p>&copy; ${new Date().getFullYear()} ${BRAND.APP_NAME}. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+    const text = `Hi ${merchantName},
+
+Your ${businessName} Analytics Summary for ${dateStr}:
+
+- Gross Merchandise Value: Rs.${gmv.toFixed(2)}
+- Total Transactions: ${txnCount}
+- Store Visits: ${visitCount}
+- Coins Issued: ${coinsIssued}
+${newUsers > 0 ? `- New Customers: ${newUsers}` : ''}
+
+View your full analytics dashboard: ${dashboardUrl}
+
+Keep up the great work!
+
+Best regards,
+Your Analytics Team
+
+---
+This is an automated email. To manage preferences, visit your account settings.
+`;
+
+    await this.send({
+      to: email,
+      subject: `Your Daily Analytics Digest - ${businessName} (${dateStr})`,
+      html,
+      text,
+    });
   }
 }
 

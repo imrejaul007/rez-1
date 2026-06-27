@@ -17,7 +17,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useGetCurrencySymbol, useGetLocale } from '@/stores/selectors';
 import { BRAND } from '@/constants/brand';
 import { colors } from '@/constants/theme';

@@ -11,7 +11,7 @@ import {
   ActivityIndicator} from 'react-native';
 import Animated, { useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProductItem } from '@/types/homepage.types';
 import { useGetCurrencySymbol } from '@/stores/selectors';

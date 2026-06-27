@@ -14,7 +14,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAddressSearch } from '@/hooks/useLocation';
 import { useLocation } from '@/contexts/LocationContext';
 import { AddressSearchResult, UserLocation } from '@/types/location.types';

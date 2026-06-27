@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Video, ResizeMode } from 'expo-av';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import PurpleGradientBg from '@/components/onboarding/PurpleGradientBg';
 import SourcePicker from '@/components/ugc/SourcePicker';
 import UploadProgress from '@/components/ugc/UploadProgress';

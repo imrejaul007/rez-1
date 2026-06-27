@@ -7,7 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SellerOption } from '@/types/search.types';
 import { router } from 'expo-router';
 import { useGetCurrencySymbol, useGetLocale } from '@/stores/selectors';

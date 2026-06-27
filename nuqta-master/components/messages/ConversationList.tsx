@@ -7,7 +7,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { PROFILE_COLORS } from '@/types/profile.types';
 import { Conversation } from '@/types/messaging.types';
@@ -77,7 +77,7 @@ function ConversationList({
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
               <ThemedText style={styles.avatarText}>
-                {item.storeName.charAt(0).toUpperCase()}
+                {(item.storeName || '?').charAt(0).toUpperCase()}
               </ThemedText>
             </View>
           )}

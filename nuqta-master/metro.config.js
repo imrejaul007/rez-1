@@ -18,6 +18,21 @@ config.maxWorkers = process.env.METRO_MAX_WORKERS
   : 1; // Default to 1 worker — set METRO_MAX_WORKERS=2 if you have 32GB+ RAM.
 
 // =============================================================================
+// RESOLVER — force NodeWatcher to break the rebundle loop
+// =============================================================================
+// `config.resolver.useWatchman = false` tells metro-file-map to use its
+// NodeWatcher instead of WatchmanWatcher. NodeWatcher debounces FS events
+// with a 100ms timer (`DEBOUNCE_MS` in metro-file-map/src/watchers/NodeWatcher.js)
+// and falls back to recursive fs.watch on every directory — robust on Windows
+// + OneDrive where Watchman/native FSEvents cascade into feedback loops that
+// drove Metro into an infinite rebundle cycle (OOM at 10 GB). This setting is
+// consumed in `metro/src/node-haste/DependencyGraph/createFileMap.js:120`.
+// Set USE_WATCHMAN=1 to revert.
+if (process.env.USE_WATCHMAN !== '1') {
+  config.resolver.useWatchman = false;
+}
+
+// =============================================================================
 // CACHE SETTINGS
 // =============================================================================
 
@@ -123,6 +138,45 @@ config.resolver = {
     // Storybook (if present)
     /\.storybook\/.*/,
     /\.stories\.(js|jsx|ts|tsx)$/,
+    // ── Dev-only tooling (from analysis: 1,707+ files pulled in by Metro) ──
+    // ESLint, TypeScript ESLint, jest preset, and their transitive deps
+    // are in devDependencies but Metro still scans them. Block the whole trees.
+    /node_modules\/eslint\/.*/,
+    /node_modules\/eslint-config-expo\/.*/,
+    /node_modules\/eslint-plugin-react\/.*/,
+    /node_modules\/eslint-plugin-react-hooks\/.*/,
+    /node_modules\/eslint-plugin-react-native\/.*/,
+    /node_modules\/@eslint\/.*/,
+    /node_modules\/@typescript-eslint\/.*/,
+    /node_modules\/@babel\/eslint-parser\/.*/,
+    /node_modules\/ts-jest\/.*/,
+    /node_modules\/jest\/.*/,
+    /node_modules\/jest-.*\/.*/,
+    /node_modules\/@jest\/.*/,
+    /node_modules\/@types\/jest\/.*/,
+    /node_modules\/expect\/.*/,
+    /node_modules\/pretty-format\/.*/,
+    /node_modules\/@sinonjs\/.*/,
+    /node_modules\/sinon\/.*/,
+    /node_modules\/istanbul\/.*/,
+    /node_modules\/nyc\/.*/,
+    /node_modules\/babel-jest\/.*/,
+    /node_modules\/babel-plugin-jest-hoist\/.*/,
+    /node_modules\/babel-preset-jest\/.*/,
+    // Type-checking helpers (only used by tsc, not at runtime)
+    /node_modules\/typescript\/lib\/tsc\.js$/,
+    /node_modules\/typescript\/lib\/tsserver\.js$/,
+    /node_modules\/typescript\/lib\/typescript\.js$/,
+    // Huge lookup-table packages we don't need
+    /node_modules\/caniuse-lite\/data\/.*/,  // 5+ MB of browser compat data
+    /node_modules\/regenerate-unicode-properties\/.*/,  // 1.5 MB of unicode data
+    /node_modules\/es-abstract\/.*/,  // 2,472 files of ECMAScript spec helpers — used by lodash etc but Metro scans them all
+    /node_modules\/lodash\/.*/,  // 1,048 files; only used by @expo/cli (dev tool) and jest-expo
+    /node_modules\/lodash-es\/.*/,
+    // JSON schema validators (often only used by build tools)
+    /node_modules\/ajv\/.*/,  // 319 files, transitively required by some build tools
+    /node_modules\/ajv-formats\/.*/,
+    /node_modules\/json-schema-deref-sync\/.*/,  // brings lodash
   ],
   hasteImplModulePath: undefined,
   // Map nested node_modules so Metro can resolve markdown-it's entities@2 correctly
@@ -205,12 +259,13 @@ const markdownItEntitiesJson = path.resolve(
   __dirname, 'node_modules/markdown-it/node_modules/entities/lib/maps/entities.json'
 );
 
-// Fix: @tanstack/react-query v5.90+ with "type":"module" breaks Metro 0.80 resolution
+// Fix: @tanstack/react-query v5.90+ with "type":"module" breaks Metro 0.80 resolution.
+// v5.6+ removed build/legacy/index.cjs; use build/modern/index.js (or package main).
 const tanstackReactQueryEntry = path.resolve(
-  __dirname, 'node_modules/@tanstack/react-query/build/legacy/index.cjs'
+  __dirname, 'node_modules/@tanstack/react-query/build/modern/index.js'
 );
 const tanstackQueryCoreEntry = path.resolve(
-  __dirname, 'node_modules/@tanstack/query-core/build/legacy/index.cjs'
+  __dirname, 'node_modules/@tanstack/query-core/build/modern/index.js'
 );
 
 const localforageFilePath = path.resolve(

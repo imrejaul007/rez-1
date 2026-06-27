@@ -100,6 +100,58 @@ export const initSentry = (app: Express) => {
   }
 };
 
+/**
+ * Phase 6.24: Sentry initialization for the background worker process.
+ * Unlike `initSentry(app)`, this doesn't require an Express app because
+ * the worker doesn't serve HTTP — it only runs cron jobs and Bull queues.
+ * Captures uncaught exceptions and unhandled rejections so a misbehaving
+ * cron job surfaces in Sentry instead of silently dying in the logs.
+ */
+export const initSentryWorker = (): void => {
+  if (!process.env.SENTRY_DSN) {
+    logger.warn('Sentry DSN not configured, error tracking disabled in worker');
+    return;
+  }
+
+  try {
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+      environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development',
+      release: process.env.SENTRY_RELEASE || getPackageVersion(),
+      tracesSampleRate: getTraceSampleRate(),
+      profilesSampleRate: getProfilesSampleRate(),
+      // No HTTP/Express integrations — worker is not an HTTP server. Just
+      // the global handlers for uncaught exceptions and unhandled rejections.
+      integrations: [
+        new Sentry.Integrations.Console({
+          levels: ['error', 'warn']
+        }),
+        new Sentry.Integrations.OnUncaughtException(),
+        new Sentry.Integrations.OnUnhandledRejection({ mode: 'strict' })
+      ],
+      beforeSend(event) {
+        // Sanitize: strip PII from event before sending
+        if (event.user) {
+          delete event.user.ip_address;
+          delete event.user.email;
+        }
+        if (event.request) {
+          delete event.request.cookies;
+          delete event.request.headers;
+        }
+        return event;
+      },
+    });
+
+    logger.info('Sentry initialized for worker process', {
+      dsn: maskDSN(process.env.SENTRY_DSN)
+    });
+  } catch (error) {
+    logger.error('Failed to initialize Sentry for worker', error as any);
+    // Don't throw - continue without Sentry
+  }
+};
+
 // ============================================================================
 // MIDDLEWARE EXPORTS
 // ============================================================================

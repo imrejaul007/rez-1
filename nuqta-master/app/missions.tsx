@@ -27,7 +27,7 @@ import CachedImage from '@/components/ui/CachedImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, Stack, useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { challengesApi, ChallengeProgress, Challenge } from '@/services/challengesApi';
 import streakApi from '@/services/streakApi';
 import { useGetCurrencySymbol } from '@/stores/selectors';

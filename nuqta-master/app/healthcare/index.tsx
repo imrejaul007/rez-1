@@ -21,13 +21,14 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import apiClient from '@/services/apiClient';
 import emergencyApi from '@/services/emergencyApi';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';
 import { catchAndWarn } from '@/utils/catchAndReport';
+import { safeCallPhone } from '@/utils/linking';
 import { useIsMounted } from '@/hooks/useIsMounted';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -145,7 +146,7 @@ const HealthcarePage: React.FC = () => {
   }, []);
 
   const handleQuickCall = (phone: string) => {
-    try { Linking.openURL(`tel:${phone}`); } catch (e) { catchAndWarn(e, 'Healthcare/openURL'); }
+    try { safeCallPhone(phone); } catch (e) { catchAndWarn(e, 'Healthcare/openURL'); }
   };
 
   const getCategoryCount = (id: string): string => {

@@ -15,7 +15,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { EVENT_COLORS } from '@/constants/EventColors';
 import StarRating from './StarRating';
 import { useIsMounted } from '@/hooks/useIsMounted';

@@ -1,7 +1,7 @@
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CashStoreSectionContainer from '../../components/cash-store/CashStoreSectionContainer';

@@ -7,7 +7,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, Pressable, TextInput } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { RewardItem, RewardCategory } from '@/types/loyaltyRedemption.types';
 import RewardCard from './RewardCard';

@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import { getImagePicker } from '@/utils/lazyImports';
 import { ThemedText } from '@/components/ThemedText';
@@ -75,6 +75,12 @@ function FeedbackPage() {
     return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   });
 
+  // NOTE: This raw fetch uploads directly to Cloudinary with custom `upload_preset` and
+  // `folder` (images/support). The current `services/imageUploadService.ts` only exports
+  // `uploadProfileImage`, hardcoded to the backend's `/user/auth/upload-avatar` endpoint with
+  // an `avatar` form field — it does not support direct Cloudinary uploads, custom presets/
+  // folders, or return the `secure_url` shape this caller passes into `supportService.createTicket`
+  // as `attachments`. Skipping migration until the service is generalized.
   const uploadImageToCloudinary = async (uri: string): Promise<string> => {
     const uploadUrl = getCloudinaryUploadUrl('image');
     const formData = new FormData();

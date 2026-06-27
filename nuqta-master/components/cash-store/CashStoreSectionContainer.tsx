@@ -27,6 +27,7 @@ import {
 import { catchAndWarn } from '@/utils/catchAndReport';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
+import { safeOpenURL } from '@/utils/linking';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 import { useRouter } from 'expo-router';
@@ -115,7 +116,7 @@ const CashStoreSectionContainer: React.FC<CashStoreSectionContainerProps> = ({
         } catch (error) {
           if (deal.externalUrl) {
             try {
-              await Linking.openURL(deal.externalUrl);
+              await safeOpenURL(deal.externalUrl);
             } catch (e) { catchAndWarn(e, 'CashStoreSectionContainer/handleTrendingDealPress-fallback'); }
           }
         }
@@ -156,7 +157,7 @@ const CashStoreSectionContainer: React.FC<CashStoreSectionContainerProps> = ({
         } catch (error) {
           if (deal.externalUrl) {
             try {
-              await Linking.openURL(deal.externalUrl);
+              await safeOpenURL(deal.externalUrl);
             } catch (e) { catchAndWarn(e, 'CashStoreSectionContainer/handleHighCashbackPress-fallback'); }
           }
         }

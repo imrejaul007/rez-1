@@ -17,7 +17,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LOCK_FEE_PERCENTAGES } from './DurationChips';
 import { useGetCurrencySymbol, useGetLocale } from '@/stores/selectors';

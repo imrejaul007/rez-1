@@ -26,7 +26,7 @@ import { useRouter, useLocalSearchParams, useFocusEffect, Stack } from "expo-rou
 import Constants from "expo-constants";
 import { ThemedView } from "@/components/ThemedView";
 import { EventItem } from "@/types/homepage.types";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import EventBookingModal from "@/components/events/EventBookingModal";
 import RelatedEventsSection from "@/components/events/RelatedEventsSection";
 import EventReviews from "@/components/events/EventReviews";
@@ -42,6 +42,7 @@ import { Colors, Spacing, BorderRadius, Typography } from '@/constants/DesignSys
 import { colors } from '@/constants/theme';
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import { errorReporter } from '@/utils/errorReporter';
+import { useSafeTimeouts } from '@/hooks/useSafeTimeouts';
 // Conditional import for native Stripe service
 let stripeReactNativeService: any = null;
 if (Platform.OS !== 'web') {
@@ -87,6 +88,7 @@ interface DynamicEventData {
 
 function EventPage({ eventId, initialEvent }: EventPageProps = {}) {
   const router = useRouter();
+  const { setSafeTimeout, clearSafeTimeout, clearAllTimeouts } = useSafeTimeouts();
   const params = useLocalSearchParams();
   const user = useAuthUser();
   const isAuthenticated = useIsAuthenticated();
@@ -267,7 +269,7 @@ function EventPage({ eventId, initialEvent }: EventPageProps = {}) {
     } catch (error) {
       if (!isMountedRef.current) return;
       const delay = Math.min(1000 * Math.pow(2, retries), 10000); // Exponential backoff, max 10s
-      retryTimeoutRef.current = setTimeout(() => {
+      retryTimeoutRef.current = setSafeTimeout(() => {
         if (isMountedRef.current) {
           retryWithBackoff(retryFn, retries + 1);
         }
@@ -280,7 +282,7 @@ function EventPage({ eventId, initialEvent }: EventPageProps = {}) {
   useEffect(() => {
     const subscription = Dimensions.addEventListener("change", ({ window }) => {
       if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
-      resizeTimeoutRef.current = setTimeout(() => {
+      resizeTimeoutRef.current = setSafeTimeout(() => {
         setScreenData(window);
       }, 100);
     });
@@ -588,7 +590,7 @@ function EventPage({ eventId, initialEvent }: EventPageProps = {}) {
           text: "My Events",
           onPress: () => {
             if (Platform.OS === 'ios') {
-              setTimeout(() => router.push('/my-events' as any), 50);
+              setSafeTimeout(() => router.push('/my-events' as any), 50);
             } else {
               router.push('/my-events' as any);
             }
@@ -602,7 +604,7 @@ function EventPage({ eventId, initialEvent }: EventPageProps = {}) {
 
   useEffect(() => {
     if (!error) return;
-    const id = setTimeout(() => setError(null), 4500);
+    const id = setSafeTimeout(() => setError(null), 4500);
     return () => clearTimeout(id);
   }, [error]);
 
@@ -712,7 +714,7 @@ function EventPage({ eventId, initialEvent }: EventPageProps = {}) {
                 } catch (error) {
                   if (retryCount < MAX_RETRIES) {
                     const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-                    setTimeout(() => {
+                    setSafeTimeout(() => {
                       loadEventData();
                     }, delay);
                   } else {

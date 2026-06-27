@@ -15,7 +15,7 @@ import Animated, {
   withTiming,
   interpolate,
 } from 'react-native-reanimated';
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerImpact } from "@/utils/haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { colors } from '@/constants/theme';
@@ -24,6 +24,7 @@ import {
   Spacing,
   BorderRadius } from "@/constants/DesignSystem";
 import { catchAndWarn } from '@/utils/catchAndReport';
+import { safeOpenURL } from '@/utils/linking';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -56,7 +57,7 @@ function TermsTransparencySection({
 
   const handleContactSupport = () => {
     triggerImpact('Light');
-    try { Linking.openURL(`mailto:${supportEmail}`); } catch (e) { catchAndWarn(e, 'TermsTransparencySection/openURL'); }
+    try { safeOpenURL(`mailto:${supportEmail}`); } catch (e) { catchAndWarn(e, 'TermsTransparencySection/openURL'); }
   };
 
   const rotateStyle = useAnimatedStyle(() => ({

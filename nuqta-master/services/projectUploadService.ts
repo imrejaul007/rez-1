@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Project Upload Service
 // Handles image/video uploads for project submissions using Cloudinary
 

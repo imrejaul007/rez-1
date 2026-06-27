@@ -4,7 +4,7 @@ import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { useUserIdentityStore } from '@/stores/userIdentityStore';
-import { useAuthUser, useIsAuthenticated } from '@/stores';
+import { useAuthUser, useIsAuthenticated } from '@/stores/selectors';
 import { useAuth } from '@/contexts/AuthContext';
 import StudentIdentityBanner from './StudentIdentityBanner';
 import CorporateIdentityBanner from './CorporateIdentityBanner';

@@ -17,7 +17,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { BRAND } from '@/constants/brand';
 import { useFocusEffect } from '@react-navigation/native';
@@ -114,6 +114,12 @@ function ReviewToEarnPage() {
     setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
+  // NOTE: This raw fetch uploads directly to Cloudinary with a custom `upload_preset`
+  // (reviewMedia) and `folder` (images/reviews). The current `services/imageUploadService.ts`
+  // only exports `uploadProfileImage`, hardcoded to the backend's avatar endpoint with an
+  // `avatar` form field — it does not support direct Cloudinary uploads, custom presets/folders,
+  // or return the `secure_url` shape this caller needs. Skipping migration until the service
+  // is generalized.
   const uploadImageToCloudinary = async (uri: string): Promise<string> => {
     const uploadUrl = getCloudinaryUploadUrl('image');
     const formData = new FormData();

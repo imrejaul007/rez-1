@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Homepage API Service
 // Handles homepage data fetching, section management, and analytics
 // Enhanced with comprehensive error handling, validation, and logging
@@ -21,12 +20,7 @@ import { validateProductArray, validateStoreArray } from '@/utils/responseValida
 import apiClient, { ApiResponse } from './apiClient';
 import cacheService from './cacheService';
 import { useUserIdentityStore } from '@/stores/userIdentityStore';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // Cache configuration
 const HOMEPAGE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes

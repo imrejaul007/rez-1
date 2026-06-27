@@ -39,40 +39,45 @@ async function runStuckOrderDetection(): Promise<void> {
       'payment.status': 'pending',
       'payment.method': { $ne: 'cod' },
       createdAt: { $lt: oneHourAgo },
-    }).select('_id orderNumber items user').lean();
+    })
+      .select('_id orderNumber items user')
+      .lean();
 
-    for (const order of unpaidOrders) {
-      try {
-        // NOTE: Do NOT restore stock for unpaid online orders.
-        // Stock is only deducted AFTER payment confirmation (in paymentService.handlePaymentSuccess).
-        // Since these orders were never paid, stock was never deducted. Restoring would inflate inventory.
-
-        // Cancel the order
-        await Order.findByIdAndUpdate(order._id, {
-          $set: {
-            status: 'cancelled',
-            cancelReason: 'Auto-cancelled: payment not received within 1 hour',
-            cancelledAt: now,
-            'delivery.status': 'failed',
-          },
-          $push: {
-            timeline: {
+    // Batch cancel unpaid orders using bulkWrite for better performance
+    // NOTE: Do NOT restore stock for unpaid online orders.
+    // Stock is only deducted AFTER payment confirmation (in paymentService.handlePaymentSuccess).
+    // Since these orders were never paid, stock was never deducted. Restoring would inflate inventory.
+    if (unpaidOrders.length > 0) {
+      const bulkOps = unpaidOrders.map((order) => ({
+        updateOne: {
+          filter: { _id: order._id },
+          update: {
+            $set: {
               status: 'cancelled',
-              message: 'Order auto-cancelled due to unpaid payment after 1 hour',
-              timestamp: now,
-              updatedBy: 'system',
+              cancelReason: 'Auto-cancelled: payment not received within 1 hour',
+              cancelledAt: now,
+              'delivery.status': 'failed',
+            },
+            $push: {
+              timeline: {
+                status: 'cancelled',
+                message: 'Order auto-cancelled due to unpaid payment after 1 hour',
+                timestamp: now,
+                updatedBy: 'system',
+              },
             },
           },
-        });
+        },
+      }));
 
-        logger.info(`[ORDER LIFECYCLE] Auto-cancelled unpaid order: ${order.orderNumber}`);
+      try {
+        // Use ordered: false for error tolerance - continue processing even if individual orders fail
+        const result = await Order.bulkWrite(bulkOps, { ordered: false });
+        logger.info(`[ORDER LIFECYCLE] Auto-cancelled ${result.modifiedCount} unpaid orders`);
       } catch (err) {
-        logger.error(`[ORDER LIFECYCLE] Failed to auto-cancel order ${order.orderNumber}:`, err);
+        // bulkWrite throws on first ordered:true failure; ordered:false may have partial results
+        logger.error('[ORDER LIFECYCLE] Bulk cancel for unpaid orders failed:', err);
       }
-    }
-
-    if (unpaidOrders.length > 0) {
-      logger.info(`[ORDER LIFECYCLE] Auto-cancelled ${unpaidOrders.length} unpaid orders`);
     }
 
     // 2. Alert for orders stuck in confirmed/preparing for > 2 hours
@@ -80,13 +85,15 @@ async function runStuckOrderDetection(): Promise<void> {
     const stuckPrepOrders = await Order.find({
       status: { $in: ['confirmed', 'preparing'] },
       updatedAt: { $lt: twoHoursAgo },
-    }).select('_id orderNumber status items.store').lean();
+    })
+      .select('_id orderNumber status items.store')
+      .lean();
 
     if (stuckPrepOrders.length > 0) {
       orderSocketService.emitToAdmin('ORDER_STUCK_ALERT', {
         type: 'preparation_stuck',
         count: stuckPrepOrders.length,
-        orders: stuckPrepOrders.map(o => ({
+        orders: stuckPrepOrders.map((o) => ({
           orderId: String(o._id),
           orderNumber: o.orderNumber,
           status: o.status,
@@ -102,14 +109,16 @@ async function runStuckOrderDetection(): Promise<void> {
     const stuckDispatchOrders = await Order.find({
       status: { $in: ['dispatched', 'out_for_delivery'] },
       updatedAt: { $lt: threeHoursAgo },
-    }).select('_id orderNumber status items.store').lean();
+    })
+      .select('_id orderNumber status items.store')
+      .lean();
 
     if (stuckDispatchOrders.length > 0) {
       // Notify admin
       orderSocketService.emitToAdmin('ORDER_STUCK_ALERT', {
         type: 'delivery_stuck',
         count: stuckDispatchOrders.length,
-        orders: stuckDispatchOrders.map(o => ({
+        orders: stuckDispatchOrders.map((o) => ({
           orderId: String(o._id),
           orderNumber: o.orderNumber,
           status: o.status,
@@ -122,17 +131,13 @@ async function runStuckOrderDetection(): Promise<void> {
       for (const order of stuckDispatchOrders) {
         const storeId = order.items?.[0]?.store;
         if (storeId) {
-          orderSocketService.emitToMerchant(
-            String(storeId),
-            'ORDER_DELIVERY_DELAYED',
-            {
-              orderId: String(order._id),
-              orderNumber: order.orderNumber,
-              status: order.status,
-              message: 'Order has been in transit for over 3 hours',
-              timestamp: now,
-            }
-          );
+          orderSocketService.emitToMerchant(String(storeId), 'ORDER_DELIVERY_DELAYED', {
+            orderId: String(order._id),
+            orderNumber: order.orderNumber,
+            status: order.status,
+            message: 'Order has been in transit for over 3 hours',
+            timestamp: now,
+          });
         }
       }
 
@@ -170,10 +175,16 @@ async function runPaymentVerificationRecovery(): Promise<void> {
       'payment.status': 'pending',
       'payment.method': { $ne: 'cod' },
       createdAt: { $lt: thirtyMinAgo, $gt: twoHoursAgo },
-    }).select('_id orderNumber paymentGateway totals user').lean();
+    })
+      .select('_id orderNumber paymentGateway totals user')
+      .lean();
 
     let recovered = 0;
     let autoCancelled = 0;
+
+    // OPTIMIZATION: Collect orders to recover and do bulk update instead of individual updates
+    // This reduces N individual database writes to a single bulkWrite operation
+    const ordersToRecover: { orderId: any; orderNumber: string }[] = [];
 
     for (const order of pendingPaymentOrders) {
       try {
@@ -190,23 +201,8 @@ async function runPaymentVerificationRecovery(): Promise<void> {
           const rzpOrder = await razorpay.orders.fetch(gatewayOrderId);
 
           if (rzpOrder.status === 'paid') {
-            // Payment was actually captured — recover the order
-            await Order.findByIdAndUpdate(order._id, {
-              $set: {
-                'payment.status': 'paid',
-                'payment.paidAt': now,
-              },
-              $push: {
-                timeline: {
-                  status: 'payment_recovered',
-                  message: 'Payment verified via background recovery check',
-                  timestamp: now,
-                  updatedBy: 'system',
-                },
-              },
-            });
-            recovered++;
-            logger.info(`[ORDER LIFECYCLE] Payment recovered for order: ${order.orderNumber}`);
+            // Payment was actually captured — mark order for bulk recovery
+            ordersToRecover.push({ orderId: order._id, orderNumber: order.orderNumber });
           }
         } catch {
           // Gateway verification failed — not an error, just couldn't verify
@@ -216,13 +212,46 @@ async function runPaymentVerificationRecovery(): Promise<void> {
       }
     }
 
+    // Bulk update all recovered orders in a single database operation
+    if (ordersToRecover.length > 0) {
+      const bulkOps = ordersToRecover.map(({ orderId }) => ({
+        updateOne: {
+          filter: { _id: orderId },
+          update: {
+            $set: {
+              'payment.status': 'paid',
+              'payment.paidAt': now,
+            },
+            $push: {
+              timeline: {
+                status: 'payment_recovered',
+                message: 'Payment verified via background recovery check',
+                timestamp: now,
+                updatedBy: 'system',
+              },
+            },
+          },
+        },
+      }));
+
+      try {
+        const result = await Order.bulkWrite(bulkOps, { ordered: false });
+        recovered = result.modifiedCount;
+        logger.info(`[ORDER LIFECYCLE] Bulk recovered ${recovered} paid orders`);
+      } catch (err) {
+        logger.error('[ORDER LIFECYCLE] Bulk order recovery failed:', err);
+      }
+    }
+
     // Auto-cancel orders pending payment for > 2 hours
     const expiredPaymentOrders = await Order.find({
       status: 'placed',
       'payment.status': 'pending',
       'payment.method': { $ne: 'cod' },
       createdAt: { $lt: twoHoursAgo },
-    }).select('_id orderNumber items').lean();
+    })
+      .select('_id orderNumber items')
+      .lean();
 
     // Batch restore stock: collect all product increments across all expired orders
     const stockIncrements = new Map<string, number>();
@@ -248,33 +277,41 @@ async function runPaymentVerificationRecovery(): Promise<void> {
       }
     }
 
-    // Batch cancel all expired orders
-    for (const order of expiredPaymentOrders) {
-      try {
-        await Order.findByIdAndUpdate(order._id, {
-          $set: {
-            status: 'cancelled',
-            cancelReason: 'Auto-cancelled: payment not received within 2 hours',
-            cancelledAt: now,
-            'delivery.status': 'failed',
-          },
-          $push: {
-            timeline: {
+    // Batch cancel all expired orders using bulkWrite for better performance
+    if (expiredPaymentOrders.length > 0) {
+      const bulkOps = expiredPaymentOrders.map((order) => ({
+        updateOne: {
+          filter: { _id: order._id },
+          update: {
+            $set: {
               status: 'cancelled',
-              message: 'Order auto-cancelled: payment timeout exceeded 2 hours',
-              timestamp: now,
-              updatedBy: 'system',
+              cancelReason: 'Auto-cancelled: payment not received within 2 hours',
+              cancelledAt: now,
+              'delivery.status': 'failed',
+            },
+            $push: {
+              timeline: {
+                status: 'cancelled',
+                message: 'Order auto-cancelled: payment timeout exceeded 2 hours',
+                timestamp: now,
+                updatedBy: 'system',
+              },
             },
           },
-        });
-        autoCancelled++;
-      } catch (err) {
-        logger.error(`[ORDER LIFECYCLE] Auto-cancel failed for ${order.orderNumber}:`, err);
-      }
-    }
+        },
+      }));
 
-    if (recovered > 0 || autoCancelled > 0) {
-      logger.info(`[ORDER LIFECYCLE] Payment recovery: ${recovered} recovered, ${autoCancelled} auto-cancelled`);
+      try {
+        // Use ordered: false for error tolerance - continue processing even if individual orders fail
+        const result = await Order.bulkWrite(bulkOps, { ordered: false });
+        autoCancelled = result.modifiedCount;
+        logger.info(`[ORDER LIFECYCLE] Payment recovery: ${recovered} recovered, ${autoCancelled} auto-cancelled`);
+      } catch (err) {
+        // bulkWrite throws on first ordered:true failure; ordered:false may have partial results
+        logger.error('[ORDER LIFECYCLE] Bulk cancel for expired orders failed:', err);
+      }
+    } else if (recovered > 0) {
+      logger.info(`[ORDER LIFECYCLE] Payment recovery: ${recovered} recovered, 0 auto-cancelled`);
     }
   } catch (error) {
     logger.error('[ORDER LIFECYCLE] Payment verification recovery failed:', error);
@@ -325,32 +362,32 @@ async function runReturnWindowCheck(): Promise<void> {
 export function initializeOrderLifecycleJobs(): void {
   // Stuck order detection — every 10 minutes
   cron.schedule('*/10 * * * *', () => {
-    runStuckOrderDetection().catch(err => logger.error('[ORDER LIFECYCLE] Stuck order detection unhandled error:', err));
+    runStuckOrderDetection().catch((err) =>
+      logger.error('[ORDER LIFECYCLE] Stuck order detection unhandled error:', err),
+    );
   });
   logger.info('  Order stuck detection job started (runs every 10 min)');
 
   // Payment verification recovery — every 15 minutes
   cron.schedule('*/15 * * * *', () => {
-    runPaymentVerificationRecovery().catch(err => logger.error('[ORDER LIFECYCLE] Payment verification recovery unhandled error:', err));
+    runPaymentVerificationRecovery().catch((err) =>
+      logger.error('[ORDER LIFECYCLE] Payment verification recovery unhandled error:', err),
+    );
   });
   logger.info('  Payment verification recovery job started (runs every 15 min)');
 
   // Return window logging — daily at midnight
   cron.schedule('0 0 * * *', () => {
-    runReturnWindowCheck().catch(err => logger.error('[ORDER LIFECYCLE] Return window check unhandled error:', err));
+    runReturnWindowCheck().catch((err) => logger.error('[ORDER LIFECYCLE] Return window check unhandled error:', err));
   });
   logger.info('  Return window check job started (runs daily at midnight)');
 
   // Order alert checks — every 30 minutes
   cron.schedule('*/30 * * * *', () => {
-    runOrderAlertChecks().catch(err => logger.error('[ORDER LIFECYCLE] Order alert checks unhandled error:', err));
+    runOrderAlertChecks().catch((err) => logger.error('[ORDER LIFECYCLE] Order alert checks unhandled error:', err));
   });
   logger.info('  Order alert checks started (runs every 30 min)');
 }
 
 // Export individual functions for testing
-export {
-  runStuckOrderDetection,
-  runPaymentVerificationRecovery,
-  runReturnWindowCheck,
-};
+export { runStuckOrderDetection, runPaymentVerificationRecovery, runReturnWindowCheck };

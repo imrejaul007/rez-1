@@ -51,6 +51,8 @@ interface GamificationActions {
   awardCoins: (amount: number, reason: string) => Promise<void>;
   spendCoins: (amount: number, reason: string) => Promise<void>;
   updateDailyStreak: () => Promise<void>;
+  claimReward: (rewardId: string) => Promise<{ success: boolean; reward?: any; points?: number }>;
+  completeChallenge: (challengeId: string) => Promise<{ success: boolean; reward?: number }>;
   markAchievementAsShown: (achievementId: string) => void;
   refreshAchievements: () => Promise<void>;
   clearError: () => void;
@@ -108,6 +110,8 @@ const defaultActions: GamificationActions = {
   awardCoins: noopAsync,
   spendCoins: noopAsync,
   updateDailyStreak: noopAsync,
+  claimReward: async () => ({ success: false }),
+  completeChallenge: async () => ({ success: false }),
   markAchievementAsShown: noop,
   refreshAchievements: noopAsync,
   clearError: noop,

@@ -27,12 +27,7 @@ import walletApi from './walletApi';
 import pointsApi, { PointsBalance } from './pointsApi';
 import gamificationAPI from './gamificationApi';
 import apiClient, { ApiResponse } from './apiClient';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 export interface CoinSyncResult {
   success: boolean;

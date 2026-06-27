@@ -8,12 +8,7 @@ import {
   ProductSearchHookResult,
   ProductSearchParams,
 } from '@/types/product-selector.types';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 interface UseProductSearchOptions {
   maxProducts?: number;

@@ -196,9 +196,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: -0.3,
     lineHeight: 28,
-    textShadowColor: 'rgba(0,0,0,0.15)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    ...Platform.select({
+      web: {
+        textShadow: '0 1px 2px rgba(0,0,0,0.15)',
+      },
+      default: {
+        textShadowColor: 'rgba(0,0,0,0.15)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+      },
+    }),
   },
   titleUnderline: {
     width: 50,
@@ -232,11 +239,21 @@ const styles = StyleSheet.create({
   },
   activeTabButton: {
     transform: [{ scale: 1.02 }],
-    shadowColor: COLORS.gold,
-    shadowOpacity: 0.5,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 12,
-    elevation: 8,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 12px rgba(255, 200, 87, 0.5)',
+      },
+      ios: {
+        shadowColor: COLORS.gold,
+        shadowOpacity: 0.5,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+      default: {},
+    }),
     borderWidth: 2,
     borderColor: 'rgba(255, 200, 87, 0.4)',
   },

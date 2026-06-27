@@ -14,7 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CrossPlatformBlurView as BlurView } from '@/components/ui/CrossPlatformBlurView';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { HomeDeliveryHeaderProps } from '@/types/home-delivery.types';

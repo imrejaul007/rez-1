@@ -102,7 +102,7 @@ function HabixoSkeleton(): React.ReactElement {
     >
       <View style={styles.skeletonGrid}>
         {[0, 1, 2, 3].map((index) => (
-          <View key={index} style={styles.skeletonCard}>
+          <View key={`skeleton-${index}`} style={styles.skeletonCard}>
             <SkeletonBlock height={140} style={styles.skeletonSpace} />
             <SkeletonBlock height={18} width="80%" style={styles.skeletonSpace} />
             <SkeletonBlock height={14} width="50%" style={styles.skeletonSpace} />

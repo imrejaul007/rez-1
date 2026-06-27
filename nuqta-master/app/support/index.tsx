@@ -5,11 +5,12 @@ import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Pressable, StatusBar, Platform, RefreshControl, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import supportService, { SupportTicket, FAQ } from '@/services/supportApi';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';
+import { safeCallPhone } from '@/utils/linking';
 import { Colors, Spacing, Gradients } from '@/constants/DesignSystem';
 import { SectionListSkeleton } from '@/components/skeletons';
 import { colors } from '@/constants/theme';
@@ -142,7 +143,9 @@ function SupportHubPage() {
           // Even if ticket creation fails, still attempt the call
         }
         // Open phone dialer for immediate call
-        Linking.openURL(`tel:${EMERGENCY_PHONE}`).catch(() => {
+        // Phase 6: web parity — tel: doesn't place calls on web, so the
+        // safeOpenURL helper shows a modal with the number instead.
+        safeCallPhone(EMERGENCY_PHONE, 'Call emergency support').catch(() => {
           platformAlertSimple('Call Failed', `Please call ${EMERGENCY_PHONE} directly for emergency support.`);
         });
       }

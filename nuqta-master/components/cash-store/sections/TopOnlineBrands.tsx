@@ -17,7 +17,7 @@ import Animated, { interpolate, useAnimatedStyle, useDerivedValue, useSharedValu
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { CashStoreBrand } from '../../../types/cash-store.types';
 import { colors } from '@/constants/theme';
 

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Modal, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
 import { colors, spacing, borderRadius, shadows } from '@/constants/theme';
 import { useUserIdentityStore } from '@/stores/userIdentityStore';
-import { useAuthUser, useIsAuthenticated } from '@/stores';
+import { useAuthUser, useIsAuthenticated } from '@/stores/selectors';
 import * as identityApi from '@/services/identityApi';
 import analyticsService, { IdentityAnalyticsEvents } from '@/services/analyticsService';
 import { useIsMounted } from '@/hooks/useIsMounted';

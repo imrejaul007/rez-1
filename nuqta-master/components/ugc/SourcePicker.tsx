@@ -12,7 +12,7 @@ import {
   Dimensions,
   Platform} from 'react-native';
 import { platformAlertSimple } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { UploadSource } from '@/types/ugc-upload.types';
 import { colors } from '@/constants/theme';
 

@@ -21,7 +21,7 @@ import {
 import { FormPageSkeleton } from '@/components/skeletons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '@/services/apiClient';
 import { useGetCurrencySymbol } from '@/stores/selectors';

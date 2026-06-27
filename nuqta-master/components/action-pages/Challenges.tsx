@@ -11,7 +11,7 @@ import {
   RefreshControl, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';

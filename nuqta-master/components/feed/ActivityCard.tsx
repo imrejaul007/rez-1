@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,25 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Activity, Comment } from '../../services/activityFeedApi';
 import * as activityFeedApi from '../../services/activityFeedApi';
 import FollowButton from '../social/FollowButton';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useToastStore } from '@/stores/toastStore';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface ActivityCardProps {
   activity: Activity;
@@ -35,7 +45,22 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onLike, onComment
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [stats, setStats] = useState({ likes: 0, comments: 0, shares: 0 });
+  const [isLiked, setIsLiked] = useState(activity.hasLiked || false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
   const isMounted = useIsMounted();
+  const showError = useToastStore((state) => state.showError);
+  const showSuccess = useToastStore((state) => state.showSuccess);
+
+  // Ref for request race condition prevention
+  const requestIdRef = useRef(0);
+
+  // Animation values
+  const likeScale = useSharedValue(1);
+
+  // Animated style for like button
+  const likeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: likeScale.value }],
+  }));
 
   // Load activity stats
   React.useEffect(() => {
@@ -75,12 +100,60 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onLike, onComment
     }
   };
 
-  const handleLike = () => {
-    onLike(activity._id);
-    setStats(prev => ({
-      ...prev,
-      likes: activity.hasLiked ? prev.likes - 1 : prev.likes + 1
-    }));
+  const handleLike = async () => {
+    if (isLikeLoading) return;
+
+    const currentRequestId = ++requestIdRef.current;
+    const previousLiked = isLiked;
+    const previousLikes = stats.likes;
+
+    try {
+      setIsLikeLoading(true);
+
+      // Optimistic update - immediate UI feedback
+      const newLiked = !previousLiked;
+      setIsLiked(newLiked);
+      setStats(prev => ({
+        ...prev,
+        likes: newLiked ? prev.likes + 1 : Math.max(0, prev.likes - 1)
+      }));
+
+      // Animate the like button
+      likeScale.value = withSequence(
+        withTiming(1.3, { duration: 100 }),
+        withSpring(1, { friction: 3, tension: 100 })
+      );
+
+      // Call parent's onLike handler
+      await onLike(activity._id);
+
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Show success toast
+      showSuccess(newLiked ? 'Added to favorites' : 'Removed from favorites', 2000);
+    } catch (error) {
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Rollback optimistic update
+      setIsLiked(previousLiked);
+      setStats(prev => ({
+        ...prev,
+        likes: previousLikes
+      }));
+
+      // Show error toast
+      showError('Failed to update like', 3000);
+    } finally {
+      if (currentRequestId === requestIdRef.current) {
+        setIsLikeLoading(false);
+      }
+    }
   };
 
   const handleSubmitComment = async () => {
@@ -126,7 +199,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onLike, onComment
           <CachedImage source={item.user.profilePicture} style={styles.commentAvatarImage} />
         ) : (
           <View style={styles.commentAvatarPlaceholder}>
-            <Text style={styles.commentAvatarText}>{item.user.name.charAt(0).toUpperCase()}</Text>
+            <Text style={styles.commentAvatarText}>{(item.user?.name || '?').charAt(0).toUpperCase()}</Text>
           </View>
         )}
       </View>
@@ -166,7 +239,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onLike, onComment
               <CachedImage source={activity.user.profilePicture} style={styles.avatarImage} />
             ) : (
               <View style={[styles.avatarPlaceholder, { backgroundColor: activity.feedContent.color }]}>
-                <Text style={styles.avatarText}>{activity.user.name.charAt(0).toUpperCase()}</Text>
+                <Text style={styles.avatarText}>{(activity.user?.name || '?').charAt(0).toUpperCase()}</Text>
               </View>
             )}
           </View>
@@ -201,16 +274,22 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onLike, onComment
 
       {/* Action Buttons */}
       <View style={styles.actions}>
-        <Pressable style={styles.actionButton} onPress={handleLike}>
-          <Ionicons
-            name={activity.hasLiked ? 'heart' : 'heart-outline'}
-            size={24}
-            color={activity.hasLiked ? '#FF3B30' : colors.midGray}
-          />
-          <Text style={[styles.actionText, activity.hasLiked && styles.actionTextActive]}>
+        <AnimatedPressable
+          style={styles.actionButton}
+          onPress={handleLike}
+          disabled={isLikeLoading}
+        >
+          <Animated.View style={likeAnimatedStyle}>
+            <Ionicons
+              name={isLiked ? 'heart' : 'heart-outline'}
+              size={24}
+              color={isLiked ? '#FF3B30' : colors.midGray}
+            />
+          </Animated.View>
+          <Text style={[styles.actionText, isLiked && styles.actionTextActive]}>
             {stats.likes || 0}
           </Text>
-        </Pressable>
+        </AnimatedPressable>
 
         <Pressable style={styles.actionButton} onPress={handleShowComments}>
           <Ionicons name="chatbubble-outline" size={22} color={colors.midGray} />

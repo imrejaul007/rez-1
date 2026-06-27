@@ -1,89 +1,35 @@
 /**
- * CardGridSkeleton - Generic 2-column card grid
- *
- * For: offers, deals, outlets, saved items, mall pages, flash sales
+ * CardGridSkeleton - Card grid skeleton - matches the layout of a grid of cards
  */
 
 import React from 'react';
-import { View, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import SkeletonLoader from './SkeletonLoader';
-import { colors } from '@/constants/theme';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
-
-function CardSkeleton() {
-  return (
-    <View style={styles.card}>
-      <SkeletonLoader width="100%" height={120} borderRadius={10} />
-      <View style={styles.cardContent}>
-        <SkeletonLoader width="85%" height={14} borderRadius={4} style={styles.cardTitle} />
-        <SkeletonLoader width="60%" height={12} borderRadius={4} style={styles.cardSubtitle} />
-        <SkeletonLoader width={70} height={16} borderRadius={4} style={styles.cardPrice} />
-      </View>
-    </View>
-  );
+interface CardGridSkeletonProps {
+  count?: number;
+  columns?: number;
 }
 
-function CardGridSkeleton({ count = 6 }: { count?: number }) {
+function CardGridSkeleton({ count = 6, columns = 2 }: CardGridSkeletonProps) {
+  const cols = columns;
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <SkeletonLoader width={140} height={20} borderRadius={6} style={styles.header} />
-
-      <View style={styles.grid}>
-        {Array.from({ length: count }).map((_, i) => (
-          <CardSkeleton key={i} />
-        ))}
-      </View>
+    <View style={styles.grid} accessibilityLabel="Loading cards" accessibilityRole="none">
+      {Array.from({ length: count * cols }).map((_, i) => (
+        <View key={i} style={styles.card}>
+          <SkeletonLoader width="100%" height={120} borderRadius={12} style={styles.mb} />
+          <SkeletonLoader width="80%" height={14} style={styles.mb} />
+          <SkeletonLoader width="60%" height={14} />
+        </View>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  header: {
-    marginBottom: 16,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  card: {
-    width: CARD_WIDTH,
-    backgroundColor: colors.background.primary,
-    borderRadius: 14,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  cardContent: {
-    padding: 10,
-  },
-  cardTitle: {
-    marginBottom: 6,
-  },
-  cardSubtitle: {
-    marginBottom: 8,
-  },
-  cardPrice: {
-    marginTop: 2,
-  },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  card: { width: '47%' },
+  mb: { marginBottom: 8 },
 });
 
-export default React.memo(CardGridSkeleton);
+export default CardGridSkeleton;

@@ -22,12 +22,7 @@ import {
   RedemptionRequest,
 } from '@/types/loyaltyRedemption.types';
 import { useSocket } from '@/contexts/SocketContext';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 interface UseLoyaltyRedemptionOptions {
   autoLoad?: boolean;

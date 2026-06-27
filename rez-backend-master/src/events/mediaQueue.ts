@@ -29,7 +29,7 @@ export const MEDIA_QUEUE_NAME = 'media-events';
 
 // ── Event types ────────────────────────────────────────────────────────────────
 
-export type MediaOperation = 'generate-variants' | 'delete-asset' | 'invalidate-cdn' | 'cleanup-temp';
+export type MediaOperation = 'generate-variants' | 'delete-asset' | 'invalidate-cdn' | 'cleanup-temp' | 'retry-upload';
 
 export interface MediaEvent {
   /** Unique event ID for idempotency */
@@ -52,8 +52,10 @@ export interface MediaEvent {
     crop?: string;
     quality?: number | string;
   }[];
-  /** Local file path (for cleanup operations) */
+  /** Local file path (for cleanup operations or retry uploads) */
   localPath?: string;
+  /** Cloudinary folder for retry uploads */
+  folder?: string;
   /** Source of the request */
   source?: string;
   /** Timestamp */
@@ -237,6 +239,56 @@ export function startMediaWorker(): Worker {
           }
 
           return { status: 'already-gone', path: event.localPath };
+        }
+
+        case 'retry-upload': {
+          if (!event.localPath) {
+            return { status: 'skipped', reason: 'no-localPath' };
+          }
+
+          const { CloudinaryService } = await import('../services/CloudinaryService');
+
+          // Check circuit health before attempting retry
+          if (!CloudinaryService.isCircuitHealthy()) {
+            logger.warn('[MediaWorker] Circuit open, deferring retry upload', {
+              eventId: event.eventId,
+              localPath: event.localPath,
+            });
+            // Throw to trigger retry via backoff
+            throw new Error('Circuit breaker open - deferring retry');
+          }
+
+          try {
+            const result = await CloudinaryService.uploadFile(event.localPath, {
+              folder: event.folder || 'retry-uploads',
+              disableFallback: true, // In retry queue, we want actual failures
+            });
+
+            if (result.isPlaceholder) {
+              throw new Error(`Retry upload returned placeholder: ${result.fallbackReason}`);
+            }
+
+            logger.info('[MediaWorker] Retry upload succeeded', {
+              eventId: event.eventId,
+              publicId: result.public_id,
+              secureUrl: result.secure_url,
+            });
+
+            return {
+              status: 'uploaded',
+              publicId: result.public_id,
+              secureUrl: result.secure_url,
+              localPath: event.localPath,
+            };
+          } catch (error: any) {
+            logger.error('[MediaWorker] Retry upload failed', {
+              eventId: event.eventId,
+              localPath: event.localPath,
+              error: error.message,
+              attemptsMade: job.attemptsMade,
+            });
+            throw error; // Re-throw to trigger BullMQ retry
+          }
         }
 
         default:

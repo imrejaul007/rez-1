@@ -1,12 +1,6 @@
-// @ts-nocheck
 import apiClient, { ApiResponse } from './apiClient';
 import { colors } from '@/constants/theme';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // Types for the new offers API
 export interface Offer {

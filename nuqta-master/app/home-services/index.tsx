@@ -9,7 +9,7 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import homeServicesApi, { HomeServiceCategory, HomeService, HomeServicesStats } from '@/services/homeServicesApi';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Points/Coins API Service
  * Centralized service for managing user points, coins, and rewards

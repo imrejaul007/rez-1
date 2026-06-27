@@ -15,7 +15,7 @@ import Animated, {
   withTiming } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import { SafeAreaView } from 'react-native-safe-area-context';

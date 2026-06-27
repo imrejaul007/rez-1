@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { View, Pressable, StyleSheet, ScrollView, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/DesignSystem';

@@ -9,7 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { ThemedText } from '@/components/ThemedText';

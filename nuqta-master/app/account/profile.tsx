@@ -29,7 +29,7 @@ import {
 } from 'react-native';
 import { FormPageSkeleton } from '@/components/skeletons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { useAuthUser, useIsAuthenticated, useAuthLoading } from '@/stores/selectors';
@@ -496,7 +496,7 @@ function AccountProfilePage() {
           <View style={styles.settingsCard}>
             <Pressable
               style={styles.settingItem}
-              onPress={() => router.push('/account/profile-visibility' as any)}
+              onPress={() => router.push('/account/profile-visibility')}
               accessibilityLabel={`Profile visibility. Current setting: ${privacySettings?.profileVisibility || 'FRIENDS'}`}
               accessibilityRole="button"
               accessibilityHint="Double tap to change who can see your profile"
@@ -517,7 +517,7 @@ function AccountProfilePage() {
 
             <Pressable
               style={styles.settingItem}
-              onPress={() => router.push('/account/two-factor-auth' as any)}
+              onPress={() => router.push('/account/two-factor-auth')}
               accessibilityLabel={`Two-factor authentication. Status: ${securitySettings?.twoFactorAuth.enabled ? 'Enabled' : 'Disabled'}`}
               accessibilityRole="button"
               accessibilityHint="Double tap to manage two-factor authentication settings"
@@ -676,7 +676,7 @@ function AccountProfilePage() {
           <View style={styles.settingsCard}>
             <Pressable
               style={styles.settingItem}
-              onPress={() => router.push('/profile/edit' as any)}
+              onPress={() => router.push('/profile/edit')}
               accessibilityLabel="Edit profile information"
               accessibilityRole="button"
               accessibilityHint="Navigate to edit profile screen"
@@ -697,7 +697,7 @@ function AccountProfilePage() {
 
             <Pressable
               style={styles.settingItem}
-              onPress={() => router.push('/account/change-password' as any)}
+              onPress={() => router.push('/account/change-password')}
               accessibilityLabel="Change password"
               accessibilityRole="button"
               accessibilityHint="Navigate to change password screen"
@@ -718,7 +718,7 @@ function AccountProfilePage() {
 
             <Pressable
               style={styles.settingItem}
-              onPress={() => router.push('/account/delete-account' as any)}
+              onPress={() => router.push('/account/delete-account')}
               accessibilityLabel="Delete account permanently"
               accessibilityRole="button"
               accessibilityHint="Navigate to account deletion screen. Warning: This action is permanent"

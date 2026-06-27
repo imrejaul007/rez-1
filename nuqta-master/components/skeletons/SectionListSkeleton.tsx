@@ -1,82 +1,32 @@
 /**
- * SectionListSkeleton - For pages with multiple collapsible sections
- *
- * Layout: section headers + nested items
+ * SectionListSkeleton - Section list skeleton - vertical list of sections
  */
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import SkeletonLoader from './SkeletonLoader';
-import { colors } from '@/constants/theme';
 
-function SectionBlock() {
+interface SectionListSkeletonProps {
+  count?: number;
+}
+
+function SectionListSkeleton({ count = 4 }: SectionListSkeletonProps) {
   return (
-    <View style={styles.section}>
-      {/* Section Header */}
-      <View style={styles.sectionHeader}>
-        <SkeletonLoader width="60%" height={16} borderRadius={4} />
-        <SkeletonLoader width={20} height={20} borderRadius={4} />
-      </View>
-
-      {/* Section Items */}
-      {[1, 2].map((i) => (
-        <View key={i} style={styles.item}>
-          <SkeletonLoader width="85%" height={14} borderRadius={4} />
-          <SkeletonLoader width="55%" height={12} borderRadius={4} style={styles.itemSubtext} />
+    <View style={styles.container} accessibilityLabel="Loading sections" accessibilityRole="none">
+      {Array.from({ length: count }).map((_, i) => (
+        <View key={i} style={styles.section}>
+          <SkeletonLoader width={120} height={18} style={styles.mb} />
+          <SkeletonLoader width="100%" height={80} borderRadius={8} />
         </View>
       ))}
     </View>
   );
 }
 
-function SectionListSkeleton({ sections = 5 }: { sections?: number }) {
-  return (
-    <View style={styles.container}>
-      {/* Page Title */}
-      <SkeletonLoader width={160} height={22} borderRadius={6} style={styles.title} />
-
-      {/* Search Bar (optional) */}
-      <SkeletonLoader width="100%" height={44} borderRadius={12} style={styles.searchBar} />
-
-      {Array.from({ length: sections }).map((_, i) => (
-        <SectionBlock key={i} />
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  title: {
-    marginBottom: 16,
-  },
-  searchBar: {
-    marginBottom: 20,
-  },
-  section: {
-    marginBottom: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.neutral[100],
-    paddingBottom: 12,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  item: {
-    paddingVertical: 10,
-    paddingLeft: 8,
-  },
-  itemSubtext: {
-    marginTop: 4,
-  },
+  container: { padding: 12 },
+  section: { marginBottom: 16 },
+  mb: { marginBottom: 8 },
 });
 
-export default React.memo(SectionListSkeleton);
+export default SectionListSkeleton;

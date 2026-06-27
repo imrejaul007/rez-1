@@ -10,7 +10,7 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import financialServicesApi, { FinancialService, FinancialServiceCategory } from '@/services/financialServicesApi';
 import { useComprehensiveAnalytics } from '@/hooks/useComprehensiveAnalytics';
 import { ANALYTICS_EVENTS } from '@/services/analytics/events';

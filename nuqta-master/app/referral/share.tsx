@@ -13,7 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import QRCode from 'react-native-qrcode-svg';
@@ -27,6 +27,7 @@ import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/
 import { BRAND } from '@/constants/brand';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { safeOpenURL } from '@/utils/linking';
 
 function ReferralSharePage() {
   const router = useRouter();
@@ -100,7 +101,7 @@ function ReferralSharePage() {
           const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
           const canOpen = await Linking.canOpenURL(url);
           if (canOpen) {
-            await Linking.openURL(url);
+            await safeOpenURL(url);
           } else {
             await RNShare.share({ message, title: `Join ${BRAND.APP_NAME}` });
           }
@@ -110,7 +111,7 @@ function ReferralSharePage() {
           const url = `tg://msg?text=${encodeURIComponent(message)}`;
           const canOpen = await Linking.canOpenURL(url);
           if (canOpen) {
-            await Linking.openURL(url);
+            await safeOpenURL(url);
           } else {
             await RNShare.share({ message, title: `Join ${BRAND.APP_NAME}` });
           }
@@ -118,12 +119,12 @@ function ReferralSharePage() {
         }
         case 'email': {
           const url = `mailto:?subject=${encodeURIComponent(template.subject || '')}&body=${encodeURIComponent(message)}`;
-          await Linking.openURL(url);
+          await safeOpenURL(url);
           break;
         }
         case 'sms': {
           const url = `sms:?body=${encodeURIComponent(message)}`;
-          await Linking.openURL(url);
+          await safeOpenURL(url);
           break;
         }
         default:

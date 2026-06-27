@@ -90,6 +90,16 @@ export const CacheKeys = {
   stock: (productId: string) => `stock:${productId}`,
   stockByVariant: (productId: string, variantType: string, variantValue: string) =>
     `stock:${productId}:variant:${variantType}:${variantValue}`,
+
+  // Analytics keys (aggregate data - safe to cache)
+  analyticsStore: (storeId: string, startDate: string, endDate: string, eventType: string, groupBy: string) =>
+    `analytics:store:${storeId}:${startDate}:${endDate}:${eventType}:${groupBy}`,
+  analyticsPopularStores: (startDate: string, endDate: string, eventType: string, limit: number) =>
+    `analytics:popular:${startDate}:${endDate}:${eventType}:${limit}`,
+  analyticsDashboard: (startDate: string, endDate: string) => `analytics:dashboard:${startDate}:${endDate}`,
+  analyticsSearch: (startDate: string, endDate: string, limit: number) =>
+    `analytics:search:${startDate}:${endDate}:${limit}`,
+  analyticsCategory: (startDate: string, endDate: string) => `analytics:category:${startDate}:${endDate}`,
 };
 
 /**
@@ -266,7 +276,11 @@ export class CacheInvalidator {
   /**
    * Update stock cache atomically
    */
-  static async updateStockCache(productId: string, newStock: number, ttl: number = CacheTTL.SHORT_CACHE): Promise<void> {
+  static async updateStockCache(
+    productId: string,
+    newStock: number,
+    ttl: number = CacheTTL.SHORT_CACHE,
+  ): Promise<void> {
     try {
       await redisService.set(CacheKeys.stock(productId), newStock, ttl);
     } catch (err) {
@@ -282,7 +296,7 @@ export class CacheInvalidator {
     variantType: string,
     variantValue: string,
     newStock: number,
-    ttl: number = CacheTTL.SHORT_CACHE
+    ttl: number = CacheTTL.SHORT_CACHE,
   ): Promise<void> {
     try {
       await redisService.set(CacheKeys.stockByVariant(productId, variantType, variantValue), newStock, ttl);
@@ -321,6 +335,21 @@ export class CacheInvalidator {
   }
 
   /**
+   * Invalidate article cache (P-13: called on article create/update/delete)
+   */
+  static async invalidateArticle(articleId?: string): Promise<void> {
+    logger.info(`Invalidating article cache${articleId ? `: ${articleId}` : ': all'}`);
+
+    await CacheInvalidator.safeInvalidate(`article:${articleId || 'all'}`, [
+      redisService.delPattern('articles:list:*'),
+      redisService.delPattern('articles:trending:*'),
+      redisService.delPattern('articles:featured:*'),
+      redisService.delPattern('articles:category:*'),
+      articleId ? redisService.del(`article:${articleId}`) : Promise.resolve(),
+    ]);
+  }
+
+  /**
    * Invalidate offer cache
    */
   static async invalidateOffer(offerId: string): Promise<void> {
@@ -346,6 +375,47 @@ export class CacheInvalidator {
       redisService.delPattern('voucher:user:*'),
     ]);
   }
+
+  /**
+   * Invalidate analytics cache (P-13: called after orders, reviews, gamification events)
+   * Analytics caches are time-bounded, but invalidation ensures fresh data on key events
+   */
+  static async invalidateAnalytics(): Promise<void> {
+    logger.info('Invalidating analytics caches');
+
+    await CacheInvalidator.safeInvalidate('analytics', [
+      // Clear all analytics caches by pattern
+      redisService.delPattern('analytics:store:*'),
+      redisService.delPattern('analytics:popular:*'),
+      redisService.delPattern('analytics:dashboard:*'),
+      redisService.delPattern('analytics:search:*'),
+      redisService.delPattern('analytics:category:*'),
+    ]);
+  }
+
+  /**
+   * Invalidate user achievements cache (P-13: called when achievements are unlocked/updated)
+   */
+  static async invalidateUserAchievements(userId: string): Promise<void> {
+    logger.info(`Invalidating achievements cache for user: ${userId}`);
+
+    await CacheInvalidator.safeInvalidate(`achievements:${userId}`, [
+      redisService.delPattern(`achievements:user:${userId}:*`),
+    ]);
+  }
+
+  /**
+   * Invalidate challenge-related cache (P-13: called when challenge progress updates)
+   */
+  static async invalidateChallenges(challengeId?: string): Promise<void> {
+    logger.info(`Invalidating challenge cache${challengeId ? `: ${challengeId}` : ': all'}`);
+
+    await CacheInvalidator.safeInvalidate(`challenges:${challengeId || 'all'}`, [
+      redisService.delPattern('challenges:*'),
+      redisService.delPattern('leaderboard:*'),
+      redisService.delPattern('challenge:*'),
+    ]);
+  }
 }
 
 /**
@@ -355,10 +425,13 @@ export function generateQueryCacheKey(params: Record<string, any>): string {
   // Sort keys to ensure consistent cache keys regardless of parameter order
   const sortedParams = Object.keys(params)
     .sort()
-    .reduce((acc, key) => {
-      acc[key] = params[key];
-      return acc;
-    }, {} as Record<string, any>);
+    .reduce(
+      (acc, key) => {
+        acc[key] = params[key];
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
   return JSON.stringify(sortedParams);
 }
@@ -366,11 +439,7 @@ export function generateQueryCacheKey(params: Record<string, any>): string {
 /**
  * Wrap a function with caching
  */
-export async function withCache<T>(
-  cacheKey: string,
-  ttl: number,
-  fetchFunction: () => Promise<T>
-): Promise<T> {
+export async function withCache<T>(cacheKey: string, ttl: number, fetchFunction: () => Promise<T>): Promise<T> {
   // Try to get from cache first
   const cached = await redisService.get<T>(cacheKey);
   if (cached !== null) {

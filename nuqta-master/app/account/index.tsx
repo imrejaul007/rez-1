@@ -19,7 +19,7 @@ import Animated, {
   withTiming,
   runOnJS } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
@@ -27,7 +27,7 @@ import AccountTabs from '@/components/account/AccountTabs';
 import SettingsItem from '@/components/account/SettingsItem';
 import AccountSkeleton from '@/components/account/AccountSkeleton';
 import useAccountData from '@/hooks/useAccountData';
-import { useRezBalance } from '@/stores';
+import { useRezBalance } from '@/stores/selectors';
 import {
   AccountTabType,
   AccountSettingsCategory,
@@ -311,7 +311,7 @@ function AccountPage() {
                       const route = SEGMENT_ROUTES[segment];
                       if (route) router.push(route as any);
                     } else {
-                      router.push('/onboarding/identity-select' as any);
+                      router.push('/onboarding/identity-select');
                     }
                   }}
                   style={{

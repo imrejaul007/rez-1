@@ -9,7 +9,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from
 import * as Clipboard from 'expo-clipboard';
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import apiClient from '@/services/apiClient';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Brand API Service
 // Handles brand partnerships and mall brand data
 

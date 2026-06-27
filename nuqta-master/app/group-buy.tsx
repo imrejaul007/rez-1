@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { platformAlertSimple, platformAlertConfirm, platformAlertDestructive } from '@/utils/platformAlert';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { Stack } from 'expo-router';
 import { useGroupBuying } from '@/hooks/useGroupBuying';

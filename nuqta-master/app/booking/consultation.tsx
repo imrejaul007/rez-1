@@ -14,7 +14,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { FormPageSkeleton } from '@/components/skeletons';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -378,7 +378,7 @@ function ConsultationBookingScreen() {
           >
             {availableDates.map((date, index) => (
               <Pressable
-                key={index}
+                key={date.toISOString()}
                 style={[
                   styles.dateCard,
                   selectedDate?.toDateString() === date.toDateString() && styles.dateCardSelected,
@@ -422,7 +422,7 @@ function ConsultationBookingScreen() {
               <View style={styles.timeGrid}>
                 {timeSlots.map((slot, index) => (
                   <Pressable
-                    key={index}
+                    key={slot.time}
                     style={[
                       styles.timeSlot,
                       !slot.available && styles.timeSlotDisabled,

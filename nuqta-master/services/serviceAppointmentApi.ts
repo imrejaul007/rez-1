@@ -2,12 +2,7 @@
 // Handles service appointment booking operations (salon, spa, etc.)
 
 import apiClient, { ApiResponse } from './apiClient';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // TypeScript Interfaces
 export interface ServiceAppointmentRequest {

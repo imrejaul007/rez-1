@@ -1,4 +1,3 @@
-// @ts-nocheck
 // data/earnSocialData.ts - Production-ready data and configurations for Earn From Social Media feature
 
 import {

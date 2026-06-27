@@ -15,7 +15,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { ThemedText } from '@/components/ThemedText';
@@ -490,7 +490,7 @@ function BookingsPage() {
           <Text style={styles.emptySubtitle}>Please login to view your bookings</Text>
           <Pressable
             style={[styles.ctaButton, { backgroundColor: tintColor || C.primary }]}
-            onPress={() => router.push('/sign-in' as any)}
+            onPress={() => router.push('/sign-in')}
           >
             <Text style={styles.ctaButtonText}>Login</Text>
           </Pressable>
@@ -728,7 +728,7 @@ function BookingsPage() {
         ) : (
           <Pressable
             style={[styles.ctaButton, { backgroundColor: C.primary }]}
-            onPress={() => router.push('/' as any)}
+            onPress={() => router.push('/')}
           >
             <Text style={styles.ctaButtonText}>Explore Now</Text>
           </Pressable>

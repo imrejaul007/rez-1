@@ -7,7 +7,7 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import exploreApi, { VerifiedReview } from '@/services/exploreApi';
 import { CardGridSkeleton } from '@/components/skeletons';

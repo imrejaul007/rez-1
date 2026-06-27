@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { MallBrand } from '../../types/mall.types';
 import { FlashList } from '@shopify/flash-list';
 import { colors } from '@/constants/theme';
@@ -37,7 +37,7 @@ const MallTrendingNow: React.FC<MallTrendingNowProps> = ({
   onViewAllPress,
 }) => {
   const getInitials = (name: string) =>
-    name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    (name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
   const renderItem = useCallback(
     ({ item, index }: { item: MallBrand; index: number }) => {

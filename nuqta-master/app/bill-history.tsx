@@ -18,7 +18,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { platformAlertConfirm } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useNavigation } from 'expo-router';
 import { billUploadService } from '@/services/billUploadService';
 import { TransactionListSkeleton } from '@/components/skeletons';

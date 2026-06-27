@@ -1,301 +1,416 @@
-import { useState, useCallback } from 'react';
-import { useIsAuthenticated } from '@/stores/selectors';
-import { useToast } from '@/hooks/useToast';
+// hooks/useUGCInteractions.ts
+// Comprehensive optimistic update hook for UGC interactions (like, bookmark, share)
+
+import { useState, useCallback, useRef, useMemo } from 'react';
+import { useToastStore } from '@/stores/toastStore';
 import ugcApi from '@/services/ugcApi';
+import { UGCContent } from '@/types/reviews';
 
 interface UGCInteractionState {
   likedContent: Set<string>;
   bookmarkedContent: Set<string>;
   likeCounts: Map<string, number>;
-  isLoading: Set<string>;
+}
+
+interface UseUGCInteractionsOptions {
+  /** Initial content to initialize state from */
+  initialContent?: UGCContent[];
+  /** Callback when any interaction state changes */
+  onStateChange?: (state: UGCInteractionState) => void;
+}
+
+interface UseUGCInteractionsReturn {
+  /** State */
+  likedContent: Set<string>;
+  bookmarkedContent: Set<string>;
+  likeCounts: Map<string, number>;
+  /** Check if content is liked */
+  isLiked: (contentId: string) => boolean;
+  /** Check if content is bookmarked */
+  isBookmarked: (contentId: string) => boolean;
+  /** Get like count for content */
+  getLikeCount: (contentId: string) => number;
+  /** Check if a specific content is being processed */
+  isProcessing: (contentId: string) => boolean;
+  /** Toggle like with optimistic update */
+  toggleLike: (contentId: string) => Promise<void>;
+  /** Toggle bookmark with optimistic update */
+  toggleBookmark: (contentId: string) => Promise<void>;
+  /** Initialize state from content array */
+  initializeState: (content: UGCContent[]) => void;
+  /** Update a single content item in state */
+  updateContentState: (contentId: string, updates: Partial<UGCContent>) => void;
+  /** Reset all state */
+  reset: () => void;
 }
 
 /**
- * Hook for managing UGC like and bookmark interactions with backend synchronization
- * Includes optimistic updates and rollback on error
+ * Hook for managing UGC (User Generated Content) interactions with optimistic updates.
+ *
+ * Features:
+ * - Optimistic updates for instant UI feedback
+ * - Automatic rollback on failure
+ * - Concurrent request prevention
+ * - Toast notifications for success/error
+ * - State synchronization with backend
+ *
+ * @example
+ * ```tsx
+ * const {
+ *   toggleLike,
+ *   toggleBookmark,
+ *   isLiked,
+ *   isBookmarked,
+ *   getLikeCount,
+ * } = useUGCInteractions({ initialContent: ugcContent });
+ *
+ * // In component
+ * <Pressable onPress={() => toggleLike(content.id)}>
+ *   <Ionicons name={isLiked(content.id) ? 'heart' : 'heart-outline'} />
+ * </Pressable>
+ * ```
  */
-export function useUGCInteractions() {
-  const isAuthenticated = useIsAuthenticated();
-  const { showSuccess, showError } = useToast();
+export function useUGCInteractions(
+  options: UseUGCInteractionsOptions = {}
+): UseUGCInteractionsReturn {
+  const {
+    initialContent = [],
+    onStateChange,
+  } = options;
 
-  const [state, setState] = useState<UGCInteractionState>({
-    likedContent: new Set(),
-    bookmarkedContent: new Set(),
-    likeCounts: new Map(),
-    isLoading: new Set(),
-  });
+  // State
+  const [likedContent, setLikedContent] = useState<Set<string>>(new Set());
+  const [bookmarkedContent, setBookmarkedContent] = useState<Set<string>>(new Set());
+  const [likeCounts, setLikeCounts] = useState<Map<string, number>>(new Map());
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+
+  // Ref for request race condition prevention
+  const requestIdRef = useRef(0);
+
+  // Toast notifications
+  const showSuccess = useToastStore((state) => state.showSuccess);
+  const showError = useToastStore((state) => state.showError);
+
+  // Notify parent of state changes
+  const notifyStateChange = useCallback(() => {
+    onStateChange?.({
+      likedContent,
+      bookmarkedContent,
+      likeCounts,
+    });
+  }, [likedContent, bookmarkedContent, likeCounts, onStateChange]);
 
   /**
-   * Check if user is authenticated
+   * Initialize state from content array
    */
-  const requireAuth = useCallback(() => {
-    if (!isAuthenticated) {
-      showError('Please sign in to interact with content');
-      return false;
-    }
-    return true;
-  }, [isAuthenticated, showError]);
-
-  /**
-   * Initialize state from UGC content array
-   */
-  const initializeState = useCallback((content: any[]) => {
-    const likedSet = new Set<string>();
-    const bookmarkedSet = new Set<string>();
-    const countsMap = new Map<string, number>();
+  const initializeState = useCallback((content: UGCContent[]) => {
+    const newLiked = new Set<string>();
+    const newBookmarked = new Set<string>();
+    const newCounts = new Map<string, number>();
 
     content.forEach((item) => {
-      if (item.isLiked) likedSet.add(item.id);
-      if (item.isBookmarked) bookmarkedSet.add(item.id);
-      countsMap.set(item.id, item.likes || 0);
+      if (item.isLiked) {
+        newLiked.add(item.id);
+      }
+      if (item.isBookmarked) {
+        newBookmarked.add(item.id);
+      }
+      newCounts.set(item.id, item.likes);
     });
 
-    setState({
-      likedContent: likedSet,
-      bookmarkedContent: bookmarkedSet,
-      likeCounts: countsMap,
-      isLoading: new Set(),
-    });
+    setLikedContent(newLiked);
+    setBookmarkedContent(newBookmarked);
+    setLikeCounts(newCounts);
   }, []);
 
-  /**
-   * Toggle like on UGC content
-   */
-  const toggleLike = useCallback(
-    async (contentId: string) => {
-      if (!requireAuth()) return;
-
-      // Check if already processing this content
-      if (state.isLoading.has(contentId)) return;
-
-      // Optimistic update
-      const wasLiked = state.likedContent.has(contentId);
-      const currentCount = state.likeCounts.get(contentId) || 0;
-      const newCount = wasLiked ? currentCount - 1 : currentCount + 1;
-
-      setState((prev) => {
-        const newLiked = new Set(prev.likedContent);
-        const newCounts = new Map(prev.likeCounts);
-        const newLoading = new Set(prev.isLoading);
-
-        if (wasLiked) {
-          newLiked.delete(contentId);
-        } else {
-          newLiked.add(contentId);
-        }
-        newCounts.set(contentId, newCount);
-        newLoading.add(contentId);
-
-        return {
-          ...prev,
-          likedContent: newLiked,
-          likeCounts: newCounts,
-          isLoading: newLoading,
-        };
-      });
-
-      try {
-        // Call backend API
-        const response = await ugcApi.toggleLike(contentId);
-
-        if (response.success && response.data) {
-          // Update with actual backend data
-          setState((prev) => {
-            const newLiked = new Set(prev.likedContent);
-            const newCounts = new Map(prev.likeCounts);
-            const newLoading = new Set(prev.isLoading);
-
-            if (response.data!.isLiked) {
-              newLiked.add(contentId);
-            } else {
-              newLiked.delete(contentId);
-            }
-            newCounts.set(contentId, response.data!.likes);
-            newLoading.delete(contentId);
-
-            return {
-              ...prev,
-              likedContent: newLiked,
-              likeCounts: newCounts,
-              isLoading: newLoading,
-            };
-          });
-
-          // Show toast
-          showSuccess(
-            response.data.isLiked ? 'Added to favorites' : 'Removed from favorites',
-            2000
-          );
-        } else {
-          throw new Error(response.error || 'Failed to update like status');
-        }
-      } catch (error: any) {
-
-        // Rollback optimistic update
-        setState((prev) => {
-          const newLiked = new Set(prev.likedContent);
-          const newCounts = new Map(prev.likeCounts);
-          const newLoading = new Set(prev.isLoading);
-
-          if (wasLiked) {
-            newLiked.add(contentId);
-          } else {
-            newLiked.delete(contentId);
-          }
-          newCounts.set(contentId, currentCount);
-          newLoading.delete(contentId);
-
-          return {
-            ...prev,
-            likedContent: newLiked,
-            likeCounts: newCounts,
-            isLoading: newLoading,
-          };
-        });
-
-        showError(error?.message || 'Failed to update like', 3000);
-      }
-    },
-    [state, requireAuth, showSuccess, showError]
-  );
-
-  /**
-   * Toggle bookmark on UGC content
-   */
-  const toggleBookmark = useCallback(
-    async (contentId: string) => {
-      if (!requireAuth()) return;
-
-      // Check if already processing this content
-      if (state.isLoading.has(contentId)) return;
-
-      // Optimistic update
-      const wasBookmarked = state.bookmarkedContent.has(contentId);
-
-      setState((prev) => {
-        const newBookmarked = new Set(prev.bookmarkedContent);
-        const newLoading = new Set(prev.isLoading);
-
-        if (wasBookmarked) {
-          newBookmarked.delete(contentId);
-        } else {
-          newBookmarked.add(contentId);
-        }
-        newLoading.add(contentId);
-
-        return {
-          ...prev,
-          bookmarkedContent: newBookmarked,
-          isLoading: newLoading,
-        };
-      });
-
-      try {
-        // Call backend API
-        const response = await ugcApi.toggleBookmark(contentId);
-
-        if (response.success && response.data) {
-          // Update with actual backend data
-          setState((prev) => {
-            const newBookmarked = new Set(prev.bookmarkedContent);
-            const newLoading = new Set(prev.isLoading);
-
-            if (response.data!.isBookmarked) {
-              newBookmarked.add(contentId);
-            } else {
-              newBookmarked.delete(contentId);
-            }
-            newLoading.delete(contentId);
-
-            return {
-              ...prev,
-              bookmarkedContent: newBookmarked,
-              isLoading: newLoading,
-            };
-          });
-
-          // Show toast
-          showSuccess(
-            response.data.isBookmarked ? 'Bookmarked' : 'Bookmark removed',
-            2000
-          );
-        } else {
-          throw new Error(response.error || 'Failed to update bookmark status');
-        }
-      } catch (error: any) {
-
-        // Rollback optimistic update
-        setState((prev) => {
-          const newBookmarked = new Set(prev.bookmarkedContent);
-          const newLoading = new Set(prev.isLoading);
-
-          if (wasBookmarked) {
-            newBookmarked.add(contentId);
-          } else {
-            newBookmarked.delete(contentId);
-          }
-          newLoading.delete(contentId);
-
-          return {
-            ...prev,
-            bookmarkedContent: newBookmarked,
-            isLoading: newLoading,
-          };
-        });
-
-        showError(error?.message || 'Failed to update bookmark', 3000);
-      }
-    },
-    [state, requireAuth, showSuccess, showError]
-  );
+  // Initialize from initial content
+  useMemo(() => {
+    if (initialContent.length > 0) {
+      initializeState(initialContent);
+    }
+  }, [initialContent, initializeState]);
 
   /**
    * Check if content is liked
    */
-  const isLiked = useCallback(
-    (contentId: string) => {
-      return state.likedContent.has(contentId);
-    },
-    [state.likedContent]
-  );
+  const isLiked = useCallback((contentId: string): boolean => {
+    return likedContent.has(contentId);
+  }, [likedContent]);
 
   /**
    * Check if content is bookmarked
    */
-  const isBookmarked = useCallback(
-    (contentId: string) => {
-      return state.bookmarkedContent.has(contentId);
-    },
-    [state.bookmarkedContent]
-  );
+  const isBookmarked = useCallback((contentId: string): boolean => {
+    return bookmarkedContent.has(contentId);
+  }, [bookmarkedContent]);
 
   /**
    * Get like count for content
    */
-  const getLikeCount = useCallback(
-    (contentId: string) => {
-      return state.likeCounts.get(contentId) || 0;
-    },
-    [state.likeCounts]
-  );
+  const getLikeCount = useCallback((contentId: string): number => {
+    return likeCounts.get(contentId) ?? 0;
+  }, [likeCounts]);
 
   /**
    * Check if content is being processed
    */
-  const isProcessing = useCallback(
-    (contentId: string) => {
-      return state.isLoading.has(contentId);
-    },
-    [state.isLoading]
-  );
+  const isProcessing = useCallback((contentId: string): boolean => {
+    return processingIds.has(contentId);
+  }, [processingIds]);
+
+  /**
+   * Toggle like for content
+   */
+  const toggleLike = useCallback(async (contentId: string) => {
+    // Prevent concurrent requests for same content
+    if (processingIds.has(contentId)) return;
+
+    const currentRequestId = ++requestIdRef.current;
+    const wasLiked = likedContent.has(contentId);
+    const previousCount = likeCounts.get(contentId) ?? 0;
+
+    try {
+      // Add to processing set
+      setProcessingIds((prev) => new Set(prev).add(contentId));
+
+      // Optimistic update
+      const newLiked = !wasLiked;
+      const newCount = wasLiked ? Math.max(0, previousCount - 1) : previousCount + 1;
+
+      setLikedContent((prev) => {
+        const next = new Set(prev);
+        if (newLiked) {
+          next.add(contentId);
+        } else {
+          next.delete(contentId);
+        }
+        return next;
+      });
+
+      setLikeCounts((prev) => {
+        const next = new Map(prev);
+        next.set(contentId, newCount);
+        return next;
+      });
+
+      // API call
+      const response = await ugcApi.toggleLike(contentId);
+
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      if (response.success && response.data) {
+        // Update with server-confirmed values
+        setLikedContent((prev) => {
+          const next = new Set(prev);
+          if (response.data!.isLiked) {
+            next.add(contentId);
+          } else {
+            next.delete(contentId);
+          }
+          return next;
+        });
+
+        setLikeCounts((prev) => {
+          const next = new Map(prev);
+          next.set(contentId, response.data!.likes);
+          return next;
+        });
+
+        // Show success toast
+        showSuccess(
+          response.data!.isLiked ? 'Added to favorites' : 'Removed from favorites',
+          2000
+        );
+      } else {
+        throw new Error(response.error || 'Failed to update like');
+      }
+    } catch (error) {
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Rollback optimistic update
+      setLikedContent((prev) => {
+        const next = new Set(prev);
+        if (wasLiked) {
+          next.add(contentId);
+        } else {
+          next.delete(contentId);
+        }
+        return next;
+      });
+
+      setLikeCounts((prev) => {
+        const next = new Map(prev);
+        next.set(contentId, previousCount);
+        return next;
+      });
+
+      // Show error toast
+      showError('Failed to update like', 3000);
+    } finally {
+      // Remove from processing set
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(contentId);
+        return next;
+      });
+    }
+  }, [processingIds, likedContent, likeCounts, showSuccess, showError]);
+
+  /**
+   * Toggle bookmark for content
+   */
+  const toggleBookmark = useCallback(async (contentId: string) => {
+    // Prevent concurrent requests for same content
+    if (processingIds.has(contentId)) return;
+
+    const currentRequestId = ++requestIdRef.current;
+    const wasBookmarked = bookmarkedContent.has(contentId);
+
+    try {
+      // Add to processing set
+      setProcessingIds((prev) => new Set(prev).add(contentId));
+
+      // Optimistic update
+      const newBookmarked = !wasBookmarked;
+
+      setBookmarkedContent((prev) => {
+        const next = new Set(prev);
+        if (newBookmarked) {
+          next.add(contentId);
+        } else {
+          next.delete(contentId);
+        }
+        return next;
+      });
+
+      // API call
+      const response = await ugcApi.toggleBookmark(contentId);
+
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      if (response.success && response.data) {
+        // Update with server-confirmed value
+        setBookmarkedContent((prev) => {
+          const next = new Set(prev);
+          if (response.data!.isBookmarked) {
+            next.add(contentId);
+          } else {
+            next.delete(contentId);
+          }
+          return next;
+        });
+
+        // Show success toast
+        showSuccess(
+          response.data!.isBookmarked ? 'Bookmarked' : 'Bookmark removed',
+          2000
+        );
+      } else {
+        throw new Error(response.error || 'Failed to update bookmark');
+      }
+    } catch (error) {
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Rollback optimistic update
+      setBookmarkedContent((prev) => {
+        const next = new Set(prev);
+        if (wasBookmarked) {
+          next.add(contentId);
+        } else {
+          next.delete(contentId);
+        }
+        return next;
+      });
+
+      // Show error toast
+      showError('Failed to update bookmark', 3000);
+    } finally {
+      // Remove from processing set
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(contentId);
+        return next;
+      });
+    }
+  }, [processingIds, bookmarkedContent, showSuccess, showError]);
+
+  /**
+   * Update a single content item's state
+   */
+  const updateContentState = useCallback((contentId: string, updates: Partial<UGCContent>) => {
+    if (updates.isLiked !== undefined) {
+      setLikedContent((prev) => {
+        const next = new Set(prev);
+        if (updates.isLiked) {
+          next.add(contentId);
+        } else {
+          next.delete(contentId);
+        }
+        return next;
+      });
+    }
+    if (updates.isBookmarked !== undefined) {
+      setBookmarkedContent((prev) => {
+        const next = new Set(prev);
+        if (updates.isBookmarked) {
+          next.add(contentId);
+        } else {
+          next.delete(contentId);
+        }
+        return next;
+      });
+    }
+    if (updates.likes !== undefined) {
+      setLikeCounts((prev) => {
+        const next = new Map(prev);
+        next.set(contentId, updates.likes!);
+        return next;
+      });
+    }
+    notifyStateChange();
+  }, [notifyStateChange]);
+
+  /**
+   * Reset all state
+   */
+  const reset = useCallback(() => {
+    setLikedContent(new Set());
+    setBookmarkedContent(new Set());
+    setLikeCounts(new Map());
+    setProcessingIds(new Set());
+  }, []);
 
   return {
-    toggleLike,
-    toggleBookmark,
+    // State
+    likedContent,
+    bookmarkedContent,
+    likeCounts,
+
+    // Getters
     isLiked,
     isBookmarked,
     getLikeCount,
     isProcessing,
+
+    // Actions
+    toggleLike,
+    toggleBookmark,
     initializeState,
+    updateContentState,
+    reset,
   };
 }
+
+export default useUGCInteractions;

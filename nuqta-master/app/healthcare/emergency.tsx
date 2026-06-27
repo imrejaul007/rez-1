@@ -21,12 +21,13 @@ import {
 import { CardGridSkeleton } from '@/components/skeletons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import emergencyApi, { EmergencyContact, EmergencyBooking } from '@/services/emergencyApi';
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { safeCallPhone } from '@/utils/linking';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const COLORS = {
@@ -127,7 +128,7 @@ const EmergencyPage: React.FC = () => {
     Linking.canOpenURL(phoneNumber)
       .then((supported) => {
         if (supported) {
-          try { Linking.openURL(phoneNumber); } catch (_e) { /* silently handle */ }
+          try { safeCallPhone(number); } catch (_e) { /* silently handle */ }
         } else {
           platformAlertSimple('Error', 'Phone call is not supported on this device');
         }

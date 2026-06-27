@@ -46,23 +46,32 @@ export function startLeaderboardJob(): void {
     try {
       logger.info('[LeaderboardJob] Starting leaderboard rank update job');
 
-      let totalUpdated = 0;
+      // MP-D002 OPTIMIZATION: Parallelize city processing instead of sequential
+      // Previously each city awaited updateCityLeaderboards() before starting the
+      // next — 10 cities × ~3 seconds each = ~30 seconds total. Now all cities
+      // process concurrently in a single round, bounded by the slowest city.
+      const cityResults = await Promise.all(
+        TOP_CITIES.map(async (city) => {
+          try {
+            const updated = await updateCityLeaderboards(city);
+            return { city, updated, success: true };
+          } catch (error) {
+            logger.warn('[LeaderboardJob] Failed to update leaderboard for city', {
+              city,
+              error: (error as Error).message
+            });
+            return { city, updated: 0, success: false };
+          }
+        })
+      );
 
-      for (const city of TOP_CITIES) {
-        try {
-          const updated = await updateCityLeaderboards(city);
-          totalUpdated += updated;
-        } catch (error) {
-          logger.warn('[LeaderboardJob] Failed to update leaderboard for city', {
-            city,
-            error: (error as Error).message
-          });
-        }
-      }
+      const totalUpdated = cityResults.reduce((sum, r) => sum + r.updated, 0);
+      const successfulCities = cityResults.filter(r => r.success).length;
 
       logger.info('[LeaderboardJob] Leaderboard update completed', {
         totalUpdated,
-        citiesProcessed: TOP_CITIES.length
+        citiesProcessed: TOP_CITIES.length,
+        successfulCities
       });
     } catch (error) {
       logger.error('[LeaderboardJob] Job failed', {
@@ -81,54 +90,59 @@ export function startLeaderboardJob(): void {
  */
 async function updateCityLeaderboards(city: string): Promise<number> {
   const periods = ['weekly', 'monthly', 'alltime'];
-  let totalUpdated = 0;
 
-  for (const period of periods) {
-    try {
-      // Get top 100 entries for this city/period
-      const topEntries = await Leaderboard.find({
-        city,
-        period
-      })
-        .sort({ score: -1 })
-        .limit(TOP_USERS_LIMIT)
-        .lean();
+  // MP-D002 OPTIMIZATION: Parallelize period processing within each city
+  // Previously weekly/monthly/alltime ran sequentially — now all 3 periods
+  // execute concurrently, further reducing total job time.
+  const periodResults = await Promise.all(
+    periods.map(async (period) => {
+      try {
+        // Get top 100 entries for this city/period
+        const topEntries = await Leaderboard.find({
+          city,
+          period
+        })
+          .sort({ score: -1 })
+          .limit(TOP_USERS_LIMIT)
+          .lean();
 
-      // MP-D002 FIX: Previously each rank change issued an individual await
-      // topEntries[i].save() inside the loop — up to 100 sequential round-trips
-      // to MongoDB per city/period combination, and 3 000 total (10 cities × 3
-      // periods × 100 saves).  Each round-trip holds a DB connection slot open
-      // while waiting; under concurrent analytics load this exhausts the Mongoose
-      // connection pool, starving API request handlers of connections.
-      //
-      // The fix batches all rank changes for a city/period into a single
-      // bulkWrite() call: one round-trip instead of up to 100, and zero
-      // Mongoose document overhead because we use lean() above.
-      const bulkOps: any[] = [];
-      for (let i = 0; i < topEntries.length; i++) {
-        if (topEntries[i].rank !== i + 1) {
-          bulkOps.push({
-            updateOne: {
-              filter: { _id: topEntries[i]._id },
-              update: { $set: { rank: i + 1 } },
-            },
-          });
-          totalUpdated++;
+        // MP-D002 FIX: Previously each rank change issued an individual await
+        // topEntries[i].save() inside the loop — up to 100 sequential round-trips
+        // to MongoDB per city/period combination, and 3 000 total (10 cities × 3
+        // periods × 100 saves).  Each round-trip holds a DB connection slot open
+        // while waiting; under concurrent analytics load this exhausts the Mongoose
+        // connection pool, starving API request handlers of connections.
+        //
+        // The fix batches all rank changes for a city/period into a single
+        // bulkWrite() call: one round-trip instead of up to 100, and zero
+        // Mongoose document overhead because we use lean() above.
+        const bulkOps: any[] = [];
+        for (let i = 0; i < topEntries.length; i++) {
+          if (topEntries[i].rank !== i + 1) {
+            bulkOps.push({
+              updateOne: {
+                filter: { _id: topEntries[i]._id },
+                update: { $set: { rank: i + 1 } },
+              },
+            });
+          }
         }
+        if (bulkOps.length > 0) {
+          await Leaderboard.bulkWrite(bulkOps, { ordered: false });
+        }
+        return { period, updated: bulkOps.length, success: true };
+      } catch (error) {
+        logger.warn('[LeaderboardJob] Failed to update period leaderboard', {
+          city,
+          period,
+          error: (error as Error).message
+        });
+        return { period, updated: 0, success: false };
       }
-      if (bulkOps.length > 0) {
-        await Leaderboard.bulkWrite(bulkOps, { ordered: false });
-      }
-    } catch (error) {
-      logger.warn('[LeaderboardJob] Failed to update period leaderboard', {
-        city,
-        period,
-        error: (error as Error).message
-      });
-    }
-  }
+    })
+  );
 
-  return totalUpdated;
+  return periodResults.reduce((sum, r) => sum + r.updated, 0);
 }
 
 export function stopLeaderboardJob(): void {

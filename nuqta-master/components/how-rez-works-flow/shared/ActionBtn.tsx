@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Text, StyleSheet, Platform, View, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@/constants/theme';
 import Animated, {
     useSharedValue,

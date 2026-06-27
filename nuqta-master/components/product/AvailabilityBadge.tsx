@@ -12,7 +12,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@/constants/theme';
 
 type AvailabilityStatus = 'in-store' | 'online-only' | 'out-of-stock' | 'limited';

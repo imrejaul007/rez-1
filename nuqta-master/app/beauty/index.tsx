@@ -20,7 +20,7 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import storesApi from '@/services/storesApi';
 import productsApi from '@/services/productsApi';
 import { catchAndReport } from '@/utils/catchAndReport';
@@ -300,7 +300,7 @@ const BeautyPage: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Featured Salons & Spas</Text>
-              <Pressable onPress={() => router.push('/stores?category=beauty-wellness' as any)}>
+              <Pressable onPress={() => router.push('/stores?category=beauty-wellness')}>
                 <Text style={styles.viewAllText}>View All</Text>
               </Pressable>
             </View>
@@ -343,7 +343,7 @@ const BeautyPage: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Trending Products</Text>
-              <Pressable onPress={() => router.push('/products?category=beauty-wellness' as any)}>
+              <Pressable onPress={() => router.push('/products?category=beauty-wellness')}>
                 <Text style={styles.viewAllText}>View All</Text>
               </Pressable>
             </View>
@@ -414,7 +414,7 @@ const BeautyPage: React.FC = () => {
             </View>
             <Pressable
               style={styles.promoButton}
-              onPress={() => router.push('/offers' as any)}
+              onPress={() => router.push('/offers')}
             >
               <Text style={styles.promoButtonText}>View Offers</Text>
             </Pressable>
@@ -427,7 +427,7 @@ const BeautyPage: React.FC = () => {
           <View style={styles.quickActionsRow}>
             <Pressable
               style={styles.quickActionCard}
-              onPress={() => router.push('/stores?category=beauty-wellness&filter=verified' as any)}
+              onPress={() => router.push('/stores?category=beauty-wellness&filter=verified')}
             >
               <View style={[styles.quickActionIcon, { backgroundColor: '#E0F2FE' }]}>
                 <Ionicons name="shield-checkmark" size={24} color={colors.brand.sky} />
@@ -436,7 +436,7 @@ const BeautyPage: React.FC = () => {
             </Pressable>
             <Pressable
               style={styles.quickActionCard}
-              onPress={() => router.push('/stores?category=beauty-wellness&filter=nearby' as any)}
+              onPress={() => router.push('/stores?category=beauty-wellness&filter=nearby')}
             >
               <View style={[styles.quickActionIcon, { backgroundColor: Colors.warningScale[200] }]}>
                 <Ionicons name="location" size={24} color={Colors.warning} />
@@ -445,7 +445,7 @@ const BeautyPage: React.FC = () => {
             </Pressable>
             <Pressable
               style={styles.quickActionCard}
-              onPress={() => router.push('/offers?type=cashback' as any)}
+              onPress={() => router.push('/offers?type=cashback')}
             >
               <View style={[styles.quickActionIcon, { backgroundColor: colors.tint.green }]}>
                 <Ionicons name="wallet" size={24} color={Colors.success} />
@@ -454,7 +454,7 @@ const BeautyPage: React.FC = () => {
             </Pressable>
             <Pressable
               style={styles.quickActionCard}
-              onPress={() => router.push('/stores?category=beauty-wellness&filter=try-buy' as any)}
+              onPress={() => router.push('/stores?category=beauty-wellness&filter=try-buy')}
             >
               <View style={[styles.quickActionIcon, { backgroundColor: colors.pinkMist }]}>
                 <Ionicons name="flash" size={24} color={colors.deepPink} />

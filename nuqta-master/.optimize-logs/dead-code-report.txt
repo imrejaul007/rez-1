@@ -1,0 +1,254 @@
+Bundle size: 33.62 MB
+Source files: 2407
+
+Files with code in bundle: 2066
+Files NOT in bundle:       341
+
+=== Files whose code is NOT in the production bundle ===
+
+  types/ (57 files, 299.7 KB)
+       4.7 KB  types/activity.types.ts
+             tried identifiers: (no identifiers)
+       5.1 KB  types/ai.types.ts
+             tried identifiers: (no identifiers)
+       6.4 KB  types/api-integration.ts
+             tried identifiers: (no identifiers)
+    ... and 54 more
+  hooks/ (49 files, 304.0 KB)
+       0.3 KB  hooks/index.ts
+             tried identifiers: (no identifiers)
+       0.5 KB  hooks/mainstore.ts
+             tried identifiers: (no identifiers)
+       9.0 KB  hooks/useAccessibility.ts
+             tried identifiers: useAccessibility, useAccessibility
+    ... and 46 more
+  services/ (49 files, 426.9 KB)
+       1.7 KB  services/accountApi.ts
+             tried identifiers: (no identifiers)
+       8.1 KB  services/activityFeedApi.ts
+             tried identifiers: (no identifiers)
+       1.2 KB  services/bankOffersApi.ts
+             tried identifiers: bankOffersApi
+    ... and 46 more
+  utils/ (48 files, 367.3 KB)
+       5.3 KB  utils/achievementTriggers.ts
+             tried identifiers: orderAchievementTriggers
+       8.9 KB  utils/activityIntegration.ts
+             tried identifiers: enhancedOrderService
+      11.5 KB  utils/activityTriggers.ts
+             tried identifiers: orderActivityTriggers
+    ... and 45 more
+  hooks/mutations/ (8 files, 15.2 KB)
+       0.3 KB  hooks/mutations/index.ts
+             tried identifiers: (no identifiers)
+       7.0 KB  hooks/mutations/useCartMutations.ts
+             tried identifiers: useUpdateCartItem, useRemoveFromCart
+       2.1 KB  hooks/mutations/useCheckoutMutations.ts
+             tried identifiers: useRemoveCouponMutation, useApplyCouponMutation
+    ... and 5 more
+  hooks/queries/ (8 files, 11.3 KB)
+       0.7 KB  hooks/queries/index.ts
+             tried identifiers: (no identifiers)
+       1.5 KB  hooks/queries/useCheckoutData.ts
+             tried identifiers: useCheckoutAddresses, useCheckoutAddresses
+       2.4 KB  hooks/queries/useExplore.ts
+             tried identifiers: useExploreTrendingProducts, useExploreVerifiedReviews
+    ... and 5 more
+  components/common/ (6 files, 9.9 KB)
+       0.2 KB  components/common/EmptyState.tsx
+             tried identifiers: (no identifiers)
+       0.5 KB  components/common/ErrorBoundary.tsx
+             tried identifiers: (no identifiers)
+       8.5 KB  components/common/LazyImage.tsx
+             tried identifiers: LazyImage, LazyImage
+    ... and 3 more
+  components/homepage/ (6 files, 52.8 KB)
+      15.6 KB  components/homepage/CategoryCashbackGrid.tsx
+             tried identifiers: mapCampaignsToCategories, CategoryCashbackGrid
+      12.6 KB  components/homepage/CategoryTabBar.tsx
+             tried identifiers: CategoryTabBar
+       2.3 KB  components/homepage/NuqtaPlusUpsellCard.tsx
+             tried identifiers: NuqtaPlusUpsellCard
+    ... and 3 more
+  components/homepage/lazyGroups/ (6 files, 2.3 KB)
+       0.1 KB  components/homepage/lazyGroups/categoryListSections.ts
+             tried identifiers: (no identifiers)
+       0.5 KB  components/homepage/lazyGroups/categorySections.ts
+             tried identifiers: (no identifiers)
+       0.4 KB  components/homepage/lazyGroups/dealSections.ts
+             tried identifiers: (no identifiers)
+    ... and 3 more
+  components/store/ (6 files, 45.0 KB)
+       3.4 KB  components/store/CrossStoreProductsSection.types.ts
+             tried identifiers: (no identifiers)
+      12.9 KB  components/store/ExampleUsage.tsx
+             tried identifiers: BasicExample
+       8.1 KB  components/store/FrequentlyBoughtTogetherExample.tsx
+             tried identifiers: CartRecommendationsExample, ProductDetailPageExample
+    ... and 3 more
+  config/ (6 files, 21.0 KB)
+       4.6 KB  config/categoryStaticData.ts
+             tried identifiers: FOOD_TABS
+       0.1 KB  config/checkoutConfig.ts
+             tried identifiers: (no identifiers)
+       1.5 KB  config/goingOutSectionConfig.ts
+             tried identifiers: GOING_OUT_SUBCATEGORIES
+    ... and 3 more
+  components/bill-upload/ (5 files, 35.5 KB)
+       4.5 KB  components/bill-upload/BillCamera.tsx
+             tried identifiers: BillCamera
+      12.5 KB  components/bill-upload/BillUploadForm.tsx
+             tried identifiers: BillUploadForm
+      15.4 KB  components/bill-upload/BillUploadModals.tsx
+             tried identifiers: MerchantSelectorModal
+    ... and 2 more
+  components/ (5 files, 10.9 KB)
+       2.7 KB  components/CoinInfoCard.tsx
+             tried identifiers: CoinInfoCard
+       0.8 KB  components/ExternalLink.tsx
+             tried identifiers: ExternalLink
+       0.7 KB  components/HapticTab.tsx
+             tried identifiers: HapticTab
+    ... and 2 more
+  components/lazy/ (5 files, 46.4 KB)
+       1.2 KB  components/lazy/LazyComponent.tsx
+             tried identifiers: LazyComponent
+       1.7 KB  components/lazy/LazyLoadWrapper.tsx
+             tried identifiers: LazyLoadWrapper
+      12.9 KB  components/lazy/LazyModals.tsx
+             tried identifiers: LazyDealDetailsModal
+    ... and 2 more
+  components/ugc/ (4 files, 28.7 KB)
+       0.5 KB  components/ugc/index.ts
+             tried identifiers: (no identifiers)
+      17.9 KB  components/ugc/ProductSelectorExample.tsx
+             tried identifiers: UGCContentCreationExample, ProductComparisonExample
+       3.2 KB  components/ugc/ReportModalExample.tsx
+             tried identifiers: ReportModalExample
+    ... and 1 more
+  types/unified/ (4 files, 44.2 KB)
+      11.5 KB  types/unified/Order.ts
+             tried identifiers: (no identifiers)
+      12.3 KB  types/unified/Product.ts
+             tried identifiers: (no identifiers)
+      11.8 KB  types/unified/Store.ts
+             tried identifiers: (no identifiers)
+    ... and 1 more
+  components/categories/ (3 files, 25.0 KB)
+       2.4 KB  components/categories/CategoryIconGrid.tsx
+             tried identifiers: CategoryIconGrid
+      16.5 KB  components/categories/CategoryIconItem.tsx
+             tried identifiers: CategoryIconItem
+       6.2 KB  components/categories/CategoryImageCard.tsx
+             tried identifiers: CategoryImageCard
+  components/events/ (3 files, 23.8 KB)
+       8.1 KB  components/events/EventHeader.tsx
+             tried identifiers: EventHeader
+       4.9 KB  components/events/EventSchedule.tsx
+             tried identifiers: EventSchedule
+      10.8 KB  components/events/EventTicketing.tsx
+             tried identifiers: EventTicketing
+  components/explore/ (3 files, 30.2 KB)
+      11.4 KB  components/explore/ExploreHeader.tsx
+             tried identifiers: ExploreHeader
+      18.5 KB  components/explore/ExploreStoreGrid.tsx
+             tried identifiers: TrendingReelsSection
+       0.2 KB  components/explore/index.ts
+             tried identifiers: (no identifiers)
+  components/food-dining/ (3 files, 4.8 KB)
+       1.4 KB  components/food-dining/helpers.ts
+             tried identifiers: isRestaurantOpen
+       0.8 KB  components/food-dining/index.ts
+             tried identifiers: (no identifiers)
+       2.5 KB  components/food-dining/Skeletons.tsx
+             tried identifiers: SectionHeaderSkeleton
+  components/product/ (3 files, 25.1 KB)
+      10.0 KB  components/product/ExpertReviewsExample.tsx
+             tried identifiers: ExpertReviewsExample, expertReviewsApi
+       2.3 KB  components/product/index.ts
+             tried identifiers: (no identifiers)
+      12.9 KB  components/product/QA_PHOTOS_INTEGRATION_EXAMPLE.tsx
+             tried identifiers: MainStorePageExample, submitQuestion
+  contexts/ (3 files, 14.2 KB)
+       4.6 KB  contexts/ComparisonContext.tsx
+             tried identifiers: useComparisonActions, useComparisonStatus
+       8.7 KB  contexts/LazyContexts.tsx
+             tried identifiers: createConditionalContext, LazyGamificationContext
+       1.0 KB  contexts/ShimmerContext.tsx
+             tried identifiers: ShimmerProvider, ShimmerProvider
+  components/action-pages/ (2 files, 8.4 KB)
+       6.5 KB  components/action-pages/FastDeliveryFood.tsx
+             tried identifiers: FastDeliveryPage
+       1.9 KB  components/action-pages/index.ts
+             tried identifiers: ACTION_COMPONENTS, ACTION_SLUGS
+  components/gamification/ (2 files, 6.9 KB)
+       1.6 KB  components/gamification/AchievementToastManager.tsx
+             tried identifiers: AchievementToastManager
+       5.4 KB  components/gamification/OptimizedGameCard.tsx
+             tried identifiers: OptimizedGameCard
+  components/how-rez-works-flow/ (2 files, 0.4 KB)
+       0.0 KB  components/how-rez-works-flow/index.ts
+             tried identifiers: (no identifiers)
+       0.4 KB  components/how-rez-works-flow/types.ts
+             tried identifiers: (no identifiers)
+  components/store-payment/ (2 files, 1.9 KB)
+       1.3 KB  components/store-payment/index.ts
+             tried identifiers: (no identifiers)
+       0.5 KB  components/store-payment/QRScanner.tsx
+             tried identifiers: (no identifiers)
+  components/ui/ (2 files, 1.5 KB)
+       1.0 KB  components/ui/index.ts
+             tried identifiers: (no identifiers)
+       0.5 KB  components/ui/TabBarBackground.ios.tsx
+             tried identifiers: BlurTabBarBackground, useBottomTabOverflow
+  services/analytics/ (2 files, 5.0 KB)
+       1.3 KB  services/analytics/index.ts
+             tried identifiers: (no identifiers)
+       3.7 KB  services/analytics/types.ts
+             tried identifiers: (no identifiers)
+  services/analytics/providers/ (2 files, 6.5 KB)
+       1.5 KB  services/analytics/providers/BaseProvider.ts
+             tried identifiers: (no identifiers)
+       5.0 KB  services/analytics/providers/FirebaseProvider.ts
+             tried identifiers: FirebaseAnalyticsProvider
+  stores/ (2 files, 5.6 KB)
+       1.5 KB  stores/index.ts
+             tried identifiers: (no identifiers)
+       4.1 KB  stores/offlineSyncStore.ts
+             tried identifiers: useOfflineSyncStore
+  constants/ (2 files, 2.5 KB)
+       1.9 KB  constants/Colors.ts
+             tried identifiers: NuqtaColors
+       0.6 KB  constants/priveConversion.ts
+             tried identifiers: PRIVE_CONVERSION_RATES
+  app/MainStoreSection/ (1 files, 3.8 KB)
+       3.8 KB  app/MainStoreSection/index.ts
+             tried identifiers: (no identifiers)
+  app/setup/ (1 files, 2.5 KB)
+       2.5 KB  app/setup/warningSuppression.ts
+             tried identifiers: (no identifiers)
+  app/store/ (1 files, 0.2 KB)
+       0.2 KB  app/store/index.tsx
+             tried identifiers: (no identifiers)
+  components/account/ (1 files, 5.7 KB)
+       5.7 KB  components/account/TrustScoreCard.tsx
+             tried identifiers: TrustScoreCard
+  components/bill-upload/hooks/ (1 files, 20.1 KB)
+      20.1 KB  components/bill-upload/hooks/useBillUploadPage.ts
+             tried identifiers: useBillUploadPage, useBillUploadPage
+  components/cart/ (1 files, 4.5 KB)
+       4.5 KB  components/cart/CartSocketIntegration.tsx
+             tried identifiers: CartSocketIntegration, CartSocketIntegration
+  components/checkout/ (1 files, 1.1 KB)
+       1.1 KB  components/checkout/index.ts
+             tried identifiers: (no identifiers)
+  components/earn/ (1 files, 0.3 KB)
+       0.3 KB  components/earn/index.ts
+             tried identifiers: (no identifiers)
+  components/earn/sections/ (1 files, 1.4 KB)
+       1.4 KB  components/earn/sections/index.ts
+             tried identifiers: (no identifiers)
+
+Total dead code: 1.93 MB across 341 files
+NOTE: This includes expo-router files (in app/) and barrel re-exports.
+      Run again after excluding app/ for a more accurate count.

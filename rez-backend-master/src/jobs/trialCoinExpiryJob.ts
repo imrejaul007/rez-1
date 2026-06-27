@@ -1,6 +1,10 @@
 import * as cron from 'node-cron';
 import { logger } from '../config/logger';
 import trialCoinService from '../services/trialCoinService';
+// Phase 6.24: distributed lock so multi-replica deploys don't both expire
+// the same trial coins (which would log a duplicate expiry event and could
+// affect downstream user-balance snapshots).
+import { runWithLock } from '../config/cronJobs';
 
 let expiryJob: ReturnType<typeof cron.schedule> | null = null;
 let isRunning = false;
@@ -29,13 +33,24 @@ export function startTrialCoinExpiryJob(): void {
     try {
       logger.info('[TrialCoinExpiryJob] Starting expiry job');
 
-      const result = await trialCoinService.expireCoins();
-
-      logger.info('[TrialCoinExpiryJob] Expiry job completed', {
-        usersProcessed: result.usersProcessed,
-        coinsExpired: result.coinsExpired,
-        breakage: `${result.coinsExpired} coins`
-      });
+      // Phase 6.24: distributed lock across replicas. Without this, two
+      // rez-worker pods would both call trialCoinService.expireCoins() and
+      // produce duplicate expiry events.
+      const result = await runWithLock(
+        'cron:trial_coin_expiry',
+        1800,           // 30-min TTL
+        'trial coin expiry',
+        () => trialCoinService.expireCoins()
+      );
+      if (result) {
+        logger.info('[TrialCoinExpiryJob] Expiry job completed', {
+          usersProcessed: result.usersProcessed,
+          coinsExpired: result.coinsExpired,
+          breakage: `${result.coinsExpired} coins`
+        });
+      } else {
+        logger.info('[TrialCoinExpiryJob] Skipped — another worker held the lock');
+      }
     } catch (error) {
       logger.error('[TrialCoinExpiryJob] Job failed', {
         error: (error as Error).message

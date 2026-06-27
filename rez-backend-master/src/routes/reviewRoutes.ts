@@ -33,8 +33,7 @@ router.get('/featured',
 
 // Get reviews for a store
 router.get('/store/:storeId',
-  // generalLimiter,, // Disabled for development
-  validateParams(Joi.object({
+    validateParams(Joi.object({
     storeId: commonSchemas.objectId()
   })),
   validateQuery(Joi.object({
@@ -62,8 +61,7 @@ router.get('/product/:productId',
 
 // Check if user can review a store
 router.get('/store/:storeId/can-review',
-  // generalLimiter,, // Disabled for development
-  requireAuth,
+    requireAuth,
   validateParams(Joi.object({
     storeId: commonSchemas.objectId()
   })),

@@ -7,7 +7,7 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming} from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerImpact, triggerNotification } from "@/utils/haptics";
 import { ThemedText } from '@/components/ThemedText';
 import wishlistApi, { DiscountSnapshot } from '@/services/wishlistApi';

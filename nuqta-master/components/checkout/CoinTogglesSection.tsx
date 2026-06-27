@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, Switch, StyleSheet, Platform, Dimensions } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { BRAND } from '@/constants/brand';
 import { PROMO_COIN_MAX_USAGE_PERCENTAGE } from '@/config/checkout.config';

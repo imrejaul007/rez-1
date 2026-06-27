@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Bill Upload Analytics Service
  *

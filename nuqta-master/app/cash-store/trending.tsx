@@ -27,7 +27,8 @@ import CachedImage from '@/components/ui/CachedImage';
 import { useRouter } from 'expo-router';
 import { platformAlertConfirm } from '@/utils/platformAlert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { safeOpenURL } from '@/utils/linking';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 
@@ -234,7 +235,7 @@ function TrendingOffersPage() {
         platformAlertConfirm(
           'Tracking Issue',
           'Your cashback may not be tracked. Open anyway?',
-          () => { try { Linking.openURL(brand.externalUrl!); } catch (e) { catchAndWarn(e, 'CashStoreTrending/openURL'); } },
+          () => { try { safeOpenURL(brand.externalUrl!); } catch (e) { catchAndWarn(e, 'CashStoreTrending/openURL'); } },
           'Open Anyway'
         );
       }
@@ -273,7 +274,7 @@ function TrendingOffersPage() {
         platformAlertConfirm(
           'Tracking Issue',
           'Your cashback may not be tracked. Open anyway?',
-          () => { try { Linking.openURL(offer.externalUrl!); } catch (e) { catchAndWarn(e, 'CashStoreTrending/openURL'); } },
+          () => { try { safeOpenURL(offer.externalUrl!); } catch (e) { catchAndWarn(e, 'CashStoreTrending/openURL'); } },
           'Open Anyway'
         );
       }

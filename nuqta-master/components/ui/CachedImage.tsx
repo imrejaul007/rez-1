@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useEffect, useRef, memo, useMemo } from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp, Platform, PixelRatio } from 'react-native';
 import { Image as ExpoImage, ImageStyle } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ShimmerSkeleton } from './ShimmerSkeleton';
 import { optimizeCloudinaryUrl } from '@/utils/cloudinaryHelper';
 import { colors } from '@/constants/theme';

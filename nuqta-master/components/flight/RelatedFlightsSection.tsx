@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import travelApi from '@/services/travelApi';
 import { useGetCurrencySymbol } from '@/stores/selectors';

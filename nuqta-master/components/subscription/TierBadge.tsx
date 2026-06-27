@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { TIER_COLORS, TIER_GRADIENTS, TIER_ICONS } from '@/types/subscription.types';
 import type { SubscriptionTier } from '@/types/subscription.types';

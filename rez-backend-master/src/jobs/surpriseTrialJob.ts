@@ -1,6 +1,10 @@
 import * as cron from 'node-cron';
 import { logger } from '../config/logger';
 import gamificationService from '../services/gamificationService';
+// Phase 6.24: distributed lock so multi-replica deploys don't assign the
+// same surprise trial to the same user twice (a duplicate assignment could
+// grant a duplicate reward and produce duplicate audit log entries).
+import { runWithLock } from '../config/cronJobs';
 
 let surpriseTrialJob: ReturnType<typeof cron.schedule> | null = null;
 let isRunning = false;
@@ -32,11 +36,19 @@ export function startSurpriseTrialJob(): void {
     try {
       logger.info('[SurpriseTrialJob] Starting surprise trial assignment job');
 
-      const result = await gamificationService.assignSurpriseTrials();
-
-      logger.info('[SurpriseTrialJob] Assignment job completed', {
-        assigned: result.assigned
-      });
+      const result = await runWithLock(
+        'cron:surprise_trial',
+        3600,           // 1h TTL: assignment can take a while for many users
+        'surprise trial weekly assignment',
+        () => gamificationService.assignSurpriseTrials()
+      );
+      if (result) {
+        logger.info('[SurpriseTrialJob] Assignment job completed', {
+          assigned: result.assigned
+        });
+      } else {
+        logger.info('[SurpriseTrialJob] Skipped — another worker held the lock');
+      }
     } catch (error) {
       logger.error('[SurpriseTrialJob] Job failed', {
         error: (error as Error).message

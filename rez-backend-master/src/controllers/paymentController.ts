@@ -959,10 +959,17 @@ async function handleStripeRefund(event: any) {
     }
 
     // Update order payment status
+    // FIX [HIGH-3]: Use decimal-safe comparison instead of >= to avoid floating-point issues
     const refundAmount = charge.amount_refunded / 100; // Convert from cents
+    const paidAmount = order.totals.paidAmount;
 
-    if (refundAmount >= order.totals.paidAmount) {
+    if (Math.abs(refundAmount - paidAmount) < 0.01) {
+      // Exact match (within 1 paisa tolerance)
       order.payment.status = 'refunded';
+    } else if (refundAmount > paidAmount) {
+      // Edge case: over-refund, still mark as refunded
+      order.payment.status = 'refunded';
+      logger.warn('[STRIPE WEBHOOK] Over-refund detected:', { refundAmount, paidAmount, chargeId: charge.id });
     } else {
       order.payment.status = 'partially_refunded';
     }

@@ -14,7 +14,7 @@ import {
   Pressable,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import bonusZoneApi, { BonusZoneCampaign } from '@/services/bonusZoneApi';
 import BonusZoneCard from '@/components/earn/BonusZoneCard';

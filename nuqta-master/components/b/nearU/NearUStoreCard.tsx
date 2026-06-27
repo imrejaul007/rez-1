@@ -32,12 +32,12 @@
 import React, { useMemo } from 'react';
 import {
   AccessibilityRole,
-  Image,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import {
   borderRadius,
   colors,

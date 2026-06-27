@@ -11,7 +11,7 @@ import {
   ScrollView,
   Platform} from 'react-native';
 import { platformAlertSimple } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { PROFILE_COLORS } from '@/types/profile.types';
 import { QUICK_MESSAGE_TEMPLATES } from '@/types/messaging.types';
@@ -20,6 +20,7 @@ import storeMessagingService from '@/services/storeMessagingApi';
 import { colors } from '@/constants/theme';
 import { catchAndWarn } from '@/utils/catchAndReport';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { safeCallPhone, safeOpenURL } from '@/utils/linking';
 
 interface ContactStoreModalProps {
   visible: boolean;
@@ -130,7 +131,7 @@ function ContactStoreModal({
     const phoneUrl = `tel:${storePhone}`;
     Linking.canOpenURL(phoneUrl).then((supported) => {
       if (supported) {
-        Linking.openURL(phoneUrl).catch(() => {});
+        safeCallPhone(storePhone);
       } else {
         platformAlertSimple('Error', 'Unable to make phone calls on this device');
       }
@@ -154,7 +155,7 @@ function ContactStoreModal({
 
     Linking.canOpenURL(whatsappUrl).then((supported) => {
       if (supported) {
-        Linking.openURL(whatsappUrl).catch(() => {});
+        safeOpenURL(whatsappUrl);
       } else {
         platformAlertSimple('WhatsApp not installed', 'Please install WhatsApp to use this feature');
       }
@@ -173,7 +174,7 @@ function ContactStoreModal({
       : 'Customer Inquiry';
     const emailUrl = `mailto:${storeEmail}?subject=${encodeURIComponent(subject)}`;
 
-    try { Linking.openURL(emailUrl); } catch (e) { catchAndWarn(e, 'ContactStoreModal/openURL'); }
+    try { safeOpenURL(emailUrl); } catch (e) { catchAndWarn(e, 'ContactStoreModal/openURL'); }
   };
 
   // Render contact option

@@ -20,7 +20,7 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import GroceryStoreCard from '@/components/grocery/GroceryStoreCard';
 import { StoresListSkeleton } from '@/components/grocery/GrocerySkeleton';
 import { storesApi } from '@/services/storesApi';

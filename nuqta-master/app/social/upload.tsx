@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { getImagePicker } from '@/utils/lazyImports';
 import { ThemedText } from '@/components/ThemedText';
@@ -226,6 +226,15 @@ function UploadPage() {
         formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPresets.images);
         formData.append('folder', `images/social/${contentType}s/`);
 
+        // NOTE: This raw fetch uploads directly to Cloudinary with a custom `upload_preset`
+        // and per-contentType `folder` (images/social/{posts|stories}/). The current
+        // `services/imageUploadService.ts` only exports `uploadProfileImage`, hardcoded to the
+        // backend's `/user/auth/upload-avatar` endpoint with an `avatar` form field — it does
+        // not support direct Cloudinary uploads, custom presets/folders, per-contentType folder
+        // routing, or return the `secure_url` shape this caller needs for `imageUrls`. Note
+        // also that this site intentionally does NOT check `res.ok` — a failed Cloudinary
+        // response is silently swallowed (no `secure_url` pushed), which would also need to be
+        // preserved if migrating. Skipping migration until the service is generalized.
         const uploadRes = await fetch(getCloudinaryUploadUrl('image'), {
           method: 'POST',
           body: formData,

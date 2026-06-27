@@ -67,8 +67,16 @@ export class ClaudeService {
   constructor() {
     this.apiKey = process.env.CLAUDE_API_KEY ?? '';
     this.model = process.env.CLAUDE_MODEL ?? DEFAULT_MODEL;
-    this.maxTokens = Number(process.env.CLAUDE_MAX_TOKENS ?? '1024');
-    this.temperature = Number(process.env.CLAUDE_TEMPERATURE ?? '0.7');
+
+    // Parse and validate maxTokens with bounds checking
+    // OPTIMIZATION: Added NaN check and bounds clamping for env var safety
+    const parsedMaxTokens = parseInt(process.env.CLAUDE_MAX_TOKENS ?? '1024', 10);
+    this.maxTokens = isNaN(parsedMaxTokens) ? 1024 : Math.max(1, Math.min(parsedMaxTokens, 4096));
+
+    // Parse and validate temperature with bounds checking
+    // OPTIMIZATION: Added NaN check and bounds clamping for env var safety
+    const parsedTemperature = parseFloat(process.env.CLAUDE_TEMPERATURE ?? '0.7');
+    this.temperature = isNaN(parsedTemperature) ? 0.7 : Math.max(0, Math.min(parsedTemperature, 2.0));
 
     if (!this.apiKey) {
       logger.warn('[ClaudeService] CLAUDE_API_KEY is not set — AI chat will return fallback responses.');

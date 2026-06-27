@@ -17,7 +17,7 @@ import CachedImage from '@/components/ui/CachedImage';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';
 import * as ExpoCamera from 'expo-camera';
 import { getImagePicker } from '@/utils/lazyImports';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useNavigation } from 'expo-router';
 import { billUploadService } from '@/services/billUploadService';
 import { useBillVerification } from '@/hooks/useBillVerification';
@@ -346,7 +346,7 @@ function EnhancedBillUploadPage() {
               <Text style={styles.errorTitle}>Verification Issues</Text>
             </View>
             {workflow.errors.map((err, index) => (
-              <Text key={index} style={styles.errorText}>• {err}</Text>
+              <Text key={`err-${index}`} style={styles.errorText}>• {err}</Text>
             ))}
             <Pressable
               style={styles.correctionButton}

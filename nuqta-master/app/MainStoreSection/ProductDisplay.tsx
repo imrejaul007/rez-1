@@ -23,12 +23,13 @@ import ReAnimated, {
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerImpact, triggerNotification } from "@/utils/haptics";
 import { GlassCard } from "@/components/ui";
 import { ThemedText } from "@/components/ThemedText";
 import { colors } from '@/constants/theme';
 import { catchAndWarn } from '@/utils/catchAndReport';
+import { safeCallPhone, safeOpenURL } from '@/utils/linking';
 import {
   Colors,
   Spacing,
@@ -231,7 +232,7 @@ export default memo(function ProductDisplay({
         android: `geo:${locationCoords.lat},${locationCoords.lng}?q=${locationCoords.lat},${locationCoords.lng}`,
         default: `https://www.google.com/maps/search/?api=1&query=${locationCoords.lat},${locationCoords.lng}`,
       });
-      try { Linking.openURL(url); } catch (e) { catchAndWarn(e, 'ProductDisplay/openURL'); }
+      try { safeOpenURL(url); } catch (e) { catchAndWarn(e, 'ProductDisplay/openURL'); }
     }
   }, [onDirectionsPress, locationCoords]);
 
@@ -240,7 +241,7 @@ export default memo(function ProductDisplay({
     if (onCallPress) {
       onCallPress();
     } else if (phoneNumber) {
-      try { Linking.openURL(`tel:${phoneNumber}`); } catch (e) { catchAndWarn(e, 'ProductDisplay/openURL'); }
+      try { safeCallPhone(phoneNumber); } catch (e) { catchAndWarn(e, 'ProductDisplay/openURL'); }
     }
   }, [onCallPress, phoneNumber]);
 

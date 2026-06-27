@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, ImageSourcePropType } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { spacing, borderRadius } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import Text from './Text';

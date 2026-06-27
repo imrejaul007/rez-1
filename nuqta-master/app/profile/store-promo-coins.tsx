@@ -18,7 +18,7 @@ import CachedImage from '@/components/ui/CachedImage';
 import { router } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BackendBrandedCoin } from '@/services/walletApi';
 import { useBrandedCoins, useWalletLoading, useRefreshWallet } from '@/stores/selectors';

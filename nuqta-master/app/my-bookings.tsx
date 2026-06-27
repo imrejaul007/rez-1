@@ -18,7 +18,7 @@ import { FlashList } from '@shopify/flash-list';
 import { CardGridSkeleton } from '@/components/skeletons';
 import { platformAlertSimple, platformAlertDestructive } from '@/utils/platformAlert';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import serviceBookingApi, { ServiceBooking } from '@/services/serviceBookingApi';
 import CashbackStatusBadge from '@/components/travel/CashbackStatusBadge';

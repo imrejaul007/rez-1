@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, StatusBar, StyleSheet, Platform } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { BRAND } from '@/constants/brand';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/DesignSystem';

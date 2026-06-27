@@ -1,4 +1,3 @@
-// @ts-nocheck
 import asyncStorageService from './asyncStorageService';
 // Lazy-loaded: pako (50KB compression lib) only loaded when compression is used
 let _pako: typeof import('pako') | null = null;

@@ -2,7 +2,7 @@ import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, StatusBar, Pressable, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ThemedText } from '@/components/ThemedText';
 import { colors, spacing, borderRadius, shadows } from '@/constants/theme';

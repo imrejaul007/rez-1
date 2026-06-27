@@ -15,7 +15,7 @@ import Animated, {
   withSpring} from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { type ImageSource } from 'expo-image';
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from "expo-linear-gradient";
 import { CrossPlatformBlurView as BlurView } from '@/components/ui/CrossPlatformBlurView';
 import { triggerImpact } from "@/utils/haptics";

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/DesignSystem';
 import { NUQTA } from './searchTheme';

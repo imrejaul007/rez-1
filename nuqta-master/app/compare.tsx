@@ -21,7 +21,7 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { platformAlertSimple, platformAlertDestructive } from '@/utils/platformAlert';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useGetCurrencySymbol, useIsAuthenticated } from '@/stores/selectors';
 import productComparisonApi from '@/services/productComparisonApi';
 import { ComparisonProduct } from '@/services/productComparisonApi';
@@ -412,7 +412,7 @@ function ComparePage() {
                   {compareItems.map((item) => (
                     <View key={item.id} style={styles.valueCell}>
                       {item.features.map((feature, index) => (
-                        <View key={index} style={styles.featureItem}>
+                        <View key={`feature-${index}`} style={styles.featureItem}>
                           <Ionicons name="checkmark" size={14} color={COLORS.primaryGreen} />
                           <Text style={styles.featureText}>{feature}</Text>
                         </View>

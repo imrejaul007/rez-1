@@ -25,7 +25,7 @@ import Animated, {
   withTiming } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import productsApi from '@/services/productsApi';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -496,7 +496,7 @@ function CabDetailsPage() {
             <View style={styles.imageIndicators}>
               {cab.images.map((_, index) => (
                 <View
-                  key={index}
+                  key={`cab-img-${index}`}
                   style={[
                     styles.indicator,
                     selectedImageIndex === index && styles.indicatorActive,

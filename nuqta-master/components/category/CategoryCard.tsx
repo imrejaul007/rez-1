@@ -1,13 +1,12 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Pressable,
   StyleSheet,
-  Dimensions,
   ActivityIndicator,
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { CategoryItem } from '@/types/category.types';
@@ -16,7 +15,6 @@ import { showToast } from '@/components/common/ToastManager';
 import { normalizeProductPrice, normalizeProductRating } from '@/utils/productDataNormalizer';
 import { formatPrice } from '@/utils/priceFormatter';
 import { colors } from '@/constants/theme';
-import { useIsMounted } from '@/hooks/useIsMounted';
 
 interface CategoryCardProps {
   item: CategoryItem;
@@ -38,109 +36,79 @@ function CategoryCard({
   cardStyle = 'elevated',
 }: CategoryCardProps) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const isMounted = useIsMounted();
   const cartState = useCartState();
   const cartActions = useCartActions();
-  const [, forceUpdate] = useState({});
 
-  // Force re-render when cart changes
-  useEffect(() => {
-    forceUpdate({});
-  }, [cartState.items.length, cartState.items]);
+  // Check if product is in cart and get quantity
+  const cartItem = useMemo(() =>
+    cartState.items.find(i => i.productId === item.id),
+    [cartState.items, item.id]
+  );
+  const quantityInCart = cartItem?.quantity || 0;
+  const isInCart = quantityInCart > 0;
 
-  // Check if product is in cart and get quantity - memoized to ensure proper re-renders
-  const { productId, cartItem, quantityInCart, isInCart } = useMemo(() => {
-    const id = item.id;
-    const cartItem = cartState.items.find(i => i.productId === id);
-    const qty = cartItem?.quantity || 0;
-    const inCart = qty > 0;
+  const handlePress = useCallback(() => onPress(item), [item, onPress]);
 
-    return {
-      productId: id,
-      cartItem,
-      quantityInCart: qty,
-      isInCart: inCart
-    };
-  }, [item.id, cartState.items, cartState.items.length]);
-  
-  const handlePress = () => {
-    onPress(item);
-  };
-
-  const handleAddToCart = async (e: any) => {
+  const handleAddToCart = useCallback(async (e: any) => {
     e.stopPropagation();
     e.preventDefault();
-    
     if (isAddingToCart) return;
-    
     setIsAddingToCart(true);
     try {
-      // Extract product ID - handle both product._id and product.id formats
       const productId = item.id;
-
-      if (!productId) {
-        return;
-      }
-
-      // Extract price - handle complex price objects
-      let currentPrice = 0;
-      let originalPrice = 0;
-
-      if (item.price) {
-        currentPrice = item.price.current || 0;
-        originalPrice = item.price.original ?? item.price.current ?? 0;
-      }
-
-      // Extract image - handle multiple possible formats
-      let imageUrl = '';
-      if (item.image) {
-        imageUrl = item.image;
-      } else if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-        imageUrl = item.images[0];
-      }
-
-      // Prepare cart item data - match the CartItem type from @/types/cart
+      if (!productId) return;
+      let currentPrice = item.price?.current || 0;
+      let originalPrice = item.price?.original ?? item.price?.current ?? 0;
+      let imageUrl = item.image || (item.images?.[0] || '');
       const cartItemData = {
         id: productId,
         name: item.name || 'Product',
         price: currentPrice,
-        originalPrice: originalPrice,
+        originalPrice,
         discountedPrice: currentPrice,
         image: imageUrl,
         cashback: item.cashback?.percentage ? `${item.cashback.percentage}%` : '0%',
         category: 'products' as const,
         quantity: 1,
         selected: false,
-        
         availabilityStatus: 'in_stock' as const,
       };
-      // Add to cart via CartContext
       await cartActions.addItem(cartItemData);
-
-      // Show success toast
-      showToast({
-        message: `${item.name || 'Item'} added to cart`,
-        type: 'success',
-        duration: 3000
-      });
+      showToast({ message: `${item.name || 'Item'} added to cart`, type: 'success', duration: 3000 });
     } catch (error) {
-      
-      // Show error toast
-      showToast({
-        message: 'Failed to add item to cart',
-        type: 'error',
-        duration: 3000
-      });
+      showToast({ message: 'Failed to add item to cart', type: 'error', duration: 3000 });
     } finally {
-      if (!isMounted()) return;
       setIsAddingToCart(false);
     }
-  };
+  }, [isAddingToCart, item, cartActions]);
 
-  const handleToggleFavorite = (e: any) => {
+  const handleToggleFavorite = useCallback((e: any) => {
     e.stopPropagation();
     onToggleFavorite(item);
-  };
+  }, [item, onToggleFavorite]);
+
+  // Memoized quantity update handlers
+  const handleDecreaseQuantity = useCallback(async () => {
+    if (!cartItem) return;
+    try {
+      if (quantityInCart > 1) {
+        await cartActions.updateQuantity(cartItem.id, quantityInCart - 1);
+      } else {
+        await cartActions.removeItem(cartItem.id);
+      }
+    } catch (error) {
+      showToast({ message: 'Failed to update quantity', type: 'error', duration: 3000 });
+    }
+  }, [cartItem, quantityInCart, cartActions]);
+
+  const handleIncreaseQuantity = useCallback(async () => {
+    if (!cartItem) return;
+    try {
+      await cartActions.updateQuantity(cartItem.id, quantityInCart + 1);
+    } catch (error) {
+      showToast({ message: 'Failed to update quantity', type: 'error', duration: 3000 });
+    }
+  }, [cartItem, quantityInCart, cartActions]);
 
   // Get container style based on card style
   const getContainerStyle = () => {
@@ -359,23 +327,7 @@ function CategoryCard({
                 <View style={styles.quantityControls}>
                   <Pressable
                     style={styles.quantityButton}
-                    onPress={async (e) => {
-                      e.stopPropagation();
-                      try {
-                        if (quantityInCart > 1) {
-                          await cartActions.updateQuantity(cartItem!.id, quantityInCart - 1);
-                        } else {
-                          await cartActions.removeItem(cartItem!.id);
-                        }
-                      } catch (error) {
-                        showToast({
-                          message: 'Failed to update quantity',
-                          type: 'error',
-                          duration: 3000
-                        });
-                      }
-                    }}
-                   
+                    onPress={handleDecreaseQuantity}
                   >
                     <Ionicons name="remove" size={18} color={colors.background.primary} />
                   </Pressable>
@@ -386,19 +338,7 @@ function CategoryCard({
 
                   <Pressable
                     style={styles.quantityButton}
-                    onPress={async (e) => {
-                      e.stopPropagation();
-                      try {
-                        await cartActions.updateQuantity(cartItem!.id, quantityInCart + 1);
-                      } catch (error) {
-                        showToast({
-                          message: 'Failed to update quantity',
-                          type: 'error',
-                          duration: 3000
-                        });
-                      }
-                    }}
-                   
+                    onPress={handleIncreaseQuantity}
                   >
                     <Ionicons name="add" size={18} color={colors.background.primary} />
                   </Pressable>

@@ -24,7 +24,7 @@ import Animated, {
   withRepeat,
   interpolate} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/DesignSystem';
 import {
   PRIVE_COLORS,

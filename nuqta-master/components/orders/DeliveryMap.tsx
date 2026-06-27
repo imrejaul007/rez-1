@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Linking, Platform } from 'react-native';
 import { catchAndWarn } from '@/utils/catchAndReport';
+import { safeCallPhone } from '@/utils/linking';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { OrderLocationUpdate } from '@/hooks/useOrderTracking';
 import { colors } from '@/constants/theme';
 
@@ -54,7 +55,9 @@ function DeliveryMap({ locationUpdate, deliveryAddress, storeLocation }: Deliver
   const handleCallDriver = () => {
     if (locationUpdate?.deliveryPartner.phone) {
       try {
-        Linking.openURL(`tel:${locationUpdate.deliveryPartner.phone}`);
+        // Phase 6: web parity — tel: doesn't place calls on web, so the
+        // safeOpenURL helper shows a modal with the number instead.
+        safeCallPhone(locationUpdate.deliveryPartner.phone, 'Call delivery partner');
       } catch (e) { catchAndWarn(e, 'DeliveryMap/handleCallDriver'); }
     }
   };
@@ -181,7 +184,7 @@ function DeliveryMap({ locationUpdate, deliveryAddress, storeLocation }: Deliver
             ) : (
               <View style={styles.driverAvatarPlaceholder}>
                 <Text style={styles.driverAvatarText}>
-                  {locationUpdate.deliveryPartner.name.charAt(0).toUpperCase()}
+                  {(locationUpdate.deliveryPartner?.name || '?').charAt(0).toUpperCase()}
                 </Text>
               </View>
             )}

@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { MallBrand, BrandBadge, BrandTier } from '../../../types/mall.types';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { colors } from '@/constants/theme';
@@ -213,7 +213,7 @@ const BrandFullWidthCard: React.FC<BrandFullWidthCardProps> = ({
               style={styles.tierBadge}
             >
               <Text style={styles.tierBadgeText}>
-                {brand.tier.charAt(0).toUpperCase() + brand.tier.slice(1)}
+                {(brand.tier || '').charAt(0).toUpperCase() + (brand.tier || '').slice(1)}
               </Text>
             </LinearGradient>
 
@@ -229,7 +229,7 @@ const BrandFullWidthCard: React.FC<BrandFullWidthCardProps> = ({
                   style={styles.badge}
                 >
                   <Text style={styles.badgeText}>
-                    {badge.charAt(0).toUpperCase() + badge.slice(1).replace('-', ' ')}
+                    {(badge || '').charAt(0).toUpperCase() + (badge || '').slice(1).replace('-', ' ')}
                   </Text>
                 </LinearGradient>
               );

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // User Generated Content (UGC) API Service
 // Handles user photos, videos, and content sharing
 

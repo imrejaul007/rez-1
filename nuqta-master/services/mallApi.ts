@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Mall API Service
  *
@@ -15,12 +14,7 @@ import {
   MallHomepageData,
   MallBrandFilters
 } from '../types/mall.types';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 /** Raw store data returned by the batch endpoint (before transform to MallBrand) */
 interface MallStoreData {

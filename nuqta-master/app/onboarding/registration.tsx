@@ -4,7 +4,7 @@ import { View, Text, Pressable, StyleSheet, Platform, TextInput, KeyboardAvoidin
 import analyticsService from '@/services/analyticsService';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import FormInput from '@/components/onboarding/FormInput';
 import { useAuthLoading, useAuthError, useAuthActions } from '@/stores/selectors';
 import CountryCodePicker, { COUNTRY_CODES, CountryCode } from '@/components/common/CountryCodePicker';

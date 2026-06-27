@@ -201,10 +201,8 @@ export const ANALYTICS_EVENTS = {
   TRIAL_CONVERTED: 'trial_converted',
 } as const;
 
-export type AnalyticsEventName = typeof ANALYTICS_EVENTS[keyof typeof ANALYTICS_EVENTS];
-
 // Event property schemas for validation
-export const EVENT_SCHEMAS = {
+export const EVENT_SCHEMAS: Record<string, { required: string[]; optional: string[] }> = {
   [ANALYTICS_EVENTS.STORE_VIEWED]: {
     required: ['storeId', 'storeName'],
     optional: ['storeCategory', 'source', 'referrer'],
@@ -230,4 +228,6 @@ export const EVENT_SCHEMAS = {
     optional: ['merchantId', 'merchantName', 'paymentMethod'],
   },
   // Add more schemas as needed
-} as const;
+};
+
+export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS];

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
@@ -23,7 +22,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import gamificationApi, {
@@ -42,11 +41,13 @@ import { Colors, Spacing, BorderRadius, Typography } from '@/constants/DesignSys
 import { BRAND } from '@/constants/brand';
 import { colors } from '@/constants/theme';
 import { catchAndWarn } from '@/utils/catchAndReport';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 const { width } = Dimensions.get('window');
 
 function DailyCheckInPage() {
   const router = useRouter();
+  const handleBack = useSafeBack();
   const insets = useSafeAreaInsets();
   const { actions: gamificationActions } = useGamification();
   const getCurrencySymbol = useGetCurrencySymbol();
@@ -457,7 +458,7 @@ function DailyCheckInPage() {
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} style={styles.backButton}>
+        <Pressable onPress={handleBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={Colors.text.primary} />
         </Pressable>
         <View style={styles.headerTitleContainer}>

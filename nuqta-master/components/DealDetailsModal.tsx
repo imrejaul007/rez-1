@@ -15,7 +15,7 @@ import {
 import Animated, { useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { CrossPlatformBlurView as BlurView } from '@/components/ui/CrossPlatformBlurView';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import { Deal } from '@/types/deals';

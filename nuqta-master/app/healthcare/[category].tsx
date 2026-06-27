@@ -21,12 +21,13 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams, Redirect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import apiClient from '@/services/apiClient';
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { safeCallPhone } from '@/utils/linking';
 
 const COLORS = {
   white: Colors.background.primary,
@@ -222,7 +223,7 @@ const HealthcareCategoryPage: React.FC = () => {
 
   const handleCallStore = (phone?: string) => {
     if (phone) {
-      try { Linking.openURL(`tel:${phone}`); } catch (_e) { /* silently handle */ }
+      try { safeCallPhone(phone); } catch (_e) { /* silently handle */ }
     } else {
       platformAlertSimple('Not Available', 'Phone number is not available.');
     }

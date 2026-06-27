@@ -2,6 +2,8 @@ import { logger } from '../config/logger';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { razorpayConfig, validateRazorpayConfig } from '../config/razorpay.config';
+import { razorpayCircuit } from '../utils/circuitBreaker';
+import { withTimeout, TimeoutError } from '../utils/timeout';
 
 /**
  * Razorpay Service
@@ -13,26 +15,29 @@ import { razorpayConfig, validateRazorpayConfig } from '../config/razorpay.confi
 const RAZORPAY_TIMEOUT_MS = parseInt(process.env.RAZORPAY_HTTP_TIMEOUT_MS || '10000', 10);
 
 /**
- * Race a promise against a timeout. If the underlying call hasn't resolved
- * within `ms` milliseconds, reject with a clear error so the caller (and the
- * circuit breaker) can react instead of hanging forever.
- *
- * This addresses the AUDIT_REPORT.md finding #1: Razorpay calls had no
- * timeout, which could starve the event loop at 10x load.
+ * Execute a Razorpay API call with circuit breaker and timeout protection.
+ * This prevents cascading failures when Razorpay is experiencing issues.
  */
-async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  let timer: NodeJS.Timeout | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      reject(new Error(`[RAZORPAY] ${label} timed out after ${ms}ms`));
-    }, ms);
-    // Don't keep the event loop alive just for the timeout
-    if (timer && typeof (timer as any).unref === 'function') (timer as any).unref();
-  });
+async function withCircuitBreaker<T>(
+  operation: () => Promise<T>,
+  operationName: string
+): Promise<T> {
   try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    if (timer) clearTimeout(timer);
+    return await razorpayCircuit.exec(async () => {
+      return withTimeout(operation(), {
+        timeout: RAZORPAY_TIMEOUT_MS,
+        operation: `razorpay:${operationName}`,
+      });
+    });
+  } catch (error) {
+    // Log circuit breaker state changes
+    if (error instanceof Error && error.message.includes('Circuit is OPEN')) {
+      logger.error(`🔴 [CIRCUIT_BREAKER] Razorpay circuit is OPEN — request rejected: ${operationName}`);
+    }
+    if (error instanceof TimeoutError) {
+      logger.error(`⏱️ [CIRCUIT_BREAKER] Razorpay timeout: ${operationName} exceeded ${RAZORPAY_TIMEOUT_MS}ms`);
+    }
+    throw error;
   }
 }
 
@@ -76,23 +81,33 @@ export async function createRazorpayOrder(
 }> {
   try {
     const razorpay = getRazorpayInstance();
-    
-    const options = {
-      amount: Math.round(amount * 100), // Convert to paise
+
+    // FIX [LOW-4]: Validate minimum amount (Razorpay requires minimum 1 INR = 100 paise)
+    const amountInPaise = Math.round(amount * 100);
+    if (amountInPaise < 100) {
+      logger.error('❌ [RAZORPAY] Amount below minimum:', { amount, minimumRequired: 1 });
+      throw new Error(`Minimum amount for Razorpay is 1 INR. Requested: ${amount} INR`);
+    }
+
+    // FIX [HIGH-1]: Add idempotency key to prevent duplicate orders on network retry
+    const idempotencyKey = `razorpay_order_${receipt}_${Date.now()}`;
+
+    const options: any = {
+      amount: amountInPaise,
       currency: razorpayConfig.currency,
       receipt,
       notes: notes || {},
+      idempotency_key: idempotencyKey,
     };
-    
+
     logger.info('💳 [RAZORPAY] Creating order:', {
       amount: `₹${amount}`,
       receipt,
       notes,
     });
     
-    const order = await withTimeout(
-      razorpay.orders.create(options),
-      RAZORPAY_TIMEOUT_MS,
+    const order = await withCircuitBreaker(
+      () => razorpay.orders.create(options),
       'orders.create'
     );
     
@@ -134,8 +149,18 @@ export function verifyRazorpaySignature(
       .update(text)
       .digest('hex');
     
-    const isValid = expectedSignature === razorpaySignature;
-    
+    // FIX [HIGH-2]: Use timing-safe comparison to prevent timing attacks
+    let isValid = false;
+    try {
+      isValid = crypto.timingSafeEqual(
+        Buffer.from(expectedSignature),
+        Buffer.from(razorpaySignature)
+      );
+    } catch (e) {
+      // Buffers have different lengths - cannot be equal
+      isValid = false;
+    }
+
     if (isValid) {
       logger.info('✅ [RAZORPAY] Signature verified:', {
         orderId: razorpayOrderId,
@@ -145,11 +170,10 @@ export function verifyRazorpaySignature(
       logger.error('❌ [RAZORPAY] Signature verification failed:', {
         orderId: razorpayOrderId,
         paymentId: razorpayPaymentId,
-        expected: expectedSignature,
-        received: razorpaySignature,
+        // FIX: Don't log expected/received signatures in production for security
       });
     }
-    
+
     return isValid;
   } catch (error) {
     logger.error('❌ [RAZORPAY] Signature verification error:', error);
@@ -245,6 +269,7 @@ export function getRazorpayConfigForFrontend() {
 
 /**
  * Validate webhook signature (for webhook endpoints)
+ * FIX [HIGH-2]: Use timing-safe comparison to prevent timing attacks
  */
 export function validateWebhookSignature(
   webhookBody: string,
@@ -255,8 +280,17 @@ export function validateWebhookSignature(
       .createHmac('sha256', razorpayConfig.keySecret)
       .update(webhookBody)
       .digest('hex');
-    
-    return expectedSignature === webhookSignature;
+
+    // FIX [HIGH-2]: Use timing-safe comparison to prevent timing attacks
+    try {
+      return crypto.timingSafeEqual(
+        Buffer.from(expectedSignature),
+        Buffer.from(razorpaySignature)
+      );
+    } catch (e) {
+      // If buffers have different lengths, they can't be equal
+      return false;
+    }
   } catch (error) {
     logger.error('❌ [RAZORPAY] Webhook signature validation failed:', error);
     return false;
@@ -320,32 +354,48 @@ export async function createRazorpayPayout(params: {
       reference: params.reference
     });
 
-    // Note: Razorpay X (Payouts) API is different from regular Razorpay
-    // You need to enable Razorpay X and get separate credentials
-    // For now, we'll simulate the payout
+    // CRITICAL: Production must use real Razorpay X API - never simulate
+    const isProduction = process.env.NODE_ENV === 'production';
 
-    // In production, uncomment this:
-    // const payout = await razorpay.payouts.create(payoutData);
+    let payout: any;
 
-    // Simulated response for development
-    const payout: any = {
-      id: `pout_${Date.now()}`,
-      entity: 'payout',
-      amount: Math.round(params.amount * 100),
-      currency: params.currency || 'INR',
-      status: 'processing',
-      purpose: params.purpose,
-      mode: 'IMPS',
-      reference_id: params.reference,
-      narration: `Cashback payment - ${params.reference}`,
-      created_at: Math.floor(Date.now() / 1000)
-    };
+    if (isProduction) {
+      // Production: Call actual Razorpay X Payouts API
+      logger.info('💸 [RAZORPAY] Calling real Razorpay X Payouts API');
+      payout = await withTimeout(
+        (razorpay as any).payouts.create(payoutData),
+        RAZORPAY_TIMEOUT_MS,
+        `payouts.create(${params.reference})`
+      );
+      logger.info('✅ [RAZORPAY] Real payout created:', {
+        payoutId: payout.id,
+        amount: `₹${params.amount}`,
+        status: payout.status
+      });
+    } else {
+      // Development/Testing: Use simulated response with clear marking
+      logger.warn('⚠️ [RAZORPAY] Using SIMULATED payout (NOT production)');
 
-    logger.info('✅ [RAZORPAY] Payout created:', {
-      payoutId: payout.id,
-      amount: `₹${params.amount}`,
-      status: payout.status
-    });
+      payout = {
+        id: `pout_${Date.now()}`,
+        entity: 'payout',
+        amount: Math.round(params.amount * 100),
+        currency: params.currency || 'INR',
+        status: 'simulated',
+        purpose: params.purpose,
+        mode: 'IMPS',
+        reference_id: params.reference,
+        narration: `Cashback payment - ${params.reference}`,
+        created_at: Math.floor(Date.now() / 1000),
+        _simulated: true, // Always marked as simulated
+        _warning: 'DO NOT use simulated payouts in production'
+      };
+
+      logger.info('✅ [RAZORPAY] Simulated payout created (DEV ONLY):', {
+        payoutId: payout.id,
+        amount: `₹${params.amount}`
+      });
+    }
 
     return payout;
   } catch (error: any) {

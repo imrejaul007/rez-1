@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { CashbackStatus } from '@/services/serviceBookingApi';
 import { colors } from '@/constants/theme';
 import { useGetCurrencySymbol } from '@/stores/selectors';

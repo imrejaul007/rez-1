@@ -1,0 +1,97 @@
+
+=== Safe cleanup analysis ===
+
+Total source files: 2396
+Truly dead files:    113 (0.76 MB)
+Skipped:
+  Type files:          99
+  Routes (app/):       594
+  Side-effect imports: 0
+  Identifier in bundle: 227
+  Example files:       6
+
+=== Files safe to remove ===
+
+  hooks/ (25 files, 169.2 KB)
+       9.0 KB  hooks/useAccessibility.ts
+       2.5 KB  hooks/useAnalytics.ts
+       4.7 KB  hooks/useEarningsSocket.ts
+    ... and 22 more
+  utils/ (24 files, 213.5 KB)
+       8.8 KB  utils/dateUtils.ts
+      10.1 KB  utils/deal-conflict-detection.ts
+      10.9 KB  utils/deal-recommendations.ts
+    ... and 21 more
+  services/ (18 files, 181.4 KB)
+      11.4 KB  services/cacheWarmingService.ts
+      14.2 KB  services/cameraService.ts
+       7.8 KB  services/earningProjectsApi.ts
+    ... and 15 more
+  components/homepage/lazyGroups/ (6 files, 2.3 KB)
+       0.1 KB  components/homepage/lazyGroups/categoryListSections.ts
+       0.5 KB  components/homepage/lazyGroups/categorySections.ts
+       0.4 KB  components/homepage/lazyGroups/dealSections.ts
+    ... and 3 more
+  components/ (5 files, 10.9 KB)
+       2.7 KB  components/CoinInfoCard.tsx
+       0.8 KB  components/ExternalLink.tsx
+       0.7 KB  components/HapticTab.tsx
+    ... and 2 more
+  components/lazy/ (4 files, 45.2 KB)
+       1.7 KB  components/lazy/LazyLoadWrapper.tsx
+      12.9 KB  components/lazy/LazyModals.tsx
+      15.0 KB  components/lazy/LazyRoutes.tsx
+    ... and 1 more
+  components/common/ (3 files, 9.2 KB)
+       8.5 KB  components/common/LazyImage.tsx
+       0.3 KB  components/common/mobile.ts
+       0.3 KB  components/common/states.ts
+  components/events/ (3 files, 23.8 KB)
+       8.1 KB  components/events/EventHeader.tsx
+       4.9 KB  components/events/EventSchedule.tsx
+      10.8 KB  components/events/EventTicketing.tsx
+  components/store/ (3 files, 23.0 KB)
+       3.4 KB  components/store/CrossStoreProductsSection.types.ts
+       3.3 KB  components/store/StoreProductGrid.tsx
+      16.3 KB  components/store/STORE_FOLLOW_BUTTON_INTEGRATION_EXAMPLES.tsx
+  components/categories/ (2 files, 8.6 KB)
+       2.4 KB  components/categories/CategoryIconGrid.tsx
+       6.2 KB  components/categories/CategoryImageCard.tsx
+  components/gamification/ (2 files, 6.9 KB)
+       1.6 KB  components/gamification/AchievementToastManager.tsx
+       5.4 KB  components/gamification/OptimizedGameCard.tsx
+  contexts/ (2 files, 13.3 KB)
+       4.6 KB  contexts/ComparisonContext.tsx
+       8.7 KB  contexts/LazyContexts.tsx
+  hooks/queries/ (2 files, 2.3 KB)
+       1.8 KB  hooks/queries/useHomepageData.ts
+       0.5 KB  hooks/queries/useUserBoot.ts
+  config/ (2 files, 4.7 KB)
+       4.6 KB  config/categoryStaticData.ts
+       0.1 KB  config/checkoutConfig.ts
+  components/account/ (1 files, 5.7 KB)
+       5.7 KB  components/account/TrustScoreCard.tsx
+  components/action-pages/ (1 files, 6.5 KB)
+       6.5 KB  components/action-pages/FastDeliveryFood.tsx
+  components/cart/ (1 files, 4.5 KB)
+       4.5 KB  components/cart/CartSocketIntegration.tsx
+  components/events/hooks/ (1 files, 18.2 KB)
+      18.2 KB  components/events/hooks/useEventPage.ts
+  components/homepage/ (1 files, 2.3 KB)
+       2.3 KB  components/homepage/NuqtaPlusUpsellCard.tsx
+  components/onboarding/ (1 files, 1.1 KB)
+       1.1 KB  components/onboarding/OnboardingContainer.tsx
+  components/playPage/ (1 files, 0.7 KB)
+       0.7 KB  components/playPage/VideoVisibilityManager.tsx
+  components/product/ (1 files, 12.9 KB)
+      12.9 KB  components/product/QA_PHOTOS_INTEGRATION_EXAMPLE.tsx
+  components/ui/ (1 files, 0.5 KB)
+       0.5 KB  components/ui/TabBarBackground.ios.tsx
+  hooks/b/travel/ (1 files, 8.9 KB)
+       8.9 KB  hooks/b/travel/useTravelBooking.ts
+  services/analytics/providers/ (1 files, 5.0 KB)
+       5.0 KB  services/analytics/providers/FirebaseProvider.ts
+  constants/ (1 files, 1.9 KB)
+       1.9 KB  constants/Colors.ts
+
+DRY RUN — would move 113 files to .trash/

@@ -5,11 +5,12 @@ import { View, ScrollView, StyleSheet, RefreshControl, Pressable, Platform } fro
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring } from 'react-native-reanimated';
+  withSpring,
+  cancelAnimation } from 'react-native-reanimated';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
@@ -17,13 +18,22 @@ import { usePlayPageData } from '@/hooks/usePlayPageData';
 import { UGCVideoItem, CategoryTab, PLAY_PAGE_COLORS } from '@/types/playPage.types';
 import { Article } from '@/types/article.types';
 import { useVideoPreload } from '@/services/videoPreloadService';
-import { useIsAuthenticated } from '@/stores';
+import { useIsAuthenticated } from '@/stores/selectors';
 import LoadingState from '@/components/common/LoadingState';
 import ErrorState from '@/components/common/ErrorState';
-import articlesService from '@/services/articlesApi';
 
 // CategoryHeader stays eager — used in error/loading states before content renders
 import CategoryHeader from '@/components/playPage/CategoryHeader';
+
+// articlesService (22.5 KB) is only used inside fetchArticles, which runs from
+// useEffect after first paint. Defer the import so the heavy apiClient +
+// articles types are not pulled into the initial Play tab bundle. In test
+// environments (jest) we keep the eager import since dynamic import() requires
+// --experimental-vm-modules and tests typically mock at the module boundary.
+const _useLazyArticles = typeof jest === 'undefined';
+const getArticlesService = _useLazyArticles
+  ? () => import('@/services/articlesApi').then(m => m.default)
+  : () => Promise.resolve(require('@/services/articlesApi').default);
 
 // Lazy-loaded content sections (play tab is never the initial screen)
 // Note: Using direct imports in test environments where React.lazy dynamic
@@ -78,6 +88,7 @@ function PlayScreen() {
 
       logger.debug('📰 [PlayPage] Fetching articles...');
 
+      const articlesService = await getArticlesService();
       const response = await articlesService.getArticles({
         page: 1,
         limit: 6,
@@ -105,6 +116,10 @@ function PlayScreen() {
   // Animate FAB entrance on mount & fetch articles
   React.useEffect(() => {
     fabScale.value = withSpring(1, { damping: 12, stiffness: 40 });
+
+    // Cancel the spring animation on unmount to avoid "tried to assign to
+    // value of already destroyed/shared value" warnings on rapid remount.
+    return () => cancelAnimation(fabScale);
 
     // Fetch articles on mount
     fetchArticles();

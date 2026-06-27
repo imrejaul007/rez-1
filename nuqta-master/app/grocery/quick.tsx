@@ -18,7 +18,7 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import GroceryProductCard from '@/components/grocery/GroceryProductCard';
 import GroceryStoreCard from '@/components/grocery/GroceryStoreCard';
 import { GroceryHubSkeleton } from '@/components/grocery/GrocerySkeleton';
@@ -170,7 +170,7 @@ const QuickDeliveryPage: React.FC = () => {
   const handleAddToCart = async (product: any) => {
     try {
       const productId = product.id || product._id;
-      await cartApi.addToCart(productId, 1);
+      await cartApi.addToCart({ productId, quantity: 1 });
     } catch (err: any) {
       platformAlertSimple('Error', err?.message || 'Failed to add item to cart. Please try again.');
     }

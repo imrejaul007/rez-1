@@ -10,7 +10,7 @@ import {
   Linking,
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { FAQSuggestion } from '@/types/supportChat.types';
 import { colors } from '@/constants/theme';
 import { catchAndWarn } from '@/utils/catchAndReport';

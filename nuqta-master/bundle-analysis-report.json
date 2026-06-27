@@ -1,31 +1,373 @@
 {
-  "timestamp": "2025-11-14T15:10:33.971Z",
-  "totalSize": 12993385,
+  "timestamp": "2026-06-24T06:34:26.651Z",
+  "totalSize": 30910740,
   "assets": {
-    "totalSize": 1588749,
-    "fileCount": 24,
+    "totalSize": 4854725,
+    "fileCount": 122,
     "byType": {
-      ".ttf": {
-        "count": 1,
-        "size": 93252,
+      ".png": {
+        "count": 118,
+        "size": 3889414,
         "files": [
           {
-            "path": "fonts/SpaceMono-Regular.ttf",
-            "size": 93252
-          }
-        ]
-      },
-      ".png": {
-        "count": 22,
-        "size": 1362567,
-        "files": [
+            "path": "category-icons/BEAUTY-WELLNESS/Beauty-services.png",
+            "size": 20229
+          },
+          {
+            "path": "category-icons/BEAUTY-WELLNESS/Cosmetics.png",
+            "size": 30311
+          },
+          {
+            "path": "category-icons/BEAUTY-WELLNESS/Cosmetology.png",
+            "size": 15423
+          },
+          {
+            "path": "category-icons/BEAUTY-WELLNESS/Dermatology.png",
+            "size": 10937
+          },
+          {
+            "path": "category-icons/BEAUTY-WELLNESS/Men-grooming.png",
+            "size": 10334
+          },
+          {
+            "path": "category-icons/BEAUTY-WELLNESS/nail.png",
+            "size": 8271
+          },
+          {
+            "path": "category-icons/BEAUTY-WELLNESS/Salons.png",
+            "size": 19562
+          },
+          {
+            "path": "category-icons/BEAUTY-WELLNESS/Skincare-cosmetics.png",
+            "size": 36131
+          },
+          {
+            "path": "category-icons/BEAUTY-WELLNESS/Spa-massage.png",
+            "size": 20500
+          },
+          {
+            "path": "category-icons/EDUCATION-LEARNING/Coaching-center.png",
+            "size": 15186
+          },
+          {
+            "path": "category-icons/EDUCATION-LEARNING/Language-training.png",
+            "size": 10078
+          },
+          {
+            "path": "category-icons/EDUCATION-LEARNING/Music-dance-classes.png",
+            "size": 12953
+          },
+          {
+            "path": "category-icons/EDUCATION-LEARNING/Skill-development.png",
+            "size": 14410
+          },
+          {
+            "path": "category-icons/EDUCATION-LEARNING/Vocational.png",
+            "size": 13607
+          },
+          {
+            "path": "category-icons/ELECTRONICS/Accessories.png",
+            "size": 16661
+          },
+          {
+            "path": "category-icons/ELECTRONICS/Audio-headphones.png",
+            "size": 21951
+          },
+          {
+            "path": "category-icons/ELECTRONICS/Cameras.png",
+            "size": 26224
+          },
+          {
+            "path": "category-icons/ELECTRONICS/Gaming.png",
+            "size": 28341
+          },
+          {
+            "path": "category-icons/ELECTRONICS/Laptops.png",
+            "size": 25674
+          },
+          {
+            "path": "category-icons/ELECTRONICS/Mobile-phones.png",
+            "size": 26459
+          },
+          {
+            "path": "category-icons/ELECTRONICS/Smartwatches.png",
+            "size": 18989
+          },
+          {
+            "path": "category-icons/ELECTRONICS/Televisions.png",
+            "size": 19932
+          },
+          {
+            "path": "category-icons/ENTERTAINMENT/Amusement-parks.png",
+            "size": 19540
+          },
+          {
+            "path": "category-icons/ENTERTAINMENT/Festivals.png",
+            "size": 18279
+          },
+          {
+            "path": "category-icons/ENTERTAINMENT/Gaming-cafes.png",
+            "size": 16143
+          },
+          {
+            "path": "category-icons/ENTERTAINMENT/Live-events.png",
+            "size": 18607
+          },
+          {
+            "path": "category-icons/ENTERTAINMENT/Movies.png",
+            "size": 12419
+          },
+          {
+            "path": "category-icons/ENTERTAINMENT/Virtual-reality.png",
+            "size": 9920
+          },
+          {
+            "path": "category-icons/ENTERTAINMENT/Workshops.png",
+            "size": 16123
+          },
+          {
+            "path": "category-icons/FINANCIAL-LIFESTYLE/Bill-payments.png",
+            "size": 6357
+          },
+          {
+            "path": "category-icons/FINANCIAL-LIFESTYLE/Broadband.png",
+            "size": 8650
+          },
+          {
+            "path": "category-icons/FINANCIAL-LIFESTYLE/Donations.png",
+            "size": 10892
+          },
+          {
+            "path": "category-icons/FINANCIAL-LIFESTYLE/Gold-savings.png",
+            "size": 16448
+          },
+          {
+            "path": "category-icons/FINANCIAL-LIFESTYLE/Insurance.png",
+            "size": 9157
+          },
+          {
+            "path": "category-icons/FINANCIAL-LIFESTYLE/Mobile-recharge.png",
+            "size": 10312
+          },
+          {
+            "path": "category-icons/FINANCIAL-LIFESTYLE/OTT.png",
+            "size": 13031
+          },
+          {
+            "path": "category-icons/FITNESS-SPORTS/CrossFit.png",
+            "size": 12893
+          },
+          {
+            "path": "category-icons/FITNESS-SPORTS/Gyms.png",
+            "size": 9103
+          },
+          {
+            "path": "category-icons/FITNESS-SPORTS/Martial-arts.png",
+            "size": 14739
+          },
+          {
+            "path": "category-icons/FITNESS-SPORTS/Sports-academies.png",
+            "size": 16302
+          },
+          {
+            "path": "category-icons/FITNESS-SPORTS/Sportswear.png",
+            "size": 18341
+          },
+          {
+            "path": "category-icons/FITNESS-SPORTS/Yoga.png",
+            "size": 22716
+          },
+          {
+            "path": "category-icons/FITNESS-SPORTS/Zumba.png",
+            "size": 11198
+          },
+          {
+            "path": "category-icons/FOOD-DINING/Bakery-confectionery.png",
+            "size": 22368
+          },
+          {
+            "path": "category-icons/FOOD-DINING/Cafes.png",
+            "size": 18049
+          },
+          {
+            "path": "category-icons/FOOD-DINING/Cloud-kitchens.png",
+            "size": 21350
+          },
+          {
+            "path": "category-icons/FOOD-DINING/Family-restaurants.png",
+            "size": 20049
+          },
+          {
+            "path": "category-icons/FOOD-DINING/Fine-dining.png",
+            "size": 12356
+          },
+          {
+            "path": "category-icons/FOOD-DINING/Ice-cream-dessert.png",
+            "size": 15624
+          },
+          {
+            "path": "category-icons/FOOD-DINING/QSR-Fast-food.png",
+            "size": 18867
+          },
+          {
+            "path": "category-icons/FOOD-DINING/Street-food.png",
+            "size": 14499
+          },
+          {
+            "path": "category-icons/GROCERY-ESSENTIALS/Dairy.png",
+            "size": 13273
+          },
+          {
+            "path": "category-icons/GROCERY-ESSENTIALS/Fresh-vegetables.png",
+            "size": 23599
+          },
+          {
+            "path": "category-icons/GROCERY-ESSENTIALS/Kirana-Stores.png",
+            "size": 14863
+          },
+          {
+            "path": "category-icons/GROCERY-ESSENTIALS/Meat-fish.png",
+            "size": 74908
+          },
+          {
+            "path": "category-icons/GROCERY-ESSENTIALS/Packaged-goods.png",
+            "size": 58171
+          },
+          {
+            "path": "category-icons/GROCERY-ESSENTIALS/Supermarkets.png",
+            "size": 18996
+          },
+          {
+            "path": "category-icons/GROCERY-ESSENTIALS/water-cans.png",
+            "size": 12808
+          },
+          {
+            "path": "category-icons/HEALTHCARE/Clinics.png",
+            "size": 14328
+          },
+          {
+            "path": "category-icons/HEALTHCARE/Dental.png",
+            "size": 11372
+          },
+          {
+            "path": "category-icons/HEALTHCARE/Diagnostics.png",
+            "size": 15653
+          },
+          {
+            "path": "category-icons/HEALTHCARE/Home-nursing.png",
+            "size": 17723
+          },
+          {
+            "path": "category-icons/HEALTHCARE/Pharmacy.png",
+            "size": 13394
+          },
+          {
+            "path": "category-icons/HEALTHCARE/Physiotherapy.png",
+            "size": 17742
+          },
+          {
+            "path": "category-icons/HEALTHCARE/Vision-eyewear.png",
+            "size": 8913
+          },
+          {
+            "path": "category-icons/HOME-SERVICES/AC-repair.png",
+            "size": 16908
+          },
+          {
+            "path": "category-icons/HOME-SERVICES/Cleaning.png",
+            "size": 13167
+          },
+          {
+            "path": "category-icons/HOME-SERVICES/Electrical.png",
+            "size": 18491
+          },
+          {
+            "path": "category-icons/HOME-SERVICES/Home-tutors.png",
+            "size": 16067
+          },
+          {
+            "path": "category-icons/HOME-SERVICES/House-shifting.png",
+            "size": 7877
+          },
+          {
+            "path": "category-icons/HOME-SERVICES/Laundry-dry-cleaning.png",
+            "size": 12005
+          },
+          {
+            "path": "category-icons/HOME-SERVICES/Pest-control.png",
+            "size": 9371
+          },
+          {
+            "path": "category-icons/HOME-SERVICES/Plumbing.png",
+            "size": 15271
+          },
+          {
+            "path": "category-icons/Shopping/Bags.png",
+            "size": 43676
+          },
+          {
+            "path": "category-icons/Shopping/Electronics.png",
+            "size": 13651
+          },
+          {
+            "path": "category-icons/Shopping/Fashion.png",
+            "size": 16010
+          },
+          {
+            "path": "category-icons/Shopping/footwear.png",
+            "size": 19861
+          },
+          {
+            "path": "category-icons/Shopping/Jewelry.png",
+            "size": 9816
+          },
+          {
+            "path": "category-icons/Shopping/Local-brands.png",
+            "size": 44822
+          },
+          {
+            "path": "category-icons/Shopping/Mobile-accessories.png",
+            "size": 9005
+          },
+          {
+            "path": "category-icons/Shopping/Watches.png",
+            "size": 21538
+          },
+          {
+            "path": "category-icons/TRAVEL-EXPERIENCES/Activities.png",
+            "size": 16716
+          },
+          {
+            "path": "category-icons/TRAVEL-EXPERIENCES/Airport-services.png",
+            "size": 22554
+          },
+          {
+            "path": "category-icons/TRAVEL-EXPERIENCES/Bike-rentals.png",
+            "size": 16175
+          },
+          {
+            "path": "category-icons/TRAVEL-EXPERIENCES/Hotels.png",
+            "size": 19467
+          },
+          {
+            "path": "category-icons/TRAVEL-EXPERIENCES/Intercity-travel.png",
+            "size": 10656
+          },
+          {
+            "path": "category-icons/TRAVEL-EXPERIENCES/taxis.png",
+            "size": 13428
+          },
+          {
+            "path": "category-icons/TRAVEL-EXPERIENCES/Tours.png",
+            "size": 11424
+          },
+          {
+            "path": "category-icons/TRAVEL-EXPERIENCES/Weekend-getaways.png",
+            "size": 17385
+          },
           {
             "path": "images/adaptive-icon.png",
             "size": 17547
-          },
-          {
-            "path": "images/bag.png",
-            "size": 7808
           },
           {
             "path": "images/card1.png",
@@ -53,35 +395,31 @@
           },
           {
             "path": "images/favicon.png",
-            "size": 1466
+            "size": 5671
+          },
+          {
+            "path": "images/globe-banner.png",
+            "size": 68270
           },
           {
             "path": "images/icon.png",
             "size": 22380
           },
           {
-            "path": "images/order-now.png",
-            "size": 3002
+            "path": "images/nuqta-coin.png",
+            "size": 57739
           },
           {
-            "path": "images/partial-react-logo.png",
-            "size": 5075
+            "path": "images/nuqta-logo.png",
+            "size": 58829
+          },
+          {
+            "path": "images/promo-banner.png",
+            "size": 684361
           },
           {
             "path": "images/promo-coin.png",
             "size": 3160
-          },
-          {
-            "path": "images/react-logo.png",
-            "size": 6341
-          },
-          {
-            "path": "images/react-logo@2x.png",
-            "size": 14225
-          },
-          {
-            "path": "images/react-logo@3x.png",
-            "size": 21252
           },
           {
             "path": "images/scratch-offer.png",
@@ -90,6 +428,42 @@
           {
             "path": "images/splash-icon.png",
             "size": 17547
+          },
+          {
+            "path": "images/stores/alliance-store.png",
+            "size": 7445
+          },
+          {
+            "path": "images/stores/cash-store.png",
+            "size": 8180
+          },
+          {
+            "path": "images/stores/fast-delivery.png",
+            "size": 6872
+          },
+          {
+            "path": "images/stores/lowest-price.png",
+            "size": 6819
+          },
+          {
+            "path": "images/stores/luxury-store.png",
+            "size": 8714
+          },
+          {
+            "path": "images/stores/one-rupee-store.png",
+            "size": 4499
+          },
+          {
+            "path": "images/stores/organic.png",
+            "size": 7994
+          },
+          {
+            "path": "images/stores/shopping-bags.png",
+            "size": 62600
+          },
+          {
+            "path": "images/tabs/rez-mall.png",
+            "size": 10444
           },
           {
             "path": "images/wallet1.png",
@@ -109,6 +483,16 @@
           }
         ]
       },
+      ".ttf": {
+        "count": 1,
+        "size": 93252,
+        "files": [
+          {
+            "path": "fonts/SpaceMono-Regular.ttf",
+            "size": 93252
+          }
+        ]
+      },
       ".jpg": {
         "count": 1,
         "size": 132930,
@@ -118,9 +502,35 @@
             "size": 132930
           }
         ]
+      },
+      ".gif": {
+        "count": 2,
+        "size": 739129,
+        "files": [
+          {
+            "path": "images/nuqta-coin-animated.gif",
+            "size": 370769
+          },
+          {
+            "path": "images/pay-in-store-icon-compressed.gif",
+            "size": 368360
+          }
+        ]
       }
     },
     "largeFiles": [
+      {
+        "path": "images/promo-banner.png",
+        "size": 684361
+      },
+      {
+        "path": "images/nuqta-coin-animated.gif",
+        "size": 370769
+      },
+      {
+        "path": "images/pay-in-store-icon-compressed.gif",
+        "size": 368360
+      },
       {
         "path": "images/card3.png",
         "size": 347673
@@ -144,13 +554,12 @@
     ]
   },
   "dependencies": {
-    "totalDeps": 81,
-    "prodDeps": 65,
-    "devDeps": 16,
+    "totalDeps": 87,
+    "prodDeps": 70,
+    "devDeps": 17,
     "heavyDeps": [
       "@expo/vector-icons",
       "@stripe/stripe-react-native",
-      "axios",
       "expo",
       "react-native",
       "react-native-reanimated",
@@ -159,37 +568,37 @@
     ]
   },
   "sourceCode": {
-    "totalSize": 11404636,
+    "totalSize": 26056015,
     "sizes": {
-      "app": 3818622,
-      "components": 4370415,
-      "services": 1535464,
-      "hooks": 868219,
-      "utils": 811916
+      "app": 11370080,
+      "components": 10054980,
+      "services": 2196677,
+      "hooks": 1620299,
+      "utils": 813979
     }
   },
   "opportunities": [
     {
       "type": "images",
       "severity": "high",
-      "description": "Large image assets detected (1.43 MB)",
+      "description": "Large image assets detected (3.84 MB)",
       "suggestion": "Convert images to WebP format and compress them",
-      "potentialSavings": 598199
+      "potentialSavings": 1608938
     },
     {
       "type": "assets",
       "severity": "medium",
-      "description": "5 large asset files detected",
+      "description": "8 large asset files detected",
       "suggestion": "Review and optimize large assets",
-      "potentialSavings": 337838
+      "potentialSavings": 764885
     },
     {
       "type": "dependencies",
       "severity": "medium",
-      "description": "8 heavy dependencies installed",
+      "description": "7 heavy dependencies installed",
       "suggestion": "Review if all features are needed, consider tree-shaking",
       "potentialSavings": null
     }
   ],
-  "potentialSavings": 936037
+  "potentialSavings": 2373823
 }

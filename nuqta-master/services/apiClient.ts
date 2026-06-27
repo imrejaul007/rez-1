@@ -3,7 +3,20 @@
 
 import { Platform } from 'react-native';
 import { parseConnectionError, formatConnectionError, isConnectionError } from '@/utils/connectionUtils';
-import { Sentry } from '@/config/sentry';
+// Sentry is lazy-loaded: it pulls in 220+ modules. Only the error reporting
+// path needs it, so we defer the import until the first API error occurs.
+let _sentry: any = null;
+async function getSentry() {
+  if (_sentry !== null) return _sentry;
+  try {
+    const mod = await import('@/config/sentry');
+    _sentry = mod.Sentry;
+    return _sentry;
+  } catch {
+    _sentry = false;
+    return null;
+  }
+}
 import { globalDeduplicator, createRequestKey } from '@/utils/requestDeduplicator';
 import { globalConcurrencyLimiter } from '@/utils/concurrencyLimiter';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -472,21 +485,28 @@ class ApiClient {
     } catch (error) {
       if (slowWarningId) clearTimeout(slowWarningId);
 
-      // Report API errors to Sentry with tier tags for filtering
+      // Report API errors to Sentry with tier tags for filtering (lazy-loaded)
       try {
         const { useSubscriptionStore } = require('@/stores/subscriptionStore');
         const { usePriveStore } = require('@/stores/priveStore');
         const subComputed = useSubscriptionStore.getState().computed;
         const priveEligibility = usePriveStore.getState().eligibility;
+        const errorType = error instanceof Error && error.name === 'AbortError' ? 'timeout'
+          : error instanceof Error && isConnectionError(error) ? 'network' : 'api';
+        const actualError = error instanceof Error ? error : new Error(String(error));
 
-        Sentry?.withScope?.((scope: any) => {
-          scope.setTag('endpoint', endpoint);
-          scope.setTag('method', method);
-          scope.setTag('user_tier', subComputed?.isVIP ? 'vip' : subComputed?.isPremium ? 'premium' : 'free');
-          scope.setTag('prive_tier', priveEligibility?.tier ?? 'none');
-          scope.setTag('error_type', error instanceof Error && error.name === 'AbortError' ? 'timeout'
-            : error instanceof Error && isConnectionError(error) ? 'network' : 'api');
-          Sentry.captureException(error instanceof Error ? error : new Error(String(error)));
+        getSentry().then((Sentry) => {
+          if (!Sentry) return;
+          try {
+            Sentry.withScope?.((scope: any) => {
+              scope.setTag('endpoint', endpoint);
+              scope.setTag('method', method);
+              scope.setTag('user_tier', subComputed?.isVIP ? 'vip' : subComputed?.isPremium ? 'premium' : 'free');
+              scope.setTag('prive_tier', priveEligibility?.tier ?? 'none');
+              scope.setTag('error_type', errorType);
+              Sentry.captureException(actualError);
+            });
+          } catch {}
         });
       } catch {
         // Sentry/store unavailable — don't block error handling

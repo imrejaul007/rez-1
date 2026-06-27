@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { TrendingHashtagsSectionProps, TrendingHashtag } from '@/types/categoryTypes';
 import { colors } from '@/constants/theme';
 

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FormPageSkeleton } from '@/components/skeletons';
 import { ThemedText } from '@/components/ThemedText';
@@ -435,7 +435,7 @@ You will receive a confirmation message at ${customerPhone}${customerEmail ? ` a
 
                 return (
                   <Pressable
-                    key={index}
+                    key={date.toISOString()}
                     onPress={() => {
                       setSelectedDate(date);
                       setSelectedTime(null); // Reset time when date changes

@@ -1,12 +1,12 @@
 // @ts-nocheck
-import React, { useMemo, useEffect, useState, useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   Pressable,
   StyleSheet,
   View,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { RecommendationCardProps } from '@/types/homepage.types';
@@ -20,24 +20,6 @@ import { formatPrice } from '@/utils/priceFormatter';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
 
-// Custom comparison function for React.memo
-const arePropsEqual = (prevProps: RecommendationCardProps, nextProps: RecommendationCardProps) => {
-  const prevRec = prevProps.recommendation;
-  const nextRec = nextProps.recommendation;
-
-  return (
-    (prevRec._id || prevRec.id) === (nextRec._id || nextRec.id) &&
-    prevProps.width === nextProps.width &&
-    prevProps.showReason === nextProps.showReason &&
-    prevRec.name === nextRec.name &&
-    prevRec.price.current === nextRec.price.current &&
-    prevRec.price.original === nextRec.price.original &&
-    prevRec.rating?.value === nextRec.rating?.value &&
-    prevRec.inventory?.stock === nextRec.inventory?.stock &&
-    prevRec.availabilityStatus === nextRec.availabilityStatus
-  );
-};
-
 function RecommendationCard({
   recommendation,
   onPress,
@@ -49,8 +31,7 @@ function RecommendationCard({
   const cartActions = useCartActions();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { subscribe, subscribing } = useStockNotifications();
-  const [, forceUpdate] = useState({});
-  const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
+  const [isTogglingWishlist, setIsTogglingWishlist] = React.useState(false);
   const isMounted = useIsMounted();
 
   // Stock status
@@ -60,11 +41,6 @@ function RecommendationCard({
     stock,
     lowStockThreshold,
   });
-
-  // Force re-render when cart changes
-  useEffect(() => {
-    forceUpdate({});
-  }, [cartState.items.length, cartState.items]);
 
   // Check if product is in cart and get quantity
   const { productId, cartItem, quantityInCart, isInCart } = useMemo(() => {
@@ -79,7 +55,7 @@ function RecommendationCard({
       quantityInCart: qty,
       isInCart: inCart
     };
-  }, [recommendation._id, recommendation.id, cartState.items, cartState.items.length]);
+  }, [recommendation._id, recommendation.id, cartState.items]);
   // Get currency from recommendation data
   const productCurrency = useMemo(() => {
     return recommendation.price?.currency || recommendation.pricing?.currency || 'INR';
@@ -388,7 +364,7 @@ function RecommendationCard({
   );
 }
 
-export default React.memo(RecommendationCard, arePropsEqual);
+export default React.memo(RecommendationCard);
 
 const styles = StyleSheet.create({
   container: {

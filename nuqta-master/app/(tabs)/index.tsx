@@ -18,40 +18,18 @@ import ReAnimated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { platformAlertSimple } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import {
-  useGetCurrencySymbol,
-  useGetCurrency,
-  useGetLocale,
-  useAuthUser,
-  useAuthActions,
-  useIsAuthenticated,
-  useCartItemCount,
-  useCartActions,
-  useRefreshCart,
-  useRezBalance,
-  useWalletData,
-  useWalletLoading,
-  useRefreshWallet,
-  useSavingsInsights,
-  useActiveTab,
-  useSetActiveTab,
-  usePriveEligibility,
-  useIsPriveEligible,
-  useActiveHomeTab,
-  useSetActiveHomeTab,
-  useRegisterScrollToTop,
-} from '@/stores';
+import { useGetCurrencySymbol, useGetCurrency, useGetLocale, useAuthUser, useAuthActions, useIsAuthenticated, useCartItemCount, useCartActions, useRefreshCart, useRezBalance, useWalletData, useWalletLoading, useRefreshWallet, useSavingsInsights, useActiveTab, useSetActiveTab, usePriveEligibility, useIsPriveEligible, useActiveHomeTab, useSetActiveHomeTab, useRegisterScrollToTop } from '@/stores/selectors';
 import { useProfile, useProfileMenu } from '@/contexts/ProfileContext';
 import { useUserIdentityStore } from '@/stores/userIdentityStore';
 
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import FeatureErrorBoundary from '@/components/common/FeatureErrorBoundary';
 import { colors, spacing, borderRadius, shadows, typography } from '@/constants/theme';
-import StickySearchHeader from '@/components/homepage/StickySearchHeader';
-import HeroBanner from '@/components/homepage/HeroBanner';
+const StickySearchHeader = React.lazy(() => import('@/components/homepage/StickySearchHeader'));
+const HeroBanner = React.lazy(() => import('@/components/homepage/HeroBanner'));
 import type { TabId } from '@/components/homepage/HomeTabSection';
 import { useHomepage, useHomepageNavigation } from '@/hooks/useHomepage';
 import { useLoyaltySection } from '@/hooks/useLoyaltySection';
@@ -80,33 +58,33 @@ const PriveSectionContainer = lazyWithRetry(() =>
 );
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 // ── B-feature additive slot: Savings widget (Phase 1.1) ──
-import SavingsWidget from '@/components/b/savings/SavingsWidget';
+const SavingsWidget = React.lazy(() => import('@/components/b/savings/SavingsWidget'));
 // ── B-feature additive slot: Coin Expiry Banner (Phase 1.2) ──
-import CoinExpiryBanner from '@/components/b/wallet/CoinExpiryBanner';
-import FeatureFlagGate from '@/components/b/_shared/FeatureFlagGate';
+const CoinExpiryBanner = React.lazy(() => import('@/components/b/wallet/CoinExpiryBanner'));
+const FeatureFlagGate = React.lazy(() => import('@/components/b/_shared/FeatureFlagGate'));
 // ── B-feature additive slot: Streak + REZ Score (Phase 1.3) ──
-import StreakFireIcon from '@/components/b/gamification/StreakFireIcon';
-import RezScoreCard from '@/components/b/gamification/RezScoreCard';
+const StreakFireIcon = React.lazy(() => import('@/components/b/gamification/StreakFireIcon'));
+const RezScoreCard = React.lazy(() => import('@/components/b/gamification/RezScoreCard'));
 import { useStreakDisplay } from '@/hooks/b/gamification/useStreakDisplay';
 // ── B-feature additive slot: Weekly Digest (Phase 1.4) ──
-import WeeklyDigestCard from '@/components/b/social/WeeklyDigestCard';
+const WeeklyDigestCard = React.lazy(() => import('@/components/b/social/WeeklyDigestCard'));
 // ── B-feature additive slot: Map View (Phase 1.5) ──
-import MapViewWidget from '@/components/b/map/MapViewWidget';
-
+const MapViewWidget = React.lazy(() => import('@/components/b/map/MapViewWidget'));
 // Profile now from Zustand store (imported above)
 import { profileMenuSections } from '@/constants/profileMenu';
-import LocationDisplay from '@/components/location/LocationDisplay';
+const LocationDisplay = React.lazy(() => import('@/components/location/LocationDisplay'));
 // LocationPickerModal lazy-loaded below (modal — only needed on tap)
 import { useCurrentLocation, useLocationPermission } from '@/hooks/useLocation';
 import { AddressSearchResult } from '@/types/location.types';
 // Cart & Auth now from Zustand selectors (imported above)
-import { HomepageCacheWarmer } from '@/services/homepageApi';
+// HomepageCacheWarmer is dynamically imported inside loadUserContext (only used in async paths)
+// to keep the 1200-line services/homepageApi.ts out of the entry bundle.
 // Wallet now from Zustand selectors (imported above)
-import StoriesRow from '@/components/whats-new/StoriesRow';
+const StoriesRow = React.lazy(() => import('@/components/whats-new/StoriesRow'));
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 // HomeTab now from Zustand selectors (imported above)
 import CachedImage, { prefetchImages } from '@/components/ui/CachedImage';
-import HomepageSkeleton from '@/components/homepage/HomepageSkeleton';
+const HomepageSkeleton = React.lazy(() => import('@/components/homepage/HomepageSkeleton'));
 import { BRAND } from '@/constants/brand';
 import { queryClient } from '@/lib/queryClient';
 import { queryKeys } from '@/lib/queryKeys';
@@ -114,6 +92,7 @@ import { queryKeys } from '@/lib/queryKeys';
 // ProfileMenuModal eagerly loaded — React.lazy + Suspense(null) causes modal to not appear on Android
 import ProfileMenuModal from '@/components/profile/ProfileMenuModal';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useSafeTimeouts } from '@/hooks/useSafeTimeouts';
 
 // Lazy-loaded components (below-the-fold / modals / secondary content)
 const HomeTabSection = lazyWithRetry(() => import('@/components/homepage/HomeTabSection'));
@@ -250,6 +229,7 @@ const BadgeAvatar: React.FC<BadgeAvatarProps> = React.memo(({ size = 24, color }
 
 function HomeScreen() {
   const isMounted = useIsMounted();
+  const { setSafeTimeout, clearSafeTimeout, clearAllTimeouts } = useSafeTimeouts();
   const router = useRouter();
   // Zustand selectors — each only re-renders when its specific value changes
   const getCurrencySymbol = useGetCurrencySymbol();
@@ -383,14 +363,14 @@ function HomeScreen() {
   React.useEffect(() => {
     if (IS_WEB) {
       // Already set to true on web — just prefetch in background
-      const webTimer = setTimeout(prefetchOtherTabs, 1000);
+      const webTimer = setSafeTimeout(prefetchOtherTabs, 1000);
       return () => clearTimeout(webTimer);
     }
     let prefetchTimer: ReturnType<typeof setTimeout>;
     const handle = InteractionManager.runAfterInteractions(() => {
       setInteractionsComplete(true);
       // After Near U renders, prefetch Mall/Cash Store JS chunks + API data in background
-      prefetchTimer = setTimeout(prefetchOtherTabs, 1000);
+      prefetchTimer = setSafeTimeout(prefetchOtherTabs, 1000);
     });
 
     return () => {
@@ -401,7 +381,7 @@ function HomeScreen() {
 
   // Defer push notification init by 3 seconds after mount
   React.useEffect(() => {
-    const timer = setTimeout(() => setPushReady(true), 3000);
+    const timer = setSafeTimeout(() => setPushReady(true), 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -443,6 +423,8 @@ function HomeScreen() {
     }
 
     // Fallback: separate API call if batch didn't include userContext (e.g., not authenticated during batch)
+    // Dynamic import: keeps services/homepageApi.ts (1200+ lines) out of the entry bundle.
+    const { HomepageCacheWarmer } = await import('@/services/homepageApi');
     const contextResult = await HomepageCacheWarmer.getUserContext()
       .then(r => ({ status: 'fulfilled' as const, value: r }))
       .catch(e => ({ status: 'rejected' as const, reason: e }));
@@ -546,7 +528,7 @@ function HomeScreen() {
   const handleCoinPress = useCallback(() => {
     if (IS_IOS) {
       clearTimeout(navTimerRef.current);
-      navTimerRef.current = setTimeout(() => router.push('/wallet-screen'), 50);
+      navTimerRef.current = setSafeTimeout(() => router.push('/wallet-screen'), 50);
     } else {
       router.push('/wallet-screen');
     }
@@ -559,14 +541,14 @@ function HomeScreen() {
   const handleCartPress = useCallback(() => {
     if (IS_IOS) {
       clearTimeout(navTimerRef.current);
-      navTimerRef.current = setTimeout(() => router.push('/cart'), 50);
+      navTimerRef.current = setSafeTimeout(() => router.push('/cart'), 50);
     } else {
       router.push('/cart');
     }
   }, [router]);
 
   const handleNotificationPress = useCallback(() => {
-    router.push('/account/notification-history' as any);
+    router.push('/account/notification-history');
   }, [router]);
 
   const handleProfilePress = useCallback(() => {
@@ -627,7 +609,13 @@ function HomeScreen() {
   // Show full-page skeleton while initial data is loading
   // This prevents layout shift and provides instant visual feedback
   if (!interactionsComplete && state.loading) {
-    return <HomepageSkeleton />;
+    return (
+      <View style={viewStyles.mainContainer}>
+        <Suspense fallback={null}>
+          <HomepageSkeleton />
+        </Suspense>
+      </View>
+    );
   }
 
   return (
@@ -672,14 +660,16 @@ function HomeScreen() {
             <View style={[viewStyles.locationIconWrapper, tabStyles.locationIconBg]}>
               <Ionicons name="location" size={14} color={colors.text.inverse} />
             </View>
-            <LocationDisplay
-              compact={true}
-              showCoordinates={false}
-              showLastUpdated={false}
-              showRefreshButton={false}
-              style={viewStyles.locationDisplay}
-              textStyle={tabStyles.locationText || textStyles.locationText}
-            />
+            <Suspense fallback={null}>
+              <LocationDisplay
+                compact={true}
+                showCoordinates={false}
+                showLastUpdated={false}
+                showRefreshButton={false}
+                style={viewStyles.locationDisplay}
+                textStyle={tabStyles.locationText || textStyles.locationText}
+              />
+            </Suspense>
             <View style={viewStyles.locationChevron}>
               <Ionicons
                 name={showDetailedLocation ? "chevron-up" : "chevron-down"}
@@ -776,14 +766,16 @@ function HomeScreen() {
                 <Ionicons name="location" size={16} color={activeTab === 'mall' ? colors.brand.sky : activeTab === 'cash' ? colors.brand.caramel : colors.lightMustard} />
                 <Text style={viewStyles.addressHeaderText}>Current Location</Text>
               </View>
-              <LocationDisplay
-                compact={false}
-                showCoordinates={false}
-                showLastUpdated={false}
-                showRefreshButton={false}
-                style={viewStyles.detailedLocationDisplay}
-                textStyle={viewStyles.detailedLocationText}
-              />
+              <Suspense fallback={null}>
+                <LocationDisplay
+                  compact={false}
+                  showCoordinates={false}
+                  showLastUpdated={false}
+                  showRefreshButton={false}
+                  style={viewStyles.detailedLocationDisplay}
+                  textStyle={viewStyles.detailedLocationText}
+                />
+              </Suspense>
             </View>
 
             {/* Change Location Button */}
@@ -801,7 +793,7 @@ function HomeScreen() {
                 animatedHeight.value = withTiming(0, { duration: 200 });
                 animatedOpacity.value = withTiming(0, { duration: 200 });
                 // Open modal after animation delay
-                setTimeout(() => setIsLocationModalVisible(true), 220);
+                setSafeTimeout(() => setIsLocationModalVisible(true), 220);
               }}
              
             >
@@ -818,7 +810,11 @@ function HomeScreen() {
         </ReAnimated.View>
 
         {/* Hero Banner - Dynamic content based on user - Only show when "near-u" tab is active */}
-        {activeTab === 'near-u' && <HeroBanner totalSaved={totalSaved} />}
+        {activeTab === 'near-u' && (
+          <Suspense fallback={<View style={{ height: 120 }} />}>
+            <HeroBanner totalSaved={totalSaved} />
+          </Suspense>
+        )}
 
         {/* Mall Hero Banner */}
         {activeTab === 'mall' && (
@@ -845,38 +841,48 @@ function HomeScreen() {
 
       {/* ── B-feature additive slot: Savings widget (Phase 1.1) ── */}
       <FeatureFlagGate flag="b.savings">
-        <SavingsWidget />
+        <Suspense fallback={null}>
+          <SavingsWidget />
+        </Suspense>
       </FeatureFlagGate>
 
       {/* ── B-feature additive slot: Coin Expiry Banner (Phase 1.2) ── */}
       <View style={viewStyles.bCoinExpirySlot}>
-        <CoinExpiryBanner />
+        <Suspense fallback={null}>
+          <CoinExpiryBanner />
+        </Suspense>
       </View>
 
       {/* ── B-feature additive slot: Streak + REZ Score row (Phase 1.3) ── */}
       <View style={viewStyles.bStreakScoreSlot}>
-        <StreakFireIcon streakDays={currentStreakDays} />
-        <RezScoreCard />
+        <Suspense fallback={null}>
+          <StreakFireIcon streakDays={currentStreakDays} />
+          <RezScoreCard />
+        </Suspense>
       </View>
 
       {/* ── B-feature additive slot: Weekly Digest preview (Phase 1.4) ── */}
       <FeatureFlagGate flag="b.weeklyDigest">
-        <WeeklyDigestCard
-          digest={{
-            weekStartIso: '2026-06-15',
-            weekEndIso: '2026-06-21',
-            headline: 'You saved ₹482 this week',
-            highlights: [
-              { emoji: '💰', label: 'Saved', value: '₹482' },
-              { emoji: '🔥', label: 'Streak', value: '5 days' },
-              { emoji: '🏷️', label: 'Vouchers', value: '3 new' },
-            ],
-          }}
-        />
+        <Suspense fallback={null}>
+          <WeeklyDigestCard
+            digest={{
+              weekStartIso: '2026-06-15',
+              weekEndIso: '2026-06-21',
+              headline: 'You saved ₹482 this week',
+              highlights: [
+                { emoji: '💰', label: 'Saved', value: '₹482' },
+                { emoji: '🔥', label: 'Streak', value: '5 days' },
+                { emoji: '🏷️', label: 'Vouchers', value: '3 new' },
+              ],
+            }}
+          />
+        </Suspense>
       </FeatureFlagGate>
 
       {/* ── B-feature additive slot: Map View (Phase 1.5) ── */}
-      <MapViewWidget />
+      <Suspense fallback={null}>
+        <MapViewWidget />
+      </Suspense>
 
       {/* Home Tab Section with 4 Tabs - Outside gradient */}
       <Suspense fallback={<View style={{ height: 44 }} />}>
@@ -925,7 +931,9 @@ function HomeScreen() {
 
       {/* Stories Row — What's New (Instagram-style, gated by storiesRowEnabled flag) */}
       {activeTab !== 'prive' && storiesRowEnabled && (
-        <StoriesRow variant={tabStyles.whatsNewVariant} />
+        <Suspense fallback={null}>
+          <StoriesRow variant={tabStyles.whatsNewVariant} />
+        </Suspense>
       )}
 
       {/* Content */}
@@ -1023,13 +1031,15 @@ function HomeScreen() {
       {/* showThreshold should be high enough so sticky header only appears after category section scrolls out of view */}
       {/* Hide for Privé tab as it has its own dark theme */}
       {activeTab !== 'prive' && (
-        <StickySearchHeader
-          scrollY={scrollY}
-          showThreshold={580}
-          onSearchPress={handleSearchPress}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-        />
+        <Suspense fallback={null}>
+          <StickySearchHeader
+            scrollY={scrollY}
+            showThreshold={580}
+            onSearchPress={handleSearchPress}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
+        </Suspense>
       )}
     </View>
   );
@@ -1211,9 +1221,11 @@ const viewStyles = StyleSheet.create({
   },
   locationDisplay: {
     backgroundColor: 'transparent',
-    shadowOpacity: 0,
-    elevation: 0,
     padding: 0,
+    ...Platform.select({
+      web: { boxShadow: 'none' },
+      default: { shadowOpacity: 0, elevation: 0 },
+    }),
     ...Platform.select({
       android: { flex: 0, flexGrow: 0, flexShrink: 1 },
       ios: { flex: 0, flexShrink: 1 },
@@ -1286,9 +1298,11 @@ const viewStyles = StyleSheet.create({
   },
   detailedLocationDisplay: {
     backgroundColor: 'transparent',
-    shadowOpacity: 0,
-    elevation: 0,
     padding: 0,
+    ...Platform.select({
+      web: { boxShadow: 'none' },
+      default: { shadowOpacity: 0, elevation: 0 },
+    }),
   },
   detailedLocationText: {
     color: colors.text.primary,

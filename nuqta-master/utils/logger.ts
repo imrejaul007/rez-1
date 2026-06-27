@@ -6,7 +6,19 @@
  * with monitoring services like Sentry.
  */
 
-import { MonitoringHelpers } from '@/config/monitoring.config';
+// MonitoringHelpers is lazy-loaded: it pulls in Sentry (220+ modules).
+// We defer the import until the first call that needs it.
+let _monitoring: typeof import('@/config/monitoring.config').MonitoringHelpers | null = null;
+async function getMonitoring() {
+  if (_monitoring) return _monitoring;
+  try {
+    const mod = await import('@/config/monitoring.config');
+    _monitoring = mod.MonitoringHelpers;
+    return _monitoring;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Log levels
@@ -152,12 +164,10 @@ class Logger {
     this.addLog(LogLevel.WARN, message, data, context);
 
 
-    // Send warnings to monitoring in production
+    // Send warnings to monitoring in production (lazy-loaded)
     if (!__DEV__) {
-      MonitoringHelpers.trackEvent('warning', {
-        message,
-        data,
-        context,
+      void getMonitoring().then(m => {
+        if (m) m.trackEvent('warning', { message, data, context });
       });
     }
   }
@@ -172,11 +182,10 @@ class Logger {
     this.addLog(LogLevel.ERROR, message, error, context);
 
 
-    // Send errors to monitoring
+    // Send errors to monitoring (lazy-loaded)
     if (error) {
-      MonitoringHelpers.trackError(error, {
-        message,
-        context,
+      void getMonitoring().then(m => {
+        if (m) m.trackError(error, { message, context });
       });
     }
   }
@@ -205,9 +214,11 @@ class Logger {
   logNavigation(from: string, to: string): void {
     this.debug(`Navigation: ${from} → ${to}`, undefined, 'Navigation');
 
-    // Track page view in analytics
+    // Track page view in analytics (lazy-loaded)
     if (!__DEV__) {
-      MonitoringHelpers.trackPageView(to, { from });
+      void getMonitoring().then(m => {
+        if (m) m.trackPageView(to, { from });
+      });
     }
   }
 
@@ -217,9 +228,11 @@ class Logger {
   logAction(action: string, data?: any): void {
     this.info(`User Action: ${action}`, data, 'User');
 
-    // Track event in analytics
+    // Track event in analytics (lazy-loaded)
     if (!__DEV__) {
-      MonitoringHelpers.trackEvent(action, data);
+      void getMonitoring().then(m => {
+        if (m) m.trackEvent(action, data);
+      });
     }
   }
 
@@ -229,9 +242,11 @@ class Logger {
   logPerformance(metric: string, duration: number, context?: string): void {
     this.debug(`Performance: ${metric} took ${duration}ms`, undefined, context);
 
-    // Track performance in monitoring
+    // Track performance in monitoring (lazy-loaded)
     if (!__DEV__) {
-      MonitoringHelpers.trackPerformance(metric, duration, { context });
+      void getMonitoring().then(m => {
+        if (m) m.trackPerformance(metric, duration, { context });
+      });
     }
   }
 

@@ -12,7 +12,7 @@ import {
   Modal,
   ScrollView} from 'react-native';
 import { platformAlertSimple, platformAlertDestructive } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { EVENT_COLORS } from '@/constants/EventColors';
 import { useIsAuthenticated } from '@/stores/selectors';
 import eventReviewApi, { EventReviewData } from '@/services/eventReviewApi';

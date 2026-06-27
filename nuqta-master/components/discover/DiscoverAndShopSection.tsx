@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { DiscoverTabType, CategoryCard, DiscoverReel, DiscoverPost, DiscoverArticle, DiscoverImage } from '@/types/discover.types';
 import { useDiscoverContent } from '@/hooks/useDiscoverContent';
@@ -975,11 +975,11 @@ function DiscoverAndShopSection({
             if (activeTab === 'reels') {
               router.push('/social/reels' as any);
             } else if (activeTab === 'posts') {
-              router.push('/social/posts' as any);
+              // TODO: /social/posts route not yet built — tab pending
             } else if (activeTab === 'articles') {
-              router.push('/social/articles' as any);
+              // TODO: /social/articles route not yet built — tab pending
             } else if (activeTab === 'images') {
-              router.push('/social/images' as any);
+              // TODO: /social/images route not yet built — tab pending
             }
           }}
          

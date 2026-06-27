@@ -4,7 +4,7 @@ import { View, Text, Pressable, StyleSheet, Platform, ScrollView } from 'react-n
 import { useRouter } from 'expo-router';
 import { useBackButton } from '@/hooks/useSafeNavigation';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuthActions } from '@/stores/selectors';
 import { navigationDebugger } from '@/utils/navigationDebug';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';

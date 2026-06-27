@@ -14,7 +14,7 @@ import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CrossPlatformBlurView as BlurView } from '@/components/ui/CrossPlatformBlurView';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { usePlayPageData } from '@/hooks/usePlayPageData';
 import { UGCVideoItem, PLAY_PAGE_COLORS } from '@/types/playPage.types';

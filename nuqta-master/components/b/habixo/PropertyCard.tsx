@@ -28,12 +28,12 @@
  */
 import React, { useMemo } from 'react';
 import {
-  Image,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import { formatPrice } from '@/utils/priceFormatter';
 import type { HabixoProperty, HabixoPropertyType } from '@/types/habixo.types';

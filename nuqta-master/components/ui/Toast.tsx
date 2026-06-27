@@ -4,7 +4,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { spacing, borderRadius, typography, zIndex , colors } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 

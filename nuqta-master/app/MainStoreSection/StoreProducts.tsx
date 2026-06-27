@@ -21,7 +21,7 @@ import Animated, {
 import { ProductGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CrossPlatformBlurView as BlurView } from '@/components/ui/CrossPlatformBlurView';
 import productsApi, { Product } from '@/services/productsApi';

@@ -21,7 +21,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import earningsApi, { PartnerEarningsSummary } from '@/services/earningsApi';
 import { useGetCurrencySymbol, useFormatPrice } from '@/stores/selectors';
 import { platformAlertSimple } from '@/utils/platformAlert';

@@ -14,13 +14,14 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { BRAND } from '@/constants/brand';
 import { colors } from '@/constants/theme';
+import { safeOpenURL } from '@/utils/linking';
 
 const SOCIAL_LINKS = {
   facebook: 'https://facebook.com/nuqtaapp',
@@ -39,17 +40,17 @@ function AboutPage() {
       const url = SOCIAL_LINKS[platform];
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
-        await Linking.openURL(url);
+        await safeOpenURL(url);
       }
     } catch (_e) { /* silently handle */ }
   };
 
   const handleEmailPress = async () => {
-    try { await Linking.openURL('mailto:support@nuqtaapp.com'); } catch (_e) { /* silently handle */ }
+    try { await safeOpenURL('mailto:support@nuqtaapp.com'); } catch (_e) { /* silently handle */ }
   };
 
   const handleWebsitePress = async () => {
-    try { await Linking.openURL('https://nuqtaapp.com'); } catch (_e) { /* silently handle */ }
+    try { await safeOpenURL('https://nuqtaapp.com'); } catch (_e) { /* silently handle */ }
   };
 
   return (

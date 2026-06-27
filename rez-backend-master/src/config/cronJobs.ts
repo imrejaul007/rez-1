@@ -17,6 +17,14 @@ import { startRefundReversalJob } from '../jobs/refundReversalJob';
 import { initializeInventoryAlertJob } from '../jobs/inventoryAlerts';
 import { initializeDealExpiryJob } from '../jobs/expireDealRedemptions';
 import { initializeVoucherExpiryJob } from '../jobs/expireVoucherRedemptions';
+// Phase 6.24: wire up the merchant daily stats job. Was previously defined
+// in computeMerchantDailyStats.ts but never scheduled (BUG-025 removed the
+// inner cron.schedule but the replacement was never added). Runs daily at
+// 1 AM under a Redis distributed lock.
+import { computeYesterdayStats } from '../jobs/computeMerchantDailyStats';
+import { initExperienceRewardCron as initializeExperienceRewardCron } from '../jobs/experienceRewardCron';
+import { startTrialCoinExpiryJob } from '../jobs/trialCoinExpiryJob';
+import { startSurpriseTrialJob } from '../jobs/surpriseTrialJob';
 import { initializeTableBookingExpiryJob } from '../jobs/expireTableBookings';
 import { startReconciliationJob } from '../jobs/reconciliationJob';
 import { startReservationCleanup } from '../jobs/reservationCleanup';
@@ -48,6 +56,7 @@ import { ScheduledJobService } from '../services/ScheduledJobService';
 import AuditRetentionService from '../services/AuditRetentionService';
 import { ReportService } from '../merchantservices/ReportService';
 import { initializeTagOffersJob } from '../jobs/tagOffersJob';
+import { initializeProviderAnalyticsDigestJob } from '../jobs/providerAnalyticsDigestJob';
 
 // Phase 4 stub replacement: thin wrapper around node-cron. Same signature as the old stub
 // so callers (jobs/) don't need changes. Validates the expression, logs scheduling, and
@@ -77,10 +86,82 @@ export const scheduleCronJob = (
 };
 
 /**
+ * Phase 6.24: Wrap a cron callback with a Redis distributed lock so it only
+ * runs on one worker replica even when multiple rez-worker pods are running.
+ * Use this for any cron that has side effects (writes, notifications,
+ * payments). Read-only crons or stats-aggregation crons can skip the lock.
+ *
+ * The lock is a string token (matching the rest of the codebase's
+ * redisService.acquireLock / releaseLock pair). On success the callback's
+ * return value is forwarded to the caller; on skip (lock not acquired) or
+ * failure, null is returned and the caller can branch on that.
+ *
+ * @param lockKey  Unique Redis key for the lock (e.g. 'cron:gift_expiry')
+ * @param ttlSec   Lock TTL in seconds. Should be > the worst-case job runtime.
+ * @param description  Human-readable job name for logs
+ * @param callback  The job body to run if the lock is acquired
+ *
+ * Returns the callback's resolved value on success, or null if the lock was
+ * held by another worker or the job threw.
+ */
+export async function runWithLock<T>(
+  lockKey: string,
+  ttlSec: number,
+  description: string,
+  callback: () => Promise<T>
+): Promise<T | null> {
+  let token: string | null = null;
+  try {
+    token = await redisService.acquireLock(lockKey, ttlSec);
+    if (!token) {
+      logger.info(`[CRON] Skipped "${description}" — another worker holds the lock`);
+      return null;
+    }
+    return await callback();
+  } catch (err: any) {
+    logger.error(`[CRON] Job "${description}" failed:`, err.message);
+    return null;
+  } finally {
+    if (token) {
+      try { await redisService.releaseLock(lockKey, token); } catch { /* ignore */ }
+    }
+  }
+}
+
+/**
  * Initializes ALL cron jobs and background services.
  * Called from startServer() after DB + Redis are connected.
+ *
+ * PRODUCTION SAFETY (Phase 6.24 fix): Cron jobs must only run on the dedicated
+ * `rez-worker` service. Running them on the API service too causes duplicate
+ * execution — every wallet reconciliation, gift delivery, leaderboard refresh,
+ * etc. would fire N times across N API replicas, producing duplicate side
+ * effects (double-credits, double-emails, etc.).
+ *
+ * The contract is:
+ *   - Worker service: ENABLE_CRON=true (explicit opt-in)
+ *   - API service:    ENABLE_CRON unset or !== 'true' (default skip)
+ *
+ * `DISABLE_CRON_IN_API=true` is supported for backwards compatibility but the
+ * explicit `ENABLE_CRON` gate is the source of truth going forward.
  */
 export async function initializeCronJobs(): Promise<void> {
+  // PRODUCTION GUARD: only run crons when ENABLE_CRON=true.
+  // The legacy `DISABLE_CRON_IN_API` flag is honored as a backwards-compat
+  // bypass — if either flag says "skip", we skip.
+  if (process.env.ENABLE_CRON !== 'true') {
+    if (process.env.DISABLE_CRON_IN_API === 'true') {
+      logger.info('[CRON] Skipped (DISABLE_CRON_IN_API=true; legacy flag).');
+    } else {
+      logger.warn(
+        '[CRON] Skipped (ENABLE_CRON !== "true"). ' +
+        'Set ENABLE_CRON=true on the rez-worker service only. ' +
+        'Running crons on API replicas causes duplicate side effects.'
+      );
+    }
+    return;
+  }
+
   // Initialize report service
   ReportService.initialize();
 
@@ -132,6 +213,32 @@ export async function initializeCronJobs(): Promise<void> {
   // Reconciliation job
   startReconciliationJob();
   logger.info('Reconciliation job started (runs daily at 3:00 AM)');
+
+  // Phase 6.24: merchant daily stats — daily at 1 AM with a distributed lock
+  // (multi-replica would otherwise double-write the merchant_daily_stats
+  // collection, causing data corruption in aggregate views).
+  scheduleCronJob('0 1 * * *', async () => {
+    await runWithLock(
+      'cron:merchant_daily_stats',
+      1800,           // 30-min TTL: stats rollup can take a while
+      'merchant daily stats',
+      computeYesterdayStats
+    );
+  }, 'merchant daily stats');
+  logger.info('Merchant daily stats job started (runs daily at 1:00 AM, lock-protected)');
+
+  // Experience reward cron (monthly grant). Self-locking via runWithLock
+  // inside the job, so safe under multi-replica.
+  initializeExperienceRewardCron();
+  logger.info('Experience reward cron started (daily at 23:00 UTC, lock-protected)');
+
+  // Phase 6.24: trial coin expiry (daily 2 AM) and surprise trial assignment
+  // (weekly Monday 6 AM) — both write to user balances, so both are
+  // lock-protected via runWithLock inside the job itself.
+  startTrialCoinExpiryJob();
+  logger.info('Trial coin expiry job started (runs daily at 2:00 AM, lock-protected)');
+  startSurpriseTrialJob();
+  logger.info('Surprise trial job started (runs Monday at 6:00 AM, lock-protected)');
 
   // Reservation cleanup job
   startReservationCleanup();
@@ -257,6 +364,10 @@ export async function initializeCronJobs(): Promise<void> {
   // Weekly savings summary — Monday 10 AM
   initializeWeeklySummaryJob();
   logger.info('Weekly summary job started (runs Monday 10:00 AM)');
+
+  // Provider analytics digest email — daily at 9:00 AM IST
+  initializeProviderAnalyticsDigestJob();
+  logger.info('Provider analytics digest job started (runs daily at 9:00 AM IST)');
 
   // Wallet-ledger reconciliation — daily at 4 AM
   const { initializeLedgerReconciliationJob } = await import('../jobs/walletLedgerReconciliationJob');

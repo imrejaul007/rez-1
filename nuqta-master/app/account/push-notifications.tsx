@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { FormPageSkeleton } from '@/components/skeletons';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import notificationService from '../../services/notificationService';
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';

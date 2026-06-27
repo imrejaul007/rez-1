@@ -22,8 +22,7 @@ router.use(generalLimiter);
 
 // Get public wishlists
 router.get('/public',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     category: Joi.string().valid('personal', 'gift', 'business', 'event', 'custom'),
     search: Joi.string().trim().max(100),
@@ -38,8 +37,7 @@ router.use(authenticate);
 
 // Get user's wishlists
 router.get('/',
-  // generalLimiter,, // Disabled for development
-  validateQuery(Joi.object({
+    validateQuery(Joi.object({
     category: Joi.string().valid('personal', 'gift', 'business', 'event', 'custom'),
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(50).default(20)
@@ -49,21 +47,18 @@ router.get('/',
 
 // Create new wishlist
 router.post('/',
-  // generalLimiter,, // Disabled for development
-  validate(wishlistSchemas.createWishlist),
+    validate(wishlistSchemas.createWishlist),
   createWishlist
 );
 
 // Get default wishlist (must be before /:wishlistId to prevent "default" being treated as an ID)
 router.get('/default',
-  // generalLimiter,, // Disabled for development
-  getDefaultWishlist
+    getDefaultWishlist
 );
 
 // Check if item is in wishlist (must be before /:wishlistId)
 router.get('/check',
-  // generalLimiter,, // Disabled for development
-  validateQuery(Joi.object({
+    validateQuery(Joi.object({
     itemType: Joi.string().valid('product', 'store', 'video', 'Product', 'Store', 'Video').required(),
     itemId: commonSchemas.objectId().required()
   })),
@@ -73,8 +68,7 @@ router.get('/check',
 // Remove item by type and itemId (convenience endpoint)
 // Using POST instead of DELETE because DELETE with body isn't universally supported
 router.post('/remove-item',
-  // generalLimiter,, // Disabled for development
-  validate(Joi.object({
+    validate(Joi.object({
     itemType: Joi.string().valid('product', 'store', 'video', 'Product', 'Store', 'Video').required(),
     itemId: commonSchemas.objectId().required()
   })),
@@ -83,8 +77,7 @@ router.post('/remove-item',
 
 // Get single wishlist by ID
 router.get('/:wishlistId',
-  // generalLimiter,, // Disabled for development
-  validateParams(Joi.object({
+    validateParams(Joi.object({
     wishlistId: commonSchemas.objectId().required()
   })),
   getWishlistById
@@ -92,8 +85,7 @@ router.get('/:wishlistId',
 
 // Delete wishlist
 router.delete('/:wishlistId', 
-  // generalLimiter,, // Disabled for development
-  validateParams(Joi.object({
+    validateParams(Joi.object({
     wishlistId: commonSchemas.objectId().required()
   })),
   deleteWishlist
@@ -101,8 +93,7 @@ router.delete('/:wishlistId',
 
 // Add item to wishlist
 router.post('/:wishlistId/items', 
-  // generalLimiter,, // Disabled for development
-  validateParams(Joi.object({
+    validateParams(Joi.object({
     wishlistId: commonSchemas.objectId().required()
   })),
   validate(wishlistSchemas.addToWishlist),
@@ -111,8 +102,7 @@ router.post('/:wishlistId/items',
 
 // Update wishlist item
 router.patch('/:wishlistId/items/:itemId', 
-  // generalLimiter,, // Disabled for development
-  validateParams(Joi.object({
+    validateParams(Joi.object({
     wishlistId: commonSchemas.objectId().required(),
     itemId: commonSchemas.objectId().required()
   })),
@@ -129,8 +119,7 @@ router.patch('/:wishlistId/items/:itemId',
 
 // Remove item from wishlist
 router.delete('/:wishlistId/items/:itemId', 
-  // generalLimiter,, // Disabled for development
-  validateParams(Joi.object({
+    validateParams(Joi.object({
     wishlistId: commonSchemas.objectId().required(),
     itemId: commonSchemas.objectId().required()
   })),

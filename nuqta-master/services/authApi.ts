@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Authentication API Service
 // Handles user authentication, registration, and profile management
 // Enhanced with comprehensive error handling, validation, token management, and logging
@@ -12,12 +11,7 @@ import {
   isUserVerified
 } from '@/types/unified';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // Module-level token state (independent of apiClient mock state)
 let _currentAuthToken: string | null = null;
@@ -25,6 +19,15 @@ let _currentAuthToken: string | null = null;
 // Flag to ensure the 401 retry path in getProfile runs at most once per
 // getProfile invocation (prevents infinite retry loops on persistent 401s).
 let _profile401RetryUsed = false;
+
+// Phase 6.24: In-flight dedup for sendOtp. Two rapid clicks (e.g. React
+// StrictMode, double-tap, or a hot-reload during a manual test) previously
+// fired two /auth/send-otp requests in quick succession. The auth-service
+// has server-side idempotency (30s) so the second OTP request is harmless
+// in terms of overwriting the first, but it still costs a network round
+// trip and a rate-limit slot. This in-flight guard returns the same promise
+// to concurrent callers.
+let _sendOtpInFlight: Promise<ApiResponse<{ message: string; expiresIn: number }>> | null = null;
 
 // Keep the old User interface for backwards compatibility during migration
 export interface User {
@@ -203,36 +206,47 @@ class AuthService {
    * Send OTP for registration or login
    */
   async sendOtp(data: OtpRequest): Promise<ApiResponse<{ message: string; expiresIn: number }>> {
-    const startTime = Date.now();
-
-    try {
-      // The API server is the source of truth for input validation. We
-      // intentionally do NOT throw synchronous validation errors before
-      // calling the API - the API is responsible for rejecting invalid
-      // input (phone number, email, etc.). Throwing synchronously here
-      // would prevent the API client (and its mocks in tests) from being
-      // exercised and would cause stale mock state to leak across tests.
-      // If the API returns an error response, we propagate it.
-
-      // Log request (sanitize phone number)
-      logApiRequest('POST', '/auth/send-otp', {
-        phoneNumber: data.phoneNumber ? data.phoneNumber.slice(-4).padStart(10, '*') : '',
-        email: data.email
-      });
-
-      const response = await withRetry(
-        () => apiClient.post<{ message: string; expiresIn: number }>('/auth/send-otp', data),
-        { maxRetries: 2 }
-      );
-
-      logApiResponse('POST', '/auth/send-otp', { success: response.success }, Date.now() - startTime);
-
-      return response;
-    } catch (error: any) {
-      devLog.error('[AUTH API] Error sending OTP:', error);
-      // Re-throw to propagate errors (including 429 rate limit responses)
-      throw error;
+    // In-flight dedup: if a sendOtp is already running, return the same
+    // promise to concurrent callers. Cleared in finally{} below.
+    if (_sendOtpInFlight) {
+      return _sendOtpInFlight;
     }
+
+    const startTime = Date.now();
+    _sendOtpInFlight = (async () => {
+      try {
+        // The API server is the source of truth for input validation. We
+        // intentionally do NOT throw synchronous validation errors before
+        // calling the API - the API is responsible for rejecting invalid
+        // input (phone number, email, etc.). Throwing synchronously here
+        // would prevent the API client (and its mocks in tests) from being
+        // exercised and would cause stale mock state to leak across tests.
+        // If the API returns an error response, we propagate it.
+
+        // Log request (sanitize phone number)
+        logApiRequest('POST', '/auth/send-otp', {
+          phoneNumber: data.phoneNumber ? data.phoneNumber.slice(-4).padStart(10, '*') : '',
+          email: data.email
+        });
+
+        const response = await withRetry(
+          () => apiClient.post<{ message: string; expiresIn: number }>('/auth/send-otp', data),
+          { maxRetries: 2 }
+        );
+
+        logApiResponse('POST', '/auth/send-otp', { success: response.success }, Date.now() - startTime);
+
+        return response;
+      } catch (error: any) {
+        devLog.error('[AUTH API] Error sending OTP:', error);
+        // Re-throw to propagate errors (including 429 rate limit responses)
+        throw error;
+      } finally {
+        // Clear the in-flight guard so the next sendOtp call can fire.
+        _sendOtpInFlight = null;
+      }
+    })();
+    return _sendOtpInFlight;
   }
 
   /**
@@ -438,14 +452,14 @@ class AuthService {
         };
       }
 
-      logApiRequest('PATCH', '/profile', { fields: Object.keys(data) });
+      logApiRequest('PUT', '/user/auth/profile', { fields: Object.keys(data) });
 
       const response = await withRetry(
-        () => apiClient.patch<User>('/profile', data),
+        () => apiClient.put<User>('/user/auth/profile', data),
         { maxRetries: 2 }
       );
 
-      logApiResponse('PATCH', '/profile', response, Date.now() - startTime);
+      logApiResponse('PUT', '/user/auth/profile', response, Date.now() - startTime);
 
       return response;
     } catch (error: any) {

@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { useRouter } from 'expo-router';
 import { showToast } from '@/components/common/ToastManager';
@@ -149,8 +149,8 @@ function PromoCodeModal({
                             onQuickPromoSelect(promo.code);
                           } else if (requiresTier && !meetsTierRequirement) {
                             const upgradeMessage = userLoyaltyTier
-                              ? `\uD83D\uDD12 ${tierName.toUpperCase()} MEMBERS ONLY - Upgrade from ${userLoyaltyTier.toUpperCase()} to ${tierName.toUpperCase()} to unlock this ${promo.discountValue}${promo.discountType === 'PERCENTAGE' ? '%' : currencySymbol} discount!`
-                              : `\uD83D\uDD12 ${tierName.toUpperCase()} MEMBERS ONLY - Become a member to unlock this ${promo.discountValue}${promo.discountType === 'PERCENTAGE' ? '%' : currencySymbol} discount!`;
+                              ? `\uD83D\uDD12 ${(tierName || '').toUpperCase()} MEMBERS ONLY - Upgrade from ${(userLoyaltyTier || '').toUpperCase()} to ${(tierName || '').toUpperCase()} to unlock this ${promo.discountValue}${promo.discountType === 'PERCENTAGE' ? '%' : currencySymbol} discount!`
+                              : `\uD83D\uDD12 ${(tierName || '').toUpperCase()} MEMBERS ONLY - Become a member to unlock this ${promo.discountValue}${promo.discountType === 'PERCENTAGE' ? '%' : currencySymbol} discount!`;
                             showToast({ message: upgradeMessage, type: 'warning', duration: 4000 });
                           } else {
                             showToast({
@@ -184,7 +184,7 @@ function PromoCodeModal({
                               <View style={styles.tierBadge}>
                                 <Ionicons name="lock-closed" size={10} color={colors.warningScale[400]} />
                                 <ThemedText style={styles.tierBadgeText}>
-                                  {tierName.toUpperCase()} MEMBERS ONLY
+                                  {(tierName || '').toUpperCase()} MEMBERS ONLY
                                 </ThemedText>
                               </View>
                             )}

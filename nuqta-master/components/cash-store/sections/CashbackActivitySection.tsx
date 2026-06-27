@@ -15,7 +15,7 @@ import {
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { CashbackActivity, formatCurrency } from '../../../types/cash-store.types';
 import { colors } from '@/constants/theme';
 
@@ -201,7 +201,7 @@ const ActivityItem: React.FC<{
           >
             <Ionicons name={statusIcon as any} size={10} color={statusColor} />
             <Text style={[styles.statusText, { color: statusColor }]}>
-              {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
+              {activity.status ? activity.status.charAt(0).toUpperCase() + activity.status.slice(1) : '—'}
             </Text>
           </LinearGradient>
         </View>

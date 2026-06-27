@@ -15,7 +15,7 @@ import {
   Platform,
   ActivityIndicator} from 'react-native';
 import { platformAlertSimple } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import serviceBookingApi from '@/services/serviceBookingApi';

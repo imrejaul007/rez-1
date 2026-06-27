@@ -1,65 +1,37 @@
 /**
- * NotificationListSkeleton - For notification list screens
- *
- * Layout: rows with circle avatar + text lines + timestamp
+ * NotificationListSkeleton - Notification list skeleton
  */
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import SkeletonLoader from './SkeletonLoader';
-import { colors } from '@/constants/theme';
 
-function NotificationRow() {
-  return (
-    <View style={styles.row}>
-      <SkeletonLoader width={40} height={40} variant="circle" />
-      <View style={styles.textContainer}>
-        <SkeletonLoader width="80%" height={14} borderRadius={4} />
-        <SkeletonLoader width="55%" height={12} borderRadius={4} style={styles.subtitle} />
-      </View>
-      <SkeletonLoader width={40} height={10} borderRadius={4} />
-    </View>
-  );
+interface NotificationListSkeletonProps {
+  count?: number;
 }
 
-function NotificationListSkeleton({ count = 10 }: { count?: number }) {
+function NotificationListSkeleton({ count = 6 }: NotificationListSkeletonProps) {
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <SkeletonLoader width={160} height={20} borderRadius={6} style={styles.header} />
-
+    <View style={styles.container} accessibilityLabel="Loading notifications" accessibilityRole="none">
       {Array.from({ length: count }).map((_, i) => (
-        <NotificationRow key={i} />
+        <View key={i} style={styles.item}>
+          <SkeletonLoader width={40} height={40} borderRadius={20} style={styles.mr} />
+          <View style={styles.flex1}>
+            <SkeletonLoader width="80%" height={14} style={styles.mb} />
+            <SkeletonLoader width="60%" height={12} />
+          </View>
+        </View>
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.neutral[100],
-  },
-  textContainer: {
-    flex: 1,
-    marginLeft: 12,
-    gap: 6,
-  },
-  subtitle: {
-    marginTop: 2,
-  },
+  container: { padding: 12 },
+  item: { flexDirection: 'row', padding: 12, borderRadius: 8 },
+  mr: { marginRight: 12 },
+  flex1: { flex: 1 },
+  mb: { marginBottom: 6 },
 });
 
-export default React.memo(NotificationListSkeleton);
+export default NotificationListSkeleton;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Pressable, TextInput, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { showToast } from '@/components/common/ToastManager';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/DesignSystem';

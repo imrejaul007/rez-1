@@ -1,4 +1,3 @@
-// @ts-nocheck
 import apiClient from '@/services/apiClient';
 
 export interface ServiceabilityResult {

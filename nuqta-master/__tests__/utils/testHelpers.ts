@@ -215,7 +215,7 @@ export const randomPhoneNumber = (): string =>
  * Deep clone object
  */
 export const deepClone = <T>(obj: T): T =>
-  JSON.parse(JSON.stringify(obj));
+  structuredClone(obj);
 
 /**
  * Suppress console logs during test

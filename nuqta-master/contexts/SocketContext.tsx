@@ -5,6 +5,7 @@ type Socket = any;
 const getIO = async () => (await import('socket.io-client')).io;
 import Constants from 'expo-constants';
 import { useSocketStore } from '@/stores/socketStore';
+import { useAuthStore } from '@/stores/authStore';
 import { AppState, AppStateStatus, Platform } from 'react-native';
 import { getAuthToken, getUser } from '@/utils/authStorage';
 import mainApiClient from '@/services/apiClient';
@@ -135,6 +136,14 @@ export function SocketProvider({ children, config }: SocketProviderProps) {
   const [socketVersion, setSocketVersion] = useState(0);
   const subscribedProducts = useRef<Set<string>>(new Set());
   const subscribedStores = useRef<Set<string>>(new Set());
+
+  // Subscribe to live auth token from the Zustand store (kept in sync by
+  // AuthProvider whenever the token is refreshed or replaced). When this
+  // value changes, the mount effect below tears down the old socket and
+  // reconnects with the new auth token — fixing long-running sessions where
+  // the socket was silently keeping a stale access token (every ~58 min
+  // proactive refresh would otherwise leave the WS auth stale).
+  const authToken = useAuthStore((s) => s.state.token);
 
   // Initialize socket connection (deferred: socket.io-client loaded on demand)
   // FIXED: Properly cleanup event listeners to prevent memory leaks
@@ -279,7 +288,9 @@ export function SocketProvider({ children, config }: SocketProviderProps) {
         socketRef.current = null;
       }
     };
-  }, []); // Empty deps - only run once
+  }, [authToken]); // Re-run when token changes (login, logout, or proactive refresh)
+                  // On cleanup the old socket disconnects; on re-run a new one
+                  // mounts with the fresh token and re-subscribes via handleConnect.
 
   // Re-subscribe to all products and stores after reconnection
   const resubscribeAll = useCallback(() => {

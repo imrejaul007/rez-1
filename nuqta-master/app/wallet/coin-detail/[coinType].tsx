@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWalletData, useWalletLoading, useWalletRefreshing, useRefreshWallet } from '@/stores/selectors';
 import { COIN_TYPES, CoinType } from '@/types/wallet';

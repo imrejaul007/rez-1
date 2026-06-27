@@ -14,7 +14,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { CartHeaderProps } from '@/types/cart';
 import { borderRadius, colors, spacing } from '@/constants/theme';

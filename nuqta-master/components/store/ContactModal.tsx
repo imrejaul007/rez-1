@@ -19,12 +19,13 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { safeCallPhone, safeOpenURL } from '@/utils/linking';
 
 interface ContactModalProps {
   visible: boolean;
@@ -108,7 +109,7 @@ function ContactModal({
       const url = `tel:${phone}`;
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
-        await Linking.openURL(url);
+        await safeCallPhone(phone);
       }
     } catch (error) {
       // silently handle
@@ -122,7 +123,7 @@ function ContactModal({
       const url = `mailto:${email}`;
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
-        await Linking.openURL(url);
+        await safeOpenURL(url);
       }
     } catch (error) {
       // silently handle

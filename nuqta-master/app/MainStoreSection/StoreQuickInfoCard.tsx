@@ -8,10 +8,11 @@ import {
   Linking,
   Platform,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from "@/components/ThemedText";
 import { colors } from '@/constants/theme';
 import { catchAndWarn } from '@/utils/catchAndReport';
+import { safeOpenURL } from '@/utils/linking';
 
 interface OperationalHours {
   open?: string;
@@ -107,10 +108,10 @@ function StoreQuickInfoCard({
         android: `google.navigation:q=${location.coordinates.lat},${location.coordinates.lng}`,
         default: `https://www.google.com/maps/dir/?api=1&destination=${location.coordinates.lat},${location.coordinates.lng}`,
       });
-      try { Linking.openURL(url); } catch (e) { catchAndWarn(e, 'StoreQuickInfoCard/openURL'); }
+      try { safeOpenURL(url); } catch (e) { catchAndWarn(e, 'StoreQuickInfoCard/openURL'); }
     } else if (formattedAddress) {
       const encodedAddress = encodeURIComponent(formattedAddress);
-      try { Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`); } catch (e) { catchAndWarn(e, 'StoreQuickInfoCard/openURL'); }
+      try { safeOpenURL(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`); } catch (e) { catchAndWarn(e, 'StoreQuickInfoCard/openURL'); }
     }
   };
 

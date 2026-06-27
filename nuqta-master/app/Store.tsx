@@ -24,26 +24,35 @@ import { useProfile, useProfileMenu } from '@/contexts/ProfileContext';
 import ProfileMenuModal from '@/components/profile/ProfileMenuModal';
 import { profileMenuSections } from '@/constants/profileMenu';
 import { useRouter } from 'expo-router';
-import deal from '@/assets/images/deal.png';
 import CachedImage from '@/components/ui/CachedImage';
 
-// Store category images
+// Store category images (ES imports so Metro can tree-shake and hoist)
+import fastDeliveryImg from '@/assets/images/stores/fast-delivery.png';
+import budgetFriendlyImg from '@/assets/images/stores/one-rupee-store.png';
+import cashStoreImg from '@/assets/images/stores/cash-store.png';
+import luxuryStoreImg from '@/assets/images/stores/luxury-store.png';
+import allianceStoreImg from '@/assets/images/stores/alliance-store.png';
+import organicStoreImg from '@/assets/images/stores/organic.png';
+import lowestPriceImg from '@/assets/images/stores/lowest-price.png';
+import rezMallImg from '@/assets/images/tabs/rez-mall.png';
+
 const storeImages = {
-  fastDelivery: require('@/assets/images/stores/fast-delivery.png'),
-  budgetFriendly: require('@/assets/images/stores/one-rupee-store.png'),
-  ninetyNineStore: require('@/assets/images/stores/cash-store.png'),
-  premium: require('@/assets/images/stores/luxury-store.png'),
-  alliance: require('@/assets/images/stores/alliance-store.png'),
-  organic: require('@/assets/images/stores/organic.png'),
-  lowestPrice: require('@/assets/images/stores/lowest-price.png'),
-  cashStore: require('@/assets/images/stores/cash-store.png'),
-  rezMall: require('@/assets/images/tabs/rez-mall.png') };
+  fastDelivery: fastDeliveryImg,
+  budgetFriendly: budgetFriendlyImg,
+  ninetyNineStore: cashStoreImg,
+  premium: luxuryStoreImg,
+  alliance: allianceStoreImg,
+  organic: organicStoreImg,
+  lowestPrice: lowestPriceImg,
+  cashStore: cashStoreImg,
+  rezMall: rezMallImg,
+};
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import LocationDisplay from '@/components/location/LocationDisplay';
 import { storeSearchService, StoreCategory } from '@/services/storeSearchService';
 import CategoryGridSkeleton from '@/components/store-search/CategoryGridSkeleton';
-import { useRezBalance, useWalletLoading, useGetCurrencySymbol } from '@/stores';
+import { useRezBalance, useWalletLoading, useGetCurrencySymbol } from '@/stores/selectors';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { BRAND } from '@/constants/brand';
 import { colors } from '@/constants/theme';

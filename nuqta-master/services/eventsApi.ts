@@ -1,12 +1,6 @@
-// @ts-nocheck
 import { EventItem } from '@/types/homepage.types';
 import apiClient from './apiClient';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // Region getter - will be set by RegionContext
 let getRegionFn: (() => string) | null = null;

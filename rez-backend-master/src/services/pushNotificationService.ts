@@ -4,6 +4,8 @@
  * Handles sending push notifications via Expo Server SDK and SMS via Twilio.
  * Supports sending to individual users (by userId) and batch sending to multiple users.
  * Invalid/expired tokens are tracked for cleanup by the receipt processing job.
+ *
+ * Circuit breakers are used for both Expo Push and Twilio SMS to prevent cascading failures.
  */
 
 import Expo, { ExpoPushMessage, ExpoPushTicket, ExpoPushReceipt } from 'expo-server-sdk';
@@ -12,8 +14,18 @@ import { User } from '../models/User';
 import { MerchantUser } from '../models/MerchantUser';
 import { createServiceLogger } from '../config/logger';
 import { BRAND } from '../config/brand';
+import { getCircuitBreaker } from '../utils/circuitBreaker';
+import { withTimeout } from '../utils/timeout';
 
 const logger = createServiceLogger('push-notification');
+
+// Circuit breakers for notification services
+const expoCircuit = getCircuitBreaker('expo-push');
+const pushTwilioCircuit = getCircuitBreaker('twilio-push'); // Separate circuit for push service SMS
+
+// Timeouts for notification services
+const EXPO_PUSH_TIMEOUT_MS = parseInt(process.env.EXPO_PUSH_TIMEOUT_MS || '10000', 10);
+const PUSH_SMS_TIMEOUT_MS = parseInt(process.env.PUSH_SMS_TIMEOUT_MS || '8000', 10);
 
 /**
  * Expo push ticket error codes that indicate a token should be removed
@@ -139,12 +151,38 @@ class PushNotificationService {
       }));
 
       const chunks = this.expo.chunkPushNotifications(messages);
+
+      // Check circuit breaker state
+      if (expoCircuit.getState() === 'OPEN') {
+        logger.warn('[Expo Push] Circuit breaker OPEN, skipping push notification', { userId });
+        return false; // Non-blocking: log and continue
+      }
+
       for (const chunk of chunks) {
         try {
-          const tickets = await this.expo.sendPushNotificationsAsync(chunk);
+          // Wrap with circuit breaker and timeout
+          const tickets = await expoCircuit.exec(() =>
+            withTimeout(
+              this.expo.sendPushNotificationsAsync(chunk),
+              {
+                timeout: EXPO_PUSH_TIMEOUT_MS,
+                operation: 'send-push-notification',
+              }
+            )
+          );
           this.processTickets(tickets, validTokens, userId);
         } catch (error: any) {
-          logger.error('Failed to send push notification chunk', { userId, error: error.message });
+          // Check if circuit breaker is OPEN
+          if (error.message?.includes('Circuit is OPEN')) {
+            logger.warn('[Expo Push] Circuit breaker OPEN, skipping chunk', { userId });
+            break;
+          }
+          // Check for timeout
+          if (error.name === 'TimeoutError') {
+            logger.error('[Expo Push] Push notification timed out', { userId, error: error.message });
+          } else {
+            logger.error('Failed to send push notification chunk', { userId, error: error.message });
+          }
         }
       }
 
@@ -198,12 +236,27 @@ class PushNotificationService {
         return false;
       }
 
+      // Check circuit breaker state
+      if (expoCircuit.getState() === 'OPEN') {
+        logger.warn('[Expo Push] Circuit breaker OPEN, skipping merchant push notification', { merchantId });
+        return false; // Non-blocking: log and continue
+      }
+
       const chunks = this.expo.chunkPushNotifications(messages);
       let tokenIndex = 0;
 
       for (const chunk of chunks) {
         try {
-          const tickets = await this.expo.sendPushNotificationsAsync(chunk);
+          // Wrap with circuit breaker and timeout
+          const tickets = await expoCircuit.exec(() =>
+            withTimeout(
+              this.expo.sendPushNotificationsAsync(chunk),
+              {
+                timeout: EXPO_PUSH_TIMEOUT_MS,
+                operation: 'send-merchant-push',
+              }
+            )
+          );
           for (let i = 0; i < tickets.length; i++) {
             const ticket = tickets[i];
             const mapping = tokenUserMap[tokenIndex + i];
@@ -224,7 +277,17 @@ class PushNotificationService {
           }
           tokenIndex += chunk.length;
         } catch (error: any) {
-          logger.error('Failed to send merchant push notification chunk', { merchantId, error: error.message });
+          // Check if circuit breaker is OPEN
+          if (error.message?.includes('Circuit is OPEN')) {
+            logger.warn('[Expo Push] Circuit breaker OPEN, skipping merchant chunk', { merchantId });
+            break;
+          }
+          // Check for timeout
+          if (error.name === 'TimeoutError') {
+            logger.error('[Expo Push] Merchant push notification timed out', { merchantId, error: error.message });
+          } else {
+            logger.error('Failed to send merchant push notification chunk', { merchantId, error: error.message });
+          }
           tokenIndex += chunk.length;
         }
       }
@@ -269,13 +332,28 @@ class PushNotificationService {
 
       if (messages.length === 0) return 0;
 
+      // Check circuit breaker state
+      if (expoCircuit.getState() === 'OPEN') {
+        logger.warn('[Expo Push] Circuit breaker OPEN, skipping batch push', { userCount: userIds.length });
+        return 0; // Non-blocking: log and continue
+      }
+
       let sent = 0;
       const chunks = this.expo.chunkPushNotifications(messages);
       let tokenIndex = 0;
 
       for (const chunk of chunks) {
         try {
-          const tickets = await this.expo.sendPushNotificationsAsync(chunk);
+          // Wrap with circuit breaker and timeout
+          const tickets = await expoCircuit.exec(() =>
+            withTimeout(
+              this.expo.sendPushNotificationsAsync(chunk),
+              {
+                timeout: EXPO_PUSH_TIMEOUT_MS,
+                operation: 'send-batch-push',
+              }
+            )
+          );
           for (let i = 0; i < tickets.length; i++) {
             const ticket = tickets[i];
             const mapping = tokenUserMap[tokenIndex + i];
@@ -292,7 +370,17 @@ class PushNotificationService {
           }
           tokenIndex += chunk.length;
         } catch (error: any) {
-          logger.error('Failed to send batch push chunk', { error: error.message });
+          // Check if circuit breaker is OPEN
+          if (error.message?.includes('Circuit is OPEN')) {
+            logger.warn('[Expo Push] Circuit breaker OPEN, stopping batch', { userCount: userIds.length });
+            break;
+          }
+          // Check for timeout
+          if (error.name === 'TimeoutError') {
+            logger.error('[Expo Push] Batch push timed out', { error: error.message });
+          } else {
+            logger.error('Failed to send batch push chunk', { error: error.message });
+          }
           tokenIndex += chunk.length;
         }
       }
@@ -432,17 +520,43 @@ class PushNotificationService {
         return false;
       }
 
-      const result = await this.twilioClient.messages.create({
-        body: message,
-        to,
-        from: twilioPhone,
-      });
+      // Check circuit breaker state before attempting
+      if (pushTwilioCircuit.getState() === 'OPEN') {
+        logger.warn('[SMS] Circuit breaker OPEN, skipping SMS', { to: to.slice(-4) });
+        return false; // Non-blocking: log warning and continue
+      }
+
+      // Wrap with circuit breaker and timeout
+      const result: any = await pushTwilioCircuit.exec(() =>
+        withTimeout(
+          this.twilioClient!.messages.create({
+            body: message,
+            to,
+            from: twilioPhone,
+          }),
+          {
+            timeout: PUSH_SMS_TIMEOUT_MS,
+            operation: `send-sms-to-${to.slice(-4)}`,
+          }
+        )
+      );
 
       logger.info(`[SMS] Sent to ***${to.slice(-4)}: ${result.sid}`);
       return true;
     } catch (error: any) {
-      logger.error('[SMS] Failed to send', { error: error.message });
-      return false;
+      // Check if circuit breaker is OPEN
+      if (error.message?.includes('Circuit is OPEN')) {
+        logger.warn('[SMS] Circuit breaker OPEN, skipping SMS', { to: to.slice(-4) });
+        return false; // Non-blocking: log warning and continue
+      }
+
+      // Check for timeout
+      if (error.name === 'TimeoutError') {
+        logger.error('[SMS] Failed to send (timeout)', { to: to.slice(-4), error: error.message });
+      } else {
+        logger.error('[SMS] Failed to send', { to: to.slice(-4), error: error.message });
+      }
+      return false; // Non-blocking: return false without throwing
     }
   }
 

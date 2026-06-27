@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BRAND } from '@/constants/brand';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { experiencesApi, StoreExperience } from '@/services/experiencesApi';

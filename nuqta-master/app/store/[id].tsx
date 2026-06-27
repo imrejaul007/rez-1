@@ -20,9 +20,10 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import apiClient from '@/services/apiClient';
 import { showAlert } from '@/components/common/CrossPlatformAlert';
+import { safeCallPhone } from '@/utils/linking';
 import { campaignsApi, DealRedemption } from '@/services/campaignsApi';
 import { useIsAuthenticated } from '@/stores/selectors';
 import CoinIcon from '@/components/ui/CoinIcon';
@@ -225,7 +226,9 @@ const StoreDetailPage: React.FC = () => {
 
   const handleCall = () => {
     if (store?.contact?.phone) {
-      try { Linking.openURL(`tel:${store.contact.phone}`); } catch (e) { catchAndWarn(e, 'StoreDetail/openURL'); }
+      // Phase 6: web parity — tel: doesn't place calls on web, so the
+      // safeOpenURL helper shows a modal with the number instead.
+      try { safeCallPhone(store.contact.phone, `Call ${store.name ?? 'store'}`); } catch (e) { catchAndWarn(e, 'StoreDetail/openURL'); }
     }
   };
 

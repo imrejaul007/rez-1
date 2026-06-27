@@ -8,7 +8,7 @@
  */
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth';
-import savingsController from '../../controllers/b/savingsController';
+import savingsController from '../../controllers/SavingsController';
 
 const router = Router();
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Surveys API Service
  * Handles all survey-related API calls

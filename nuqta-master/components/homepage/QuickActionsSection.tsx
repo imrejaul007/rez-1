@@ -7,7 +7,7 @@ import {
   Text,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@/constants/theme';
 import { useUserIdentityStore, IdentitySegment } from '@/stores/userIdentityStore';
 

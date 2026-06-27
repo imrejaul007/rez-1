@@ -52,8 +52,7 @@ router.post('/submit',
 
 // Get all projects with filtering
 router.get('/', 
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     category: Joi.string().valid('review', 'social_share', 'ugc_content', 'store_visit', 'survey', 'photo', 'video', 'data_collection', 'mystery_shopping', 'referral'),
     difficulty: Joi.string().valid('easy', 'medium', 'hard'),
@@ -73,8 +72,7 @@ router.get('/',
 
 // Get featured projects
 router.get('/featured', 
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     limit: Joi.number().integer().min(1).max(50).default(10)
   })),
@@ -83,8 +81,7 @@ router.get('/featured',
 
 // Get projects by category
 router.get('/category/:category',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     category: Joi.string().valid('review', 'social_share', 'ugc_content', 'store_visit', 'survey', 'photo', 'video', 'data_collection', 'mystery_shopping', 'referral').required()
   })),
@@ -97,15 +94,13 @@ router.get('/category/:category',
 
 // Get earning project categories (public endpoint)
 router.get('/categories',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   getEarningCategories
 );
 
 // Get user's project submissions (requires authentication)
 router.get('/my-submissions',
-  // generalLimiter,, // Disabled for development
-  authenticate,
+    authenticate,
   validateQuery(Joi.object({
     status: Joi.string().valid('pending', 'approved', 'rejected'),
     sortBy: Joi.string().valid('newest', 'oldest', 'status').default('newest'),
@@ -117,8 +112,7 @@ router.get('/my-submissions',
 
 // Get single project by ID
 router.get('/:projectId', 
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     projectId: commonSchemas.objectId().required()
   })),
@@ -127,8 +121,7 @@ router.get('/:projectId',
 
 // Like/Unlike project (requires authentication)
 router.post('/:projectId/like', 
-  // generalLimiter,, // Disabled for development
-  authenticate,
+    authenticate,
   validateParams(Joi.object({
     projectId: commonSchemas.objectId().required()
   })),
@@ -137,8 +130,7 @@ router.post('/:projectId/like',
 
 // Add comment to project (requires authentication)
 router.post('/:projectId/comments', 
-  // generalLimiter,, // Disabled for development
-  authenticate,
+    authenticate,
   validateParams(Joi.object({
     projectId: commonSchemas.objectId().required()
   })),

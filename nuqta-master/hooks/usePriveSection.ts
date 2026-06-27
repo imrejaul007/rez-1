@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * usePriveSection Hook
  * Data & state management for Privé section

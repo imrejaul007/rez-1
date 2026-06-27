@@ -10,7 +10,7 @@ import {
   View, Text, StyleSheet, FlatList, TextInput, Pressable,
   ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import apiClient from '@/services/apiClient';

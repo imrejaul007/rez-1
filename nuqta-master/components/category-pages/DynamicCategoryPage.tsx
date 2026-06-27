@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * DynamicCategoryPage - Backend-Driven Category Page
  *
@@ -24,11 +23,11 @@ import Animated, { runOnJS, useSharedValue, withTiming } from 'react-native-rean
 import CachedImage from '@/components/ui/CachedImage';
 import logger from '@/utils/logger';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 // Section components
-import CategoryHeader from '@/components/CategoryHeader';
+import CategoryHeader from '@/components/category/CategoryHeader';
 import QuickActionBar from '@/components/category/QuickActionBar';
 import BrowseCategoryGrid from '@/components/category/BrowseCategoryGrid';
 import EnhancedAISuggestionsSection from '@/components/category/EnhancedAISuggestionsSection';

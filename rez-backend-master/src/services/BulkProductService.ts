@@ -336,14 +336,21 @@ class BulkProductService {
         throw new Error('Store not found for merchant');
       }
 
-      // Process products in batches for better performance
+      // Process products in batches using bulk operations for optimal performance
+      // OPTIMIZATION: Use insertMany instead of individual save() calls
       const batchSize = 100;
       for (let i = 0; i < products.length; i += batchSize) {
         const batch = products.slice(i, i + batchSize);
+        const startRow = i + 2; // Row number offset (+2 for 1-based indexing and header row)
+
+        // Prepare all product data for the batch
+        const productDataList: any[] = [];
+        const batchRowNumbers: number[] = [];
 
         for (let j = 0; j < batch.length; j++) {
           const productRow = batch[j];
-          const rowNumber = i + j + 2;
+          const rowNumber = startRow + j;
+          batchRowNumbers.push(rowNumber);
 
           try {
             // Generate SKU if not provided
@@ -392,23 +399,180 @@ class BulkProductService {
               }
             };
 
-            // Create merchant product
-            const merchantProduct = new MProduct(productData);
-            await merchantProduct.save({ session });
-
-            // Create user-side product
-            await this.createUserSideProduct(merchantProduct, merchantId, store._id as any, session);
-
-            createdProducts.push(merchantProduct);
-            successCount++;
-
+            productDataList.push(productData);
           } catch (error: any) {
+            // Track errors for rows that fail during data preparation
             errorCount++;
             errors.push({
               row: rowNumber,
               field: 'general',
-              message: error.message || 'Failed to create product',
+              message: error.message || 'Failed to prepare product data',
               value: productRow.name
+            });
+          }
+        }
+
+        // Skip this batch iteration if no valid products to insert
+        if (productDataList.length === 0) {
+          continue;
+        }
+
+        try {
+          // BULK OPERATION: Insert all merchant products at once using insertMany
+          // Using { ordered: false } to continue on errors within the batch
+          const merchantProducts = await MProduct.insertMany(
+            productDataList,
+            { session, ordered: false }
+          );
+
+          // BULK OPERATION: Insert all user-side products at once
+          // First, collect all categories needed and create any missing ones
+          const categoryNames = [...new Set(productDataList.map(p => p.category))];
+          let categories = await Category.find({ name: { $in: categoryNames } }).session(session).lean();
+          const existingCategoryMap = new Map(categories.map(c => [c.name, c]));
+
+          // Create missing categories
+          const categoriesToCreate = categoryNames.filter(name => !existingCategoryMap.has(name));
+          if (categoriesToCreate.length > 0) {
+            const newCategories = await Category.create(
+              categoriesToCreate.map(name => ({
+                name,
+                slug: name.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-'),
+                type: 'product',
+                isActive: true
+              })),
+              { session }
+            );
+            newCategories.forEach(c => existingCategoryMap.set(c.name, c as any));
+          }
+
+          // Prepare user-side products for bulk insert
+          const userProductsData = merchantProducts.map((merchantProduct, idx) => {
+            const productData = productDataList[idx];
+            const category = existingCategoryMap.get(productData.category);
+
+            // Create unique slug
+            let productSlug = merchantProduct.name
+              .toLowerCase()
+              .replace(/[^a-z0-9\s]/g, '')
+              .replace(/\s+/g, '-')
+              .trim();
+
+            // Check for slug collisions and generate unique slug
+            let counter = 1;
+            const baseSlug = productSlug;
+            while (categories.some(c => {
+              const catSlug = c.name.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
+              return catSlug === productSlug;
+            }) || merchantProducts.slice(0, idx).some(mp => {
+              const mpSlug = mp.name.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
+              return mpSlug === productSlug;
+            })) {
+              productSlug = `${baseSlug}-${counter}`;
+              counter++;
+            }
+
+            return {
+              name: merchantProduct.name,
+              slug: productSlug,
+              description: merchantProduct.description,
+              shortDescription: merchantProduct.shortDescription,
+              category: category!._id,
+              store: store._id as mongoose.Types.ObjectId,
+              brand: merchantProduct.brand,
+              sku: merchantProduct.sku,
+              barcode: merchantProduct.barcode,
+              images: merchantProduct.images?.map((img: any) => img.url) || [],
+              pricing: {
+                original: merchantProduct.compareAtPrice || merchantProduct.price,
+                selling: merchantProduct.price,
+                currency: merchantProduct.currency || 'INR',
+                discount: merchantProduct.compareAtPrice
+                  ? Math.round(((merchantProduct.compareAtPrice - merchantProduct.price) / merchantProduct.compareAtPrice) * 100)
+                  : 0
+              },
+              inventory: {
+                stock: merchantProduct.inventory.stock,
+                isAvailable: merchantProduct.inventory.stock > 0,
+                lowStockThreshold: merchantProduct.inventory.lowStockThreshold || 5,
+                unlimited: false
+              },
+              ratings: {
+                average: 0,
+                count: 0,
+                distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+              },
+              specifications: [],
+              tags: merchantProduct.tags || [],
+              seo: {
+                title: merchantProduct.name,
+                description: merchantProduct.shortDescription || merchantProduct.description,
+                keywords: []
+              },
+              analytics: {
+                views: 0,
+                purchases: 0,
+                conversions: 0,
+                wishlistAdds: 0,
+                shareCount: 0,
+                returnRate: 0,
+                avgRating: 0
+              },
+              cashback: {
+                percentage: merchantProduct.cashback?.percentage || 5,
+                isActive: merchantProduct.cashback?.isActive || true
+              },
+              isActive: merchantProduct.status === 'active',
+              isFeatured: merchantProduct.visibility === 'featured',
+              isDigital: false,
+              weight: merchantProduct.weight,
+              productType: 'product'
+            };
+          });
+
+          // BULK OPERATION: Insert all user products at once using insertMany
+          // Cast to any[] to match Mongoose insertMany typing conventions used in this codebase
+          await Product.insertMany(userProductsData as any[], { session, ordered: false });
+
+          // All products in this batch succeeded
+          createdProducts.push(...merchantProducts);
+          successCount += merchantProducts.length;
+
+        } catch (error: any) {
+          // Handle bulk insert errors
+          // insertMany with ordered:false may still throw, but partial data is inserted
+          if (error.writeErrors) {
+            // Some products failed during bulk insert
+            const failedCount = error.writeErrors.length;
+            errorCount += failedCount;
+
+            // Track individual row errors
+            error.writeErrors.forEach((writeError: any, idx: number) => {
+              const originalIndex = error.insertedDocs
+                ? error.insertedDocs.findIndex((doc: any, i: number) => i >= idx)
+                : idx;
+              errors.push({
+                row: batchRowNumbers[originalIndex] || startRow + idx,
+                field: 'general',
+                message: writeError.errmsg || 'Failed to insert product',
+                value: productDataList[originalIndex]?.name || 'Unknown'
+              });
+            });
+
+            // Count successes
+            const successInBatch = batchRowNumbers.length - failedCount;
+            successCount += successInBatch;
+            createdProducts.push(...createdProducts.slice(0, successInBatch));
+          } else {
+            // Unknown error - mark entire batch as failed
+            errorCount += batchRowNumbers.length;
+            batchRowNumbers.forEach((rowNum, idx) => {
+              errors.push({
+                row: rowNum,
+                field: 'general',
+                message: error.message || 'Batch insert failed',
+                value: productDataList[idx]?.name || 'Unknown'
+              });
             });
           }
         }

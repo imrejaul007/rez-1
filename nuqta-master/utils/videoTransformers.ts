@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Transformation utilities for converting backend video data to frontend UGC format
 import { Video } from '@/services/realVideosApi';
 import { UGCVideoItem, Product, ContentType } from '@/types/playPage.types';

@@ -31,6 +31,23 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): P
 }
 
 /**
+ * Result type with fallback tracking
+ */
+export interface CloudinaryUploadResult {
+  url: string;
+  secureUrl: string;
+  publicId: string;
+  thumbnailUrl: string;
+  format: string;
+  width: number;
+  height: number;
+  bytes: number;
+  isPlaceholder?: boolean;
+  fallbackReason?: string;
+  circuitState?: string;
+}
+
+/**
  * Validate Cloudinary configuration
  */
 export function validateCloudinaryConfig(): boolean {
@@ -49,54 +66,83 @@ export function validateCloudinaryConfig(): boolean {
 }
 
 /**
- * Upload image to Cloudinary
+ * Upload image to Cloudinary with circuit breaker and fallback.
  * @param filePath - Local file path or buffer
  * @param folder - Cloudinary folder (default: bills)
  * @param options - Additional upload options
+ * @param options.disableFallback - If true, throws on failure instead of fallback
  */
 export async function uploadToCloudinary(
   filePath: string | Buffer,
   folder: string = 'bills',
-  options: any = {}
-): Promise<{
-  url: string;
-  secureUrl: string;
-  publicId: string;
-  thumbnailUrl: string;
-  format: string;
-  width: number;
-  height: number;
-  bytes: number;
-}> {
-  try {
-    const uploadOptions = {
-      folder: `rez/${folder}`,
-      resource_type: 'auto',
-      transformation: [
-        { width: 1200, height: 1200, crop: 'limit', quality: 'auto' }
-      ],
-      ...options
-    };
+  options: { disableFallback?: boolean; [key: string]: any } = {}
+): Promise<CloudinaryUploadResult> {
+  const { disableFallback, ...uploadOptions } = options;
+  const circuitState = cloudinaryCircuit.getState();
 
-    const result = await cloudinaryCircuit.exec(() =>
-      withTimeout(
-        cloudinary.uploader.upload(
-          typeof filePath === 'string' ? filePath : `data:image/jpeg;base64,${filePath.toString('base64')}`,
-          uploadOptions
+  const mergedOptions = {
+    folder: `rez/${folder}`,
+    resource_type: 'auto',
+    transformation: [
+      { width: 1200, height: 1200, crop: 'limit', quality: 'auto' }
+    ],
+    ...uploadOptions
+  };
+
+  try {
+    const result = await cloudinaryCircuit.execute(
+      () =>
+        withTimeout(
+          cloudinary.uploader.upload(
+            typeof filePath === 'string' ? filePath : `data:image/jpeg;base64,${filePath.toString('base64')}`,
+            mergedOptions
+          ),
+          CLOUDINARY_UPLOAD_TIMEOUT_MS,
+          `uploader.upload(${typeof filePath === 'string' ? filePath : 'buffer'})`
         ),
-        CLOUDINARY_UPLOAD_TIMEOUT_MS,
-        `uploader.upload(${typeof filePath === 'string' ? filePath : 'buffer'})`
-      )
+      // Fallback: return placeholder
+      () => ({
+        public_id: '',
+        url: '',
+        secure_url: '',
+        format: '',
+        width: 0,
+        height: 0,
+        bytes: 0,
+        isPlaceholder: true,
+      })
     );
 
     // Generate thumbnail URL
-    const thumbnailUrl = cloudinary.url(result.public_id, {
-      width: 300,
-      height: 300,
-      crop: 'fill',
-      quality: 'auto',
-      format: 'jpg'
-    });
+    const thumbnailUrl = result.public_id
+      ? cloudinary.url(result.public_id, {
+          width: 300,
+          height: 300,
+          crop: 'fill',
+          quality: 'auto',
+          format: 'jpg'
+        })
+      : '';
+
+    if (result.isPlaceholder) {
+      logger.warn('[CloudinaryUtils] Circuit open or upload failed - returning placeholder', {
+        fallbackReason: result.fallbackReason,
+        circuitState,
+      });
+      return {
+        url: '',
+        secureUrl: '',
+        publicId: '',
+        thumbnailUrl,
+        format: '',
+        width: 0,
+        height: 0,
+        bytes: 0,
+        isPlaceholder: true,
+        fallbackReason: 'circuit_open_or_upload_error',
+        circuitState,
+      };
+    }
 
     return {
       url: result.url,
@@ -106,11 +152,35 @@ export async function uploadToCloudinary(
       format: result.format,
       width: result.width,
       height: result.height,
-      bytes: result.bytes
+      bytes: result.bytes,
+      isPlaceholder: false,
     };
   } catch (error: any) {
-    logger.error('Cloudinary upload error:', error);
-    throw new Error(`Failed to upload to Cloudinary: ${error.message}`);
+    const errorMessage = error.message || String(error);
+
+    if (disableFallback) {
+      throw new Error(`Failed to upload to Cloudinary: ${errorMessage}`);
+    }
+
+    logger.error('[CloudinaryUtils] Upload error - returning placeholder', {
+      error: errorMessage,
+      circuitState,
+    });
+
+    // Return placeholder so operations aren't blocked
+    return {
+      url: '',
+      secureUrl: '',
+      publicId: '',
+      thumbnailUrl: '',
+      format: '',
+      width: 0,
+      height: 0,
+      bytes: 0,
+      isPlaceholder: true,
+      fallbackReason: `upload_error: ${errorMessage}`,
+      circuitState,
+    };
   }
 }
 
@@ -129,24 +199,38 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
 }
 
 /**
- * Upload multiple images to Cloudinary
+ * Upload multiple images to Cloudinary with circuit breaker and fallback.
+ * Individual failures return placeholders instead of failing the batch.
  * @param filePaths - Array of file paths
  * @param folder - Cloudinary folder
  */
 export async function uploadMultipleToCloudinary(
   filePaths: string[],
   folder: string = 'bills'
-): Promise<Array<{
-  url: string;
-  secureUrl: string;
-  publicId: string;
-  thumbnailUrl: string;
-}>> {
-  const uploadPromises = filePaths.map(filePath =>
-    uploadToCloudinary(filePath, folder)
+): Promise<CloudinaryUploadResult[]> {
+  const results = await Promise.all(
+    filePaths.map(filePath => uploadToCloudinary(filePath, folder))
   );
 
-  return Promise.all(uploadPromises);
+  const successCount = results.filter(r => !r.isPlaceholder).length;
+  logger.info('[CloudinaryUtils] Batch upload completed', {
+    total: filePaths.length,
+    successful: successCount,
+    placeholders: filePaths.length - successCount,
+  });
+
+  return results;
+}
+
+/**
+ * Get circuit breaker state for health checks
+ */
+export function getCloudinaryCircuitState(): { state: string; stats: any } {
+  const stats = cloudinaryCircuit.getStats();
+  return {
+    state: cloudinaryCircuit.getState(),
+    stats,
+  };
 }
 
 /**

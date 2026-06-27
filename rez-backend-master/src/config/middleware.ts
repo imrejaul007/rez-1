@@ -121,9 +121,18 @@ export function setupMiddleware(app: Express): void {
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       const allowedOrigins = getAllowedOrigins();
 
-      // Allow requests with no origin (like mobile apps, Postman, etc.)
+      // SECURITY: Mutation requests (POST/PUT/PATCH/DELETE) must have Origin header.
+      // Allow no-origin only for GET/HEAD/OPTIONS (safe methods).
+      // Mobile apps and server-to-server calls should use Authorization header
+      // and must go through the mutation check middleware below.
       if (!origin) {
-        return callback(null, true);
+        const method = (req as any).method;
+        if (method && ['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+          return callback(null, true);
+        }
+        // Log the blocked request for security monitoring
+        logger.warn(`[CORS] Blocked mutation request without Origin from: ${req.ip}`);
+        return callback(new Error('Origin header required for mutations'));
       }
 
       if (allowedOrigins.includes(origin)) {
@@ -181,9 +190,14 @@ export function setupMiddleware(app: Express): void {
   ];
 
   app.use((req: any, res: any, next: any) => {
-    // Upload routes get 10MB; everything else gets 50KB
+    // Upload routes get 10MB; everything else gets 1MB.
+    // Phase 6.24: bumped non-upload limit from 50KB to 1MB. The 50KB cap was
+    // originally for dev to catch accidental huge payloads, but it was too
+    // aggressive for production — a typical /api/orders POST with multiple
+    // line items + addresses + metadata is 50-200KB. 1MB still catches
+    // payload-abuse attacks while letting legitimate requests through.
     const isUpload = UPLOAD_PATHS.some((p: string) => req.path.startsWith(p));
-    const limit = isUpload ? '10mb' : '50kb';
+    const limit = isUpload ? '10mb' : '1mb';
 
     express.json({
       limit,
@@ -211,7 +225,7 @@ export function setupMiddleware(app: Express): void {
     });
   });
 
-  app.use(express.urlencoded({ extended: true, limit: '50kb' }));
+  app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
   // Global request sanitization — XSS + NoSQL injection prevention
   app.use((req, res, next) => {
@@ -243,8 +257,23 @@ export function setupMiddleware(app: Express): void {
     logger.info('CSRF middleware disabled (Bearer-token auth; set ENABLE_CSRF=true to enable)');
   }
 
-  // Compression middleware
-  app.use(compression({ threshold: 2048 }));
+  # ── Compression Configuration ────────────────────────────────────────────────
+  # PERFORMANCE: Compression is handled at the Nginx layer (API Gateway), NOT here.
+  #
+  # Why disabled at Express level:
+  # 1. Avoids double-compression: nginx compresses once at the edge, Express compressing
+  #    again wastes CPU with zero bandwidth benefit (compressed data can't be further compressed).
+  # 2. Better performance: nginx handles compression more efficiently (C code vs JS).
+  # 3. Single point of control: Compression settings are managed in nginx.conf.
+  # 4. Authenticated requests: nginx skips compression for auth (BREACH protection),
+  #    so Express shouldn't re-add it.
+  #
+  # Brotli support: nginx handles Brotli negotiation and fallback to gzip automatically.
+  # Express compression package only supports gzip.
+  #
+  # If deploying WITHOUT nginx (direct to client/CDN), re-enable this:
+  #   app.use(compression({ threshold: 1024, level: 6 }));
+  // Compression is disabled - handled at nginx layer to avoid double-compression
 
   // Prometheus metrics middleware - tracks all HTTP requests
   app.use(metricsMiddleware);

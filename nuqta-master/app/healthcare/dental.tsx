@@ -17,13 +17,14 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import apiClient from '@/services/apiClient';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { safeCallPhone } from '@/utils/linking';
 
 const { width } = Dimensions.get('window');
 
@@ -272,7 +273,7 @@ function DentalCarePage() {
 
   const callDentist = (phone?: string) => {
     if (phone) {
-      try { Linking.openURL(`tel:${phone}`); } catch (_e) { /* silently handle */ }
+      try { safeCallPhone(phone); } catch (_e) { /* silently handle */ }
     } else {
       platformAlertSimple('Not Available', 'Phone number not available for this dentist.');
     }

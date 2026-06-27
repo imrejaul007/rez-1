@@ -10,7 +10,7 @@ import {
   Pressable,
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { EVENT_COLORS } from '@/constants/EventColors';
 import StarRating from './StarRating';
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Table Booking API Service
 // Handles restaurant table booking operations
 

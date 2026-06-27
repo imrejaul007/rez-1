@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { CardGridSkeleton } from '@/components/skeletons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import gamificationApi, { GamificationStats } from '@/services/gamificationApi';
 import { useGetCurrencySymbol } from '@/stores/selectors';

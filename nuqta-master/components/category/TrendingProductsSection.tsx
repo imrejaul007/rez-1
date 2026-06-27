@@ -12,10 +12,9 @@ import {
   StyleSheet,
   Pressable,
   Platform,
-  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { getProductsForCategory, DummyProduct } from '@/data/categoryDummyData';
 import CoinIcon from '@/components/ui/CoinIcon';
 import { useGetCurrencySymbol } from '@/stores/selectors';

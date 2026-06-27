@@ -161,6 +161,21 @@ export function mapFrontendCheckoutToBackendOrder(checkoutData: {
     result.deliveryAddress = { name, phone, addressLine1, city, state, pincode };
   }
 
+  // Backend (orderValidators.createOrderSchema) requires `shippingAddress`
+  // as an ObjectId string, not a full address object. The frontend state
+  // carries the saved-address id on `state.selectedAddress.id` (mapped from
+  // `addr.id || addr._id` in loadAddresses). Forward it as the canonical
+  // shippingAddress so ordersApi.createOrder can hand it to the backend
+  // verbatim. If we don't have an id (e.g. guest / legacy order), the
+  // service layer will surface a clear error instead of letting Joi 400.
+  const addressId: string | undefined =
+    (address as any).id ||
+    (address as any)._id ||
+    (checkoutData as any).shippingAddressId;
+  if (addressId) {
+    (result as any).shippingAddress = addressId;
+  }
+
   // Include fulfillment details for non-delivery types
   if (checkoutData.fulfillmentDetails) {
     result.fulfillmentDetails = checkoutData.fulfillmentDetails;
@@ -170,7 +185,13 @@ export function mapFrontendCheckoutToBackendOrder(checkoutData: {
     result.storeId = checkoutData.storeId;
   }
   if (checkoutData.items) {
-    result.items = checkoutData.items;
+    // Normalize to backend shape: { product, quantity, price }
+    result.items = checkoutData.items.map((it: any) => ({
+      product: it.product ?? it.productId ?? it.id,
+      quantity: Number(it.quantity) || 1,
+      price: Number(it.price) || 0,
+      name: it.name,
+    }));
   }
   if (checkoutData.coinsUsed) {
     result.coinsUsed = checkoutData.coinsUsed;
@@ -192,26 +213,36 @@ export function mapFrontendCheckoutToBackendOrder(checkoutData: {
 
 /**
  * Map payment method names
+ *
+ * Backend (orderValidators.createOrderSchema) only accepts:
+ *   'cod' | 'online' | 'wallet' | 'razorpay' | 'stripe' | 'paypal'
+ *
+ * Frontend-only aliases ('card', 'upi', 'netbanking') are normalised to the
+ * closest backend equivalent so we don't accidentally send an unsupported
+ * value that Joi will reject with a 400.
  */
-function mapPaymentMethod(method: string): 'cod' | 'card' | 'upi' | 'wallet' | 'netbanking' | 'razorpay' {
-  const methodMap: { [key: string]: 'cod' | 'card' | 'upi' | 'wallet' | 'netbanking' | 'razorpay' } = {
+function mapPaymentMethod(method: string): 'cod' | 'online' | 'wallet' | 'razorpay' | 'stripe' | 'paypal' {
+  const methodMap: { [key: string]: 'cod' | 'online' | 'wallet' | 'razorpay' | 'stripe' | 'paypal' } = {
     'cash': 'cod',
     'cash_on_delivery': 'cod',
     'cod': 'cod',
-    'credit_card': 'card',
-    'debit_card': 'card',
-    'card': 'card',
-    'upi': 'upi',
+    // legacy frontend aliases — collapse to 'razorpay' (the canonical online gateway)
+    'credit_card': 'razorpay',
+    'debit_card': 'razorpay',
+    'card': 'razorpay',
+    'upi': 'razorpay',
+    'net_banking': 'razorpay',
+    'netbanking': 'razorpay',
     'wallet': 'wallet',
-    'net_banking': 'netbanking',
-    'netbanking': 'netbanking',
     'razorpay': 'razorpay',
-    'online': 'razorpay',
-    'online_payment': 'razorpay',
+    'stripe': 'stripe',
+    'paypal': 'paypal',
+    'online': 'online',
+    'online_payment': 'online',
   };
 
   const normalized = method.toLowerCase().replace(/\s+/g, '_');
-  return methodMap[normalized] || 'razorpay';
+  return methodMap[normalized] || 'online';
 }
 
 /**

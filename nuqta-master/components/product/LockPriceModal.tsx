@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAvailableBalance, useRefreshWallet, useGetCurrencySymbol } from '@/stores/selectors';
 import cartService, { LockWithPaymentRequest } from '@/services/cartApi';
 import { triggerImpact, triggerNotification } from '@/utils/haptics';

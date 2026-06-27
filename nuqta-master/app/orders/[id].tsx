@@ -14,7 +14,7 @@ import { platformAlertSimple, platformAlertDestructive } from '@/utils/platformA
 import { Colors } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
@@ -131,6 +131,10 @@ function OrderDetailsScreen() {
 
       if (Platform.OS === 'web') {
         // On web, fetch as blob and open in new tab
+        // NOTE: This is a PDF invoice DOWNLOAD (GET /billing/invoice/:txId/download), not an
+        // image upload. The audit incorrectly flagged it as a raw `fetch` for image upload. It
+        // has nothing to do with `services/imageUploadService.ts`, which is for uploading
+        // images. Skipping migration.
         const baseURL = apiClient.getBaseURL();
         const token = apiClient.getAuthToken();
         const response = await fetch(`${baseURL}/billing/invoice/${txId}/download`, {

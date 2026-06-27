@@ -11,7 +11,7 @@ import {
   ScrollView,
   StatusBar,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { OrderFilter, OrderStatus } from '@/types/order';
 import { colors } from '@/constants/theme';
 

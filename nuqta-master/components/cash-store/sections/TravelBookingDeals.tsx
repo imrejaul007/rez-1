@@ -18,7 +18,7 @@ import {
   Dimensions} from 'react-native';
 import Animated, { interpolate, useAnimatedStyle, useDerivedValue, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { TravelDeal } from '../../../types/cash-store.types';
 import { colors } from '@/constants/theme';
 

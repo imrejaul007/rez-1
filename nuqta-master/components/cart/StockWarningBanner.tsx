@@ -8,7 +8,7 @@ import {
   Pressable,
   Dimensions} from 'react-native';
 import Animated, { interpolate, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import {
   StockWarningBannerProps,

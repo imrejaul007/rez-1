@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Pressable, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { checkFollowStatus, toggleFollow } from '../../services/activityFeedApi';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useToastStore } from '@/stores/toastStore';
 
 interface FollowButtonProps {
   userId: string;
@@ -15,6 +16,10 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId, onFollowChange, sty
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const isMounted = useIsMounted();
+  const showError = useToastStore((state) => state.showError);
+
+  // Ref for request race condition prevention
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     loadFollowStatus();
@@ -34,12 +39,24 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId, onFollowChange, sty
     }
   };
 
-  const handleToggleFollow = async () => {
+  const handleToggleFollow = useCallback(async () => {
     if (isLoading) return;
 
+    const currentRequestId = ++requestIdRef.current;
+    const previousFollowing = isFollowing;
+
     try {
+      // Optimistic update - immediately update UI
       setIsLoading(true);
+      setIsFollowing(!previousFollowing);
+
       const result = await toggleFollow(userId);
+
+      // Check if this request is still valid (race condition prevention)
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
       if (!isMounted()) return;
       setIsFollowing(result.following);
 
@@ -47,12 +64,24 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId, onFollowChange, sty
         onFollowChange(result.following);
       }
     } catch (error) {
-      // silently handle
-    } finally {
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Rollback optimistic update
       if (!isMounted()) return;
-      setIsLoading(false);
+      setIsFollowing(previousFollowing);
+
+      // Show error toast
+      showError('Failed to update follow status', 3000);
+    } finally {
+      // Only update loading state if this is still the latest request
+      if (currentRequestId === requestIdRef.current && isMounted()) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [isLoading, isFollowing, userId, onFollowChange, isMounted, showError]);
 
   if (isCheckingStatus) {
     return (

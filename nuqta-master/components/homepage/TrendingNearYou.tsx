@@ -11,7 +11,7 @@ import {
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, withRepeat, interpolate } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { storesApi } from '@/services/storesApi';
 import { useCurrentRegionId } from '@/stores/selectors';

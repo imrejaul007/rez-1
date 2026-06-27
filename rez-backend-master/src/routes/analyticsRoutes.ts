@@ -6,7 +6,8 @@ import {
   getUserAnalytics,
   getAnalyticsDashboard,
   getSearchAnalytics,
-  getCategoryAnalytics
+  getCategoryAnalytics,
+  exportAnalyticsPDF
 } from '../controllers/analyticsController';
 import { optionalAuth, requireAuth } from '../middleware/auth';
 import { validateQuery, validateParams, validateBody, commonSchemas } from '../middleware/validation';
@@ -49,8 +50,7 @@ router.post('/batch', optionalAuth, validateBody(batchEventsSchema), handleBatch
 router.post('/events', optionalAuth, validateBody(batchEventsSchema), handleBatchEvents);
 
 // Track an analytics event
-router.post('/track',   // analyticsLimiter,, // Disabled for development
-  optionalAuth,
+router.post('/track',     optionalAuth,
   validateBody(Joi.object({
     storeId: commonSchemas.objectId().required(),
     eventType: Joi.string().valid('view', 'search', 'favorite', 'unfavorite', 'compare', 'review', 'click', 'share').required(),
@@ -69,8 +69,7 @@ router.post('/track',   // analyticsLimiter,, // Disabled for development
 );
 
 // Get store analytics
-router.get('/store/:storeId',   // generalLimiter,, // Disabled for development
-  optionalAuth,
+router.get('/store/:storeId',     optionalAuth,
   validateParams(Joi.object({
     storeId: commonSchemas.objectId()
   })),
@@ -84,8 +83,7 @@ router.get('/store/:storeId',   // generalLimiter,, // Disabled for development
 );
 
 // Get popular stores
-router.get('/popular',   // generalLimiter,, // Disabled for development
-  optionalAuth,
+router.get('/popular',     optionalAuth,
   validateQuery(Joi.object({
     startDate: Joi.date().iso(),
     endDate: Joi.date().iso(),
@@ -96,8 +94,7 @@ router.get('/popular',   // generalLimiter,, // Disabled for development
 );
 
 // Get user analytics
-router.get('/user/my-analytics',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.get('/user/my-analytics',     requireAuth,
   validateQuery(Joi.object({
     startDate: Joi.date().iso(),
     endDate: Joi.date().iso(),
@@ -107,8 +104,7 @@ router.get('/user/my-analytics',   // generalLimiter,, // Disabled for developm
 );
 
 // Get analytics dashboard
-router.get('/dashboard',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.get('/dashboard',    requireAuth,
   validateQuery(Joi.object({
     startDate: Joi.date().iso(),
     endDate: Joi.date().iso()
@@ -116,9 +112,17 @@ router.get('/dashboard',   // generalLimiter,, // Disabled for development
   getAnalyticsDashboard
 );
 
+// Export analytics report as PDF
+router.get('/export/pdf',    requireAuth,
+  validateQuery(Joi.object({
+    startDate: Joi.date().iso(),
+    endDate: Joi.date().iso()
+  })),
+  exportAnalyticsPDF
+);
+
 // Get search analytics
-router.get('/search',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.get('/search',     requireAuth,
   validateQuery(Joi.object({
     startDate: Joi.date().iso(),
     endDate: Joi.date().iso(),
@@ -128,8 +132,7 @@ router.get('/search',   // generalLimiter,, // Disabled for development
 );
 
 // Get category analytics
-router.get('/categories',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.get('/categories',     requireAuth,
   validateQuery(Joi.object({
     startDate: Joi.date().iso(),
     endDate: Joi.date().iso()

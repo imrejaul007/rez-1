@@ -6,10 +6,11 @@ import Animated, {
   useSharedValue,
   withSpring} from 'react-native-reanimated';
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerImpact, triggerNotification } from "@/utils/haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { platformAlert } from "@/utils/platformAlert";
+import { safeOpenURL } from "@/utils/linking";
 import ContactModal from "@/components/store/ContactModal";
 import {
   Colors,
@@ -170,7 +171,10 @@ function Section2({ dynamicData, cardType }: Section2Props){
         const mapsUrl = lat && lng
           ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
           : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || '')}`;
-        await Linking.openURL(mapsUrl);
+        // Phase 6: web parity — use safeOpenURL so the https: URL goes
+        // through the web-redirect path (window.open) cleanly, with error
+        // capture instead of a thrown promise.
+        await safeOpenURL(mapsUrl);
       }
     } catch (error) {
       platformAlert('Error', 'Unable to open location');

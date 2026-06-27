@@ -23,7 +23,7 @@ import Animated, {
 import { GamePageSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import gamificationApi, { SpinWheelSegment } from '@/services/gamificationApi';

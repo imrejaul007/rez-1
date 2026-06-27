@@ -43,6 +43,7 @@ import { logger } from '../config/logger';
 
 // User model import — use dynamic require so a circular init order doesn't
 // break the emitter. Resolve on first call.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _UserModel: mongoose.Model<any> | null = null;
 function getUserModel(): mongoose.Model<any> {
   if (_UserModel) return _UserModel;
@@ -50,7 +51,7 @@ function getUserModel(): mongoose.Model<any> {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const mod = require('../models/User');
     _UserModel = mod.User ?? mod.default ?? mod;
-    if (!_UserModel || typeof (_UserModel as any).findOneAndUpdate !== 'function') {
+    if (!_UserModel || typeof (_UserModel.findOneAndUpdate as Function | undefined) !== 'function') {
       throw new Error('User model resolved but missing findOneAndUpdate');
     }
     return _UserModel;
@@ -142,9 +143,9 @@ export async function resolveCustomerIdentity(input: ResolveInput): Promise<Reso
     if (mongoose.Types.ObjectId.isValid(input.customerId)) {
       try {
         const User = getUserModel();
-        const existing = await User.findById(input.customerId).select('_id').lean();
+        const existing = await User.findById(input.customerId).select('_id').lean() as { _id: mongoose.Types.ObjectId } | null;
         if (existing) {
-          return { customerId: String((existing as any)._id), resolution: 'existing' };
+          return { customerId: String(existing._id), resolution: 'existing' };
         }
       } catch (err) {
         logger.warn('[resolveCustomerIdentity] findById failed', {
@@ -197,7 +198,7 @@ export async function resolveCustomerIdentity(input: ResolveInput): Promise<Reso
         projection: { _id: 1 },
         setDefaultsOnInsert: true,
       },
-    ).lean();
+    ).lean() as { _id: mongoose.Types.ObjectId } | null;
 
     if (!doc) {
       logger.error('[resolveCustomerIdentity] upsert returned null doc', {
@@ -212,7 +213,7 @@ export async function resolveCustomerIdentity(input: ResolveInput): Promise<Reso
     // lean result, so we use a sentinel check against the ObjectId timestamp
     // to distinguish. ObjectId.getTimestamp() returns creation time; if it's
     // within the last second we can be confident we just made it.
-    const id = (doc as any)._id as mongoose.Types.ObjectId;
+    const id = doc._id;
     const justCreated = Date.now() - id.getTimestamp().getTime() < 1000;
 
     return {

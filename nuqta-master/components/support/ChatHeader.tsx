@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Modal } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { SupportAgent } from '@/types/supportChat.types';
 import { colors } from '@/constants/theme';
@@ -92,7 +92,7 @@ function ChatHeader({
                 ) : (
                   <View style={styles.avatarPlaceholder}>
                     <ThemedText style={styles.avatarText}>
-                      {agent.name.charAt(0).toUpperCase()}
+                      {(agent.name || '?').charAt(0).toUpperCase()}
                     </ThemedText>
                   </View>
                 )}

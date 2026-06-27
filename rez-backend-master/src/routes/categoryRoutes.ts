@@ -28,8 +28,7 @@ router.use(generalLimiter);
 
 // Get all categories
 router.get('/',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     type: Joi.string().valid('going_out', 'home_delivery', 'earn', 'play', 'general'),
     featured: Joi.boolean(),
@@ -45,8 +44,7 @@ router.get('/',
 
 // Get category tree
 router.get('/tree',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     type: Joi.string().valid('going_out', 'home_delivery', 'earn', 'play', 'general')
   })),
@@ -56,8 +54,7 @@ router.get('/tree',
 
 // Get root categories
 router.get('/root',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     type: Joi.string().valid('going_out', 'home_delivery', 'earn', 'play', 'general')
   })),
@@ -67,8 +64,7 @@ router.get('/root',
 
 // Get featured categories
 router.get('/featured',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     type: Joi.string().valid('going_out', 'home_delivery', 'earn', 'play', 'general'),
     limit: Joi.number().integer().min(1).max(20).default(6)
@@ -79,8 +75,7 @@ router.get('/featured',
 
 // Get categories with counts
 router.get('/with-counts',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     type: Joi.string().valid('going_out', 'home_delivery', 'earn', 'play', 'general').default('general')
   })),
@@ -120,8 +115,7 @@ router.get('/:slug/page-config',
 
 // Get category by slug
 router.get('/:slug',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     slug: Joi.string().required()
   })),

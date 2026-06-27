@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Security Service - PRODUCTION READY
 // Device fingerprinting, IP tracking, captcha verification, and security measures
 // for preventing fraud and abuse in social media earnings

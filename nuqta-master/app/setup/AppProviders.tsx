@@ -27,8 +27,13 @@ import { withErrorBoundary } from '@/utils/withErrorBoundary';
  */
 import React, { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
-import { QueryClientProvider } from '@tanstack/react-query';
+// React Query is lazy-loaded: it's 23+23=46 modules and the QueryClientProvider
+// is only needed when components actually useQuery/useMutation. We defer the
+// import until first render.
 import { queryClient } from '@/lib/queryClient';
+const QueryClientProviderLazy = React.lazy(() =>
+  import('@tanstack/react-query').then(m => ({ default: m.QueryClientProvider }))
+);
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -112,25 +117,27 @@ function AppProviders({
   const stripeKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
 
   const content = (
-    <QueryClientProvider client={queryClient}>
-    <ErrorBoundary onError={onErrorBoundaryError}>
-      <AuthProvider>
-        <IdentityHydrator />
-        <DeferredWallet>
-          <DeferredGamification>
-            <LocationProvider>
-              <LocationRegionSync />
-              <DeferredSocket>
-                <DeferredCart>
-                  <ThemedNavigation />
-                </DeferredCart>
-              </DeferredSocket>
-            </LocationProvider>
-          </DeferredGamification>
-        </DeferredWallet>
-      </AuthProvider>
-    </ErrorBoundary>
-    </QueryClientProvider>
+    <React.Suspense fallback={null}>
+      <QueryClientProviderLazy client={queryClient}>
+        <ErrorBoundary onError={onErrorBoundaryError}>
+          <AuthProvider>
+            <IdentityHydrator />
+            <DeferredWallet>
+              <DeferredGamification>
+                <LocationProvider>
+                  <LocationRegionSync />
+                  <DeferredSocket>
+                    <DeferredCart>
+                      <ThemedNavigation />
+                    </DeferredCart>
+                  </DeferredSocket>
+                </LocationProvider>
+              </DeferredGamification>
+            </DeferredWallet>
+          </AuthProvider>
+        </ErrorBoundary>
+      </QueryClientProviderLazy>
+    </React.Suspense>
   );
 
   // Wrap with StripeProvider on native platforms only

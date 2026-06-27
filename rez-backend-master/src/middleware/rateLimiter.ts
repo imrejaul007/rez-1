@@ -34,10 +34,15 @@ const keyGenerator = (req: Request): string => {
 };
 
 // ─── Check if disabled (dev override) ────────────────────────────────────────
-const isRateLimitDisabled = process.env.DISABLE_RATE_LIMIT === 'true';
+// SECURITY: Rate limiting can NEVER be disabled in production.
+// DISABLE_RATE_LIMIT=true is ignored when NODE_ENV=production.
+const isProduction = process.env.NODE_ENV === 'production';
+const isRateLimitDisabled = !isProduction && process.env.DISABLE_RATE_LIMIT === 'true';
 
 if (isRateLimitDisabled) {
-  logger.info('⚠️  Rate limiting is DISABLED (DISABLE_RATE_LIMIT=true)');
+  logger.info('⚠️  Rate limiting is DISABLED (DISABLE_RATE_LIMIT=true, NODE_ENV !== production)');
+} else if (process.env.DISABLE_RATE_LIMIT === 'true' && isProduction) {
+  logger.warn('⚠️  Rate limiting DISABLE_RATE_LIMIT=true ignored in production');
 }
 
 const passthrough = (_req: Request, _res: Response, next: NextFunction) => next();
@@ -267,7 +272,7 @@ export const otpLimiter = isRateLimitDisabled
       windowMs: 30 * 1000,
       max: 3,
       keyGenerator,
-      store: makeStore('otp'),
+      store: makeStore('otp', { failOpen: false }),
       message: (_req: Request, res: Response) => {
         res.status(429).json({
           success: false,
@@ -277,7 +282,7 @@ export const otpLimiter = isRateLimitDisabled
       },
       standardHeaders: true,
       legacyHeaders: false,
-    });
+    }, false);
 
 export const passwordResetLimiter = isRateLimitDisabled
   ? passthrough

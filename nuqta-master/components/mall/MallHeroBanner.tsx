@@ -30,7 +30,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { MallBanner } from '../../types/mall.types';
 import { FlashList } from '@shopify/flash-list';
 import { colors } from '@/constants/theme';

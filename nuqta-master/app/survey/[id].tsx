@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Platform, StatusBar, Act
 import { DetailPageSkeleton } from '@/components/skeletons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import surveyApiService, { SurveyDetail, SurveyAnswer } from '@/services/surveysApi';
 import { platformAlertSimple, platformAlertConfirm, platformAlertDestructive } from '@/utils/platformAlert';

@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import productsApi from '@/services/productsApi';
 import categoryMetadataApi from '@/services/categoryMetadataApi';

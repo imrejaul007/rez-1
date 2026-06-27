@@ -23,7 +23,7 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Elements } from '@stripe/react-stripe-js';
 import { getStripePromise } from '@/utils/lazyImports';
 import realVouchersApi from '@/services/realVouchersApi';

@@ -207,7 +207,7 @@ class ReviewsService {
     userId?: string,
     query: Omit<ReviewsQuery, 'userId'> = {}
   ): Promise<ApiResponse<ReviewsResponse>> {
-    const endpoint = userId ? `/reviews/user/${userId}` : '/reviews/my';
+    const endpoint = userId ? `/reviews/user/${userId}` : '/reviews/user/my-reviews';
     return apiClient.get(endpoint, query);
   }
 

@@ -17,7 +17,7 @@ import {
 import { DetailPageSkeleton } from '@/components/skeletons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 import * as Location from 'expo-location';
@@ -29,6 +29,7 @@ import { colors } from '@/constants/theme';
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import { catchAndWarn } from '@/utils/catchAndReport';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { safeOpenURL } from '@/utils/linking';
 
 // Nuqta Brand Colors
 const COLORS = {
@@ -274,7 +275,7 @@ function SocialImpactEventDetail() {
     } catch (_e) { /* silently handle */ }
   };
 
-  const openMaps = () => {
+  const openMaps = async () => {
     if (!event?.location?.address) return;
     const address = `${event.location.address}${event.location.city ? ', ' + event.location.city : ''}`;
     const encoded = encodeURIComponent(address);
@@ -287,18 +288,18 @@ function SocialImpactEventDetail() {
       // Web fallback — open Google Maps in a new tab
       url = `https://www.google.com/maps/search/?api=1&query=${encoded}`;
     }
-    try { Linking.openURL(url); } catch (e) { catchAndWarn(e, 'SocialImpactDetail/openURL'); }
+    try { await safeOpenURL(url); } catch (e) { catchAndWarn(e, 'SocialImpactDetail/openURL'); }
   };
 
   const callPhone = () => {
     if (event?.contact?.phone) {
-      try { Linking.openURL(`tel:${event.contact.phone}`); } catch (e) { catchAndWarn(e, 'SocialImpactDetail/openURL'); }
+      try { safeOpenURL(`tel:${event.contact.phone}`); } catch (e) { catchAndWarn(e, 'SocialImpactDetail/openURL'); }
     }
   };
 
   const sendEmail = () => {
     if (event?.contact?.email) {
-      try { Linking.openURL(`mailto:${event.contact.email}`); } catch (e) { catchAndWarn(e, 'SocialImpactDetail/openURL'); }
+      try { safeOpenURL(`mailto:${event.contact.email}`); } catch (e) { catchAndWarn(e, 'SocialImpactDetail/openURL'); }
     }
   };
 
@@ -690,7 +691,7 @@ function SocialImpactEventDetail() {
               {event.merchant?.phone && (
                 <Pressable
                   style={styles.hostedByContact}
-                  onPress={() => { try { Linking.openURL(`tel:${event.merchant!.phone}`); } catch (e) { catchAndWarn(e, 'SocialImpactDetail/openURL'); } }}
+                  onPress={() => { try { safeOpenURL(`tel:${event.merchant!.phone}`); } catch (e) { catchAndWarn(e, 'SocialImpactDetail/openURL'); } }}
                 >
                   <Ionicons name="call-outline" size={14} color={Colors.info} />
                   <Text style={styles.hostedByContactText}>{event.merchant.phone}</Text>

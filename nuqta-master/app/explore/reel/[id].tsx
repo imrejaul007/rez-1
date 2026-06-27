@@ -19,7 +19,7 @@ import { FlashList } from '@shopify/flash-list';
 import { DetailPageSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { platformAlertSimple, platformAlertConfirm, platformAlertDestructive } from '@/utils/platformAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';

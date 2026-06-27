@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Bill Upload Page - Production Ready
  *
@@ -37,9 +36,10 @@ import CachedImage from '@/components/ui/CachedImage';
 import * as ExpoCamera from 'expo-camera';
 // Deferred: ImagePicker only needed when user taps "Choose from Library"
 const getImagePicker = async () => await import('expo-image-picker');
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useNavigation, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 // Services & Hooks
 import { billUploadService } from '@/services/billUploadService';
@@ -139,6 +139,7 @@ interface ToastConfig {
 function BillUploadPage() {
   const isMounted = useIsMounted();
   const router = useRouter();
+  const handleBack = useSafeBack();
   const navigation = useNavigation();
   const { bonusCampaignSlug } = useLocalSearchParams<{ bonusCampaignSlug?: string }>();
   const { goBack } = useSafeNavigation();
@@ -280,7 +281,7 @@ function BillUploadPage() {
         }
       }
     } catch (error) {
-      logger.error('Failed to load saved form data:', error);
+      logger.error('Failed to load saved form data:', error as Error | undefined);
     }
   };
 
@@ -295,7 +296,7 @@ function BillUploadPage() {
       };
       await AsyncStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(dataToSave));
     } catch (error) {
-      logger.error('Failed to save form data:', error);
+      logger.error('Failed to save form data:', error as Error | undefined);
     }
   }, [formData]);
 
@@ -306,7 +307,7 @@ function BillUploadPage() {
     try {
       await AsyncStorage.removeItem(FORM_STORAGE_KEY);
     } catch (error) {
-      logger.error('Failed to clear saved form data:', error);
+      logger.error('Failed to clear saved form data:', error as Error | undefined);
     }
   };
 
@@ -343,7 +344,7 @@ function BillUploadPage() {
         setMerchants(mappedStores);
       }
     } catch (error) {
-      logger.error('Error loading merchants:', error);
+      logger.error('Error loading merchants:', error as Error | undefined);
       showToast('Failed to load merchants', 'error');
     } finally {
       if (!isMounted()) return;
@@ -419,7 +420,7 @@ function BillUploadPage() {
     }));
 
     // Clear error when user starts typing
-    if (errors[fieldName]) {
+    if ((errors as Record<string, string | undefined>)[fieldName]) {
       setErrors((prev) => ({
         ...prev,
         [fieldName]: undefined,
@@ -576,7 +577,7 @@ function BillUploadPage() {
           showToast(`Bill photo captured (Quality: ${quality.score}/100)`, 'success');
         }
       } catch (error) {
-        logger.error('Error taking picture:', error);
+        logger.error('Error taking picture:', error as Error | undefined);
         showToast('Failed to take picture', 'error');
       }
     }
@@ -755,6 +756,8 @@ function BillUploadPage() {
         billNumber: formData.billNumber || undefined,
         notes: formData.notes || undefined,
         cashbackCalculation: cashbackCalculation || undefined,
+        storeId: formData.merchantId,
+        date: formData.billDate,
       };
 
       // Check if online - use offline queue if offline
@@ -792,7 +795,7 @@ function BillUploadPage() {
           resetForm();
           return;
         } catch (queueError) {
-          logger.error('❌ [BILL UPLOAD] Failed to add to queue:', queueError);
+          logger.error('❌ [BILL UPLOAD] Failed to add to queue:', queueError as Error | undefined);
           if (!isMounted()) return;
           setShowProgressModal(false);
           showToast('Failed to queue bill for upload. Please try again.', 'error');
@@ -874,7 +877,7 @@ function BillUploadPage() {
         });
       }
     } catch (error) {
-      logger.error('Error uploading bill:', error);
+      logger.error('Error uploading bill:', error as Error | undefined);
       if (!isMounted()) return;
       setShowProgressModal(false);
       showToast('An unexpected error occurred', 'error');
@@ -1272,13 +1275,7 @@ function BillUploadPage() {
       >
       {/* Header */}
       <View style={styles.header}>
-        <HeaderBackButton onPress={() => {
-          if (router.canGoBack()) {
-            router.canGoBack() ? router.back() : router.replace('/(tabs)');
-          } else {
-            router.replace('/(tabs)/');
-          }
-        }} iconColor={colors.darkGray} />
+        <HeaderBackButton onPress={handleBack} iconColor={colors.darkGray} />
         <Text style={styles.headerTitle}>Upload Bill</Text>
         <Pressable onPress={() => setShowInfoModal(true)}>
           <Ionicons name="information-circle-outline" size={24} color={colors.darkGray} />

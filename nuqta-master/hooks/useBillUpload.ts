@@ -13,12 +13,7 @@ import {
   RetryConfig,
   DEFAULT_RETRY_CONFIG,
 } from '@/types/upload.types';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // Form data interface
 export interface BillUploadFormData {

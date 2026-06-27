@@ -9,7 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ supports 'edges'
@@ -32,9 +32,10 @@ import {
   getLockedItemCount,
   updateLockedProductTimers,
 } from '@/utils/cartHelpers';
+import { useSafeBack } from '@/hooks/useSafeBack';
 import { useCartValidation } from '@/hooks/useCartValidation';
 import { useCartStore } from '@/stores/cartStore';
-import { useTotalBalance, useWalletLoading, useIsAuthenticated } from '@/stores';
+import { useTotalBalance, useWalletLoading, useIsAuthenticated } from '@/stores/selectors';
 import CachedImage from '@/components/ui/CachedImage';
 import cartApi from '@/services/cartApi';
 import { CartItemSkeleton } from '@/components/common/SkeletonLoader';
@@ -67,16 +68,19 @@ const safeHaptic = (
 // Helper function to format time slot for display
 const formatTimeSlot = (start: string, end?: string): string => {
   const formatTime = (timeStr: string): string => {
+    if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) return '';
     const [hours, minutes] = timeStr.split(':').map(Number);
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return '';
     const ampm = hours >= 12 ? 'PM' : 'AM';
     const displayHour = hours % 12 || 12;
     return `${displayHour}:${minutes.toString().padStart(2, '0')} ${ampm}`;
   };
 
   const formattedStart = formatTime(start);
+  if (!formattedStart) return '';
   if (end) {
     const formattedEnd = formatTime(end);
-    return `${formattedStart} - ${formattedEnd}`;
+    return formattedEnd ? `${formattedStart} - ${formattedEnd}` : formattedStart;
   }
   return formattedStart;
 };
@@ -84,6 +88,7 @@ const formatTimeSlot = (start: string, end?: string): string => {
 function CartPage() {
   const isMounted = useIsMounted();
   const router = useRouter();
+  const handleBackPress = useSafeBack();
   const params = useLocalSearchParams<{ offerRedemptionCode?: string }>();
   const cartState = useCartStore((s) => s.state);
   const cartActions = useCartStore((s) => s.actions);
@@ -440,9 +445,7 @@ function CartPage() {
     await validateCart();
   };
 
-  const handleBackPress = () => {
-    router.canGoBack() ? router.back() : router.replace('/(tabs)');
-  };
+  // handleBackPress defined via useSafeBack above
 
   const renderCartItem = useCallback(({ item }: { item: CartItemType }) => {
     // Render locked item if on locked products tab

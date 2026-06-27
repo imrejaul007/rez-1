@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Granular Zustand selectors for maximum performance.
  *
@@ -43,6 +42,9 @@ export const useUserId = () => useAuthStore((s) => s.state.user?.id || s.state.u
 
 /** Common pattern: check if onboarded */
 export const useIsOnboarded = () => useAuthStore((s) => s.state.user?.isOnboarded ?? false);
+
+/** FIX: Full user data for payment prefill and other use cases */
+export const useUserData = () => useAuthStore((s) => s.state.user);
 
 // ============================================================================
 // WALLET SELECTORS — 48 imports

@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { FormPageSkeleton } from '@/components/skeletons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { useSecurity } from '@/contexts/SecurityContext';
@@ -218,7 +218,7 @@ function TwoFactorAuthPage() {
 
           <View style={styles.codesContainer}>
             {backupCodes.map((code, index) => (
-              <View key={index} style={styles.codeItem}>
+              <View key={code} style={styles.codeItem}>
                 <ThemedText style={styles.codeText}>{code}</ThemedText>
               </View>
             ))}

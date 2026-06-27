@@ -54,10 +54,6 @@ router.get('/health/detailed', async (req: Request, res: Response) => {
 
   // Check Redis (if configured)
   try {
-    // Import Redis client if available
-    // const { redisClient } = require('../config/redis');
-    // await redisClient.ping();
-    // health.services.redis = 'healthy';
     health.services.redis = 'not_configured';
   } catch (error: any) {
     health.services.redis = 'unhealthy';

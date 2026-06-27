@@ -18,7 +18,7 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import travelApi, { TravelService } from '@/services/travelApi';
 import { CardGridSkeleton } from '@/components/skeletons';
 import { useGetCurrencySymbol } from '@/stores/selectors';

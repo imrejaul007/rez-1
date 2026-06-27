@@ -15,7 +15,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import bonusZoneApi, { BonusZoneCampaignDetail } from '@/services/bonusZoneApi';
 import { colors } from '@/constants/theme';

@@ -509,6 +509,10 @@ export const dubaiProductSeeds: DubaiProductSeedData[] = [
 
 /**
  * Seed Dubai stores into the database
+ *
+ * OPTIMIZATION: Uses batch operations instead of sequential find + create
+ * Before: 1 DB call per store/product (N+1 queries)
+ * After: 2 queries per collection (1 fetch + 1 insertMany)
  */
 export async function seedDubaiStores(): Promise<void> {
   console.log('Seeding Dubai stores...');
@@ -525,109 +529,117 @@ export async function seedDubaiStores(): Promise<void> {
       });
     }
 
-    // Seed stores
-    for (const storeSeed of dubaiStoreSeeds) {
-      const existingStore = await Store.findOne({ slug: storeSeed.slug });
+    // OPTIMIZATION: Batch fetch all existing store slugs in ONE query
+    const existingStoreSlugs = new Set(
+      (await Store.find({ slug: { $in: dubaiStoreSeeds.map(s => s.slug) } }, { slug: 1 }).lean())
+        .map(s => s.slug)
+    );
 
-      if (!existingStore) {
-        await Store.create({
-          _id: storeSeed._id,
-          name: storeSeed.name,
-          slug: storeSeed.slug,
-          description: storeSeed.description,
-          logo: storeSeed.logo,
-          category: generalCategory._id,
-          location: {
-            address: storeSeed.location.address,
-            city: storeSeed.location.city,
-            state: storeSeed.location.state,
-            pincode: storeSeed.location.pincode,
-            coordinates: storeSeed.location.coordinates,
-          },
-          contact: {
-            phone: '+971-4-1234567',
-            email: `${storeSeed.slug}@rez.ae`,
-          },
-          ratings: {
-            average: storeSeed.rating,
-            count: Math.floor(Math.random() * 500) + 100,
-          },
-          tags: storeSeed.tags || [],
-          offers: storeSeed.offers
-            ? {
-                cashback: storeSeed.offers.cashback,
-                minOrderAmount: storeSeed.offers.minOrderAmount,
-                maxCashback: storeSeed.offers.maxCashback,
-                isPartner: true,
-              }
-            : undefined,
-          isActive: true,
-          isVerified: storeSeed.verified,
-          isFeatured: Math.random() > 0.5,
-        });
-        console.log(`  Created store: ${storeSeed.name}`);
-      } else {
-        console.log(`  Store already exists: ${storeSeed.name}`);
-      }
+    // Prepare all stores that need to be created
+    const storesToCreate = dubaiStoreSeeds.filter(s => !existingStoreSlugs.has(s.slug));
+    if (storesToCreate.length > 0) {
+      const storeDocs = storesToCreate.map(storeSeed => ({
+        _id: storeSeed._id,
+        name: storeSeed.name,
+        slug: storeSeed.slug,
+        description: storeSeed.description,
+        logo: storeSeed.logo,
+        category: generalCategory._id,
+        location: {
+          address: storeSeed.location.address,
+          city: storeSeed.location.city,
+          state: storeSeed.location.state,
+          pincode: storeSeed.location.pincode,
+          coordinates: storeSeed.location.coordinates,
+        },
+        contact: {
+          phone: '+971-4-1234567',
+          email: `${storeSeed.slug}@rez.ae`,
+        },
+        ratings: {
+          average: storeSeed.rating,
+          count: Math.floor(Math.random() * 500) + 100,
+        },
+        tags: storeSeed.tags || [],
+        offers: storeSeed.offers
+          ? {
+              cashback: storeSeed.offers.cashback,
+              minOrderAmount: storeSeed.offers.minOrderAmount,
+              maxCashback: storeSeed.offers.maxCashback,
+              isPartner: true,
+            }
+          : undefined,
+        isActive: true,
+        isVerified: storeSeed.verified,
+        isFeatured: Math.random() > 0.5,
+      }));
+
+      await Store.insertMany(storeDocs);
+      console.log(`  Created ${storesToCreate.length} stores (bulk insert)`);
     }
+    console.log(`  ${existingStoreSlugs.size} stores already exist, skipped`);
 
-    // Seed products
+    // OPTIMIZATION: Batch fetch all existing product slugs in ONE query
     console.log('Seeding Dubai products...');
-    for (const productSeed of dubaiProductSeeds) {
-      const existingProduct = await Product.findOne({ slug: productSeed.slug });
+    const existingProductSlugs = new Set(
+      (await Product.find({ slug: { $in: dubaiProductSeeds.map(p => p.slug) } }, { slug: 1 }).lean())
+        .map(p => p.slug)
+    );
 
-      if (!existingProduct) {
-        await Product.create({
-          name: productSeed.name,
-          slug: productSeed.slug,
-          sku: productSeed.sku,
-          description: productSeed.description,
-          store: productSeed.store,
-          category: generalCategory._id,
-          pricing: {
-            original: productSeed.pricing.original,
-            selling: productSeed.pricing.selling,
-            discount: Math.round(
-              ((productSeed.pricing.original - productSeed.pricing.selling) /
-                productSeed.pricing.original) *
-                100
-            ),
-            currency: productSeed.pricing.currency,
-          },
-          images: productSeed.images,
-          inventory: {
-            stock: Math.floor(Math.random() * 100) + 10,
-            isAvailable: true,
-            unlimited: false,
-          },
-          ratings: {
-            average: 0,
-            count: 0,
-            distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
-          },
-          specifications: [],
-          tags: productSeed.tags,
-          seo: {},
-          analytics: {
-            views: 0,
-            purchases: 0,
-            conversions: 0,
-            wishlistAdds: 0,
-            shareCount: 0,
-            returnRate: 0,
-            avgRating: 0,
-          },
-          isActive: true,
-          isFeatured: false,
-          isDigital: false,
-          isDeleted: false,
-          adminApproved: true,
-        });
-        console.log(`  Created product: ${productSeed.name}`);
-      } else {
-        console.log(`  Product already exists: ${productSeed.name}`);
-      }
+    // Prepare all products that need to be created
+    const productsToCreate = dubaiProductSeeds.filter(p => !existingProductSlugs.has(p.slug));
+    if (productsToCreate.length > 0) {
+      const productDocs = productsToCreate.map(productSeed => ({
+        name: productSeed.name,
+        slug: productSeed.slug,
+        sku: productSeed.sku,
+        description: productSeed.description,
+        store: productSeed.store,
+        category: generalCategory._id,
+        pricing: {
+          original: productSeed.pricing.original,
+          selling: productSeed.pricing.selling,
+          discount: Math.round(
+            ((productSeed.pricing.original - productSeed.pricing.selling) /
+              productSeed.pricing.original) *
+              100
+          ),
+          currency: productSeed.pricing.currency,
+        },
+        images: productSeed.images,
+        inventory: {
+          stock: Math.floor(Math.random() * 100) + 10,
+          isAvailable: true,
+          unlimited: false,
+        },
+        ratings: {
+          average: 0,
+          count: 0,
+          distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+        },
+        specifications: [],
+        tags: productSeed.tags,
+        seo: {},
+        analytics: {
+          views: 0,
+          purchases: 0,
+          conversions: 0,
+          wishlistAdds: 0,
+          shareCount: 0,
+          returnRate: 0,
+          avgRating: 0,
+        },
+        isActive: true,
+        isFeatured: false,
+        isDigital: false,
+        isDeleted: false,
+        adminApproved: true,
+      }));
+
+      await Product.insertMany(productDocs);
+      console.log(`  Created ${productsToCreate.length} products (bulk insert)`);
     }
+    console.log(`  ${existingProductSlugs.size} products already exist, skipped`);
 
     console.log('Dubai stores and products seeded successfully!');
   } catch (error) {

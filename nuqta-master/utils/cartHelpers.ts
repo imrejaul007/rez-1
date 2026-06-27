@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { CartItem, LockedProduct, getLockStatus, LOCK_CONFIG } from '@/types/cart';
 
 // Helper function to calculate total price

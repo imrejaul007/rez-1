@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Video Compression Utility
  * Handles video compression before upload to reduce file size

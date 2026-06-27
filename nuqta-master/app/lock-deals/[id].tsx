@@ -21,7 +21,7 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import CoinIcon from '@/components/ui/CoinIcon';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';
 import lockDealApi, { LockPriceDeal, UserLockDeal } from '@/services/lockDealApi';

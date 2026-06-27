@@ -15,7 +15,7 @@ import Animated, {
   useSharedValue,
   withTiming,
   Easing} from 'react-native-reanimated';
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import PriceAndRewardsSection from "@/components/product/PriceAndRewardsSection";

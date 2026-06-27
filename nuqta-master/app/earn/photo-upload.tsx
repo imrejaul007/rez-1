@@ -17,7 +17,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { getImagePicker } from '@/utils/lazyImports';
 import { ThemedText } from '@/components/ThemedText';
@@ -123,6 +123,14 @@ function PhotoUploadPage() {
     setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
+  // NOTE: This raw fetch uploads directly to Cloudinary with a custom `upload_preset`
+  // and `folder`, then consumes `secure_url` / `public_id` / `width` / `height` / `bytes`
+  // from Cloudinary's response. The current `services/imageUploadService.ts` only exports
+  // `uploadProfileImage`, which is hardcoded to the backend's `/user/auth/upload-avatar`
+  // endpoint with an `avatar` form field — it does not support direct Cloudinary uploads
+  // or custom `upload_preset`/`folder` form fields, and its return shape (`avatarUrl`) does
+  // not include `publicId`/`width`/`height`/`fileSize` that downstream callers here need.
+  // Skipping migration until the service is generalized.
   const uploadToCloudinary = async (uri: string): Promise<{ url: string; publicId: string; width?: number; height?: number; fileSize?: number }> => {
     const uploadUrl = getCloudinaryUploadUrl('image');
     const formData = new FormData();

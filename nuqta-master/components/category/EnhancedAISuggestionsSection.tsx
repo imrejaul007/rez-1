@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { EnhancedAISuggestionsSectionProps, AISuggestion } from '@/types/categoryTypes';
 import { colors } from '@/constants/theme';

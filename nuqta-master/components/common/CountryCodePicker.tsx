@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@/constants/theme';
 
 export interface CountryCode {

@@ -207,20 +207,6 @@ router.get('/payment-methods', getPaymentMethods);
 
 
 /**
- * @route   POST /api/wallet/dev-topup
- * @desc    Add test funds to wallet (DEVELOPMENT ONLY)
- * @body    { amount, type: 'rez' | 'promo' | 'cashback' }
- * @access  Private (dev only)
- */
-// SECURITY: require explicit opt-in flag, not just "not production". NODE_ENV
-// can be unset (defaulting to development) in misconfigured deployments,
-// which would silently expose this self-credit endpoint. The endpoint credits
-// up to 100,000 of any coin type to the caller's own wallet.
-if (process.env.ENABLE_DEV_TOPUP === 'true') {
-  router.post('/dev-topup', walletWriteLimiter, devTopup);
-}
-
-/**
  * @route   POST /api/wallet/sync-balance
  * @desc    Sync wallet balance from CoinTransaction (fixes discrepancies)
  * @access  Private

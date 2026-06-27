@@ -14,7 +14,7 @@ import React, { Suspense, useCallback, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { SharedValue } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@/constants/theme';
 import LazySection from '@/components/homepage/LazySection';
 import { SectionSkeleton } from '@/components/homepage/skeletons';

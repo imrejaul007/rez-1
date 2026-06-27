@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RecentlyViewedItem } from '@/types/recentlyViewed.types';
 import { useGetCurrencySymbol, useGetLocale } from '@/stores/selectors';

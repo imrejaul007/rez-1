@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import StoreCard from '@/components/homepage/cards/StoreCard';
 import storesApi from '@/services/storesApi';
 import { FlashList } from '@shopify/flash-list';

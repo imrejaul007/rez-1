@@ -7,7 +7,7 @@
 import React, { useEffect} from 'react';
 import { View, Pressable, StyleSheet, Dimensions} from 'react-native';
 import Animated, { Easing, interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import { SlidingTabsProps, TabData } from '@/types/cart';

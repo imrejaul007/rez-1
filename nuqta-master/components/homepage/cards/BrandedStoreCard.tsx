@@ -132,7 +132,7 @@ function BrandedStoreCard({
         {store.isPartner && (
           <View style={partnerBadgeStyles}>
             <ThemedText style={partnerTextStyles}>
-              {store.partnerLevel?.toUpperCase()} PARTNER
+              {(store.partnerLevel || '').toUpperCase() || '—'} PARTNER
             </ThemedText>
           </View>
         )}

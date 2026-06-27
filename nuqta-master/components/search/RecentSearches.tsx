@@ -5,7 +5,7 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SearchHistoryItem } from '@/services/searchHistoryService';
 import { colors } from '@/constants/theme';
 

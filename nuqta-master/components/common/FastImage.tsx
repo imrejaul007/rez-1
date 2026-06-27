@@ -10,7 +10,7 @@
 import React, { useState, useCallback, memo } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@/constants/theme';
 
 interface FastImageProps {

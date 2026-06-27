@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { loadStripe } from '@stripe/stripe-js';
 import * as authStorage from '@/utils/authStorage';
 import { useGetCurrencySymbol } from '@/stores/selectors';

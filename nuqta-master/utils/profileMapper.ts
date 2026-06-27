@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Maps backend user data to profile User format
 // Extracted to avoid circular dependency between profileStore and ProfileContext
 

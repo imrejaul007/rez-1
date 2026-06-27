@@ -13,8 +13,8 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import Markdown from 'react-native-markdown-display';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { ThemedText } from '@/components/ThemedText';
 import { Article } from '@/types/article.types';
 import articlesService from '@/services/articlesApi';
@@ -301,9 +301,7 @@ function ArticleDetailPage() {
           {/* Article Content with Markdown Rendering */}
           {article?.content && (
             <View style={styles.contentSection}>
-              <Markdown style={markdownStyles}>
-                {article.content}
-              </Markdown>
+              <MarkdownRenderer content={article.content} />
             </View>
           )}
 
@@ -314,7 +312,7 @@ function ArticleDetailPage() {
               <ThemedText style={styles.tagsLabel}>Related Topics</ThemedText>
               <View style={styles.tagsContainer}>
                 {article.tags.map((tag, index) => (
-                  <Pressable key={index} style={styles.tag}>
+                  <Pressable key={tag} style={styles.tag}>
                     <Ionicons name="pricetag" size={14} color={Colors.brand.purpleLight} />
                     <ThemedText style={styles.tagText}>
                       {tag.replace(/-/g, ' ')}
@@ -332,104 +330,6 @@ function ArticleDetailPage() {
     </View>
   );
 }
-
-// Markdown Styles
-const markdownStyles = StyleSheet.create({
-  body: {
-    color: Colors.text.secondary,
-    fontSize: 17,
-    lineHeight: 28,
-    fontWeight: '400',
-  },
-  heading1: {
-    color: Colors.text.primary,
-    fontSize: 28,
-    fontWeight: '700',
-    marginTop: 24,
-    marginBottom: 16,
-    lineHeight: 36,
-  },
-  heading2: {
-    color: Colors.text.primary,
-    fontSize: 24,
-    fontWeight: '700',
-    marginTop: 24,
-    marginBottom: 14,
-    lineHeight: 32,
-  },
-  heading3: {
-    color: Colors.text.secondary,
-    fontSize: 20,
-    fontWeight: '600',
-    marginTop: 20,
-    marginBottom: 12,
-    lineHeight: 28,
-  },
-  paragraph: {
-    marginTop: 0,
-    marginBottom: 16,
-    color: Colors.text.secondary,
-    fontSize: 17,
-    lineHeight: 28,
-  },
-  strong: {
-    fontWeight: '700',
-    color: Colors.text.primary,
-  },
-  em: {
-    fontStyle: 'italic',
-  },
-  bullet_list: {
-    marginBottom: 16,
-  },
-  ordered_list: {
-    marginBottom: 16,
-  },
-  list_item: {
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  bullet_list_icon: {
-    color: Colors.brand.purpleLight,
-    fontSize: 20,
-    lineHeight: 28,
-    marginRight: 8,
-  },
-  blockquote: {
-    backgroundColor: 'rgba(139, 92, 246, 0.05)',
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.brand.purpleLight,
-    paddingLeft: 16,
-    paddingRight: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-    marginBottom: 16,
-    borderRadius: BorderRadius.sm,
-  },
-  code_inline: {
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-    color: Colors.brand.purpleLight,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    fontSize: 15,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-  },
-  code_block: {
-    backgroundColor: Colors.text.primary,
-    color: Colors.background.secondary,
-    padding: Spacing.base,
-    borderRadius: BorderRadius.md,
-    marginBottom: Spacing.base,
-    fontSize: 14,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-  },
-  link: {
-    color: Colors.info,
-    textDecorationLine: 'underline',
-  },
-});
 
 const styles = StyleSheet.create({
   container: {

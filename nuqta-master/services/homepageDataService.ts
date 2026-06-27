@@ -1,4 +1,3 @@
-// @ts-nocheck
 import productsService from './productsApi';
 import storesService from './storesApi';
 import eventsApiService from './eventsApi';

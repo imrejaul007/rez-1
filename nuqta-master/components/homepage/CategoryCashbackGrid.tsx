@@ -17,7 +17,7 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import cashbackService, { CashbackCampaign } from '@/services/cashbackApi';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Navigation Service
 // Centralized navigation service with error handling and event management
 

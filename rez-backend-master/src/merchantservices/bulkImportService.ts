@@ -399,6 +399,87 @@ export class BulkImportService {
   }
 
   /**
+   * Prepare product data from validated row (shared between insertMany and bulkWrite)
+   */
+  private prepareProductData(data: any, storeId: string, merchantId: string): Partial<IProduct> {
+    // Parse images
+    const images = data.images
+      ? data.images.split(',').map((url: string) => url.trim()).filter((url: string) => {
+          try {
+            new URL(url);
+            return true;
+          } catch {
+            return false;
+          }
+        })
+      : [];
+
+    // Parse tags
+    const tags = data.tags
+      ? data.tags.split(',').map((tag: string) => tag.trim().toLowerCase())
+      : [];
+
+    // Generate SKU if not provided
+    const sku = data.sku?.toUpperCase() || this.generateSKU(data.name);
+
+    return {
+      name: data.name.trim(),
+      description: data.description?.trim(),
+      shortDescription: data.shortDescription?.trim(),
+      sku,
+      category: new Types.ObjectId(data.categoryId),
+      subCategory: data.subCategoryId ? new Types.ObjectId(data.subCategoryId) : undefined,
+      store: new Types.ObjectId(storeId),
+      merchantId: new Types.ObjectId(merchantId),
+      brand: data.brand?.trim(),
+      barcode: data.barcode?.trim(),
+      images: images.length > 0 ? images : ['https://via.placeholder.com/400'],
+      pricing: {
+        original: data.compareAtPrice || data.price,
+        selling: data.price,
+        discount: data.compareAtPrice
+          ? Math.round(((data.compareAtPrice - data.price) / data.compareAtPrice) * 100)
+          : 0,
+        currency: 'INR'
+      },
+      inventory: {
+        stock: data.stock,
+        isAvailable: data.stock > 0,
+        lowStockThreshold: data.lowStockThreshold || 5,
+        unlimited: false
+      },
+      tags,
+      weight: data.weight,
+      isActive: data.status === 'active' || !data.status,
+      isFeatured: data.isFeatured || false,
+      isDigital: false,
+      ratings: {
+        average: 0,
+        count: 0,
+        distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+      },
+      analytics: {
+        views: 0,
+        purchases: 0,
+        conversions: 0,
+        wishlistAdds: 0,
+        shareCount: 0,
+        returnRate: 0,
+        avgRating: 0,
+        todayPurchases: 0,
+        todayViews: 0,
+        lastResetDate: new Date()
+      },
+      seo: {
+        title: data.name,
+        description: data.shortDescription || data.description,
+        keywords: tags
+      },
+      specifications: []
+    };
+  }
+
+  /**
    * Process bulk import
    */
   async processBulkImport(
@@ -441,14 +522,131 @@ export class BulkImportService {
           )
         );
 
-        // Process valid rows
-        const processedBatch = await Promise.all(
-          validatedBatch.map(row =>
-            row.status === 'error'
-              ? Promise.resolve(row)
-              : this.processProductRow(row, storeId, merchantId)
-          )
-        );
+        // OPTIMIZATION: Use bulk writes instead of individual saves
+        // Separate error rows from valid rows
+        const errorRows = validatedBatch.filter(r => r.status === 'error');
+        const validRows = validatedBatch.filter(r => r.status !== 'error');
+
+        // Pre-check existing products for all valid rows (batch lookup)
+        const skuList = validRows.map(r => r.data.sku?.toUpperCase() || this.generateSKU(r.data.name));
+        const existingProducts = await Product.find({
+          sku: { $in: skuList },
+          store: storeId
+        }).select('_id sku');
+
+        const existingSkuMap = new Map(existingProducts.map(p => [p.sku, p._id]));
+
+        // Separate new vs existing products
+        const newRows: ImportRow[] = [];
+        const updateRows: { row: ImportRow; existingId: Types.ObjectId }[] = [];
+
+        for (const row of validRows) {
+          const sku = row.data.sku?.toUpperCase() || this.generateSKU(row.data.name);
+          const existingId = existingSkuMap.get(sku);
+
+          if (existingId) {
+            updateRows.push({ row, existingId: existingId as Types.ObjectId });
+          } else {
+            newRows.push(row);
+          }
+        }
+
+        const processedBatch: ImportRow[] = [...errorRows];
+
+        // Bulk insert new products using insertMany
+        if (newRows.length > 0) {
+          try {
+            const newProductsData = newRows.map(r => this.prepareProductData(r.data, storeId, merchantId));
+            const insertedProducts = await Product.insertMany(newProductsData, { ordered: false });
+
+            // Map inserted products back to rows
+            for (let idx = 0; idx < newRows.length; idx++) {
+              const product = insertedProducts[idx];
+              if (product) {
+                processedBatch.push({
+                  ...newRows[idx],
+                  status: 'success',
+                  productId: product._id.toString(),
+                  action: 'created'
+                });
+              } else {
+                processedBatch.push({
+                  ...newRows[idx],
+                  status: 'error',
+                  errors: [...newRows[idx].errors, 'Failed to insert product']
+                });
+              }
+            }
+          } catch (error) {
+            // Handle partial failure in insertMany
+            // Add remaining rows as errors
+            for (const row of newRows) {
+              processedBatch.push({
+                ...row,
+                status: 'error',
+                errors: [...row.errors, `Bulk insert failed: ${error instanceof Error ? error.message : 'Unknown error'}`]
+              });
+            }
+          }
+        }
+
+        // Bulk update existing products using bulkWrite
+        if (updateRows.length > 0) {
+          try {
+            const bulkOps = updateRows.map(({ row, existingId }) => ({
+              updateOne: {
+                filter: { _id: existingId },
+                update: { $set: this.prepareProductData(row.data, storeId, merchantId) }
+              }
+            }));
+
+            await Product.bulkWrite(bulkOps, { ordered: false });
+
+            // Mark all updates as successful
+            for (const { row } of updateRows) {
+              processedBatch.push({
+                ...row,
+                status: 'success',
+                productId: row.productId || '',
+                action: 'updated'
+              });
+            }
+          } catch (error) {
+            // Handle partial failure in bulkWrite
+            // Check which operations failed and mark them as errors
+            if (error instanceof Error && 'writeErrors' in error) {
+              const writeErrors = (error as any).writeErrors || [];
+              const failedIndices = new Set(writeErrors.map((e: any) => e.index));
+
+              for (let idx = 0; idx < updateRows.length; idx++) {
+                const { row } = updateRows[idx];
+                if (failedIndices.has(idx)) {
+                  processedBatch.push({
+                    ...row,
+                    status: 'error',
+                    errors: [...row.errors, `Bulk update failed: ${error instanceof Error ? error.message : 'Unknown error'}`]
+                  });
+                } else {
+                  processedBatch.push({
+                    ...row,
+                    status: 'success',
+                    productId: row.productId || '',
+                    action: 'updated'
+                  });
+                }
+              }
+            } else {
+              // Mark all as errors if we can't determine partial failures
+              for (const { row } of updateRows) {
+                processedBatch.push({
+                  ...row,
+                  status: 'error',
+                  errors: [...row.errors, `Bulk update failed: ${error instanceof Error ? error.message : 'Unknown error'}`]
+                });
+              }
+            }
+          }
+        }
 
         // Update result
         processedBatch.forEach(row => {

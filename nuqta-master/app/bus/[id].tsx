@@ -25,7 +25,7 @@ import Animated, {
   withTiming } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import productsApi from '@/services/productsApi';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -495,7 +495,7 @@ function BusDetailsPage() {
             <View style={styles.imageIndicators}>
               {bus.images.map((_, index) => (
                 <View
-                  key={index}
+                  key={`bus-img-${index}`}
                   style={[
                     styles.indicator,
                     selectedImageIndex === index && styles.indicatorActive,

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { CATEGORY_CONFIGS, SubcategoryItem } from '@/config/categoryConfig';
 import { getSubcategoryIcon } from '@/config/categoryIcons';
@@ -119,7 +119,7 @@ function CategoriesScreen() {
         {/* Search Bar */}
         <Pressable
           style={styles.searchBar}
-          onPress={() => router.push('/search' as any)}
+          onPress={() => router.push('/search')}
          
         >
           <Ionicons name="search" size={20} color={Colors.text.tertiary} />
@@ -194,10 +194,10 @@ const styles = StyleSheet.create({
     gap: 10,
     ...Platform.select({
       ios: {
-        shadowColor: Shadows.md.shadowColor,
-        shadowOffset: Shadows.md.shadowOffset,
-        shadowOpacity: Shadows.md.shadowOpacity,
-        shadowRadius: Shadows.md.shadowRadius,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
       },
       android: {
         elevation: 3,

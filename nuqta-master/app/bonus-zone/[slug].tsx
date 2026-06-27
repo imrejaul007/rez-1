@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { DetailPageSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import bonusZoneApi, {
   BonusZoneCampaignDetail,
@@ -272,7 +272,7 @@ function CampaignDetailPage() {
     if (!campaign) return;
 
     if (campaign.userState === 'claimed' || campaign.userState === 'limit_reached') {
-      router.push('/bonus-zone-history' as any);
+      router.push('/bonus-zone-history');
       return;
     }
 
@@ -491,7 +491,7 @@ function CampaignDetailPage() {
                 <Text style={styles.cardTitle}>Why You're Not Eligible</Text>
               </View>
               {userState.reasons.map((reason, index) => (
-                <View key={index} style={styles.reasonRow}>
+                <View key={`reason-${index}`} style={styles.reasonRow}>
                   <Ionicons name="close-circle" size={16} color={colors.error} />
                   <Text style={styles.reasonText}>{reason}</Text>
                 </View>
@@ -656,7 +656,7 @@ function CampaignDetailPage() {
                 <Text style={styles.cardTitle}>{howItWorks.title}</Text>
               </View>
               {howItWorks.steps.map((step, index) => (
-                <View key={index} style={styles.stepRow}>
+                <View key={`step-${index}`} style={styles.stepRow}>
                   <View style={styles.stepNumber}>
                     <Text style={styles.stepNumberText}>{index + 1}</Text>
                   </View>
@@ -740,7 +740,7 @@ function CampaignDetailPage() {
                 <Text style={styles.cardTitle}>Terms & Conditions</Text>
               </View>
               {campaign.terms.map((term, index) => (
-                <View key={index} style={styles.termRow}>
+                <View key={`term-${index}`} style={styles.termRow}>
                   <Text style={styles.termBullet}>{'\u2022'}</Text>
                   <Text style={styles.termText}>{term}</Text>
                 </View>

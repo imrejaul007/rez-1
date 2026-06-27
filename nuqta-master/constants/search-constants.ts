@@ -286,6 +286,10 @@ export const SHADOWS = {
     elevation: 8,
   },
 } as const;
+// Note: SHADOWS is intentionally kept as native-only shadow props because
+// it is only consumed by docs (.md reference sheets) and DesignTokens.ts
+// (which is a no-runtime doc mirror). The runtime shadow tokens live in
+// constants/theme.ts `shadows` / `darkShadows`, which are web-aware.
 
 // Breakpoints for responsive design
 export const BREAKPOINTS = {

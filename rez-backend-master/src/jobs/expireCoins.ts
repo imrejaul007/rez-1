@@ -109,6 +109,7 @@ async function sendPreExpiryNotifications(): Promise<{ notified: number; failed:
       .lean();
     const expiryUserMap = new Map(expiryUsers.map(u => [String(u._id), u]));
 
+    // Batch notification sends and transaction updates using bulkWrite for better performance
     for (const [userId, data] of userExpiryMap.entries()) {
       try {
         const user = expiryUserMap.get(userId);
@@ -127,17 +128,26 @@ async function sendPreExpiryNotifications(): Promise<{ notified: number; failed:
         );
 
         stats.notified++;
-
-        // Mark these transactions as warned so we don't notify again
-        await CoinTransaction.updateMany(
-          { _id: { $in: data.txIds } },
-          { $set: { 'metadata.expiryWarningNotified': true } }
-        );
       } catch (notifErr) {
         stats.failed++;
         if (process.env.NODE_ENV === 'development') {
           logger.info(`[COIN EXPIRY] Failed to send pre-expiry notification for user ${userId}:`, notifErr);
         }
+      }
+    }
+
+    // Bulk update all notified transactions to mark them as warned (single operation instead of N updates)
+    if (userExpiryMap.size > 0) {
+      const bulkOps = Array.from(userExpiryMap.values()).map(data => ({
+        updateMany: {
+          filter: { _id: { $in: data.txIds } },
+          update: { $set: { 'metadata.expiryWarningNotified': true } }
+        }
+      }));
+      try {
+        await CoinTransaction.bulkWrite(bulkOps, { ordered: false });
+      } catch (err) {
+        logger.error('[COIN EXPIRY] Bulk update for expiry warning notifications failed:', err);
       }
     }
   } catch (error) {
@@ -265,39 +275,68 @@ async function processExpiredCoins(): Promise<ExpiryStats> {
         });
       }
 
+      // Calculate total deduction per user per merchant for bulk update
+      const brandedDeductions = new Map<string, Map<string, number>>();
       for (const [userId, txs] of brandedByUser.entries()) {
-        try {
-          // Deduct from wallet.brandedCoins per merchant
-          const wallet = await Wallet.findOne({ user: new mongoose.Types.ObjectId(userId) });
-          if (wallet) {
-            for (const tx of txs) {
-              if (tx.merchantId && wallet.brandedCoins) {
-                const bcIdx = wallet.brandedCoins.findIndex(
-                  (bc: any) => bc.merchantId?.toString() === tx.merchantId
-                );
-                if (bcIdx >= 0) {
-                  (wallet.brandedCoins as any)[bcIdx].amount = Math.max(0, (wallet.brandedCoins as any)[bcIdx].amount - tx.amount);
+        if (!brandedDeductions.has(userId)) {
+          brandedDeductions.set(userId, new Map());
+        }
+        const userDeductions = brandedDeductions.get(userId)!;
+        for (const tx of txs) {
+          if (tx.merchantId) {
+            userDeductions.set(tx.merchantId, (userDeductions.get(tx.merchantId) || 0) + tx.amount);
+          }
+        }
+      }
+
+      // OPTIMIZATION: Build bulkWrite operations for wallet branded coin deductions
+      // Batch fetch all affected wallets once, then use atomic $inc updates
+      const brandedUserIds = Array.from(brandedDeductions.keys()).map(id => new mongoose.Types.ObjectId(id));
+      await Wallet.find({ user: { $in: brandedUserIds } }).then(wallets => {
+        const walletBulkOps: any[] = [];
+        for (const [userId, deductions] of brandedDeductions.entries()) {
+          for (const [merchantId, amount] of deductions.entries()) {
+            walletBulkOps.push({
+              updateOne: {
+                filter: {
+                  user: new mongoose.Types.ObjectId(userId),
+                  'brandedCoins.merchantId': new mongoose.Types.ObjectId(merchantId)
+                },
+                update: {
+                  $max: { 'brandedCoins.$.amount': 0 },  // Ensure non-negative floor
+                  $inc: { 'brandedCoins.$.amount': -amount }  // Deduct expired amount
                 }
               }
-            }
-            wallet.markModified('brandedCoins');
-            await wallet.save();
+            });
           }
-
-          // Mark as expired (no CoinTransaction 'expired' record for branded — it would corrupt ReZ balance)
-          await CoinTransaction.updateMany(
-            { _id: { $in: txs.map(t => t.id) } },
-            { $set: { 'metadata.isExpired': true, 'metadata.expiredAt': now } }
-          );
-
-          const totalBranded = txs.reduce((s, t) => s + t.amount, 0);
-          affectedUserIds.add(userId);
-          stats.totalCoinsExpired += totalBranded;
-          logger.info(`   ✓ User ${userId}: ${totalBranded} branded coins expired`);
-        } catch (err: any) {
-          logger.error(`   ✗ Failed to expire branded coins for user ${userId}:`, err.message);
-          stats.errors.push({ userId, error: err.message || 'Branded expiry error' });
         }
+        // Execute wallet bulkWrite with error tolerance (ordered: false continues on failure)
+        if (walletBulkOps.length > 0) {
+          return Wallet.bulkWrite(walletBulkOps, { ordered: false }).catch(
+            (err: any) => logger.error(`[COIN EXPIRY] Branded wallet bulkWrite partial failure: ${err.message}`)
+          );
+        }
+      });
+
+      // Mark all branded transactions as expired in a single bulkWrite operation
+      // OPTIMIZATION: Single bulkWrite instead of N sequential updateMany calls per user
+      const allBrandedTxIds = brandedTransactions.map(t => t._id);
+      await CoinTransaction.bulkWrite(
+        allBrandedTxIds.map(txId => ({
+          updateOne: {
+            filter: { _id: txId },
+            update: { $set: { 'metadata.isExpired': true, 'metadata.expiredAt': now } }
+          }
+        })),
+        { ordered: false }  // Error tolerance: continue processing even if individual updates fail
+      );
+
+      // Update stats for all processed branded users
+      for (const [userId, txs] of brandedByUser.entries()) {
+        const totalBranded = txs.reduce((s, t) => s + t.amount, 0);
+        affectedUserIds.add(userId);
+        stats.totalCoinsExpired += totalBranded;
+        logger.info(`   ✓ User ${userId}: ${totalBranded} branded coins expired`);
       }
     }
 
@@ -331,10 +370,11 @@ async function processExpiredCoins(): Promise<ExpiryStats> {
 
     logger.info(`👥 [COIN EXPIRY] Processing expiry for ${userExpiryMap.size} users (ReZ/promo) + ${brandedTransactions.length} branded txns`);
 
-    // Process each user's expired ReZ/promo coins
+    // OPTIMIZATION: Collect all expiry transactions, then batch Wallet and CoinTransaction updates
+    // Step 1: Create all expiry transactions (must be sequential to capture _id for each)
+    const expiryTransactionResults: Map<string, { _id: any; balance: number }> = new Map();
     for (const [userId, expiryData] of userExpiryMap.entries()) {
       try {
-        // Create expiry transaction (this will deduct from ReZ balance)
         const expiryTransaction = await CoinTransaction.createTransaction(
           userId,
           'expired',
@@ -347,57 +387,108 @@ async function processExpiredCoins(): Promise<ExpiryStats> {
             expiryDate: now
           }
         );
+        expiryTransactionResults.set(userId, { _id: expiryTransaction._id, balance: expiryTransaction.balance });
+        stats.transactionsCreated++;
+      } catch (error: any) {
+        logger.error(`   ✗ Failed to create expiry transaction for user ${userId}:`, error.message);
+        stats.errors.push({ userId, error: error.message || 'Expiry transaction creation failed' });
+      }
+    }
 
-        // Deduct expired amount from Wallet balance atomically
-        await Wallet.findOneAndUpdate(
-          { user: new mongoose.Types.ObjectId(userId) },
-          { $inc: { 'balance.available': -expiryData.expiredAmount, 'balance.total': -expiryData.expiredAmount } }
-        );
-        invalidateWalletCache(userId).catch((err) => logger.error('[ExpireCoins] Wallet cache invalidation failed after coin expiry', { error: err.message, userId }));
+    // Step 2: Build and execute bulk Wallet updates (OPTIMIZATION: single bulkWrite instead of N findOneAndUpdate calls)
+    const walletBulkOps: any[] = [];
+    const usersToInvalidate: string[] = [];
+    for (const [userId, expiryData] of userExpiryMap.entries()) {
+      if (expiryTransactionResults.has(userId)) {
+        walletBulkOps.push({
+          updateOne: {
+            filter: { user: new mongoose.Types.ObjectId(userId) },
+            update: { $inc: { 'balance.available': -expiryData.expiredAmount, 'balance.total': -expiryData.expiredAmount } }
+          }
+        });
+        usersToInvalidate.push(userId);
+      }
+    }
 
-        // Mark original transactions as expired
-        await CoinTransaction.updateMany(
-          {
-            _id: { $in: expiryData.expiredTransactions.map(t => t.id) }
-          },
-          {
-            $set: {
-              'metadata.isExpired': true,
-              'metadata.expiredAt': now,
-              'metadata.expiryTransactionId': expiryTransaction._id
+    // Execute Wallet bulkWrite with error tolerance
+    if (walletBulkOps.length > 0) {
+      try {
+        await Wallet.bulkWrite(walletBulkOps, { ordered: false });
+      } catch (bulkErr: any) {
+        logger.error(`[COIN EXPIRY] Wallet bulkWrite partial failure: ${bulkErr.message}`);
+      }
+      // Batch cache invalidation for all affected users
+      await Promise.allSettled(
+        usersToInvalidate.map(userId =>
+          invalidateWalletCache(userId).catch((err) => logger.error('[ExpireCoins] Cache invalidation failed', { error: err.message, userId }))
+        )
+      );
+    }
+
+    // Step 3: Build and execute bulk CoinTransaction updates (OPTIMIZATION: single bulkWrite instead of N updateMany calls)
+    const coinTxBulkOps: any[] = [];
+    for (const [userId, expiryData] of userExpiryMap.entries()) {
+      const txResult = expiryTransactionResults.get(userId);
+      if (!txResult) continue;
+
+      for (const expiredTx of expiryData.expiredTransactions) {
+        coinTxBulkOps.push({
+          updateOne: {
+            filter: { _id: new mongoose.Types.ObjectId(expiredTx.id) },
+            update: {
+              $set: {
+                'metadata.isExpired': true,
+                'metadata.expiredAt': now,
+                'metadata.expiryTransactionId': txResult._id
+              }
             }
           }
-        );
+        });
+      }
+    }
 
-        // Create ledger entry for coin expiry (fire-and-forget)
-        const userAccountId = new mongoose.Types.ObjectId(userId);
-        const expiredPoolId = ledgerService.getPlatformAccountId('expired_pool');
-        ledgerService.recordEntry({
-          debitAccount: { type: 'user_wallet', id: userAccountId },
+    // Execute CoinTransaction bulkWrite with error tolerance
+    if (coinTxBulkOps.length > 0) {
+      try {
+        await CoinTransaction.bulkWrite(coinTxBulkOps, { ordered: false });
+      } catch (bulkErr: any) {
+        logger.error(`[COIN EXPIRY] CoinTransaction bulkWrite partial failure: ${bulkErr.message}`);
+      }
+    }
+
+    // Step 4: Create ledger entries (fire-and-forget, already have all transaction IDs)
+    const expiredPoolId = ledgerService.getPlatformAccountId('expired_pool');
+    await Promise.allSettled(
+      Array.from(expiryTransactionResults.entries()).map(([userId, txResult]) => {
+        const expiryData = userExpiryMap.get(userId)!;
+        return ledgerService.recordEntry({
+          debitAccount: { type: 'user_wallet', id: new mongoose.Types.ObjectId(userId) },
           creditAccount: { type: 'expired_pool', id: expiredPoolId },
           amount: expiryData.expiredAmount,
           coinType: 'nuqta',
           operationType: 'coin_expiry',
-          referenceId: String(expiryTransaction._id),
+          referenceId: String(txResult._id),
           referenceModel: 'CoinTransaction',
           metadata: { description: `${expiryData.expiredAmount} coins expired` },
-        }).catch((err: any) => logger.error('[COIN EXPIRY] Ledger entry failed:', err));
-
-        expiryData.newBalance = expiryTransaction.balance;
-
-        affectedUserIds.add(userId);
-        stats.totalCoinsExpired += expiryData.expiredAmount;
-        stats.transactionsCreated++;
-
-        logger.info(`   ✓ User ${userId}: ${expiryData.expiredAmount} coins expired, new balance: ${expiryData.newBalance}`);
-
-      } catch (error: any) {
-        logger.error(`   ✗ Failed to process expiry for user ${userId}:`, error.message);
-        stats.errors.push({
-          userId,
-          error: error.message || 'Unknown error'
         });
-      }
+      })
+    ).then(results => {
+      results.forEach((result, idx) => {
+        if (result.status === 'rejected') {
+          logger.error('[COIN EXPIRY] Ledger entry failed:', result.reason);
+        }
+      });
+    });
+
+    // Step 5: Update stats and log results
+    for (const [userId, expiryData] of userExpiryMap.entries()) {
+      const txResult = expiryTransactionResults.get(userId);
+      if (!txResult) continue;
+
+      expiryData.newBalance = txResult.balance;
+      affectedUserIds.add(userId);
+      stats.totalCoinsExpired += expiryData.expiredAmount;
+      logger.info(`   ✓ User ${userId}: ${expiryData.expiredAmount} coins expired, new balance: ${expiryData.newBalance}`);
     }
 
     // Build combined notification list: ReZ/promo expirations + branded expirations

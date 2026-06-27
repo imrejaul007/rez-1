@@ -20,7 +20,7 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CrossPlatformBlurView as BlurView } from '@/components/ui/CrossPlatformBlurView';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { experiencesApi, StoreExperience } from '@/services/experiencesApi';
 import PremiumStoreCard from '@/components/experience/PremiumStoreCard';
 import ThinkOutsideTheBox from '@/components/experience/ThinkOutsideTheBox';

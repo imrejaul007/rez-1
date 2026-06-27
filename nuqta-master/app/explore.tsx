@@ -17,7 +17,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Video, ResizeMode } from 'expo-av';
@@ -39,7 +39,7 @@ import StoresNearYou from './explore/_components/StoresNearYou';
 import reelApi from '../services/reelApi';
 import exploreApi from '../services/exploreApi';
 import productsApi from '../services/productsApi';
-import { useRezBalance, useGetCurrencySymbol } from '@/stores';
+import { useRezBalance, useGetCurrencySymbol } from '@/stores/selectors';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { withErrorBoundary } from '@/utils/withErrorBoundary';

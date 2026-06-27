@@ -26,7 +26,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Elements } from '@stripe/react-stripe-js';
 import { getStripePromise } from '@/utils/lazyImports';

@@ -9,7 +9,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet, Dimensions, Platform } from 'react-native';
 import Animated, { useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { PriceSectionProps } from '@/types/cart';
 import { useGetCurrencySymbol, useFormatPrice, useGetLocale } from '@/stores/selectors';

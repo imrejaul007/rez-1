@@ -17,7 +17,7 @@ import { logger } from '../config/logger';
 import { getClaudeService } from './claudeService';
 import { getMenuRagService } from './menuRagService';
 import mongoose from 'mongoose';
-import { buildWhatsAppAssistantPrompt, buildWhatsAppDefaultPrompt } from '../prompts/whatsappAssistantPrompt';
+import { buildWhatsAppAssistantPrompt, buildWhatsAppDefaultPrompt } from './whatsappAssistantPrompt';
 import { Store } from '../models/Store';
 import WhatsAppAiSession, { IWhatsAppMessage } from '../models/WhatsAppAiSession';
 import whatsappOrderService from './whatsappOrderService';

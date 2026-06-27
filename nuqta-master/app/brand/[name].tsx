@@ -19,7 +19,7 @@ import {
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import storesApi from '@/services/storesApi';
 import productsApi from '@/services/productsApi';
 import { useGetCurrencySymbol } from '@/stores/selectors';
@@ -179,7 +179,7 @@ const BrandPage: React.FC = () => {
           <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={Colors.text.inverse} />
           </Pressable>
-          <Pressable onPress={() => router.push('/search' as any)} style={styles.searchButton}>
+          <Pressable onPress={() => router.push('/search')} style={styles.searchButton}>
             <Ionicons name="search" size={24} color={Colors.text.inverse} />
           </Pressable>
         </View>

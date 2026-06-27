@@ -5,7 +5,7 @@ import {
   Platform,
   StyleSheet,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/DesignSystem';
 import { NUQTA } from './searchTheme';
 

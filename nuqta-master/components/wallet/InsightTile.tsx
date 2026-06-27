@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, BorderRadius, Shadows, Spacing } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';

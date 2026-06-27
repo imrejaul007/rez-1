@@ -458,6 +458,8 @@ class PaymentGatewayService {
 
   /**
    * Verify Razorpay webhook signature
+   * FIX [HIGH-2]: Use timing-safe comparison to prevent timing attacks
+   * FIX: Use rawBody instead of JSON.stringify to avoid re-serialization issues
    */
   private async verifyRazorpayWebhook(payload: any, signature: string): Promise<boolean> {
     if (!this.config.razorpay.webhookSecret) {
@@ -465,12 +467,23 @@ class PaymentGatewayService {
     }
 
     try {
+      // FIX: Use rawBody for signature verification - Razorpay signs the exact bytes received
+      const rawBody = (payload as any).rawBody || JSON.stringify(payload);
       const expectedSignature = crypto
         .createHmac('sha256', this.config.razorpay.webhookSecret)
-        .update(JSON.stringify(payload))
+        .update(rawBody)
         .digest('hex');
 
-      return signature === expectedSignature;
+      // FIX [HIGH-2]: Use timingSafeEqual to prevent timing attacks
+      try {
+        return crypto.timingSafeEqual(
+          Buffer.from(expectedSignature),
+          Buffer.from(signature)
+        );
+      } catch (e) {
+        // Buffers have different lengths - cannot be equal
+        return false;
+      }
     } catch (error) {
       logger.error('❌ [RAZORPAY] Webhook verification failed:', error);
       return false;

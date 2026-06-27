@@ -27,11 +27,11 @@ import eventRewardService from '../services/eventRewardService';
  */
 export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Response) => {
   const webhookSignature = req.headers['x-razorpay-signature'] as string;
-  // SECURITY: use the raw body captured by express.json({ verify }) — not a
-  // re-serialization. Razorpay signs the exact bytes the sender sent;
-  // JSON.stringify(parsed) loses key order and whitespace and would cause
-  // every legitimate webhook to fail signature verification.
-  const webhookBody = (req as any).rawBody || JSON.stringify(req.body);
+  // SECURITY: The webhook route uses express.raw({ type: 'application/json' }),
+  // so req.body IS the raw Buffer. Use it directly for signature verification.
+  // Razorpay signs the exact bytes sent; JSON.stringify(req.body) would re-serialize
+  // with different key order/whitespace and break verification.
+  const webhookBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : JSON.stringify(req.body);
   const event = req.body;
 
   logger.info('🔔 [RAZORPAY WEBHOOK] Event received:', {
@@ -137,16 +137,24 @@ export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Resp
     } catch (processingError: any) {
       logger.error('❌ [RAZORPAY WEBHOOK] Processing error:', processingError);
 
-      // Update log with error — use pending_retry if under max retries
+      // FIX [MEDIUM-4]: Return proper status codes for retry logic
+      const MAX_RETRIES = 3;
       webhookLog.retryCount += 1;
-      webhookLog.status = webhookLog.retryCount >= 3 ? 'failed' : 'pending_retry';
+      webhookLog.status = webhookLog.retryCount >= MAX_RETRIES ? 'failed' : 'pending_retry';
       webhookLog.errorMessage = processingError.message;
       await webhookLog.save();
 
       logger.info(`[RAZORPAY WEBHOOK] Event ${webhookLog.eventId} marked as ${webhookLog.status} (retryCount: ${webhookLog.retryCount})`);
 
-      // Return 200 to prevent unnecessary retries for application errors
-      return res.status(200).json({
+      // Return 500 to trigger retry if under max retries, 200 only when giving up
+      if (webhookLog.retryCount >= MAX_RETRIES) {
+        return res.status(200).json({
+          received: true,
+          status: 'max_retries_exceeded',
+          message: 'Maximum retry attempts reached'
+        });
+      }
+      return res.status(500).json({
         received: true,
         status: 'error',
         message: processingError.message
@@ -156,8 +164,8 @@ export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Resp
   } catch (error: any) {
     logger.error('❌ [RAZORPAY WEBHOOK] Unexpected error:', error);
 
-    // Return 200 to prevent retries
-    return res.status(200).json({
+    // FIX [MEDIUM-4]: Return 500 for unexpected errors to trigger retry
+    return res.status(500).json({
       received: true,
       status: 'error',
       message: error.message

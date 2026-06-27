@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import GroceryProductCard from '@/components/grocery/GroceryProductCard';
 import { ProductsGridSkeleton } from '@/components/grocery/GrocerySkeleton';
 import { productsApi } from '@/services/productsApi';
@@ -322,7 +322,7 @@ const GroceryCategoryPage: React.FC = () => {
   const handleAddToCart = async (product: Product) => {
     try {
       const productId = product.id || product._id || '';
-      await cartApi.addToCart(productId, 1);
+      await cartApi.addToCart({ productId, quantity: 1 });
       // Could show a toast here
     } catch (err) {
       // silently handle

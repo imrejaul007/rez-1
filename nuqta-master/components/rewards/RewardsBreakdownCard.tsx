@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { BRAND } from '@/constants/brand';
 import { RewardChecklistItem } from '@/hooks/usePostOrderRewards';
 import { borderRadius, colors, shadows, spacing, typography } from '@/constants/theme';

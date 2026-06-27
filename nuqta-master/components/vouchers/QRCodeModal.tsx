@@ -12,7 +12,7 @@ import {
   Share,
   Dimensions} from 'react-native';
 import { platformAlertSimple, platformAlertDestructive } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
 import * as Brightness from 'expo-brightness';

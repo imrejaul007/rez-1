@@ -1,12 +1,12 @@
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, FlatList, Pressable, ActivityIndicator, Share } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { colors, spacing, borderRadius } from '@/constants/theme';
 import { useUserIdentityStore } from '@/stores/userIdentityStore';
-import { useAuthUser } from '@/stores';
+import { useAuthUser } from '@/stores/selectors';
 import * as identityApi from '@/services/identityApi';
 import analyticsService, { IdentityAnalyticsEvents } from '@/services/analyticsService';
 import { useIsMounted } from '@/hooks/useIsMounted';

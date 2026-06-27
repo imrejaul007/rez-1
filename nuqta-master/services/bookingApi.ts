@@ -1,20 +1,14 @@
-// @ts-nocheck
 // Booking API Service
 // Handles bookings and reservations management
 
 import apiClient, { ApiResponse } from './apiClient';
+import { devLog } from '@/utils/devLogger';
 
 // Backend exposes /table-bookings and /service-bookings (two separate routers).
 // Earlier this client called /bookings/* which 404'd. The Booking type
 // abstracts over the two kinds — table (restaurant) and service (salon/spa).
 const TABLE_BASE = '/table-bookings';
 const SERVICE_BASE = '/service-bookings';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
 
 // ===== TYPE DEFINITIONS =====
 

@@ -14,7 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import travelApi, { TravelService } from '@/services/travelApi';
 import { CardGridSkeleton } from '@/components/skeletons';

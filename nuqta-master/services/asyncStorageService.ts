@@ -1,10 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 /**
  * AsyncStorage Service
@@ -30,6 +25,7 @@ import {
 export const STORAGE_KEYS = {
   CART: 'shopping_cart',
   CART_OFFLINE_QUEUE: 'cart_offline_queue',
+  MUTATION_OFFLINE_QUEUE: 'mutation_offline_queue',
   WISHLIST: 'wishlist',
   RECENTLY_VIEWED: 'recently_viewed',
   RECENTLY_VIEWED_UNIFIED: 'recently_viewed_unified', // New: stores + products combined

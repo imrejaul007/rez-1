@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { View, StyleSheet, StatusBar, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useBackButton } from '@/hooks/useSafeNavigation';
 import { ThemedText } from '@/components/ThemedText';

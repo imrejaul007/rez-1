@@ -23,7 +23,7 @@ import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import CoinIcon from '@/components/ui/CoinIcon';
 import lockDealApi, { LockPriceDeal, LockDealFilters } from '@/services/lockDealApi';
 import { CardGridSkeleton } from '@/components/skeletons';

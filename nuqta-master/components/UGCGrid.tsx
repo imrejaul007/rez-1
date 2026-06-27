@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Pressable,
@@ -11,12 +11,17 @@ import Animated, {
   useSharedValue,
   withSequence,
   withSpring,
-  withTiming } from 'react-native-reanimated';
+  withTiming,
+} from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { UGCContent } from '@/types/reviews';
 import { colors } from '@/constants/theme';
+import { useToastStore } from '@/stores/toastStore';
+import ugcApi from '@/services/ugcApi';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface UGCGridProps {
   ugcContent: UGCContent[];
@@ -25,13 +30,47 @@ interface UGCGridProps {
   onBookmarkContent?: (contentId: string) => void;
 }
 
+interface ContentState {
+  isLiked: boolean;
+  isBookmarked: boolean;
+  likes: number;
+}
+
 const UGCGrid: React.FC<UGCGridProps> = ({
   ugcContent,
   onContentPress,
   onLikeContent,
   onBookmarkContent }) => {
   const screenWidth = Dimensions.get('window').width;
-  const itemWidth = (screenWidth - 64) / 2; // Account for padding and gap
+  const itemWidth = (screenWidth - 64) / 2;
+
+  // Local state for optimistic updates
+  const [contentStates, setContentStates] = useState<Record<string, ContentState>>({});
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+
+  // Toast notifications
+  const showSuccess = useToastStore((state) => state.showSuccess);
+  const showError = useToastStore((state) => state.showError);
+
+  // Ref for request race condition prevention
+  const requestIdRef = useRef(0);
+
+  // Initialize content states from initial data
+  useEffect(() => {
+    const states: Record<string, ContentState> = {};
+    ugcContent.forEach((item) => {
+      states[item.id] = {
+        isLiked: item.isLiked,
+        isBookmarked: item.isBookmarked || false,
+        likes: item.likes,
+      };
+    });
+    setContentStates(states);
+  }, [ugcContent]);
+
+  const getContentState = useCallback((contentId: string): ContentState => {
+    return contentStates[contentId] || { isLiked: false, isBookmarked: false, likes: 0 };
+  }, [contentStates]);
 
   const formatDate = (date: Date) => {
     const now = new Date();
@@ -54,40 +93,190 @@ const UGCGrid: React.FC<UGCGridProps> = ({
     return count.toString();
   };
 
+  const handleLikePress = useCallback(async (item: UGCContent) => {
+    if (processingIds.has(item.id)) return;
+
+    const currentRequestId = ++requestIdRef.current;
+    const previousState = getContentState(item.id);
+
+    try {
+      // Add to processing set
+      setProcessingIds((prev) => new Set(prev).add(item.id));
+
+      // Optimistic update
+      const newLiked = !previousState.isLiked;
+      const newLikes = newLiked ? previousState.likes + 1 : Math.max(0, previousState.likes - 1);
+
+      setContentStates((prev) => ({
+        ...prev,
+        [item.id]: {
+          ...previousState,
+          isLiked: newLiked,
+          likes: newLikes,
+        },
+      }));
+
+      // Call parent's handler
+      onLikeContent?.(item.id);
+
+      // API call
+      const response = await ugcApi.toggleLike(item.id);
+
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      if (response.success && response.data) {
+        // Update with server-confirmed values
+        setContentStates((prev) => ({
+          ...prev,
+          [item.id]: {
+            ...prev[item.id],
+            isLiked: response.data!.isLiked,
+            likes: response.data!.likes,
+          },
+        }));
+
+        showSuccess(
+          response.data!.isLiked ? 'Added to favorites' : 'Removed from favorites',
+          2000
+        );
+      } else {
+        throw new Error(response.error || 'Failed to update like');
+      }
+    } catch (error) {
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Rollback optimistic update
+      setContentStates((prev) => ({
+        ...prev,
+        [item.id]: previousState,
+      }));
+
+      showError('Failed to update like', 3000);
+    } finally {
+      // Remove from processing set
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    }
+  }, [processingIds, getContentState, onLikeContent, showSuccess, showError]);
+
+  const handleBookmarkPress = useCallback(async (item: UGCContent) => {
+    if (processingIds.has(`bookmark-${item.id}`)) return;
+
+    const currentRequestId = ++requestIdRef.current;
+    const previousState = getContentState(item.id);
+
+    try {
+      // Add to processing set
+      setProcessingIds((prev) => new Set(prev).add(`bookmark-${item.id}`));
+
+      // Optimistic update
+      const newBookmarked = !previousState.isBookmarked;
+
+      setContentStates((prev) => ({
+        ...prev,
+        [item.id]: {
+          ...previousState,
+          isBookmarked: newBookmarked,
+        },
+      }));
+
+      // Call parent's handler
+      onBookmarkContent?.(item.id);
+
+      // API call
+      const response = await ugcApi.toggleBookmark(item.id);
+
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      if (response.success && response.data) {
+        // Update with server-confirmed value
+        setContentStates((prev) => ({
+          ...prev,
+          [item.id]: {
+            ...prev[item.id],
+            isBookmarked: response.data!.isBookmarked,
+          },
+        }));
+
+        showSuccess(
+          response.data!.isBookmarked ? 'Bookmarked' : 'Bookmark removed',
+          2000
+        );
+      } else {
+        throw new Error(response.error || 'Failed to update bookmark');
+      }
+    } catch (error) {
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Rollback optimistic update
+      setContentStates((prev) => ({
+        ...prev,
+        [item.id]: previousState,
+      }));
+
+      showError('Failed to update bookmark', 3000);
+    } finally {
+      // Remove from processing set
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(`bookmark-${item.id}`);
+        return next;
+      });
+    }
+  }, [processingIds, getContentState, onBookmarkContent, showSuccess, showError]);
+
   const renderUGCItem = ({ item }: { item: UGCContent }) => {
     const likeScaleAnim = useSharedValue(1);
     const bookmarkScaleAnim = useSharedValue(1);
+
     const likeScaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: likeScaleAnim.value }] }));
     const bookmarkScaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: bookmarkScaleAnim.value }] }));
 
-    const handleLikePress = () => {
+    const state = getContentState(item.id);
+
+    const handleLike = () => {
       likeScaleAnim.value = withSequence(
         withTiming(0.8, { duration: 100 }),
         withSpring(1, { friction: 3, tension: 100 }),
       );
-      onLikeContent?.(item.id);
+      handleLikePress(item);
     };
 
-    const handleBookmarkPress = () => {
+    const handleBookmark = () => {
       bookmarkScaleAnim.value = withSequence(
         withTiming(0.8, { duration: 100 }),
         withSpring(1, { friction: 3, tension: 100 }),
       );
-      onBookmarkContent?.(item.id);
+      handleBookmarkPress(item);
     };
 
     return (
     <Pressable
       style={styles.ugcItem}
       onPress={() => onContentPress?.(item)}
-     
-      accessibilityLabel={`${item.contentType === 'video' ? 'Video' : 'Photo'} by ${item.userName}. ${item.likes} likes${item.caption ? '. ' + item.caption : ''}`}
+
+      accessibilityLabel={`${item.contentType === 'video' ? 'Video' : 'Photo'} by ${item.userName}. ${state.likes} likes${item.caption ? '. ' + item.caption : ''}`}
       accessibilityRole="button"
       accessibilityHint="Opens full content view"
     >
       <View style={styles.imageContainer}>
         <CachedImage source={item.uri} style={styles.ugcImage} />
-        
+
         {/* Content type indicator */}
         {item.contentType === 'video' && (
           <View style={styles.videoIndicator}>
@@ -104,17 +293,17 @@ const UGCGrid: React.FC<UGCGridProps> = ({
         {/* Bookmark button (top-right) */}
         <Pressable
           style={styles.bookmarkButton}
-          onPress={handleBookmarkPress}
-          accessibilityLabel={`${item.isBookmarked ? 'Remove bookmark' : 'Bookmark'} post`}
+          onPress={handleBookmark}
+          accessibilityLabel={`${state.isBookmarked ? 'Remove bookmark' : 'Bookmark'} post`}
           accessibilityRole="button"
-          accessibilityState={{ selected: item.isBookmarked }}
-          accessibilityHint={`Double tap to ${item.isBookmarked ? 'remove bookmark' : 'bookmark this post'}`}
+          accessibilityState={{ selected: state.isBookmarked }}
+          accessibilityHint={`Double tap to ${state.isBookmarked ? 'remove bookmark' : 'bookmark this post'}`}
         >
           <Animated.View style={bookmarkScaleStyle}>
             <Ionicons
-              name={item.isBookmarked ? "bookmark" : "bookmark-outline"}
+              name={state.isBookmarked ? "bookmark" : "bookmark-outline"}
               size={20}
-              color={item.isBookmarked ? colors.brand.purple : colors.background.primary}
+              color={state.isBookmarked ? colors.brand.purple : colors.background.primary}
             />
           </Animated.View>
         </Pressable>
@@ -122,20 +311,20 @@ const UGCGrid: React.FC<UGCGridProps> = ({
         {/* Like button (bottom-left) */}
         <Pressable
           style={styles.likeButton}
-          onPress={handleLikePress}
-          accessibilityLabel={`${item.isLiked ? 'Unlike' : 'Like'} post. ${formatLikeCount(item.likes)} likes`}
+          onPress={handleLike}
+          accessibilityLabel={`${state.isLiked ? 'Unlike' : 'Like'} post. ${formatLikeCount(state.likes)} likes`}
           accessibilityRole="button"
-          accessibilityState={{ selected: item.isLiked }}
-          accessibilityHint={`Double tap to ${item.isLiked ? 'remove like' : 'like this post'}`}
+          accessibilityState={{ selected: state.isLiked }}
+          accessibilityHint={`Double tap to ${state.isLiked ? 'remove like' : 'like this post'}`}
         >
           <Animated.View style={[likeScaleStyle, { flexDirection: "row", alignItems: "center" }]}>
             <Ionicons
-              name={item.isLiked ? "heart" : "heart-outline"}
+              name={state.isLiked ? "heart" : "heart-outline"}
               size={18}
-              color={item.isLiked ? colors.error : colors.background.primary}
+              color={state.isLiked ? colors.error : colors.background.primary}
             />
-            {item.likes > 0 && (
-              <ThemedText style={styles.likeCount}>{formatLikeCount(item.likes)}</ThemedText>
+            {state.likes > 0 && (
+              <ThemedText style={styles.likeCount}>{formatLikeCount(state.likes)}</ThemedText>
             )}
           </Animated.View>
         </Pressable>
@@ -148,11 +337,11 @@ const UGCGrid: React.FC<UGCGridProps> = ({
             {item.caption}
           </ThemedText>
         )}
-        
+
         <View style={styles.contentStats}>
           <View style={styles.likesContainer}>
             <Ionicons name="heart" size={12} color={colors.error} />
-            <ThemedText style={styles.likesText}>{item.likes}</ThemedText>
+            <ThemedText style={styles.likesText}>{state.likes}</ThemedText>
           </View>
           <ThemedText style={styles.dateText}>{formatDate(item.date)}</ThemedText>
         </View>

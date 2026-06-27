@@ -5,6 +5,22 @@ import apiClient, { ApiResponse } from './apiClient';
 import { Share, Platform } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
+import { safeOpenURL } from '@/utils/linking';
+
+// Schemes used by social share targets (in addition to the defaults in safeOpenURL).
+const SHARE_ALLOWED_SCHEMES = [
+  'https:',
+  'tel:',
+  'mailto:',
+  'geo:',
+  'sms:',
+  'whatsapp:',
+  'fb:',
+  'instagram:',
+  'twitter:',
+  'tg:',
+  'rez:',
+] as const;
 
 export interface ShareableLink {
   shareCode: string;
@@ -382,7 +398,7 @@ class WishlistSharingService {
 
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
-        await Linking.openURL(url);
+        await safeOpenURL(url, { allowedSchemes: SHARE_ALLOWED_SCHEMES });
         return true;
       } else {
         // Fallback to native share
@@ -403,12 +419,12 @@ class WishlistSharingService {
 
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
-        await Linking.openURL(url);
+        await safeOpenURL(url, { allowedSchemes: SHARE_ALLOWED_SCHEMES });
         return true;
       } else {
         // Fallback to web
         const webUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-        await Linking.openURL(webUrl);
+        await safeOpenURL(webUrl, { allowedSchemes: SHARE_ALLOWED_SCHEMES });
         return true;
       }
     } catch (error) {
@@ -434,7 +450,7 @@ class WishlistSharingService {
       const canOpen = await Linking.canOpenURL(url);
 
       if (canOpen) {
-        await Linking.openURL(url);
+        await safeOpenURL(url, { allowedSchemes: SHARE_ALLOWED_SCHEMES });
         return true;
       }
       return false;
@@ -458,12 +474,12 @@ class WishlistSharingService {
 
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
-        await Linking.openURL(url);
+        await safeOpenURL(url, { allowedSchemes: SHARE_ALLOWED_SCHEMES });
         return true;
       } else {
         // Fallback to web Twitter
         const webUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(options.shareUrl)}`;
-        await Linking.openURL(webUrl);
+        await safeOpenURL(webUrl, { allowedSchemes: SHARE_ALLOWED_SCHEMES });
         return true;
       }
     } catch (error) {
@@ -491,12 +507,12 @@ class WishlistSharingService {
 
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
-        await Linking.openURL(url);
+        await safeOpenURL(url, { allowedSchemes: SHARE_ALLOWED_SCHEMES });
         return true;
       } else {
         // Fallback to web Telegram
         const webUrl = `https://t.me/share/url?url=${encodeURIComponent(options.shareUrl)}&text=${encodeURIComponent(message)}`;
-        await Linking.openURL(webUrl);
+        await safeOpenURL(webUrl, { allowedSchemes: SHARE_ALLOWED_SCHEMES });
         return true;
       }
     } catch (error) {
@@ -523,7 +539,7 @@ class WishlistSharingService {
       );
       const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-      await Linking.openURL(url);
+      await safeOpenURL(url, { allowedSchemes: SHARE_ALLOWED_SCHEMES });
       return true;
     } catch (error) {
       return false;
@@ -549,7 +565,7 @@ class WishlistSharingService {
       const separator = Platform.OS === 'ios' ? '&' : '?';
       const url = `sms:${separator}body=${encodeURIComponent(message)}`;
 
-      await Linking.openURL(url);
+      await safeOpenURL(url, { allowedSchemes: SHARE_ALLOWED_SCHEMES });
       return true;
     } catch (error) {
       return false;

@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import subscriptionApi from '@/services/subscriptionApi';
 import type { CurrentSubscription, SubscriptionTier } from '@/services/subscriptionApi';
 import { useAuthUser, useIsAuthenticated } from '@/stores/selectors';
+import { useToastStore } from '@/stores/toastStore';
 
 // Feature flags for gradual rollout
 const FEATURE_FLAGS = {
@@ -18,6 +19,7 @@ interface SubscriptionState {
   currentSubscription: CurrentSubscription | null;
   availableTiers: SubscriptionTier[];
   isLoading: boolean;
+  isSubscribing: boolean;
   error: string | null;
   lastFetched: string | null;
   featureFlags: typeof FEATURE_FLAGS;
@@ -29,7 +31,8 @@ type SubscriptionAction =
   | { type: 'SUBSCRIPTION_ERROR'; payload: string }
   | { type: 'UPDATE_SUBSCRIPTION'; payload: CurrentSubscription }
   | { type: 'CLEAR_SUBSCRIPTION' }
-  | { type: 'CLEAR_ERROR' };
+  | { type: 'CLEAR_ERROR' }
+  | { type: 'SET_SUBSCRIBING'; payload: boolean };
 
 // BUG FIX #3: Storage keys - userId will be appended at runtime to prevent cross-user contamination
 const getStorageKeys = (userId: string) => ({
@@ -45,6 +48,7 @@ const initialState: SubscriptionState = {
   currentSubscription: null,
   availableTiers: [],
   isLoading: false,
+  isSubscribing: false,
   error: null,
   lastFetched: null,
   featureFlags: FEATURE_FLAGS,
@@ -82,6 +86,9 @@ function subscriptionReducer(state: SubscriptionState, action: SubscriptionActio
     case 'CLEAR_ERROR':
       return { ...state, error: null };
 
+    case 'SET_SUBSCRIBING':
+      return { ...state, isSubscribing: action.payload, error: null };
+
     default:
       return state;
   }
@@ -94,6 +101,12 @@ interface SubscriptionContextType {
     loadSubscription: (forceRefresh?: boolean) => Promise<void>;
     refreshSubscription: () => Promise<void>;
     clearError: () => void;
+    subscribe: (tier: 'premium' | 'vip', billingCycle: 'monthly' | 'yearly', paymentMethod?: string, promoCode?: string, source?: string) => Promise<{ subscription: CurrentSubscription; paymentUrl: string }>;
+    upgrade: (newTier: 'premium' | 'vip', billingCycle?: string, paymentGateway?: string) => Promise<{ upgradeId: string; fromTier: string; toTier: string; proratedAmount: number; newTierPrice: number; creditFromCurrentPlan: number; billingCycle: string; expiresAt: string }>;
+    confirmUpgrade: (upgradeId: string, paymentId?: string, paymentIntentId?: string) => Promise<{ subscription: CurrentSubscription; upgrade: { fromTier: string; toTier: string; proratedAmount: number } }>;
+    cancelSubscription: (options?: { reason?: string; feedback?: string; cancelImmediately?: boolean }) => Promise<{ subscription: CurrentSubscription; accessUntil: string; reactivationEligibleUntil: string }>;
+    renewSubscription: () => Promise<CurrentSubscription>;
+    toggleAutoRenew: (autoRenew: boolean) => Promise<CurrentSubscription>;
   };
   computed: {
     isSubscribed: boolean;
@@ -313,6 +326,110 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     dispatch({ type: 'CLEAR_ERROR' });
   }, []);
 
+  // Optimistic subscribe action
+  const subscribe = useCallback(async (tier: 'premium' | 'vip', billingCycle: 'monthly' | 'yearly', paymentMethod?: string, promoCode?: string, source?: string) => {
+    const prev = state.currentSubscription;
+    dispatch({ type: 'SET_SUBSCRIBING', payload: true });
+    try {
+      const result = await subscriptionApi.subscribeToPlan(tier, billingCycle, paymentMethod, promoCode, source);
+      dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: result.subscription });
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showSuccess('Successfully subscribed!');
+      return result;
+    } catch (error) {
+      dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: prev });
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showError('Failed to subscribe. Please try again.');
+      throw error;
+    }
+  }, [state.currentSubscription]);
+
+  // Optimistic upgrade action (initiate)
+  const upgrade = useCallback(async (newTier: 'premium' | 'vip', billingCycle?: string, paymentGateway?: string) => {
+    dispatch({ type: 'SET_SUBSCRIBING', payload: true });
+    try {
+      const result = await subscriptionApi.initiateUpgrade(newTier, billingCycle, paymentGateway);
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      return result;
+    } catch (error) {
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showError('Failed to initiate upgrade. Please try again.');
+      throw error;
+    }
+  }, []);
+
+  // Optimistic confirm upgrade action
+  const confirmUpgrade = useCallback(async (upgradeId: string, paymentId?: string, paymentIntentId?: string) => {
+    const prev = state.currentSubscription;
+    dispatch({ type: 'SET_SUBSCRIBING', payload: true });
+    try {
+      const result = await subscriptionApi.confirmUpgrade(upgradeId, paymentId, paymentIntentId);
+      dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: result.subscription });
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showSuccess('Upgrade successful!');
+      return result;
+    } catch (error) {
+      dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: prev });
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showError('Failed to confirm upgrade. Please contact support.');
+      throw error;
+    }
+  }, [state.currentSubscription]);
+
+  // Optimistic cancel subscription action
+  const cancelSubscription = useCallback(async (options?: { reason?: string; feedback?: string; cancelImmediately?: boolean }) => {
+    const prev = state.currentSubscription;
+    dispatch({ type: 'SET_SUBSCRIBING', payload: true });
+    try {
+      const result = await subscriptionApi.cancelSubscription(options || {});
+      dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: result.subscription });
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showSuccess('Subscription cancelled successfully.');
+      return result;
+    } catch (error) {
+      dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: prev });
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showError('Failed to cancel subscription. Please try again.');
+      throw error;
+    }
+  }, [state.currentSubscription]);
+
+  // Optimistic renew subscription action
+  const renewSubscription = useCallback(async () => {
+    const prev = state.currentSubscription;
+    dispatch({ type: 'SET_SUBSCRIBING', payload: true });
+    try {
+      const result = await subscriptionApi.renewSubscription();
+      dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: result });
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showSuccess('Subscription renewed!');
+      return result;
+    } catch (error) {
+      dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: prev });
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showError('Failed to renew subscription. Please try again.');
+      throw error;
+    }
+  }, [state.currentSubscription]);
+
+  // Optimistic toggle auto-renew action
+  const toggleAutoRenew = useCallback(async (autoRenew: boolean) => {
+    const prev = state.currentSubscription;
+    dispatch({ type: 'SET_SUBSCRIBING', payload: true });
+    try {
+      const result = await subscriptionApi.toggleAutoRenew(autoRenew);
+      dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: result });
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showSuccess(autoRenew ? 'Auto-renewal enabled.' : 'Auto-renewal disabled.');
+      return result;
+    } catch (error) {
+      dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: prev });
+      dispatch({ type: 'SET_SUBSCRIBING', payload: false });
+      useToastStore.getState().showError('Failed to update auto-renewal. Please try again.');
+      throw error;
+    }
+  }, [state.currentSubscription]);
+
   // Computed values
   // BUG FIX #6: Include 'trial' and 'grace_period' status as valid active states
   const activeStatuses = ['active', 'trial', 'grace_period'];
@@ -344,6 +461,12 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       loadSubscription,
       refreshSubscription,
       clearError,
+      subscribe,
+      upgrade,
+      confirmUpgrade,
+      cancelSubscription,
+      renewSubscription,
+      toggleAutoRenew,
     },
     computed: {
       isSubscribed,
@@ -354,7 +477,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       daysRemaining,
       canApplyBenefit,
     },
-  }), [state, loadSubscription, refreshSubscription, clearError, isSubscribed, isPremium, isVIP, cashbackMultiplier, hasFreeDelivery, daysRemaining, canApplyBenefit]);
+  }), [state, loadSubscription, refreshSubscription, clearError, subscribe, upgrade, confirmUpgrade, cancelSubscription, renewSubscription, toggleAutoRenew, isSubscribed, isPremium, isVIP, cashbackMultiplier, hasFreeDelivery, daysRemaining, canApplyBenefit]);
 
   return (
     <SubscriptionContext.Provider value={contextValue}>
@@ -369,6 +492,12 @@ const SUBSCRIPTION_DEFAULTS: SubscriptionContextType = {
     loadSubscription: async () => {},
     refreshSubscription: async () => {},
     clearError: () => {},
+    subscribe: async () => { throw new Error('Not initialized'); },
+    upgrade: async () => { throw new Error('Not initialized'); },
+    confirmUpgrade: async () => { throw new Error('Not initialized'); },
+    cancelSubscription: async () => { throw new Error('Not initialized'); },
+    renewSubscription: async () => { throw new Error('Not initialized'); },
+    toggleAutoRenew: async () => { throw new Error('Not initialized'); },
   },
   computed: {
     isSubscribed: false,

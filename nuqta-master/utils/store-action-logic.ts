@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Conditional rendering logic for StoreActionButtons
 
 import { Linking, Platform } from 'react-native';
@@ -12,6 +11,20 @@ import {
   ActionButtonId,
 } from '@/types/store-actions';
 import { colors } from '@/constants/theme';
+import { safeOpenURL } from '@/utils/linking';
+
+// Schemes used by store-action destinations (call, maps, web).
+// Includes `telprompt:` (iOS call) and `maps:` (iOS native maps app) which
+// aren't in the default safeOpenURL allow-list.
+const STORE_ACTION_ALLOWED_SCHEMES = [
+  'https:',
+  'tel:',
+  'telprompt:',
+  'mailto:',
+  'geo:',
+  'maps:',
+  'sms:',
+] as const;
 
 /**
  * Determines which buttons should be visible based on store type
@@ -292,7 +305,7 @@ export function handleButtonDestination(
             : `tel:${storeData.phone}`;
           Linking.canOpenURL(phoneUrl).then(supported => {
             if (supported) {
-              Linking.openURL(phoneUrl).catch(() => {});
+              safeOpenURL(phoneUrl, { allowedSchemes: STORE_ACTION_ALLOWED_SCHEMES }).catch(() => {});
             } else {
               showError('Unable to Call', 'Phone calls are not supported on this device.', 'call');
             }
@@ -311,10 +324,10 @@ export function handleButtonDestination(
             : `geo:${lat},${lng}?q=${address}`;
           Linking.canOpenURL(mapsUrl).then(supported => {
             if (supported) {
-              Linking.openURL(mapsUrl).catch(() => {});
+              safeOpenURL(mapsUrl, { allowedSchemes: STORE_ACTION_ALLOWED_SCHEMES }).catch(() => {});
             } else {
               // Fallback to Google Maps web URL
-              Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`).catch(() => {});
+              safeOpenURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, { allowedSchemes: STORE_ACTION_ALLOWED_SCHEMES }).catch(() => {});
             }
           }).catch(() => {});
         } else if (storeData?.location?.address) {
@@ -322,7 +335,7 @@ export function handleButtonDestination(
           const address = encodeURIComponent(
             `${storeData.location.address}, ${storeData.location.city || ''}`
           );
-          Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${address}`).catch(() => {});
+          safeOpenURL(`https://www.google.com/maps/search/?api=1&query=${address}`, { allowedSchemes: STORE_ACTION_ALLOWED_SCHEMES }).catch(() => {});
         } else {
           showError('Location Not Available', 'This store has not provided location information.', 'location');
         }
@@ -359,13 +372,13 @@ export function handleButtonDestination(
         ? `telprompt:${destination.value}`
         : `tel:${destination.value}`;
       Linking.canOpenURL(phoneUrl).then(supported => {
-        if (supported) Linking.openURL(phoneUrl).catch(() => {});
+        if (supported) safeOpenURL(phoneUrl, { allowedSchemes: STORE_ACTION_ALLOWED_SCHEMES }).catch(() => {});
       }).catch(() => {});
       break;
 
     case 'url':
       Linking.canOpenURL(destination.value).then(supported => {
-        if (supported) Linking.openURL(destination.value).catch(() => {});
+        if (supported) safeOpenURL(destination.value, { allowedSchemes: STORE_ACTION_ALLOWED_SCHEMES }).catch(() => {});
       }).catch(() => {});
       break;
 
@@ -379,15 +392,15 @@ export function handleButtonDestination(
           : `geo:${lat},${lng}`;
         Linking.canOpenURL(mapsUrl).then(supported => {
           if (supported) {
-            Linking.openURL(mapsUrl).catch(() => {});
+            safeOpenURL(mapsUrl, { allowedSchemes: STORE_ACTION_ALLOWED_SCHEMES }).catch(() => {});
           } else {
-            Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`).catch(() => {});
+            safeOpenURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, { allowedSchemes: STORE_ACTION_ALLOWED_SCHEMES }).catch(() => {});
           }
         }).catch(() => {});
       } else {
         // Treat as address
         const address = encodeURIComponent(destination.value);
-        Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${address}`).catch(() => {});
+        safeOpenURL(`https://www.google.com/maps/search/?api=1&query=${address}`, { allowedSchemes: STORE_ACTION_ALLOWED_SCHEMES }).catch(() => {});
       }
       break;
 

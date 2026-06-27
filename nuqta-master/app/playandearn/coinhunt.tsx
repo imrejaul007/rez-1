@@ -19,7 +19,7 @@ import Animated, {
   Easing} from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import gameApi from '../../services/gameApi';
 import { useGamification } from '@/contexts/GamificationContext';

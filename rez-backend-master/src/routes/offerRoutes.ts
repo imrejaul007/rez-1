@@ -310,6 +310,7 @@ router.get('/nearby',
     lat: Joi.number().min(-90).max(90).required(),
     lng: Joi.number().min(-180).max(180).required(),
     maxDistance: Joi.number().min(1).max(100).default(10),
+    page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(50).default(20)
   })),
   getNearbyOffers
@@ -459,7 +460,7 @@ router.get('/homepage-deals-section', optionalAuth, asyncHandler(async (req: Req
     // Return empty if section doesn't exist or is inactive
     if (!sectionConfig) {
       return res.json({
-        success: true,
+        success: false,
         data: null,
         message: 'Section not configured',
       });
@@ -469,7 +470,7 @@ router.get('/homepage-deals-section', optionalAuth, asyncHandler(async (req: Req
     if (sectionConfig.regions.length > 0 && !sectionConfig.regions.includes('all' as any)) {
       if (!sectionConfig.regions.includes(region as any)) {
         return res.json({
-          success: true,
+          success: false,
           data: null,
           message: 'Section not available in this region',
         });

@@ -22,8 +22,7 @@ const router = Router();
 router.use(generalLimiter);
 
 // Update user location
-router.post('/update',  // generalLimiter,, // Disabled for development
-  authenticate,
+router.post('/update',    authenticate,
   validate(Joi.object({
     latitude: Joi.number().min(-90).max(90).required(),
     longitude: Joi.number().min(-180).max(180).required(),
@@ -34,14 +33,12 @@ router.post('/update',  // generalLimiter,, // Disabled for development
 );
 
 // Get current user location
-router.get('/current',  // generalLimiter,, // Disabled for development
-  authenticate,
+router.get('/current',    authenticate,
   getCurrentLocation
 );
 
 // Get location history
-router.get('/history',  // generalLimiter,, // Disabled for development
-  authenticate,
+router.get('/history',    authenticate,
   validateQuery(Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(50).default(10),
@@ -50,8 +47,7 @@ router.get('/history',  // generalLimiter,, // Disabled for development
 );
 
 // Reverse geocoding - Convert coordinates to address
-router.post('/geocode',  // generalLimiter,, // Disabled for development
-  validate(Joi.object({
+router.post('/geocode',    validate(Joi.object({
     latitude: Joi.number().min(-90).max(90).required(),
     longitude: Joi.number().min(-180).max(180).required(),
   })),
@@ -59,8 +55,7 @@ router.post('/geocode',  // generalLimiter,, // Disabled for development
 );
 
 // Search addresses
-router.post('/search',  // searchLimiter,, // Disabled for development
-  validate(Joi.object({
+router.post('/search',    validate(Joi.object({
     query: Joi.string().trim().min(2).max(100).required(),
     limit: Joi.number().integer().min(1).max(10).default(5),
   })),
@@ -68,8 +63,7 @@ router.post('/search',  // searchLimiter,, // Disabled for development
 );
 
 // Validate address
-router.post('/validate',  // generalLimiter,, // Disabled for development
-  validate(Joi.object({
+router.post('/validate',    validate(Joi.object({
     address: Joi.string().trim().max(500).optional(),
     latitude: Joi.number().min(-90).max(90).optional(),
     longitude: Joi.number().min(-180).max(180).optional(),
@@ -78,8 +72,7 @@ router.post('/validate',  // generalLimiter,, // Disabled for development
 );
 
 // Get timezone for coordinates
-router.get('/timezone',  // generalLimiter,, // Disabled for development
-  validateQuery(Joi.object({
+router.get('/timezone',    validateQuery(Joi.object({
     latitude: Joi.number().min(-90).max(90).required(),
     longitude: Joi.number().min(-180).max(180).required(),
   })),
@@ -87,8 +80,7 @@ router.get('/timezone',  // generalLimiter,, // Disabled for development
 );
 
 // Get nearby stores
-router.get('/nearby-stores',  // generalLimiter,, // Disabled for development
-  validateQuery(Joi.object({
+router.get('/nearby-stores',    validateQuery(Joi.object({
     latitude: Joi.number().min(-90).max(90).required(),
     longitude: Joi.number().min(-180).max(180).required(),
     radius: Joi.number().min(0.1).max(50).default(5),
@@ -98,8 +90,7 @@ router.get('/nearby-stores',  // generalLimiter,, // Disabled for development
 );
 
 // Get location statistics
-router.get('/stats',  // generalLimiter,, // Disabled for development
-  authenticate,
+router.get('/stats',    authenticate,
   getLocationStats
 );
 

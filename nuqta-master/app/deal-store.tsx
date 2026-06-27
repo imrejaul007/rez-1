@@ -18,7 +18,7 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { campaignsApi, DealCategory, CampaignDeal } from '@/services/campaignsApi';
 import CoinIcon from '@/components/ui/CoinIcon';
 

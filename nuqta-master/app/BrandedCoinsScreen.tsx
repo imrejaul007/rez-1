@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useWalletData, useBrandedCoins } from '@/stores/selectors';
 import { COIN_TYPES } from '@/types/wallet';

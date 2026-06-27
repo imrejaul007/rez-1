@@ -8,7 +8,7 @@ import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import React, { useState, useCallback, useRef } from 'react';
 import { View, StyleSheet, Pressable, StatusBar, Dimensions, Share } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

@@ -14,13 +14,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import programApi from '../../services/programApi';
 import { BRAND } from '@/constants/brand';
 import { colors } from '@/constants/theme';
 import { catchAndWarn } from '@/utils/catchAndReport';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { safeOpenURL } from '@/utils/linking';
 
 const SocialImpactEventDetail = () => {
   const router = useRouter();
@@ -246,15 +247,15 @@ const SocialImpactEventDetail = () => {
   const event = events[id] || events['1'];
 
   const handleCall = () => {
-    try { Linking.openURL(`tel:${event.contact.phone}`); } catch (e) { catchAndWarn(e, 'SocialImpactEventDetail/openURL'); }
+    try { safeOpenURL(`tel:${event.contact.phone}`); } catch (e) { catchAndWarn(e, 'SocialImpactEventDetail/openURL'); }
   };
 
   const handleEmail = () => {
-    try { Linking.openURL(`mailto:${event.contact.email}`); } catch (e) { catchAndWarn(e, 'SocialImpactEventDetail/openURL'); }
+    try { safeOpenURL(`mailto:${event.contact.email}`); } catch (e) { catchAndWarn(e, 'SocialImpactEventDetail/openURL'); }
   };
 
   const handleMaps = () => {
-    try { Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(event.fullAddress)}`); } catch (e) { catchAndWarn(e, 'SocialImpactEventDetail/openURL'); }
+    try { safeOpenURL(`https://maps.google.com/?q=${encodeURIComponent(event.fullAddress)}`); } catch (e) { catchAndWarn(e, 'SocialImpactEventDetail/openURL'); }
   };
 
   return (

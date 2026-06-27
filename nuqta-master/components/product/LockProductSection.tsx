@@ -22,7 +22,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerImpact, triggerNotification } from '@/utils/haptics';
 import { useIsAuthenticated, useCartActions, useGetCurrencySymbol, useGetLocale, useAvailableBalance, useRefreshWallet } from '@/stores/selectors';
 import cartService from '@/services/cartApi';

@@ -21,7 +21,7 @@ import CachedImage from '@/components/ui/CachedImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, Stack, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { challengesApi, ChallengeProgress, Challenge } from '@/services/challengesApi';
 import { platformAlertSimple } from '@/utils/platformAlert';

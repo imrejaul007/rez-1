@@ -108,7 +108,8 @@ export function handleNotificationDeepLink(data: NotificationData): void {
         if (data.walletAction === 'view_transactions') {
           router.push('/transactions/index' as any);
         } else if (data.walletAction === 'view_coins') {
-          router.push('/coin-detail' as any);
+          const coinType = (data as any).coinType as string | undefined;
+          router.push(`/wallet/coin-detail/${coinType || 'coin'}` as any);
         } else {
           router.push('/wallet/index' as any);
         }
@@ -155,7 +156,7 @@ export function handleNotificationDeepLink(data: NotificationData): void {
 
       case 'subscription_reminder':
       case 'subscription_renewal':
-        router.push('/subscription/index' as any);
+        router.push('/subscriptions' as any);
         break;
 
       default:

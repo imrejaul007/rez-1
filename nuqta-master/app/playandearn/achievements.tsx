@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import streakApi from '../../services/streakApi';
 import achievementApi from '../../services/achievementApi';
@@ -284,7 +284,7 @@ const Achievements = () => {
 
         <Pressable
           style={styles.ctaCard}
-          onPress={() => router.push('/refer' as any)}
+          onPress={() => router.push('/referral' as any)}
         >
           <LinearGradient
             colors={['#3B82F620', '#06B6D420']}

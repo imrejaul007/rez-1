@@ -21,7 +21,7 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import eventsApiService from '@/services/eventsApi';
 import { EventItem } from '@/types/homepage.types';
 import { EVENT_COLORS } from '@/constants/EventColors';

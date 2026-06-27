@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, StyleSheet, Pressable, StatusBar, Platform, SafeAreaView, RefreshControl, Linking, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { PROFILE_COLORS } from '@/types/profile.types';
@@ -16,6 +16,7 @@ import ContactStoreModal from '@/components/store/ContactStoreModal';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { DetailPageSkeleton } from '@/components/skeletons';
 import { platformAlertSimple, platformAlertConfirm, platformAlertDestructive } from '@/utils/platformAlert';
+import { safeCallPhone } from '@/utils/linking';
 
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { BRAND } from '@/constants/brand';
@@ -164,7 +165,9 @@ function DetailedOrderTrackingPage() {
   const handleCallDeliveryPartner = () => {
     if (order?.deliveryPartnerData?.phone) {
       try {
-        Linking.openURL(`tel:${order.deliveryPartnerData.phone}`);
+        // Phase 6: web parity — tel: doesn't place calls on web, so the
+        // safeOpenURL helper shows a modal with the number instead.
+        safeCallPhone(order.deliveryPartnerData.phone, 'Call delivery partner');
       } catch (e) { catchAndReport(e, setLinkError, 'OrderTracking/callDeliveryPartner'); }
     } else {
       platformAlertSimple('Not Available', 'Delivery partner contact not available yet.');

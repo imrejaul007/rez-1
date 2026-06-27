@@ -10,7 +10,7 @@ import {
   Pressable,
   Share} from 'react-native';
 import { platformAlertSimple } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
 import { GroupBuyingGroup } from '@/types/groupBuying.types';
 import { useGetCurrencySymbol } from '@/stores/selectors';

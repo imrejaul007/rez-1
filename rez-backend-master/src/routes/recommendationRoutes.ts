@@ -23,8 +23,7 @@ const router = Router();
 router.use(generalLimiter);
 
 // Get personalized store recommendations
-router.get('/personalized',   // recommendationLimiter,, // Disabled for development
-  optionalAuth,
+router.get('/personalized',     optionalAuth,
   validateQuery(Joi.object({
     location: Joi.string().pattern(/^-?\d+\.?\d*,-?\d+\.?\d*$/), // "lng,lat" format
     radius: Joi.number().min(0.1).max(50).default(10),
@@ -40,8 +39,7 @@ router.get('/personalized',   // recommendationLimiter,, // Disabled for develo
 );
 
 // Get recommendations for a specific store
-router.get('/store/:storeId',   // generalLimiter,, // Disabled for development
-  optionalAuth,
+router.get('/store/:storeId',     optionalAuth,
   validateParams(Joi.object({
     storeId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/) // MongoDB ObjectId
   })),
@@ -52,8 +50,7 @@ router.get('/store/:storeId',   // generalLimiter,, // Disabled for development
 );
 
 // Get trending stores
-router.get('/trending',   // generalLimiter,, // Disabled for development
-  optionalAuth,
+router.get('/trending',     optionalAuth,
   validateQuery(Joi.object({
     location: Joi.string().pattern(/^-?\d+\.?\d*,-?\d+\.?\d*$/), // "lng,lat" format
     radius: Joi.number().min(0.1).max(50).default(10),
@@ -65,8 +62,7 @@ router.get('/trending',   // generalLimiter,, // Disabled for development
 );
 
 // Get category-based recommendations
-router.get('/category/:category',   // generalLimiter,, // Disabled for development
-  optionalAuth,
+router.get('/category/:category',     optionalAuth,
   validateParams(Joi.object({
     category: Joi.string().valid('fastDelivery', 'budgetFriendly', 'premium', 'organic', 'alliance', 'lowestPrice', 'mall', 'cashStore')
   })),
@@ -96,14 +92,12 @@ router.get('/for-you',
 );
 
 // Get user's recommendation preferences
-router.get('/preferences',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.get('/preferences',     requireAuth,
   getUserRecommendationPreferences
 );
 
 // Update user's recommendation preferences
-router.put('/preferences',   // recommendationLimiter,, // Disabled for development
-  requireAuth,
+router.put('/preferences',     requireAuth,
   validateBody(Joi.object({
     preferences: Joi.object({
       categories: Joi.array().items(Joi.string()),
@@ -124,7 +118,7 @@ router.put('/preferences',   // recommendationLimiter,, // Disabled for develop
 // ============================================
 
 // Get similar products for a specific product
-router.get('/products/similar/:productId',   // generalLimiter,, // Disabled for development
+router.get('/products/similar/:productId',
   optionalAuth,
   validateParams(Joi.object({
     productId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/) // MongoDB ObjectId
@@ -136,7 +130,7 @@ router.get('/products/similar/:productId',   // generalLimiter,, // Disabled for
 );
 
 // Get frequently bought together for a product
-router.get('/products/frequently-bought/:productId',   // generalLimiter,, // Disabled for development
+router.get('/products/frequently-bought/:productId',
   optionalAuth,
   validateParams(Joi.object({
     productId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/) // MongoDB ObjectId
@@ -148,8 +142,7 @@ router.get('/products/frequently-bought/:productId',   // generalLimiter,, // Di
 );
 
 // Get bundle deals for a product
-router.get('/products/bundle/:productId',   // generalLimiter,, // Disabled for development
-  optionalAuth,
+router.get('/products/bundle/:productId',     optionalAuth,
   validateParams(Joi.object({
     productId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/) // MongoDB ObjectId
   })),
@@ -160,8 +153,7 @@ router.get('/products/bundle/:productId',   // generalLimiter,, // Disabled for 
 );
 
 // Get personalized product recommendations for user
-router.get('/products/personalized',   // recommendationLimiter,, // Disabled for development
-  requireAuth,
+router.get('/products/personalized',     requireAuth,
   validateQuery(Joi.object({
     limit: Joi.number().integer().min(1).max(50).default(10),
     excludeProducts: Joi.string() // Comma-separated product IDs
@@ -181,8 +173,7 @@ router.get('/picked-for-you',
 );
 
 // Track product view
-router.post('/products/:productId/view',   // generalLimiter,, // Disabled for development
-  optionalAuth,
+router.post('/products/:productId/view',     optionalAuth,
   validateParams(Joi.object({
     productId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/) // MongoDB ObjectId
   })),
@@ -201,8 +192,7 @@ router.post('/products/:productId/view',   // generalLimiter,, // Disabled for d
  * This endpoint eliminates duplicate products across recommendation sections
  * and ensures variety across categories, brands, and price ranges.
  */
-router.post('/diverse',   // recommendationLimiter,, // Disabled for development
-  optionalAuth,
+router.post('/diverse',     optionalAuth,
   validateBody(Joi.object({
     excludeProducts: Joi.array().items(
       Joi.string().pattern(/^[0-9a-fA-F]{24}$/)

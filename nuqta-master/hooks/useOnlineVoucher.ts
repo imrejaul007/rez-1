@@ -1,4 +1,3 @@
-// @ts-nocheck
 // hooks/useOnlineVoucher.ts - State management hook for Online Voucher system
 
 import { useState, useEffect, useCallback, useRef } from 'react';

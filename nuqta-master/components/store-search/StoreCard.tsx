@@ -5,7 +5,7 @@ import {
   Dimensions,
   Pressable,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { StoreCardProps } from '@/types/store-search';
 import ProductGrid from './ProductGrid';
@@ -84,7 +84,7 @@ const StoreCard: React.FC<StoreCardProps & {
           {showLetterAvatar ? (
             <View style={[styles.letterAvatar, { backgroundColor: avatarColor }]}>
               <ThemedText style={styles.letterAvatarText}>
-                {storeName.charAt(0).toUpperCase()}
+                {(storeName || '?').charAt(0).toUpperCase()}
               </ThemedText>
             </View>
           ) : (

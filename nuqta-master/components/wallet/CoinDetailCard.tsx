@@ -10,7 +10,7 @@ import Animated, {
   useSharedValue,
   withSpring } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { CoinBalance, COIN_TYPES, CoinType } from '@/types/wallet';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/DesignSystem';

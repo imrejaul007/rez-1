@@ -20,7 +20,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { PRIVE_COLORS } from './priveTheme';
 import priveInviteApi from '@/services/priveInviteApi';
 import { platformAlertSimple } from '@/utils/platformAlert';
@@ -152,7 +152,7 @@ function PriveLockedTeaser({ onAccessGranted }: PriveLockedTeaserProps) {
               style={styles.codeInput}
               value={code}
               onChangeText={(text) => {
-                setCode(text.toUpperCase());
+                setCode((text || '').toUpperCase());
                 setValidationResult(null);
               }}
               placeholder="PRIVE-XXXXXXXX"

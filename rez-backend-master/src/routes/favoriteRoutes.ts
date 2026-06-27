@@ -17,8 +17,7 @@ const router = Router();
 router.use(generalLimiter);
 
 // Add store to favorites
-router.post('/store/:storeId',   // favoriteLimiter,, // Disabled for development
-  requireAuth,
+router.post('/store/:storeId',     requireAuth,
   validateParams(Joi.object({
     storeId: commonSchemas.objectId()
   })),
@@ -26,8 +25,7 @@ router.post('/store/:storeId',   // favoriteLimiter,, // Disabled for developme
 );
 
 // Remove store from favorites
-router.delete('/store/:storeId',   // favoriteLimiter,, // Disabled for development
-  requireAuth,
+router.delete('/store/:storeId',     requireAuth,
   validateParams(Joi.object({
     storeId: commonSchemas.objectId()
   })),
@@ -35,8 +33,7 @@ router.delete('/store/:storeId',   // favoriteLimiter,, // Disabled for develop
 );
 
 // Toggle favorite status
-router.post('/store/:storeId/toggle',   // favoriteLimiter,, // Disabled for development
-  requireAuth,
+router.post('/store/:storeId/toggle',     requireAuth,
   validateParams(Joi.object({
     storeId: commonSchemas.objectId()
   })),
@@ -44,8 +41,7 @@ router.post('/store/:storeId/toggle',   // favoriteLimiter,, // Disabled for de
 );
 
 // Check if store is favorited by user
-router.get('/store/:storeId/status',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.get('/store/:storeId/status',     requireAuth,
   validateParams(Joi.object({
     storeId: commonSchemas.objectId()
   })),
@@ -53,8 +49,7 @@ router.get('/store/:storeId/status',   // generalLimiter,, // Disabled for deve
 );
 
 // Get user's favorite stores
-router.get('/user/my-favorites',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.get('/user/my-favorites',     requireAuth,
   validateQuery(Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(50).default(20)
@@ -63,8 +58,7 @@ router.get('/user/my-favorites',   // generalLimiter,, // Disabled for developm
 );
 
 // Get favorite status for multiple stores
-router.post('/statuses',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.post('/statuses',     requireAuth,
   validateBody(Joi.object({
     storeIds: Joi.array().items(commonSchemas.objectId()).min(1).max(100).required()
   })),
@@ -72,8 +66,7 @@ router.post('/statuses',   // generalLimiter,, // Disabled for development
 );
 
 // Clear all favorites
-router.delete('/clear-all',   // favoriteLimiter,, // Disabled for development
-  requireAuth,
+router.delete('/clear-all',     requireAuth,
   clearAllFavorites
 );
 

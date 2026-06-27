@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSocket } from '@/contexts/SocketContext';
 import ordersService from '@/services/ordersApi';

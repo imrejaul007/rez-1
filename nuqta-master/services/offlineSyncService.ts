@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Offline Sync Service
  *

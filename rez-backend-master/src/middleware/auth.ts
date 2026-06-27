@@ -1,9 +1,18 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/User';
 import redisService from '../services/redisService';
 import { logger } from '../config/logger';
 import * as deviceFingerprintService from '../services/deviceFingerprintService';
+
+/** Device risk levels from fingerprint service */
+export type DeviceRiskLevel = 'low' | 'medium' | 'high' | 'critical';
+
+/** Extended Request with device risk information */
+export interface AuthenticatedDeviceRequest extends Request {
+  deviceRisk?: DeviceRiskLevel;
+  deviceHash?: string;
+}
 
 // Token blacklist helpers (Redis-backed)
 const TOKEN_BLACKLIST_PREFIX = 'blacklist:token:';
@@ -63,15 +72,16 @@ const getJwtSecret = (role: string): string => {
 export const generateToken = (userId: string, role: string = 'user'): string => {
   const payload = { userId, role };
   const secret = getJwtSecret(role);
-  const expiresIn = process.env.JWT_EXPIRES_IN || '15m';
+  const expiresIn = (process.env.JWT_EXPIRES_IN || '15m') as string;
+  const options: SignOptions = { expiresIn };
 
-  return jwt.sign(payload, secret, { expiresIn } as any);
+  return jwt.sign(payload, secret, options);
 };
 
 // Generate refresh token
 export const generateRefreshToken = (userId: string): string => {
   const payload = { userId };
-  
+
   // Validate refresh secret exists and is strong
   if (!process.env.JWT_REFRESH_SECRET) {
     throw new Error('JWT_REFRESH_SECRET environment variable is required');
@@ -79,11 +89,12 @@ export const generateRefreshToken = (userId: string): string => {
   if (process.env.JWT_REFRESH_SECRET.length < 32) {
     throw new Error('JWT_REFRESH_SECRET must be at least 32 characters long for security');
   }
-  
+
   const secret = process.env.JWT_REFRESH_SECRET;
-  const expiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
-  
-  return jwt.sign(payload, secret, { expiresIn } as any);
+  const expiresIn = (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as string;
+  const options: SignOptions = { expiresIn };
+
+  return jwt.sign(payload, secret, options);
 };
 
 // Verify JWT token — tries admin secret first if available, then falls back to user secret
@@ -170,12 +181,10 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
     try {
       // Check if token is blacklisted (e.g. after logout or refresh).
-      // SECURITY: fail CLOSED in production for ALL authenticated routes — not
-      // just admin/wallet/transfer/prive. Otherwise a stolen-but-revoked token
-      // would be accepted on orders/profile/cart routes if Redis is down.
-      // Dev still fails open so testing without Redis is possible.
-      const failClosed = process.env.NODE_ENV === 'production';
-      if (await isTokenBlacklisted(token, failClosed)) {
+      // SECURITY: fail CLOSED for ALL authenticated routes. If Redis is unavailable
+      // and we can't verify the blacklist, a stolen-but-revoked token would be
+      // accepted. Always fail closed for sensitive operations.
+      if (await isTokenBlacklisted(token, true)) {
         return res.status(401).json({ success: false, message: 'Token has been revoked' });
       }
 
@@ -201,14 +210,25 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         // auto-create a shadow admin in the monolith's DB on first request.
         // Admin / merchant / operator roles MUST be provisioned through the
         // admin service, not claimed by the client.
+        //
+        // CRITICAL SECURITY FIX: Shadow users are created with `isActive: false`
+        // and `auth.lockUntil: new Date()` to ensure the status checks below
+        // ALWAYS block access. Without this, deactivated/locked users could
+        // bypass security by presenting a valid JWT — the shadow user bypass
+        // mechanism would grant access because the checks were never reached
+        // (isActive was hardcoded to true).
         const shadowUser = await User.create({
           _id: decoded.userId,
           phone: (decoded as any).phoneNumber || '',
           phoneNumber: (decoded as any).phoneNumber || '',
           role: 'user',
-          isActive: true,
-          isVerified: false,
-          isOnboarded: false,
+          isActive: false,  // SECURITY: Must be false so status checks block access
+          auth: {
+            isVerified: false,
+            isOnboarded: false,
+            loginAttempts: 0,
+            lockUntil: new Date(),  // SECURITY: Lock until explicitly activated
+          },
           profile: {},
           preferences: {},
         }).catch((err: any) => {
@@ -231,8 +251,32 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
           });
         }
         logger.info('✅ [AUTH] Created shadow user for cross-service auth:', decoded.userId);
+
+        // SECURITY FIX: Check account status BEFORE granting access.
+        // Shadow users are created with isActive=false and locked to ensure
+        // that only users verified in the monolith's own DB can proceed.
+        // This prevents deactivated/locked users from accessing the system
+        // via JWTs that were valid before deactivation/lock occurred.
+        if (!shadowUser.isActive) {
+          logger.warn('⚠️ [AUTH] Shadow user account not activated:', shadowUser._id);
+          return res.status(401).json({
+            success: false,
+            message: 'Account requires activation. Please complete registration.'
+          });
+        }
+
+        if (shadowUser.isAccountLocked()) {
+          logger.warn('⚠️ [AUTH] Shadow user account locked:', shadowUser._id);
+          return res.status(423).json({
+            success: false,
+            message: 'Account is temporarily locked. Please try again later.'
+          });
+        }
+
+        // Attach user to request only after passing all security checks
         req.user = shadowUser;
         req.userId = String(shadowUser._id);
+
         // Continue past the user checks — shadow user is trusted by virtue of valid JWT
         return next();
       }
@@ -270,8 +314,9 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             });
           }
           // Attach risk level for downstream handlers
-          (req as any).deviceRisk = deviceStatus.riskLevel;
-          (req as any).deviceHash = deviceHash;
+          const deviceReq = req as AuthenticatedDeviceRequest;
+          deviceReq.deviceRisk = deviceStatus.riskLevel;
+          deviceReq.deviceHash = deviceHash;
 
           // Fire-and-forget: register device usage
           const osHeader = req.headers['x-device-os'] as string || '';
@@ -310,10 +355,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 };
 
 // Optional authentication middleware (doesn't fail if no token)
+// SECURITY: For sensitive operations, prefer authenticate() instead.
+// This middleware logs all auth bypasses for security monitoring.
 export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = extractTokenFromHeader(req.headers.authorization);
-    
+
     if (token) {
       try {
         const decoded = verifyToken(token);
@@ -322,16 +369,24 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
         if (user && user.isActive && !user.isAccountLocked()) {
           req.user = user;
           req.userId = String(user._id);
+        } else if (user) {
+          // User exists but is inactive or locked — log the bypass attempt
+          logger.warn(`[AUTH] optionalAuth: authenticated user ${decoded.userId} is ${!user.isActive ? 'inactive' : 'locked'}, proceeding unauthenticated on ${req.method} ${req.path}`);
         }
       } catch (tokenError) {
-        // Log invalid tokens for monitoring (don't fail the request)
-        logger.warn(`[AUTH] optionalAuth invalid token on ${req.method} ${req.path}:`, (tokenError as Error).message);
+        // SECURITY: Log ALL invalid token attempts for monitoring
+        // (even though we don't fail, we need visibility into abuse attempts)
+        logger.warn(`[AUTH] optionalAuth: invalid token on ${req.method} ${req.path}: ${(tokenError as Error).message}`);
       }
+    } else {
+      // Log when auth is bypassed due to no token (for audit trails)
+      logger.debug(`[AUTH] optionalAuth: no token provided, proceeding unauthenticated on ${req.method} ${req.path}`);
     }
-    
+
     next();
   } catch (error) {
-    // Don't fail on optional auth errors
+    // SECURITY: Catch-all — log unexpected errors, don't silently swallow
+    logger.error(`[AUTH] optionalAuth: unexpected error on ${req.method} ${req.path}:`, error);
     next();
   }
 };

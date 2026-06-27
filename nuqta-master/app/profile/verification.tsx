@@ -11,7 +11,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { getImagePicker } from '@/utils/lazyImports';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/DesignSystem';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import verificationService, { VerificationStatus } from '@/services/verificationApi';
@@ -20,6 +20,7 @@ import { platformAlertSimple } from '@/utils/platformAlert';
 import { FormPageSkeleton } from '@/components/skeletons';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 // Cross-platform alert that works on web
 const showAlert = (title: string, message: string, onOk?: () => void) => {
@@ -143,6 +144,7 @@ const PROFESSION_OPTIONS = [
 
 function VerificationPage() {
   const router = useRouter();
+  const handleBack = useSafeBack();
   const { zone = 'student' } = useLocalSearchParams<{ zone: string }>();
   const user = useAuthUser();
   const isAuthenticated = useIsAuthenticated();
@@ -346,7 +348,7 @@ function VerificationPage() {
           <StatusBar barStyle="light-content" />
         <LinearGradient colors={[config.color, config.color + 'CC']} style={styles.header}>
           <SafeAreaView edges={['top']}>
-            <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} style={styles.backButton}>
+            <Pressable onPress={handleBack} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color={colors.background.primary} />
             </Pressable>
           </SafeAreaView>

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Play Page Mock Data
 // Dummy data for UGC video content matching screenshot designs
 

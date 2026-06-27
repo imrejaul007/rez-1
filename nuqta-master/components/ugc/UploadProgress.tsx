@@ -16,7 +16,7 @@ import Animated, {
   withSequence,
   Easing,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { UploadProgress as UploadProgressType, UploadStatus } from '@/types/ugc-upload.types';
 import { colors } from '@/constants/theme';
 

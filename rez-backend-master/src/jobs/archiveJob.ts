@@ -148,33 +148,42 @@ async function exportOldLedgerMonths(): Promise<{ monthsExported: number; entrie
     return { monthsExported: 0, entriesExported: 0 };
   }
 
-  let monthsExported = 0;
-  let entriesExported = 0;
+  // MP-D002 OPTIMIZATION: Parallelize ledger month exports instead of sequential
+  // Previously each month awaited export before starting the next — if many
+  // months were pending, this could take minutes. Now all months export
+  // concurrently, bounded by the slowest month.
+  const exportResults = await Promise.all(
+    toExport.map(async (ym) => {
+      try {
+        const entries = await LedgerEntry.find({ yearMonth: ym })
+          .sort({ createdAt: 1 })
+          .lean();
 
-  for (const ym of toExport) {
-    try {
-      const entries = await LedgerEntry.find({ yearMonth: ym })
-        .sort({ createdAt: 1 })
-        .lean();
+        if (entries.length === 0) return { ym, success: true, count: 0 };
 
-      if (entries.length === 0) continue;
+        // Write gzipped JSON lines
+        const lines = entries.map(e => JSON.stringify(e)).join('\n');
+        const compressed = await gzip(Buffer.from(lines, 'utf-8'));
+        const filePath = path.join(LEDGER_ARCHIVE_DIR, `${ym}.json.gz`);
+        fs.writeFileSync(filePath, compressed);
 
-      // Write gzipped JSON lines
-      const lines = entries.map(e => JSON.stringify(e)).join('\n');
-      const compressed = await gzip(Buffer.from(lines, 'utf-8'));
-      const filePath = path.join(LEDGER_ARCHIVE_DIR, `${ym}.json.gz`);
-      fs.writeFileSync(filePath, compressed);
+        logger.info(`Exported ledger month ${ym}`, { entries: entries.length, file: filePath });
+        return { ym, success: true, count: entries.length };
+      } catch (err) {
+        logger.error(`Failed to export ledger month ${ym}`, err as Error);
+        return { ym, success: false, count: 0 };
+      }
+    })
+  );
 
-      // Mark as archived
-      alreadyArchived.push(ym);
-      monthsExported++;
-      entriesExported += entries.length;
+  // Aggregate results
+  const successfulExports = exportResults.filter(r => r.success);
+  const monthsExported = successfulExports.length;
+  const entriesExported = successfulExports.reduce((sum, r) => sum + r.count, 0);
 
-      logger.info(`Exported ledger month ${ym}`, { entries: entries.length, file: filePath });
-    } catch (err) {
-      logger.error(`Failed to export ledger month ${ym}`, err as Error);
-    }
-  }
+  // Update archived months list with successful exports
+  const successfulMonths = exportResults.filter(r => r.success).map(r => r.ym);
+  alreadyArchived.push(...successfulMonths);
 
   // Persist archived months list
   try {

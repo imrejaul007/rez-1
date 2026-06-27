@@ -9,7 +9,7 @@ import {
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, interpolate } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { CashStoreBrand } from '../../../types/cash-store.types';
 import { colors } from '@/constants/theme';
 
@@ -71,7 +71,7 @@ const CashStoreBrandCard: React.FC<CashStoreBrandCardProps> = ({ brand, index, o
             />
           ) : (
             <LinearGradient colors={[colors.nileBlue, colors.brand.nileBlueLight]} style={styles.logoPlaceholder}>
-              <Text style={styles.logoInitial}>{(!brand.logo || logoError) ? brand.name.charAt(0).toUpperCase() : brand.logo}</Text>
+              <Text style={styles.logoInitial}>{(!brand.logo || logoError) ? (brand.name || '?').charAt(0).toUpperCase() : brand.logo}</Text>
             </LinearGradient>
           )}
         </View>

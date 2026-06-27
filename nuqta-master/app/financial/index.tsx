@@ -21,7 +21,7 @@ import { CardGridSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import apiClient from '@/services/apiClient';
 import financialServicesApi, { FinancialServiceCategory, FinancialService } from '@/services/financialServicesApi';
 import { useComprehensiveAnalytics } from '@/hooks/useComprehensiveAnalytics';

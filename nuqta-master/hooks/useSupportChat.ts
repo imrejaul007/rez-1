@@ -27,12 +27,7 @@ import type {
   OfflineMessage,
   UseSupportChatReturn,
 } from '@/types/supportChat.types';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 const STORAGE_KEYS = {
   CURRENT_TICKET: 'support_current_ticket',

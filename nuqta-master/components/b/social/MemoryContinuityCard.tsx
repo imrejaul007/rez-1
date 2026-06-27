@@ -27,7 +27,6 @@
  */
 import React, { useCallback } from 'react';
 import {
-  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -36,6 +35,7 @@ import {
 import FeatureFlagGate from '@/components/b/_shared/FeatureFlagGate';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import logger from '@/utils/logger';
+import { platformAlert } from '@/utils/platformAlert';
 import type {
   MemoryCategory,
   MemoryReference,
@@ -125,7 +125,7 @@ function MemoryContinuityCardBase({
   }, [onDismiss, memory.id]);
 
   const handleForget = useCallback(() => {
-    Alert.alert(
+    platformAlert(
       'Forget this memory?',
       'REZ will stop showing this memory. This only affects what is displayed — your purchase history is unchanged.',
       [

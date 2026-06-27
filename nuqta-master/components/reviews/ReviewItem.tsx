@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { platformAlertSimple, platformAlertConfirm, platformAlertDestructive } from '@/utils/platformAlert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import RatingStars from './RatingStars';
@@ -145,7 +145,7 @@ function ReviewItem({
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <ThemedText style={styles.avatarText}>
-                  {userName.charAt(0).toUpperCase()}
+                  {(userName || '?').charAt(0).toUpperCase()}
                 </ThemedText>
               </View>
             )}

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Fraud Detection Service - PRODUCTION READY
 // Comprehensive fraud detection and prevention system for social media earnings
 // Includes duplicate detection, rate limiting, pattern analysis, and risk scoring

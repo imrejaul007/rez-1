@@ -17,7 +17,7 @@ import CachedImage from '@/components/ui/CachedImage';
 import { useRouter, useRootNavigationState } from 'expo-router';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useAuthUser, useIsAuthenticated, useAuthLoading, useAuthError, useAuthActions } from '@/stores/selectors';
 import FormInput from '@/components/onboarding/FormInput';

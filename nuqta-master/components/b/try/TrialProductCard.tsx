@@ -18,7 +18,8 @@
  *  - The CTA button is also focusable and labelled separately.
  */
 import React, { useMemo } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import { formatPrice, formatDiscountString } from '@/utils/priceFormatter';
 import type { TrialProduct } from '@/types/try.types';

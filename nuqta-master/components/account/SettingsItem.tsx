@@ -7,7 +7,7 @@ import {
   Pressable,
   StyleSheet} from 'react-native';
 import Animated, { useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { SettingsItemProps } from '@/types/account.types';
 import { Colors, Spacing, BorderRadius } from '@/constants/DesignSystem';

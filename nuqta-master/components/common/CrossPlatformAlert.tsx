@@ -8,7 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@/constants/theme';
 import { useAlertStore, showAlert as showAlertFromStore } from '@/stores/alertStore';
 

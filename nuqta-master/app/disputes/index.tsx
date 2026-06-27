@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '@/contexts/AuthContext';
 import disputeApi, { Dispute } from '@/services/disputeApi';
 import CachedImage from '@/components/ui/CachedImage';

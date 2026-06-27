@@ -1,6 +1,7 @@
-import React, { createContext, useState, useContext, ReactNode, useMemo } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useMemo, useRef, useCallback } from 'react';
 import * as activityFeedApi from '../services/activityFeedApi';
 import { Activity, UserProfile, Comment } from '../services/activityFeedApi';
+import { useToastStore } from '@/stores/toastStore';
 
 interface SocialContextType {
   // Feed state
@@ -42,6 +43,10 @@ export const SocialProvider = ({ children }: { children: ReactNode }) => {
   const [feedPage, setFeedPage] = useState(1);
   const [hasMoreActivities, setHasMoreActivities] = useState(true);
   const [suggestedUsers, setSuggestedUsers] = useState<UserProfile[]>([]);
+  const showError = useToastStore((state) => state.showError);
+
+  // Ref for request race condition prevention
+  const requestIdRef = useRef(0);
 
   /**
    * Load activity feed
@@ -93,22 +98,64 @@ export const SocialProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
-   * Like/Unlike an activity
+   * Like/Unlike an activity with optimistic update
    */
   const likeActivity = async (activityId: string) => {
+    const currentRequestId = ++requestIdRef.current;
+
+    // Find the activity and store previous state for rollback
+    const activity = activities.find(a => a._id === activityId);
+    if (!activity) return;
+
+    const previousLiked = activity.hasLiked;
+    const previousLikesCount = activity.likesCount || 0;
+
+    // Optimistic update - immediately toggle like
+    setActivities(prev =>
+      prev.map(a =>
+        a._id === activityId
+          ? {
+              ...a,
+              hasLiked: !previousLiked,
+              likesCount: previousLiked
+                ? Math.max(0, previousLikesCount - 1)
+                : previousLikesCount + 1
+            }
+          : a
+      )
+    );
+
     try {
       const { liked, likesCount } = await activityFeedApi.toggleLike(activityId);
 
-      // Update local state optimistically
+      // Check if this request is still valid (race condition prevention)
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Update with server-confirmed values
       setActivities(prev =>
-        prev.map(activity =>
-          activity._id === activityId
-            ? { ...activity, hasLiked: liked }
-            : activity
+        prev.map(a =>
+          a._id === activityId
+            ? { ...a, hasLiked: liked, likesCount }
+            : a
         )
       );
     } catch (error) {
-      throw error;
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Rollback optimistic update
+      setActivities(prev =>
+        prev.map(a =>
+          a._id === activityId
+            ? { ...a, hasLiked: previousLiked, likesCount: previousLikesCount }
+            : a
+        )
+      );
+      showError('Failed to update like', 3000);
     }
   };
 
@@ -133,27 +180,88 @@ export const SocialProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
-   * Follow a user
+   * Follow a user with optimistic update
    */
   const followUser = async (userId: string) => {
+    const currentRequestId = ++requestIdRef.current;
+
+    // Find the suggested user and store previous state
+    const suggestedUser = suggestedUsers.find(u => u._id === userId);
+    const wasFollowing = suggestedUser?.isFollowing || false;
+
+    // Optimistic update - immediately update suggested users list
+    setSuggestedUsers(prev =>
+      prev.map(u =>
+        u._id === userId ? { ...u, isFollowing: true } : u
+      )
+    );
+
     try {
       await activityFeedApi.toggleFollow(userId);
 
-      // Reload suggested users
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Reload suggested users to get updated list
       await loadSuggestedUsers();
     } catch (error) {
-      throw error;
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Rollback optimistic update
+      setSuggestedUsers(prev =>
+        prev.map(u =>
+          u._id === userId ? { ...u, isFollowing: wasFollowing } : u
+        )
+      );
+      showError('Failed to follow user', 3000);
     }
   };
 
   /**
-   * Unfollow a user
+   * Unfollow a user with optimistic update
    */
   const unfollowUser = async (userId: string) => {
+    const currentRequestId = ++requestIdRef.current;
+
+    // Find the suggested user and store previous state
+    const suggestedUser = suggestedUsers.find(u => u._id === userId);
+    const wasFollowing = suggestedUser?.isFollowing || false;
+
+    // Optimistic update - immediately update suggested users list
+    setSuggestedUsers(prev =>
+      prev.map(u =>
+        u._id === userId ? { ...u, isFollowing: false } : u
+      )
+    );
+
     try {
       await activityFeedApi.toggleFollow(userId);
+
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Reload suggested users to get updated list
+      await loadSuggestedUsers();
     } catch (error) {
-      throw error;
+      // Check if this request is still valid
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
+      // Rollback optimistic update
+      setSuggestedUsers(prev =>
+        prev.map(u =>
+          u._id === userId ? { ...u, isFollowing: wasFollowing } : u
+        )
+      );
+      showError('Failed to unfollow user', 3000);
     }
   };
 

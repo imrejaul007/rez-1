@@ -15,7 +15,7 @@ import {
   Platform} from 'react-native';
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import QRCode from 'react-native-qrcode-svg';
 import { ThemedText } from '@/components/ThemedText';
 import wishlistSharingService, {

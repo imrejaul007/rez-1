@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import couponService, { Coupon, UserCoupon } from '@/services/couponApi';
@@ -32,6 +32,7 @@ import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import { errorReporter } from '@/utils/errorReporter';
 import ErrorState from '@/components/common/ErrorState';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 type CouponTab = 'available' | 'my-coupons' | 'expired';
@@ -63,6 +64,7 @@ const getRefName = (ref: string | { _id: string; name: string; [key: string]: an
 function CouponsPage() {
   const isMounted = useIsMounted();
   const router = useRouter();
+  const handleBack = useSafeBack();
   const getCurrencySymbol = useGetCurrencySymbol();
   const currencySymbol = getCurrencySymbol();
 
@@ -909,7 +911,7 @@ function CouponsPage() {
       {/* ── HEADER ─────────────────────────────────────────────── */}
       <LinearGradient colors={[C.headerDark, C.headerMid]} style={s.header}>
         <View style={s.headerRow}>
-          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} style={s.headerBtn}>
+          <Pressable onPress={handleBack} style={s.headerBtn}>
             <Ionicons name="arrow-back" size={22} color={colors.background.primary} />
           </Pressable>
           <ThemedText style={s.headerTitle}>Coupons</ThemedText>

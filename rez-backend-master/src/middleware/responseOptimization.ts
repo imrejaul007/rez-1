@@ -18,7 +18,7 @@ import { logger } from '../config/logger';
  * Calculate ETag for response
  */
 function calculateETag(data: any): string {
-  const hash = createHash('md5').update(JSON.stringify(data)).digest('hex');
+  const hash = createHash('sha256').update(JSON.stringify(data)).digest('hex');
   return `"${hash}"`;
 }
 

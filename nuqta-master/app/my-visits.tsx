@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { CardGridSkeleton } from '@/components/skeletons';
 import { useRouter, Stack, useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import storeVisitApi from '@/services/storeVisitApi';
 import { useIsAuthenticated, useAuthLoading } from '@/stores/selectors';

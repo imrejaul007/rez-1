@@ -12,12 +12,7 @@
 
 import apiClient, { ApiResponse } from './apiClient';
 import type { Article } from '../types/article.types';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // ============================================================================
 // Types & Interfaces

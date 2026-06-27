@@ -8,6 +8,7 @@ import coinSyncService from '@/services/coinSyncService';
 import { useIsAuthenticated, useIsOnboarded } from '@/stores/selectors';
 import { useWalletContext } from './WalletContext';
 import { useGamificationStore } from '@/stores/gamificationStore';
+import { useToastStore } from '@/stores/toastStore';
 
 // Feature flags for gradual rollout
 const GAMIFICATION_FLAGS = {
@@ -62,7 +63,10 @@ type GamificationAction =
   | { type: 'COINS_EARNED'; payload: number }
   | { type: 'COINS_SPENT'; payload: number }
   | { type: 'STREAK_UPDATED'; payload: { streak: number; loginDate: string } }
+  | { type: 'STREAK_OPTIMISTIC'; payload: { streak: number; loginDate: string } }
+  | { type: 'STREAK_REVERT'; payload: { streak: number; loginDate: string } }
   | { type: 'CHALLENGE_PROGRESS'; payload: { challengeId: string; progress: number } }
+  | { type: 'CHALLENGE_COMPLETED_OPTIMISTIC'; payload: string }
   | { type: 'GAMIFICATION_ERROR'; payload: string }
   | { type: 'CLEAR_GAMIFICATION' }
   | { type: 'CLEAR_ERROR' };
@@ -176,6 +180,20 @@ function gamificationReducer(state: GamificationState, action: GamificationActio
         lastLoginDate: action.payload.loginDate,
       };
 
+    case 'STREAK_OPTIMISTIC':
+      return {
+        ...state,
+        dailyStreak: action.payload.streak,
+        lastLoginDate: action.payload.loginDate,
+      };
+
+    case 'STREAK_REVERT':
+      return {
+        ...state,
+        dailyStreak: action.payload.streak,
+        lastLoginDate: action.payload.loginDate,
+      };
+
     case 'CHALLENGE_PROGRESS':
       return {
         ...state,
@@ -183,6 +201,14 @@ function gamificationReducer(state: GamificationState, action: GamificationActio
           c.id === action.payload.challengeId
             ? { ...c, progress: action.payload.progress, completed: action.payload.progress >= c.target }
             : c
+        ),
+      };
+
+    case 'CHALLENGE_COMPLETED_OPTIMISTIC':
+      return {
+        ...state,
+        challenges: state.challenges.map((c) =>
+          c.id === action.payload ? { ...c, completed: true, progress: c.target } : c
         ),
       };
 
@@ -210,6 +236,8 @@ interface GamificationContextType {
     awardCoins: (amount: number, reason: string) => Promise<void>;
     spendCoins: (amount: number, reason: string) => Promise<void>;
     updateDailyStreak: () => Promise<void>;
+    claimReward: (rewardId: string) => Promise<{ success: boolean; reward?: any; points?: number }>;
+    completeChallenge: (challengeId: string) => Promise<{ success: boolean; reward?: number }>;
     markAchievementAsShown: (achievementId: string) => void;
     refreshAchievements: () => Promise<void>;
     clearError: () => void;
@@ -557,6 +585,14 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
         const checkInStatusResponse = await pointsApi.getDailyCheckIn();
 
         if (checkInStatusResponse.success && checkInStatusResponse.data?.canCheckIn) {
+          // Optimistic update: increment streak immediately
+          const optimisticStreak = (state.dailyStreak || 0) + 1;
+          const optimisticDate = new Date().toISOString();
+          dispatch({
+            type: 'STREAK_OPTIMISTIC',
+            payload: { streak: optimisticStreak, loginDate: optimisticDate },
+          });
+
           // Perform daily check-in
           const checkInResponse = await pointsApi.performDailyCheckIn();
 
@@ -574,6 +610,12 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
             // Check for streak achievements
             await triggerAchievementCheck('DAILY_LOGIN', { streak, pointsEarned });
 
+          } else {
+            // Revert optimistic update on failure
+            dispatch({
+              type: 'STREAK_REVERT',
+              payload: { streak: state.dailyStreak, loginDate: state.lastLoginDate },
+            });
           }
         } else if (checkInStatusResponse.data) {
           // Already checked in, just update local state
@@ -586,18 +628,62 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
           });
         }
       } catch (checkInError) {
-        // Silently handle check-in API errors (endpoint may not exist yet)
+        // Revert optimistic update on error
+        dispatch({
+          type: 'STREAK_REVERT',
+          payload: { streak: state.dailyStreak, loginDate: state.lastLoginDate },
+        });
         // silently handle - check-in endpoint may not exist yet
       }
     } catch (error) {
       // silently handle
     }
-  }, [state.lastLoginDate, triggerAchievementCheck]);
+  }, [state.lastLoginDate, state.dailyStreak, triggerAchievementCheck]);
 
   // Mark achievement as shown
   const markAchievementAsShown = useCallback((achievementId: string) => {
     dispatch({ type: 'ACHIEVEMENT_SHOWN', payload: achievementId });
   }, []);
+
+  // Claim reward with optimistic update
+  const claimReward = useCallback(async (progressId: string): Promise<{ success: boolean; reward?: any; points?: number }> => {
+    const prevChallenges = [...state.challenges];
+    const challenge = state.challenges.find((c) => c.id === progressId);
+
+    // Optimistic update: mark challenge as completed immediately
+    dispatch({ type: 'CHALLENGE_COMPLETED_OPTIMISTIC', payload: progressId });
+
+    try {
+      const response = await challengesApi.claimReward(progressId);
+
+      if (response.success && response.data) {
+        // Update coin balance from wallet (single source of truth)
+        await syncCoinsFromWallet();
+
+        // Check for challenge completion achievements
+        await triggerAchievementCheck('CHALLENGE_COMPLETED', { challengeId: progressId });
+
+        return { success: true, reward: response.data, points: response.data.coinsEarned };
+      } else {
+        // Revert optimistic update on failure
+        dispatch({ type: 'CHALLENGES_LOADED', payload: prevChallenges });
+        useToastStore.getState().show('Failed to claim reward', 'error');
+        return { success: false };
+      }
+    } catch (error) {
+      // Revert optimistic update on error
+      dispatch({ type: 'CHALLENGES_LOADED', payload: prevChallenges });
+      useToastStore.getState().show('Failed to claim reward', 'error');
+      return { success: false };
+    }
+  }, [state.challenges, syncCoinsFromWallet, triggerAchievementCheck]);
+
+  // Complete challenge with optimistic update (alias for claimReward)
+  const completeChallenge = useCallback(async (challengeId: string): Promise<{ success: boolean; reward?: number }> => {
+    // For challenges, we use the progressId which is the same as challengeId in the local state
+    // The challenge progress ID from my-progress endpoint is stored as challenge.id in local state
+    return claimReward(challengeId);
+  }, [claimReward]);
 
   // Refresh achievements
   const refreshAchievements = useCallback(async () => {
@@ -667,6 +753,8 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     awardCoins,
     spendCoins,
     updateDailyStreak,
+    claimReward,
+    completeChallenge,
     markAchievementAsShown,
     refreshAchievements,
     clearError,
@@ -678,6 +766,8 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     awardCoins,
     spendCoins,
     updateDailyStreak,
+    claimReward,
+    completeChallenge,
     markAchievementAsShown,
     refreshAchievements,
     clearError,
@@ -691,6 +781,8 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     awardCoins: (...args: Parameters<typeof awardCoins>) => actionsRef.current.awardCoins(...args),
     spendCoins: (...args: Parameters<typeof spendCoins>) => actionsRef.current.spendCoins(...args),
     updateDailyStreak: () => actionsRef.current.updateDailyStreak(),
+    claimReward: (...args: Parameters<typeof claimReward>) => actionsRef.current.claimReward(...args),
+    completeChallenge: (...args: Parameters<typeof completeChallenge>) => actionsRef.current.completeChallenge(...args),
     markAchievementAsShown: (id: string) => actionsRef.current.markAchievementAsShown(id),
     refreshAchievements: () => actionsRef.current.refreshAchievements(),
     clearError: () => actionsRef.current.clearError(),
@@ -740,6 +832,8 @@ const GAMIFICATION_DEFAULTS: GamificationContextType = {
     awardCoins: async () => {},
     spendCoins: async () => {},
     updateDailyStreak: async () => {},
+    claimReward: async () => ({ success: false }),
+    completeChallenge: async () => ({ success: false }),
     markAchievementAsShown: () => {},
     refreshAchievements: async () => {},
     clearError: () => {},

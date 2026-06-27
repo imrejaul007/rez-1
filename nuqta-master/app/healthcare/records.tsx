@@ -24,7 +24,7 @@ import { TransactionListSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as DocumentPicker from 'expo-document-picker';
 import { getImagePicker } from '@/utils/lazyImports';
 import healthRecordsApi, { HealthRecord, HealthRecordsFilters } from '@/services/healthRecordsApi';

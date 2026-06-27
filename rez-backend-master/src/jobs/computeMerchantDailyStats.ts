@@ -133,7 +133,7 @@ export async function computeYesterdayStats(): Promise<void> {
 
     // Upsert all stats in one batch
     if (upsertOps.length > 0) {
-      await MerchantDailyStat.bulkWrite(upsertOps);
+      await MerchantDailyStat.bulkWrite(upsertOps, { ordered: false });
       logger.info(`[MerchantStats] Upserted ${upsertOps.length} merchant daily stats for ${dateStr}`);
     } else {
       logger.info(`[MerchantStats] No orders found for ${dateStr}, skipping upsert`);
@@ -182,7 +182,7 @@ export async function computeYesterdayStats(): Promise<void> {
           }));
 
           if (bookingOps.length > 0) {
-            await MerchantDailyStat.bulkWrite(bookingOps);
+            await MerchantDailyStat.bulkWrite(bookingOps, { ordered: false });
             logger.info(`[MerchantStats] Updated booking stats for ${bookingOps.length} merchants on ${dateStr}`);
           }
         }
@@ -265,7 +265,7 @@ export async function computeMerchantStatsForDate(dateStr: string): Promise<void
     }));
 
     if (upsertOps.length > 0) {
-      await MerchantDailyStat.bulkWrite(upsertOps);
+      await MerchantDailyStat.bulkWrite(upsertOps, { ordered: false });
       logger.info(`[MerchantStats] Manually computed ${upsertOps.length} stats for ${dateStr}`);
     }
   } catch (err) {

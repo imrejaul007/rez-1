@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { TransactionListSkeleton } from '@/components/skeletons';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import gamificationApi, { SpinHistoryEntry } from '@/services/gamificationApi';
 import { useGetCurrencySymbol } from '@/stores/selectors';

@@ -1,6 +1,7 @@
 {
   "extends": "expo/tsconfig.base.json",
   "compilerOptions": {
+    "module": "esnext",
     "skipLibCheck": true,
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo",
@@ -16,20 +17,12 @@
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "@rez/ui": [
-        "../../packages/rez-ui/src"
-      ],
-      "@rez/shared-types": [
-        "../../packages/shared-types/src"
       ]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
     "src",
     "components",
     "app"

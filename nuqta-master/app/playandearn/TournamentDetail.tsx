@@ -15,7 +15,7 @@ import {
 import { DetailPageSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import tournamentApi, { Tournament, TournamentLeaderboardEntry, UserRankInTournament } from '../../services/tournamentApi';
 import { useAuthUser, useGetCurrencySymbol } from '@/stores/selectors';
 import { formatTimeLeft } from '@/types/playandearn.types';

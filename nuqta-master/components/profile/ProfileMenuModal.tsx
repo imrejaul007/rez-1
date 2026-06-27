@@ -23,7 +23,7 @@ import { platformAlertSimple, platformAlertDestructive } from '@/utils/platformA
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import CachedImage from '@/components/ui/CachedImage';
 import {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Group Buying API Service
 // Handles all group buying backend communications
 

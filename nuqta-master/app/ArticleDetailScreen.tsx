@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCartActions, useGetCurrencySymbol } from '@/stores/selectors';
@@ -85,7 +85,7 @@ const renderContent = (content: string) => {
       flushList();
       const text = trimmedLine.substring(2);
       elements.push(
-        <Text key={index} style={markdownStyles.h1}>{text}</Text>
+        <Text key={`h1-${index}`} style={markdownStyles.h1}>{text}</Text>
       );
       return;
     }
@@ -95,7 +95,7 @@ const renderContent = (content: string) => {
       flushList();
       const text = trimmedLine.substring(3);
       elements.push(
-        <Text key={index} style={markdownStyles.h2}>{text}</Text>
+        <Text key={`h2-${index}`} style={markdownStyles.h2}>{text}</Text>
       );
       return;
     }
@@ -105,7 +105,7 @@ const renderContent = (content: string) => {
       flushList();
       const text = trimmedLine.substring(4);
       elements.push(
-        <Text key={index} style={markdownStyles.h3}>{text}</Text>
+        <Text key={`h3-${index}`} style={markdownStyles.h3}>{text}</Text>
       );
       return;
     }
@@ -127,7 +127,7 @@ const renderContent = (content: string) => {
     // Regular paragraph
     flushList();
     elements.push(
-      <Text key={index} style={markdownStyles.paragraph}>
+      <Text key={`p-${index}`} style={markdownStyles.paragraph}>
         {parseBoldText(trimmedLine)}
       </Text>
     );
@@ -488,7 +488,7 @@ function ArticleDetailScreen() {
               <Text style={styles.tagsSectionTitle}>Related Topics</Text>
               <View style={styles.tagsContainer}>
                 {article.tags.map((tag, index) => (
-                  <View key={index} style={styles.tag}>
+                  <View key={tag} style={styles.tag}>
                     <Text style={styles.tagText}>#{tag}</Text>
                   </View>
                 ))}

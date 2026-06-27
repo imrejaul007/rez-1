@@ -48,8 +48,7 @@ router.use(generalLimiter);
 
 // Get all stores with filtering
 router.get('/',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     category: Joi.string().trim(), // Accepts ObjectId or category slug
     location: Joi.string(), // "lng,lat" format
@@ -77,8 +76,7 @@ router.get('/',
 
 // Search stores
 router.get('/search',
-  // searchLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     q: Joi.string().trim().min(2).max(100).required(),
     category: Joi.string().trim().max(100),
@@ -91,8 +89,7 @@ router.get('/search',
 
 // Advanced store search with filters
 router.get('/search/advanced',
-  // searchLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     search: Joi.string().trim().max(100),
     category: Joi.string().valid('fastDelivery', 'budgetFriendly', 'premium', 'organic', 'alliance', 'lowestPrice', 'mall', 'cashStore'),
@@ -113,8 +110,7 @@ router.get('/search/advanced',
 
 // Get nearby stores
 router.get('/nearby',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     // Accept both naming conventions: lat/lng and latitude/longitude
     lng: Joi.number().min(-180).max(180),
@@ -130,8 +126,7 @@ router.get('/nearby',
 
 // Get featured stores
 router.get('/featured',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     limit: Joi.number().integer().min(1).max(50).default(10)
   })),
@@ -141,8 +136,7 @@ router.get('/featured',
 
 // Get trending stores - FOR FRONTEND TRENDING SECTION
 router.get('/trending',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     category: Joi.string().trim().max(100),
     limit: Joi.number().integer().min(1).max(50).default(20),
@@ -155,8 +149,7 @@ router.get('/trending',
 
 // Get new stores - FOR FRONTEND NEW ON REZ SECTION
 router.get('/new',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     limit: Joi.number().integer().min(1).max(10).default(4),
     days: Joi.number().integer().min(1).max(90).default(30),
@@ -169,8 +162,7 @@ router.get('/new',
 
 // Get top cashback stores - FOR FRONTEND DISCOVERY UI
 router.get('/top-cashback',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     latitude: Joi.number().min(-90).max(90),
     longitude: Joi.number().min(-180).max(180),
@@ -183,8 +175,7 @@ router.get('/top-cashback',
 
 // Get BNPL stores - FOR FRONTEND DISCOVERY UI
 router.get('/bnpl',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     latitude: Joi.number().min(-90).max(90),
     longitude: Joi.number().min(-180).max(180),
@@ -196,8 +187,7 @@ router.get('/bnpl',
 
 // Get nearby stores for homepage - optimized endpoint with all computed fields
 router.get('/nearby-homepage',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     latitude: Joi.number().min(-90).max(90).required(),
     longitude: Joi.number().min(-180).max(180).required(),
@@ -210,8 +200,7 @@ router.get('/nearby-homepage',
 
 // Get stores by category
 router.get('/category/:categoryId',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     categoryId: commonSchemas.objectId().required()
   })),
@@ -226,8 +215,7 @@ router.get('/category/:categoryId',
 
 // Get stores by category slug (for frontend categories page)
 router.get('/by-category-slug/:slug',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     slug: Joi.string().required()
   })),
@@ -280,8 +268,7 @@ router.get('/by-service-type/:serviceType',
 
 // Get single store by ID or slug
 router.get('/:storeId',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     storeId: Joi.string().required()
   })),
@@ -291,8 +278,7 @@ router.get('/:storeId',
 
 // Get store products
 router.get('/:storeId/products',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     storeId: commonSchemas.objectId().required()
   })),
@@ -309,8 +295,7 @@ router.get('/:storeId/products',
 
 // Get store operating status
 router.get('/:storeId/status',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     storeId: commonSchemas.objectId().required()
   })),
@@ -320,8 +305,7 @@ router.get('/:storeId/status',
 
 // Get store reviews
 router.get('/:storeId/reviews',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     storeId: commonSchemas.objectId().required()
   })),
@@ -337,16 +321,14 @@ router.get('/:storeId/reviews',
 
 // Get available store categories
 router.get('/categories/list',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   cacheMiddleware({ ttl: CacheTTL.CATEGORY_LIST, keyPrefix: 'stores:catlist', condition: () => true }),
   getStoreCategories
 );
 
 // Search stores by delivery category
 router.get('/search-by-category/:category',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     category: Joi.string().valid('all', 'fastDelivery', 'budgetFriendly', 'oneRupeeStore', 'ninetyNineStore', 'premium', 'organic', 'alliance', 'lowestPrice', 'mall', 'cashStore').required()
   })),
@@ -364,8 +346,7 @@ router.get('/search-by-category/:category',
 
 // Search stores by delivery time range
 router.get('/search-by-delivery-time',
-  // generalLimiter, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     minTime: Joi.number().integer().min(5).max(120).default(15),
     maxTime: Joi.number().integer().min(5).max(120).default(60),

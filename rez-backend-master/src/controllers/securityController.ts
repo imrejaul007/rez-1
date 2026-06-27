@@ -282,13 +282,6 @@ export const verifyCaptcha = asyncHandler(async (req: Request, res: Response) =>
     // Simulate verification delay
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // In production:
-    // const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-    //   method: 'POST',
-    //   body: `secret=${RECAPTCHA_SECRET}&response=${token}`
-    // });
-    // const data = await response.json();
-
     const simulatedScore = isValidFormat ? 0.9 : 0.3;
 
     sendSuccess(res, {

@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import apiClient from '@/services/apiClient';
@@ -270,7 +270,7 @@ function AdminCampaigns() {
                 <View style={styles.dealsContainer}>
                   <Text style={styles.dealsTitle}>Deals ({campaign.deals.length})</Text>
                   {campaign.deals.map((deal, index) => (
-                    <View key={index} style={styles.dealCard}>
+                    <View key={deal.storeId ?? `deal-${index}`} style={styles.dealCard}>
                       <View style={styles.dealInfo}>
                         {deal.image && (
                           <CachedImage source={deal.image} style={styles.dealImage} />

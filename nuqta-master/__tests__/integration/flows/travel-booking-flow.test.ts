@@ -409,7 +409,7 @@ describe('Travel Booking Flow Integration Tests', () => {
         totalPrice: 5000,
       };
 
-      expect(() => JSON.parse(JSON.stringify(validNotes))).not.toThrow();
+      expect(() => structuredClone(validNotes)).not.toThrow();
     });
 
     it('should handle invalid JSON in customerNotes', async () => {

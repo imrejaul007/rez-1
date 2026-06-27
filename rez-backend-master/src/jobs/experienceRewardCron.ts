@@ -1,6 +1,9 @@
 import * as cron from 'node-cron';
 import { checkAndGrantMonthlyRewards } from '../services/ExperienceRewardService';
 import { logger } from '../config/logger';
+// Phase 6.24: import the shared runWithLock helper so multi-replica deploys
+// don't both grant monthly experience rewards (which would double-credit).
+import { runWithLock } from '../config/cronJobs';
 
 let cronTask: ReturnType<typeof cron.schedule> | null = null;
 let isRunning = false;
@@ -23,8 +26,16 @@ export function initExperienceRewardCron(): void {
     isRunning = true;
     const start = Date.now();
     try {
-      logger.info('[ExperienceRewardCron] Starting daily experience reward check...');
-      await checkAndGrantMonthlyRewards();
+      // Phase 6.24: distributed lock across all rez-worker replicas. Without
+      // this, two replicas would both grant monthly experience rewards to
+      // the same users, double-crediting. Lock TTL is 2h to cover worst-case
+      // run time.
+      await runWithLock(
+        'cron:experience_reward',
+        7200,
+        'experience reward monthly grant',
+        checkAndGrantMonthlyRewards
+      );
       logger.info(`[ExperienceRewardCron] Completed in ${Date.now() - start}ms`);
     } catch (err) {
       logger.error(`[ExperienceRewardCron] Failed after ${Date.now() - start}ms:`, err);
@@ -33,7 +44,7 @@ export function initExperienceRewardCron(): void {
     }
   });
 
-  logger.info('[ExperienceRewardCron] Scheduled (daily at 23:00 UTC)');
+  logger.info('[ExperienceRewardCron] Scheduled (daily at 23:00 UTC, lock-protected)');
 }
 
 export function stopExperienceRewardCron(): void {

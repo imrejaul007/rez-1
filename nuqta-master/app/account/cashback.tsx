@@ -19,7 +19,7 @@ import Animated, {
   useSharedValue,
   withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import cashbackService, {
@@ -323,7 +323,7 @@ function CashbackPage() {
             <Ionicons name="chevron-back" size={20} color={Colors.nileBlue} />
           </Pressable>
           <Text style={styles.headerTitle}>Track Cashback</Text>
-          <Pressable onPress={() => router.push('/wallet' as any)} style={styles.walletButton}>
+          <Pressable onPress={() => router.push('/wallet')} style={styles.walletButton}>
             <Ionicons name="wallet-outline" size={18} color={Colors.nileBlue} />
           </Pressable>
         </View>
@@ -635,7 +635,7 @@ function CashbackPage() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Double Cashback</Text>
-              <Pressable onPress={() => router.push('/offers/double-cashback' as any)}>
+              <Pressable onPress={() => router.push('/offers/double-cashback')}>
                 <Text style={styles.seeAllText}>See All</Text>
               </Pressable>
             </View>
@@ -690,7 +690,7 @@ function CashbackPage() {
           </Pressable>
           <Pressable
             style={styles.quickAction}
-            onPress={() => router.push('/cash-store/offers' as any)}
+            onPress={() => router.push('/cash-store/offers')}
            
           >
             <View style={[styles.quickActionIcon, { backgroundColor: Colors.warning + '1A' }]}>
@@ -700,7 +700,7 @@ function CashbackPage() {
           </Pressable>
           <Pressable
             style={styles.quickAction}
-            onPress={() => router.push('/my-vouchers' as any)}
+            onPress={() => router.push('/my-vouchers')}
            
           >
             <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(139,92,246,0.1)' }]}>
@@ -710,7 +710,7 @@ function CashbackPage() {
           </Pressable>
           <Pressable
             style={styles.quickAction}
-            onPress={() => router.push('/account/coupons' as any)}
+            onPress={() => router.push('/account/coupons')}
            
           >
             <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(232,184,150,0.15)' }]}>

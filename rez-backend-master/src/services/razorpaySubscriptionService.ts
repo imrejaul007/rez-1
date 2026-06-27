@@ -256,6 +256,7 @@ class RazorpaySubscriptionService {
 
   /**
    * Verify webhook signature
+   * FIX [HIGH-2]: Use timing-safe comparison to prevent timing attacks
    */
   verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
     try {
@@ -264,7 +265,16 @@ class RazorpaySubscriptionService {
         .update(payload)
         .digest('hex');
 
-      return expectedSignature === signature;
+      // FIX [HIGH-2]: Use timingSafeEqual to prevent timing attacks
+      try {
+        return crypto.timingSafeEqual(
+          Buffer.from(expectedSignature),
+          Buffer.from(signature)
+        );
+      } catch (e) {
+        // Buffers have different lengths - cannot be equal
+        return false;
+      }
     } catch (error) {
       logger.error('Error verifying webhook signature:', error);
       return false;

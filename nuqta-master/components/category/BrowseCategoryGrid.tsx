@@ -9,7 +9,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, ImageSourcePropType } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { CategoryGridItem, BrowseCategoryGridProps } from '@/types/categoryTypes';
 import { colors } from '@/constants/theme';
 

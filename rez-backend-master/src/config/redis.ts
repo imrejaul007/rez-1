@@ -88,6 +88,13 @@ export const CacheTTL = {
 
   // Offers page aggregated data
   OFFERS_PAGE_DATA: 5 * 60, // 5 minutes
+
+  // Analytics aggregation caching (expensive pipelines, safe to cache)
+  ANALYTICS_STORE: 10 * 60, // 10 minutes
+  ANALYTICS_POPULAR: 15 * 60, // 15 minutes
+  ANALYTICS_DASHBOARD: 10 * 60, // 10 minutes
+  ANALYTICS_SEARCH: 15 * 60, // 15 minutes
+  ANALYTICS_CATEGORY: 10 * 60, // 10 minutes
 } as const;
 
 export default {

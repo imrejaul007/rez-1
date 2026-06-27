@@ -10,6 +10,7 @@
 
 import { create } from 'zustand';
 import { savingsApi } from '@/services/b/savingsApi';
+import { useToastStore } from './toastStore';
 import type {
   SavingsDashboard,
   SavingsSummary,
@@ -284,29 +285,96 @@ export const createSavingsStore = () =>
       },
 
       createGoal: async (input) => {
-        set((s) => ({ state: { ...s.state, isMutating: true, error: null } }));
+        // 1. Snapshot for rollback
+        const previousGoals = get().state.goals;
+
+        // 2. Optimistic update - add the goal immediately with pending state
+        const optimisticGoal: SavingsGoal = {
+          id: `optimistic-${Date.now()}`,
+          userId: '',
+          name: input.name,
+          targetAmountPaise: input.targetAmountPaise,
+          targetPaise: input.targetAmountPaise,
+          savedAmountPaise: 0,
+          savedPaise: 0,
+          deadline: input.deadline,
+          category: input.category,
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          isCompleted: false,
+          progress: 0,
+          milestones: [],
+          isOptimistic: true,
+        };
+
+        set((s) => ({
+          state: {
+            ...s.state,
+            goals: [optimisticGoal, ...s.state.goals],
+            isMutating: true,
+            error: null,
+          },
+        }));
+
         try {
+          // 3. Server call
           const created = await savingsApi.createGoal(input);
           set((s) => ({
             state: {
               ...s.state,
-              goals: [created, ...s.state.goals.filter((g) => g.id !== created.id)],
+              // Replace optimistic goal with server response
+              goals: [created, ...s.state.goals.filter((g) => g.id !== optimisticGoal.id)],
               isMutating: false,
               lastFetchedAt: new Date().toISOString(),
             },
           }));
           return created;
         } catch (err: unknown) {
+          // 5. Rollback on failure
           set((s) => ({
-            state: { ...s.state, isMutating: false, error: toErrorMessage(err) },
+            state: {
+              ...s.state,
+              goals: previousGoals,
+              isMutating: false,
+              error: toErrorMessage(err),
+            },
           }));
+          useToastStore.getState().showError('Failed to create savings goal');
           return null;
         }
       },
 
       updateGoal: async (id, patch) => {
-        set((s) => ({ state: { ...s.state, isMutating: true, error: null } }));
+        // 1. Snapshot for rollback
+        const { state: { goals: previousGoals } } = get();
+        const goalIndex = previousGoals.findIndex((g) => g.id === id);
+        const previousGoal = goalIndex >= 0 ? previousGoals[goalIndex] : null;
+
+        if (!previousGoal) {
+          useToastStore.getState().showError('Goal not found');
+          return null;
+        }
+
+        // 2. Optimistic update - apply changes immediately
+        const optimisticUpdated: SavingsGoal = {
+          ...previousGoal,
+          ...patch,
+          updatedAt: new Date().toISOString(),
+          isOptimistic: true,
+        };
+
+        set((s) => ({
+          state: {
+            ...s.state,
+            goals: s.state.goals.map((g) => (g.id === id ? optimisticUpdated : g)),
+            isMutating: true,
+            error: null,
+          },
+        }));
+
         try {
+          // 3. Server call
           const updated = await savingsApi.updateGoal(id, patch);
           set((s) => ({
             state: {
@@ -318,30 +386,56 @@ export const createSavingsStore = () =>
           }));
           return updated;
         } catch (err: unknown) {
+          // 5. Rollback on failure
           set((s) => ({
-            state: { ...s.state, isMutating: false, error: toErrorMessage(err) },
+            state: {
+              ...s.state,
+              goals: s.state.goals.map((g) => (g.id === id ? previousGoal : g)),
+              isMutating: false,
+              error: toErrorMessage(err),
+            },
           }));
+          useToastStore.getState().showError('Failed to update savings goal');
           return null;
         }
       },
 
       deleteGoal: async (id) => {
-        set((s) => ({ state: { ...s.state, isMutating: true, error: null } }));
+        // 1. Snapshot for rollback
+        const { state: { goals: previousGoals } } = get();
+
+        // 2. Optimistic update - remove the goal immediately
+        set((s) => ({
+          state: {
+            ...s.state,
+            goals: s.state.goals.filter((g) => g.id !== id),
+            isMutating: true,
+            error: null,
+          },
+        }));
+
         try {
+          // 3. Server call
           await savingsApi.deleteGoal(id);
           set((s) => ({
             state: {
               ...s.state,
-              goals: s.state.goals.filter((g) => g.id !== id),
               isMutating: false,
               lastFetchedAt: new Date().toISOString(),
             },
           }));
           return true;
         } catch (err: unknown) {
+          // 5. Rollback on failure
           set((s) => ({
-            state: { ...s.state, isMutating: false, error: toErrorMessage(err) },
+            state: {
+              ...s.state,
+              goals: previousGoals,
+              isMutating: false,
+              error: toErrorMessage(err),
+            },
           }));
+          useToastStore.getState().showError('Failed to delete savings goal');
           return false;
         }
       },

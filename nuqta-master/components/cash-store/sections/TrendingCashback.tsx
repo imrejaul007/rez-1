@@ -17,7 +17,7 @@ import Animated, { interpolate, useAnimatedStyle, useSharedValue, withDelay, wit
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@/constants/theme';
 import {
   TrendingDeal,
@@ -141,7 +141,7 @@ const TrendingDealCard: React.FC<{
               colors={[colors.lightPeach, colors.brand.sand]}
               style={styles.logoPlaceholder}
             >
-              <Text style={styles.logoInitial}>{deal.brand.name.charAt(0)}</Text>
+              <Text style={styles.logoInitial}>{(deal.brand.name || '?').charAt(0).toUpperCase()}</Text>
             </LinearGradient>
           )}
         </View>

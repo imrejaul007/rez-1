@@ -1,4 +1,3 @@
-// @ts-nocheck
 import apiClient from './apiClient';
 
 // Get Stripe publishable key from environment

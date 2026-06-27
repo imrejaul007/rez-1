@@ -95,6 +95,16 @@ export function validateEnvironment(): EnvConfig {
     errors.push('MONGODB_URI must be a valid MongoDB connection string');
   }
 
+  // Phase 6.24: warn about the deprecated MONGO_URI alias. 33 files still
+  // read process.env.MONGO_URI but the canonical name is MONGODB_URI. Both
+  // are accepted for now; new code should only use MONGODB_URI.
+  if (process.env.MONGO_URI && !process.env.MONGODB_URI) {
+    warnings.push(
+      'MONGO_URI is set but MONGODB_URI is not — 33 files still read MONGO_URI. ' +
+      'Both names are accepted, but new code should only use MONGODB_URI.'
+    );
+  }
+
   // Validate PORT
   const port = parseInt(process.env.PORT || '5000', 10);
   if (isNaN(port) || port < 1 || port > 65535) {

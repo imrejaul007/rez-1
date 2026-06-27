@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import categoryMetadataApi, { Occasion } from '@/services/categoryMetadataApi';
 import { getOccasionsForCategory, getAllOccasions } from '@/data/categoryDummyData';

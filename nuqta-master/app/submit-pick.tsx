@@ -19,7 +19,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { getImagePicker } from '@/utils/lazyImports';
 import creatorsApi from '@/services/creatorsApi';
@@ -126,6 +126,14 @@ function SubmitPickPage() {
   }, []);
   const isMounted = useIsMounted();
 
+  // NOTE: This uploader uses `XMLHttpRequest` (not `fetch`) directly to Cloudinary with a
+  // custom `upload_preset` and per-type `folder` (images/picks/ or videos/ugcVideos), and
+  // wires up `xhr.upload.onprogress` to update per-file progress state (`setPhotoProgress` /
+  // `setVideoProgress`). The current `services/imageUploadService.ts` only exports
+  // `uploadProfileImage`, hardcoded to the backend's `/user/auth/upload-avatar` endpoint with
+  // an `avatar` form field — it does not support direct Cloudinary uploads, custom presets/
+  // folders, per-type folder routing, or streaming progress callbacks. Skipping migration
+  // until the service is generalized.
   const uploadToCloudinary = async (
     uri: string,
     type: 'image' | 'video',

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Error Reporter Utility
  *
@@ -22,7 +21,19 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { Sentry } from '@/config/sentry';
+// Sentry is lazy-loaded: it's 220+ modules and only used when capturing
+// exceptions. Importing it eagerly would bloat the initial bundle.
+// The `sentry` variable is set on first call to a capture function.
+let sentry: typeof import('@sentry/react-native').default | null = null;
+async function getSentry() {
+  if (sentry) return sentry;
+  try {
+    sentry = await import('@sentry/react-native');
+    return sentry;
+  } catch {
+    return null;
+  }
+}
 
 // ============================================================================
 // Type Definitions
@@ -204,7 +215,9 @@ class ErrorReporter {
    */
   public setUserId(userId: string): void {
     this.userId = userId;
-    Sentry.setUser(userId ? { id: userId } : null);
+    void getSentry().then(s => {
+      if (s) s.setUser(userId ? { id: userId } : null);
+    });
   }
 
   /**
@@ -277,15 +290,18 @@ class ErrorReporter {
       this.addError(capturedError);
       this.logError(capturedError);
 
-      // Forward to Sentry in production
+      // Forward to Sentry in production (lazy-loaded)
       if (!__DEV__) {
-        try {
-          Sentry.captureException(error, {
-            level: severity === 'fatal' ? 'fatal' : severity === 'warning' ? 'warning' : 'error',
-            extra: context,
-            tags: { category: capturedError.category },
-          });
-        } catch {}
+        void getSentry().then(s => {
+          if (!s) return;
+          try {
+            s.captureException(error, {
+              level: severity === 'fatal' ? 'fatal' : severity === 'warning' ? 'warning' : 'error',
+              extra: context,
+              tags: { category: capturedError.category },
+            });
+          } catch {}
+        });
       }
     } catch (err) {
       console.error('Failed to capture error:', err);

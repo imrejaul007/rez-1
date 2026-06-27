@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { MallBrand, BrandBadge } from '../../../types/mall.types';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { colors } from '@/constants/theme';
@@ -163,7 +163,7 @@ const MallBrandCard: React.FC<MallBrandCardProps> = ({
                 ]}
               >
                 <Text style={[styles.badgeText, { color: BADGE_COLORS[displayBadge]?.text || colors.background.primary }]}>
-                  {displayBadge.charAt(0).toUpperCase() + displayBadge.slice(1)}
+                  {(displayBadge || '').charAt(0).toUpperCase() + (displayBadge || '').slice(1)}
                 </Text>
               </View>
             )}

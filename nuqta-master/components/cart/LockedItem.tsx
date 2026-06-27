@@ -7,7 +7,7 @@ import {
   Platform} from 'react-native';
 import Animated, { runOnJS, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { LinearGradient } from 'expo-linear-gradient';
 import { showAlert } from '@/components/common/CrossPlatformAlert';

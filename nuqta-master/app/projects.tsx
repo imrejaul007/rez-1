@@ -21,7 +21,7 @@ import Animated, {
   type SharedValue} from 'react-native-reanimated';
 import { CardGridSkeleton } from '@/components/skeletons';
 import { useRouter, useNavigation, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import { SafeAreaView } from 'react-native-safe-area-context';

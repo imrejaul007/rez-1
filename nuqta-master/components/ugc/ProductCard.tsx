@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ProductCardProps } from '@/types/product-selector.types';
 import CachedImage from '@/components/ui/CachedImage';
 import { useGetCurrencySymbol } from '@/stores/selectors';

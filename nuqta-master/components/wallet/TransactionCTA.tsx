@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { useRouter } from 'expo-router';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/DesignSystem';

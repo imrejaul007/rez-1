@@ -1,12 +1,6 @@
-// @ts-nocheck
 // Menu API Service
 import apiClient from './apiClient';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 interface ApiResponse<T = any> {
   success: boolean;

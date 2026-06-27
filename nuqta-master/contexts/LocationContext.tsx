@@ -1,6 +1,20 @@
 // @ts-nocheck
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { Platform } from 'react-native';
+
+// Lazy import toast store to avoid circular deps
+let _useToastStore: any = null;
+const getToastStore = async () => {
+  if (!_useToastStore) {
+    try {
+      const { useToastStore } = await import('@/stores/toastStore');
+      _useToastStore = useToastStore;
+    } catch {
+      _useToastStore = null;
+    }
+  }
+  return _useToastStore;
+};
 // Lazy-loaded: expo-location (500KB+) not in synchronous dependency chain
 let _locSvc: any = null;
 const getLocationService = async () => {
@@ -152,9 +166,37 @@ export function LocationProvider({ children }: LocationProviderProps) {
     source: 'manual' | 'gps' | 'ip' = 'gps',
     extraData?: { city?: string; state?: string; pincode?: string; neighbourhood?: string }
   ): Promise<void> => {
+    // Optimistic update: create immediate location state
+    const optimisticLocation: UserLocation = {
+      coordinates,
+      address: address ? {
+        address: address,
+        city: extraData?.city || '',
+        state: extraData?.state || '',
+        country: '',
+        pincode: extraData?.pincode || '',
+        formattedAddress: address,
+        neighbourhood: extraData?.neighbourhood,
+      } : {
+        address: '',
+        city: '',
+        state: '',
+        country: '',
+        pincode: '',
+        formattedAddress: '',
+      },
+      lastUpdated: new Date(),
+      source,
+    };
+
+    const prevLocation = state.currentLocation;
+
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
+
+      // Apply optimistic update immediately
+      dispatch({ type: 'SET_CURRENT_LOCATION', payload: optimisticLocation });
 
       const userLocation = await (await getLocationService()).updateUserLocation(coordinates, address, source, extraData);
       // Merge neighbourhood from search results if the backend didn't return it
@@ -163,30 +205,47 @@ export function LocationProvider({ children }: LocationProviderProps) {
       }
       dispatch({ type: 'SET_CURRENT_LOCATION', payload: userLocation });
     } catch (error) {
+      // Rollback on error
+      dispatch({ type: 'SET_CURRENT_LOCATION', payload: prevLocation });
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update location' });
+      try {
+        const ToastStore = await getToastStore();
+        ToastStore?.getState()?.show?.('Failed to update location', 'error');
+      } catch { /* silent */ }
       throw error;
     }
-  }, []);
+  }, [state.currentLocation]);
 
   // Set manual location - works for both authenticated and unauthenticated users
   // This caches locally and updates state without requiring server authentication
   const setManualLocation = useCallback(async (location: UserLocation): Promise<void> => {
+    const prevLocation = state.currentLocation;
+
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
 
+      // Apply optimistic update immediately
+      dispatch({ type: 'SET_CURRENT_LOCATION', payload: location });
+
       // Cache the location locally
       await (await getLocationService()).cacheLocation(location);
-
-      // Update the context state
-      dispatch({ type: 'SET_CURRENT_LOCATION', payload: location });
     } catch (error) {
+      // Rollback on error
+      dispatch({ type: 'SET_CURRENT_LOCATION', payload: prevLocation });
       dispatch({ type: 'SET_ERROR', payload: 'Failed to set location' });
+      try {
+        const ToastStore = await getToastStore();
+        ToastStore?.getState()?.show?.('Failed to set location', 'error');
+      } catch { /* silent */ }
       throw error;
     }
-  }, []);
+  }, [state.currentLocation]);
 
   const getCurrentLocation = useCallback(async (): Promise<UserLocation | null> => {
+    const prevLocation = state.currentLocation;
+    let optimisticLocation: UserLocation | null = null;
+
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
@@ -195,7 +254,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
         // Use browser's Geolocation API for web
         const webLocation = await (await getWebLocationService()).getCurrentLocation();
         if (webLocation) {
-          const userLocation: UserLocation = {
+          optimisticLocation = {
             coordinates: webLocation.coordinates,
             address: {
               address: webLocation.address.formattedAddress,
@@ -209,11 +268,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
             source: 'gps' as const,
           };
 
-          // Cache and update state
-          await (await getLocationService()).cacheLocation(userLocation);
-          dispatch({ type: 'SET_CURRENT_LOCATION', payload: userLocation });
+          // Apply optimistic update immediately
+          dispatch({ type: 'SET_CURRENT_LOCATION', payload: optimisticLocation });
 
-          return userLocation;
+          // Cache and update state
+          await (await getLocationService()).cacheLocation(optimisticLocation);
+
+          return optimisticLocation;
         }
         dispatch({ type: 'SET_ERROR', payload: 'Failed to get location' });
         return null;
@@ -227,15 +288,42 @@ export function LocationProvider({ children }: LocationProviderProps) {
       }
 
       const coordinates = await (await getLocationService()).getCurrentLocation();
+
+      // Create optimistic location with coordinates only
+      optimisticLocation = {
+        coordinates,
+        address: {
+          address: '',
+          city: '',
+          state: '',
+          country: '',
+          pincode: '',
+          formattedAddress: '',
+        },
+        lastUpdated: new Date(),
+        source: 'gps' as const,
+      };
+
+      // Apply optimistic update immediately
+      dispatch({ type: 'SET_CURRENT_LOCATION', payload: optimisticLocation });
+
       const userLocation = await (await getLocationService()).updateUserLocation(coordinates, undefined, 'gps');
       dispatch({ type: 'SET_CURRENT_LOCATION', payload: userLocation });
 
       return userLocation;
     } catch (error) {
+      // Rollback on error
+      if (prevLocation) {
+        dispatch({ type: 'SET_CURRENT_LOCATION', payload: prevLocation });
+      }
       dispatch({ type: 'SET_ERROR', payload: 'Failed to get current location' });
+      try {
+        const ToastStore = await getToastStore();
+        ToastStore?.getState()?.show?.('Failed to get current location', 'error');
+      } catch { /* silent */ }
       return null;
     }
-  }, []);
+  }, [state.currentLocation]);
 
   const getLocationHistory = useCallback(async (): Promise<LocationHistoryEntry[]> => {
     try {
@@ -354,7 +442,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     reverseGeocode: (...args: Parameters<typeof reverseGeocode>) => locationActionsRef.current.reverseGeocode(...args),
     validateAddress: (...args: Parameters<typeof validateAddress>) => locationActionsRef.current.validateAddress(...args),
     clearError: () => locationActionsRef.current.clearError(),
-  }), []);
+  }), [state.currentLocation]);
 
   const contextValue: LocationContextType = useMemo(() => ({
     state,

@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import userLoyaltyApi, { UserLoyalty } from '@/services/userLoyaltyApi';
 import { LoyaltyData } from '@/data/categoryDummyData';
 import CoinIcon from '@/components/ui/CoinIcon';

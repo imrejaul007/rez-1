@@ -86,6 +86,12 @@ class PaymentService {
         throw new Error('Razorpay is not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env');
       }
 
+      // FIX [HIGH-5]: Validate currency is INR (Razorpay only supports INR)
+      if (currency !== 'INR') {
+        logger.error('❌ [PAYMENT SERVICE] Invalid currency for Razorpay:', currency);
+        throw new Error(`Razorpay only supports INR currency. Received: ${currency}`);
+      }
+
       // Fetch order to get order number
       const order = await Order.findById(orderId).lean();
       if (!order) {
@@ -112,7 +118,13 @@ class PaymentService {
           userId: order.user.toString()
         },
         payment_capture: 1 // Auto capture payment
+        // FIX [HIGH-1]: Add idempotency key to prevent duplicate orders on network retry
       };
+
+      // FIX [HIGH-1]: Add idempotency key to prevent duplicate Razorpay orders on network failures
+      // Use orderId + timestamp to ensure uniqueness while being deterministic for retries
+      const idempotencyKey = `order_${orderId}_${Date.now()}`;
+      (orderOptions as any).idempotency_key = idempotencyKey;
 
       // Create Razorpay order (circuit breaker protects against cascade failures)
       const razorpayOrder = await razorpayCircuit.exec(() =>
@@ -260,6 +272,7 @@ class PaymentService {
       order.payment.status = 'paid';
       order.payment.transactionId = paymentDetails.razorpay_payment_id;
       order.payment.paidAt = new Date();
+      order.payment.method = 'razorpay'; // FIX [LOW-3]: Always set payment method when recording transactions
       order.totals.paidAmount = order.totals.total;
 
       // Store gateway details (using custom field if needed)

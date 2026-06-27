@@ -1,4 +1,3 @@
-// @ts-nocheck
 // useAccountData Hook
 // Fetches dynamic badge data + user stats and merges with static section definitions
 

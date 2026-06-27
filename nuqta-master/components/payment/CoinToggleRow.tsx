@@ -12,7 +12,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import CrossPlatformSlider from '@/components/common/CrossPlatformSlider';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { BRAND } from '@/constants/brand';

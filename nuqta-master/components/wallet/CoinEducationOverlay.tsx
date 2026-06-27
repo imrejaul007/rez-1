@@ -13,7 +13,7 @@ import {
   Modal,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import CachedImage from '@/components/ui/CachedImage';
 import { BRAND } from '@/constants/brand';
 import { FlashList } from '@shopify/flash-list';

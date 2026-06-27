@@ -19,7 +19,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -32,6 +32,7 @@ import { WishlistItemSkeleton } from '@/components/common/SkeletonLoader';
 import { Colors, Spacing, BorderRadius, Shadows, Typography, Gradients } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 interface WishlistItem {
   id: string;
@@ -366,9 +367,7 @@ function WishlistPage() {
     fetchWishlists();
   }, [fetchWishlists]);
 
-  const handleBackPress = useCallback(() => {
-    router.canGoBack() ? router.back() : router.replace('/(tabs)');
-  }, [router]);
+  const handleBackPress = useSafeBack();
 
   const handleCreateWishlist = useCallback(() => {
     setShowCreateModal(true);

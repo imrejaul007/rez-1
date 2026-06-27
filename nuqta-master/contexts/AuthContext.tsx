@@ -15,6 +15,7 @@ import {
   validateUser,
   isUserVerified
 } from '@/types/unified';
+import { useToastStore } from '@/stores/toastStore';
 
 // Use types from unified type system
 interface AuthState {
@@ -445,10 +446,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const updateProfile = async (data: Partial<User>) => {
+    // 1. Snapshot for rollback
+    const previousUser = state.user;
+
     try {
       if (!state.user?.id) {
         throw new Error('User not authenticated');
       }
+
+      // 2. Optimistic update - apply changes immediately
+      const optimisticUser = state.user
+        ? { ...state.user, ...data, profile: { ...state.user.profile, ...data.profile } }
+        : null;
+      dispatch({ type: 'UPDATE_USER', payload: optimisticUser });
 
       const response = await authService.updateProfile({
         profile: data.profile,
@@ -470,10 +480,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('No user data received from server');
       }
     } catch (error: any) {
+      // 5. Rollback on failure
+      dispatch({ type: 'UPDATE_USER', payload: previousUser });
       dispatch({
         type: 'AUTH_FAILURE',
         payload: error?.message || 'Profile update failed'
       });
+      useToastStore.getState().showError('Profile update failed');
 
       // Re-throw error so calling components know it failed
       throw error;
@@ -481,11 +494,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const completeOnboarding = async (data: Partial<User>) => {
+    // 1. Snapshot for rollback
+    const previousUser = state.user;
+
     try {
 
       if (!state.user?.id) {
         throw new Error('User not authenticated');
       }
+
+      // 2. Optimistic update - apply changes immediately
+      const optimisticUser = state.user
+        ? { ...state.user, ...data, profile: { ...state.user.profile, ...data.profile } }
+        : null;
+      dispatch({ type: 'UPDATE_USER', payload: optimisticUser });
 
       const response = await authService.completeOnboarding({
         profile: data.profile,
@@ -512,10 +534,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({ type: 'UPDATE_USER', payload: response.data });
 
     } catch (error: any) {
+      // 5. Rollback on failure
+      dispatch({ type: 'UPDATE_USER', payload: previousUser });
       dispatch({
         type: 'AUTH_FAILURE',
         payload: error?.message || 'Onboarding completion failed'
       });
+      useToastStore.getState().showError('Onboarding completion failed');
 
       // Re-throw error so calling components know it failed
       throw error;

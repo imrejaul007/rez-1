@@ -431,14 +431,165 @@ const allCategoryData = [
 ];
 
 // ============================================
-// SEED FUNCTION
+// OPTIMIZED BULK SEED FUNCTIONS
 // ============================================
 
+/**
+ * Prepares bulk operations for a category and its subcategories.
+ * Returns { categoryOp, subcategoryOps } to be executed with bulkWrite.
+ */
+function prepareCategoryBulkOps(data: typeof allCategoryData[0]): {
+    categoryOp: any;
+    subcategoryOps: any[];
+    slugToSub: Map<string, any>;
+} {
+    const categoryOp = {
+        updateOne: {
+            filter: { slug: data.slug },
+            update: {
+                $set: {
+                    name: data.name,
+                    slug: data.slug,
+                    type: data.type,
+                    icon: data.icon,
+                    isActive: true,
+                    vibes: data.vibes,
+                    occasions: data.occasions,
+                    trendingHashtags: data.trendingHashtags,
+                    aiSuggestions: data.aiSuggestions,
+                    aiPlaceholders: data.aiPlaceholders,
+                    productCount: Math.floor(Math.random() * 5000) + 1000,
+                    storeCount: Math.floor(Math.random() * 100) + 20,
+                    maxCashback: Math.floor(Math.random() * 20) + 10,
+                    isBestSeller: true,
+                    metadata: {
+                        featured: true,
+                        color: data.vibes[0]?.color || '#3B82F6',
+                        seoTitle: `${data.name} - Best Deals & Offers`,
+                        seoDescription: `Shop best ${data.name} on Rez`,
+                    },
+                },
+                $setOnInsert: { childCategories: [] }, // Will be updated after subcategories are created
+            },
+            upsert: true,
+        },
+    };
+
+    // Map slug to subcategory data for later reference
+    const slugToSub = new Map<string, any>();
+    data.subcategories.forEach(sub => {
+        slugToSub.set(sub.slug, {
+            name: sub.name,
+            slug: sub.slug,
+            type: data.type,
+            icon: sub.icon,
+            isActive: true,
+            productCount: Math.floor(Math.random() * 500) + 50,
+        });
+    });
+
+    // Prepare bulk upsert operations for all subcategories
+    const subcategoryOps = data.subcategories.map(sub => ({
+        updateOne: {
+            filter: { slug: sub.slug },
+            update: {
+                $set: {
+                    name: sub.name,
+                    slug: sub.slug,
+                    type: data.type,
+                    icon: sub.icon,
+                    isActive: true,
+                    productCount: Math.floor(Math.random() * 500) + 50,
+                },
+            },
+            upsert: true,
+        },
+    }));
+
+    return { categoryOp, subcategoryOps, slugToSub };
+}
+
+/**
+ * Seeds all categories and subcategories using bulkWrite operations.
+ * OPTIMIZED: Replaces sequential upserts with parallel bulk operations.
+ */
+async function seedAllCategoriesBulk() {
+    console.log('🌱 Starting OPTIMIZED category seeding (bulkWrite)...\n');
+
+    // Step 1: Collect all bulk operations for all categories and their subcategories
+    console.log('📦 Preparing bulk operations for all categories...');
+    const allCategoryOps: any[] = [];
+    const allSubcategoryOps: any[] = [];
+    const categorySlugMap = new Map<string, { vibes: any[]; occasions: any[]; subcategories: any[] }>();
+
+    for (const data of allCategoryData) {
+        const { categoryOp, subcategoryOps } = prepareCategoryBulkOps(data);
+        allCategoryOps.push(categoryOp);
+        allSubcategoryOps.push(...subcategoryOps);
+        categorySlugMap.set(data.slug, {
+            vibes: data.vibes,
+            occasions: data.occasions,
+            subcategories: data.subcategories,
+        });
+    }
+
+    // Step 2: Execute bulk upsert for subcategories FIRST (they need to exist before we can link them)
+    console.log(`⚡ Executing bulkWrite for ${allSubcategoryOps.length} subcategories...`);
+    await Category.bulkWrite(allSubcategoryOps, { ordered: false });
+
+    // Step 3: Fetch all subcategory IDs to build parent-child relationships
+    console.log('🔗 Fetching subcategory IDs for parent linking...');
+    const allSubcategorySlugs = allCategoryData.flatMap(d => d.subcategories.map(s => s.slug));
+    const subcategories = await Category.find({ slug: { $in: allSubcategorySlugs } }).lean();
+
+    // Build slug -> _id map for subcategories
+    const subSlugToId = new Map<string, any>();
+    subcategories.forEach(sub => subSlugToId.set(sub.slug, sub._id));
+
+    // Step 4: Execute bulk upsert for main categories
+    console.log(`⚡ Executing bulkWrite for ${allCategoryOps.length} main categories...`);
+    await Category.bulkWrite(allCategoryOps, { ordered: false });
+
+    // Step 5: Update childCategories on all parent categories using bulkWrite
+    console.log('🔗 Linking subcategories to parent categories...');
+    const parentChildLinks: any[] = [];
+
+    for (const data of allCategoryData) {
+        const childIds = data.subcategories
+            .map(sub => subSlugToId.get(sub.slug))
+            .filter(id => id !== undefined);
+
+        parentChildLinks.push({
+            updateOne: {
+                filter: { slug: data.slug },
+                update: { $set: { childCategories: childIds } },
+            },
+        });
+    }
+
+    await Category.bulkWrite(parentChildLinks, { ordered: false });
+
+    console.log('\n🎉 All 12 categories seeded successfully with bulkWrite!');
+    console.log(`   - ${allCategoryOps.length} main categories processed`);
+    console.log(`   - ${allSubcategoryOps.length} subcategories processed`);
+    console.log(`   - All parent-child relationships linked`);
+}
+
+async function runCategorySeeds() {
+    // Use optimized bulkWrite version for better performance
+    await seedAllCategoriesBulk();
+}
+
+// Keep legacy function for backward compatibility (deprecated - use seedAllCategoriesBulk instead)
+/**
+ * OPTIMIZED: Uses bulkWrite instead of nested sequential queries
+ * Before: 1 + N + 1 sequential DB calls (N = number of subcategories)
+ * After: 2 bulkWrite operations
+ */
 async function seedCategory(data: typeof allCategoryData[0]) {
     console.log(`📁 Processing: ${data.name}...`);
 
-    let category = await Category.findOne({ slug: data.slug });
-
+    // OPTIMIZATION: Prepare all bulk operations upfront
     const categoryData: any = {
         name: data.name,
         slug: data.slug,
@@ -462,49 +613,57 @@ async function seedCategory(data: typeof allCategoryData[0]) {
         },
     };
 
-    if (category) {
-        await Category.findOneAndUpdate({ slug: data.slug }, categoryData);
-    } else {
-        category = await Category.create(categoryData);
-    }
+    // Step 1: Upsert the main category
+    const categoryOp = {
+        updateOne: {
+            filter: { slug: data.slug },
+            update: { $set: categoryData },
+            upsert: true,
+        },
+    };
+    await Category.bulkWrite([categoryOp]);
 
-    // Create subcategories
-    const childIds = [];
-    for (const sub of data.subcategories) {
-        let subCat = await Category.findOne({ slug: sub.slug });
-        const subData = {
-            name: sub.name,
-            slug: sub.slug,
-            type: data.type,
-            icon: sub.icon,
-            parentCategory: category!._id,
-            isActive: true,
-            productCount: Math.floor(Math.random() * 500) + 50,
+    // Fetch the category to get its _id for subcategory linking
+    const category = await Category.findOne({ slug: data.slug }).lean();
+    const categoryId = category?._id;
+
+    // Step 2: Prepare and execute bulk upsert for all subcategories
+    const subcategoryOps = data.subcategories.map(sub => ({
+        updateOne: {
+            filter: { slug: sub.slug },
+            update: {
+                $set: {
+                    name: sub.name,
+                    slug: sub.slug,
+                    type: data.type,
+                    icon: sub.icon,
+                    parentCategory: categoryId,
+                    isActive: true,
+                    productCount: Math.floor(Math.random() * 500) + 50,
+                },
+            },
+            upsert: true,
+        },
+    }));
+    await Category.bulkWrite(subcategoryOps);
+
+    // Step 3: Fetch subcategory IDs and link them to parent
+    const subcategorySlugs = data.subcategories.map(s => s.slug);
+    const subcategories = await Category.find({ slug: { $in: subcategorySlugs } }).lean();
+    const childIds = subcategories.map(sub => sub._id);
+
+    // Step 4: Update parent with child IDs
+    if (categoryId) {
+        const linkOp = {
+            updateOne: {
+                filter: { _id: categoryId },
+                update: { $set: { childCategories: childIds } },
+            },
         };
-
-        if (subCat) {
-            await Category.findOneAndUpdate({ slug: sub.slug }, subData);
-        } else {
-            subCat = await Category.create(subData);
-        }
-        if (subCat) childIds.push(subCat._id);
+        await Category.bulkWrite([linkOp]);
     }
-
-    await Category.findByIdAndUpdate(category!._id, {
-        $set: { childCategories: childIds },
-    });
 
     console.log(`   ✅ Seeded with ${data.vibes.length} vibes, ${data.occasions.length} occasions, ${data.subcategories.length} subcategories`);
-}
-
-async function runCategorySeeds() {
-    console.log('🌱 Starting comprehensive category seeding...\n');
-
-    for (const data of allCategoryData) {
-        await seedCategory(data);
-    }
-
-    console.log('\n🎉 All 12 categories seeded successfully!');
 }
 
 // Run if executed directly
@@ -521,4 +680,4 @@ if (require.main === module) {
         });
 }
 
-export { runCategorySeeds };
+export { runCategorySeeds, seedAllCategoriesBulk };

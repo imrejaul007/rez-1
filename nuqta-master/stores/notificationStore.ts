@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import userSettingsApi from '@/services/userSettingsApi';
+import { useToastStore } from './toastStore';
 
 export interface NotificationSettings {
   push: {
@@ -101,27 +102,32 @@ export const useNotificationStore = create<NotificationStoreState>((set, get) =>
   error: null,
 
   updateSettings: async (updates: Partial<NotificationSettings>): Promise<boolean> => {
+    // 1. Snapshot for rollback
+    const { settings: previousSettings } = get();
+    if (!previousSettings) return false;
+
+    // 2. Optimistic update - apply changes immediately
+    const newSettings = { ...previousSettings, ...updates };
+    set({ settings: newSettings, error: null });
+
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATION_SETTINGS, JSON.stringify(newSettings));
+
     try {
-      const { settings } = get();
-      if (!settings) return false;
-
-      const newSettings = { ...settings, ...updates };
-      set({ settings: newSettings });
-
-      await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATION_SETTINGS, JSON.stringify(newSettings));
-
-      try {
-        const response = await userSettingsApi.updateNotificationPreferences(newSettings);
-        if (response.success) {
-          await AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString());
-          return true;
-        }
-        return false;
-      } catch (_err) {
-        return false;
+      // 3. Server call
+      const response = await userSettingsApi.updateNotificationPreferences(newSettings);
+      if (response.success) {
+        await AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString());
+        return true;
       }
+
+      // Server rejected - rollback
+      set({ settings: previousSettings, error: 'Failed to update settings' });
+      useToastStore.getState().showError('Failed to update notification settings');
+      return false;
     } catch (_err) {
-      set({ error: 'Failed to update settings' });
+      // 5. Rollback on failure
+      set({ settings: previousSettings, error: 'Failed to update settings' });
+      useToastStore.getState().showError('Failed to update notification settings');
       return false;
     }
   },

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Orders API Service
 // Handles order creation, management, and tracking
 
@@ -173,6 +172,10 @@ export interface CreateOrderRequest {
     vehicleInfo?: string;
     pickupInstructions?: string;
   };
+  /**
+   * Frontend-friendly delivery address (object). The service layer maps
+   * this to the backend's `shippingAddress` ObjectId before submitting.
+   */
   deliveryAddress?: {
     name: string;
     phone: string;
@@ -186,7 +189,12 @@ export interface CreateOrderRequest {
     landmark?: string;
     addressType?: 'home' | 'work' | 'other';
   };
-  paymentMethod: 'wallet' | 'card' | 'upi' | 'cod' | 'netbanking' | 'razorpay';
+  /**
+   * Pre-resolved shipping address ObjectId. If the caller already knows
+   * the saved address `_id`, they can pass it directly and skip mapping.
+   */
+  shippingAddress?: string;
+  paymentMethod: 'wallet' | 'razorpay' | 'stripe' | 'cod' | 'paypal' | 'online';
   specialInstructions?: string;
   couponCode?: string;
   redemptionCode?: string;
@@ -269,7 +277,50 @@ class OrdersService {
   // callers (and integration tests) can use `order.id`, `order.status`,
   // `order.items`, etc. without going through `.data`.
   async createOrder(data: CreateOrderRequest): Promise<Order> {
-    const response = await apiClient.post<Order>('/orders', data);
+    // Backend (orderValidators.ts / createOrderSchema) requires:
+    //   - items: Array<{ product: ObjectId, quantity, price }>
+    //   - shippingAddress: ObjectId string (NOT a delivery address object)
+    //   - paymentMethod: 'cod' | 'online' | 'wallet' | 'razorpay' | 'stripe' | 'paypal'
+    // The frontend historically populated `deliveryAddress` (object); we now
+    // accept either and emit the canonical wire format here.
+    const shippingAddressId: string | undefined =
+      (data as any).shippingAddress ||
+      (data.deliveryAddress as any)?._id ||
+      (data.deliveryAddress as any)?.id;
+
+    const body: Record<string, any> = { ...(data as any) };
+
+    if (shippingAddressId) {
+      body.shippingAddress = shippingAddressId;
+    }
+    // Always strip the legacy frontend-only `deliveryAddress` object so the
+    // validator doesn't see a stray field. We preserve it under the new
+    // `billingAddress` slot only when the caller supplied a real ObjectId
+    // (rare); otherwise the backend will reject with a clear error if the
+    // caller forgot to wire up the address id.
+    delete body.deliveryAddress;
+
+    // Items: backend requires at least one. If the caller didn't supply
+    // them, surface a clear error instead of letting Joi reject with a
+    // generic 400.
+    if (!body.items || !Array.isArray(body.items) || body.items.length === 0) {
+      throw {
+        response: {
+          status: 400,
+          data: { error: 'items_required', message: 'Order must contain at least one item' },
+        },
+        message: 'Order must contain at least one item',
+      };
+    }
+    // Normalize item shape: backend expects `product` (ObjectId), `quantity`, `price`.
+    body.items = body.items.map((it: any) => ({
+      product: it.product ?? it.productId ?? it.id,
+      variant: it.variant,
+      quantity: Number(it.quantity) || 1,
+      price: Number(it.price) || 0,
+    }));
+
+    const response = await apiClient.post<Order>('/orders', body);
     if (response && response.success && response.data) {
       return response.data as Order;
     }
@@ -398,7 +449,34 @@ class OrdersService {
     reason?: string
   ): Promise<ApiResponse<Order>> {
     try {
-      const response = await apiClient.patch<Order>(`/orders/${orderId}/cancel`, { reason });
+      // Backend (orderValidators.cancelOrderSchema) requires:
+      //   reason: string().trim().min(10).max(500).required()
+      // Defend against callers (tests, legacy screens) that pass short
+      // strings — we throw a clear error here instead of letting the
+      // server respond with an opaque 400.
+      const trimmed = (reason || '').trim();
+      if (!trimmed) {
+        return {
+          success: false,
+          error: 'Cancellation reason is required',
+          message: 'Cancellation reason is required',
+        };
+      }
+      if (trimmed.length < 10) {
+        return {
+          success: false,
+          error: 'Cancellation reason must be at least 10 characters',
+          message: 'Cancellation reason must be at least 10 characters',
+        };
+      }
+      if (trimmed.length > 500) {
+        return {
+          success: false,
+          error: 'Cancellation reason must be 500 characters or fewer',
+          message: 'Cancellation reason must be 500 characters or fewer',
+        };
+      }
+      const response = await apiClient.patch<Order>(`/orders/${orderId}/cancel`, { reason: trimmed });
       return response;
     } catch (error: any) {
       return {

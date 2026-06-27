@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import surveysApiService, { SurveyDetail, SurveyQuestion, SurveyAnswer } from '@/services/surveysApi';
 import { platformAlertSimple, platformAlertConfirm } from '@/utils/platformAlert';

@@ -735,3 +735,35 @@ export const incrementArticleShare = asyncHandler(async (req: Request, res: Resp
     throw new AppError('Failed to record article share', 500);
   }
 });
+
+// Record article view
+export const recordArticleView = asyncHandler(async (req: Request, res: Response) => {
+  const { articleId } = req.params;
+  const { readTime } = req.body;
+  const userId = req.userId;
+
+  try {
+    const article = await Article.findById(articleId);
+
+    if (!article) {
+      return sendNotFound(res, 'Article not found');
+    }
+
+    // Use the model's incrementViews method for atomic updates
+    await article.incrementViews(userId);
+
+    // Note: readTime is accepted but stored at the analytics level
+    // if the analytics.avgReadTime needs updating in the future
+
+    // Get updated article
+    const updatedArticle = await Article.findById(articleId).select('analytics').lean();
+
+    sendSuccess(res, {
+      views: updatedArticle?.analytics?.totalViews || 0,
+      avgReadTime: updatedArticle?.analytics?.avgReadTime || 0
+    }, 'Article view recorded successfully');
+
+  } catch (error) {
+    throw new AppError('Failed to record article view', 500);
+  }
+});

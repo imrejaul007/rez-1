@@ -27,7 +27,7 @@ import { FlashList } from '@shopify/flash-list';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 
 import realVouchersApi from '../../services/realVouchersApi';
@@ -278,7 +278,7 @@ function BuyCouponsPage() {
   }, [claimingCouponId]);
 
   const handleViewMyCoupons = useCallback(() => {
-    router.push('/account/coupons' as any);
+    router.push('/account/coupons');
   }, [router]);
 
   // ─── Denomination Range Display ────────────────────────────

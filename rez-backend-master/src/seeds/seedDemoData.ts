@@ -149,10 +149,14 @@ const CORE_CATEGORIES = [
 
 async function seedCategories(): Promise<void> {
   logger.info('[SeedDemo] Seeding core categories…');
-  for (const cat of CORE_CATEGORIES) {
-    await Category.findOneAndUpdate(
-      { slug: cat.slug },
-      {
+
+  // OPTIMIZATION: Use bulkWrite instead of sequential findOneAndUpdate
+  // Before: 10 sequential DB calls (one per category)
+  // After: 1 bulk operation
+  const bulkOps = CORE_CATEGORIES.map(cat => ({
+    updateOne: {
+      filter: { slug: cat.slug },
+      update: {
         $setOnInsert: {
           name: cat.name,
           slug: cat.slug,
@@ -168,10 +172,12 @@ async function seedCategories(): Promise<void> {
           maxCashback: 20,
         },
       },
-      { upsert: true, new: true },
-    );
-  }
-  logger.info(`[SeedDemo] ${CORE_CATEGORIES.length} categories ensured`);
+      upsert: true,
+    },
+  }));
+
+  await (Category as any).bulkWrite(bulkOps as any[], { ordered: false });
+  logger.info(`[SeedDemo] ${CORE_CATEGORIES.length} categories ensured (bulkWrite)`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -561,10 +567,22 @@ const STORE_DEFS: StoreSeedDef[] = [
 
 async function seedStores(): Promise<Record<string, mongoose.Types.ObjectId>> {
   logger.info('[SeedDemo] Seeding stores…');
-  const storeIdMap: Record<string, mongoose.Types.ObjectId> = {};
 
-  for (const s of STORE_DEFS) {
-    const categoryId = await getOrCreateCategory(s.categorySlug);
+  // OPTIMIZATION: Resolve all category IDs upfront in parallel before bulk operations
+  // Before: 1 DB call per store (sequential) + category lookups
+  // After: 1 bulk operation for stores (category lookups batched)
+  const uniqueCategorySlugs = Array.from(new Set(STORE_DEFS.map(s => s.categorySlug)));
+  const categoryIdMap: Record<string, mongoose.Types.ObjectId> = {};
+
+  // Batch resolve category IDs
+  await Promise.all(
+    uniqueCategorySlugs.map(async (slug) => {
+      categoryIdMap[slug] = await getOrCreateCategory(slug);
+    })
+  );
+
+  // Build bulk operations
+  const bulkOps = STORE_DEFS.map(s => {
     const imgBase = `https://images.unsplash.com/photo-1${(Math.abs(s.slug.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % 9_000_000) + 500_000_000}?w=800&auto=format&fit=crop`;
     const logoBase = `https://images.unsplash.com/photo-1${(Math.abs(s.slug.split('').reduce((a, c) => a + c.charCodeAt(0), 1)) % 9_000_000) + 500_000_000}?w=200&auto=format&fit=crop`;
 
@@ -574,91 +592,100 @@ async function seedStores(): Promise<Record<string, mongoose.Types.ObjectId>> {
     const distribution2 = Math.round(s.ratingCount * 0.08);
     const distribution1 = s.ratingCount - distribution5 - distribution4 - distribution3 - distribution2;
 
-    const doc = await Store.findOneAndUpdate(
-      { slug: s.slug },
-      {
-        $setOnInsert: {
-          name: s.name,
-          slug: s.slug,
-          description: s.description,
-          logo: logoBase,
-          image: imgBase,
-          banner: [
-            `https://images.unsplash.com/search/photos/${encodeURIComponent(s.bannerKeyword)}?w=1200&auto=format&fit=crop`,
-          ],
-          category: categoryId,
-          location: {
-            address: s.address,
-            city: 'Bengaluru',
-            state: 'Karnataka',
-            pincode: s.pincode,
-            coordinates: s.coordinates,
-            deliveryRadius: 5,
-            landmark: s.neighbourhood,
-          },
-          contact: {
-            phone: '+918022334455',
-            email: `hello@${s.slug}.rez.app`,
-          },
-          ratings: {
-            average: s.rating,
-            count: s.ratingCount,
-            distribution: {
-              5: distribution5,
-              4: distribution4,
-              3: distribution3,
-              2: distribution2,
-              1: distribution1,
+    return {
+      updateOne: {
+        filter: { slug: s.slug },
+        update: {
+          $setOnInsert: {
+            name: s.name,
+            slug: s.slug,
+            description: s.description,
+            logo: logoBase,
+            image: imgBase,
+            banner: [
+              `https://images.unsplash.com/search/photos/${encodeURIComponent(s.bannerKeyword)}?w=1200&auto=format&fit=crop`,
+            ],
+            category: categoryIdMap[s.categorySlug],
+            location: {
+              address: s.address,
+              city: 'Bengaluru',
+              state: 'Karnataka',
+              pincode: s.pincode,
+              coordinates: s.coordinates,
+              deliveryRadius: 5,
+              landmark: s.neighbourhood,
             },
+            contact: {
+              phone: '+918022334455',
+              email: `hello@${s.slug}.rez.app`,
+            },
+            ratings: {
+              average: s.rating,
+              count: s.ratingCount,
+              distribution: {
+                5: distribution5,
+                4: distribution4,
+                3: distribution3,
+                2: distribution2,
+                1: distribution1,
+              },
+            },
+            offers: {
+              cashback: s.cashback,
+              minOrderAmount: 100,
+              maxCashback: s.cashback * 20,
+              isPartner: true,
+              partnerLevel: s.cashback >= 15 ? 'gold' : s.cashback >= 10 ? 'silver' : 'bronze',
+            },
+            operationalInfo: {
+              hours: defaultHours,
+              deliveryTime: '30-45 mins',
+              minimumOrder: 150,
+              deliveryFee: 30,
+              freeDeliveryAbove: 500,
+              acceptsWalletPayment: true,
+              paymentMethods: ['upi', 'card', 'wallet', 'cash'],
+            },
+            deliveryCategories: {
+              fastDelivery: true,
+              budgetFriendly: false,
+              ninetyNineStore: false,
+              premium: s.isFeatured,
+              organic: false,
+              alliance: false,
+              lowestPrice: false,
+              mall: false,
+              cashStore: false,
+            },
+            analytics: {
+              totalOrders: Math.round(s.ratingCount * 2.5),
+              totalRevenue: Math.round(s.ratingCount * 2.5 * 450),
+              avgOrderValue: 450,
+              repeatCustomers: Math.round(s.ratingCount * 0.6),
+              followersCount: Math.round(s.ratingCount * 1.8),
+            },
+            tags: s.tags,
+            isActive: true,
+            isFeatured: s.isFeatured,
+            isVerified: true,
           },
-          offers: {
-            cashback: s.cashback,
-            minOrderAmount: 100,
-            maxCashback: s.cashback * 20,
-            isPartner: true,
-            partnerLevel: s.cashback >= 15 ? 'gold' : s.cashback >= 10 ? 'silver' : 'bronze',
-          },
-          operationalInfo: {
-            hours: defaultHours,
-            deliveryTime: '30-45 mins',
-            minimumOrder: 150,
-            deliveryFee: 30,
-            freeDeliveryAbove: 500,
-            acceptsWalletPayment: true,
-            paymentMethods: ['upi', 'card', 'wallet', 'cash'],
-          },
-          deliveryCategories: {
-            fastDelivery: true,
-            budgetFriendly: false,
-            ninetyNineStore: false,
-            premium: s.isFeatured,
-            organic: false,
-            alliance: false,
-            lowestPrice: false,
-            mall: false,
-            cashStore: false,
-          },
-          analytics: {
-            totalOrders: Math.round(s.ratingCount * 2.5),
-            totalRevenue: Math.round(s.ratingCount * 2.5 * 450),
-            avgOrderValue: 450,
-            repeatCustomers: Math.round(s.ratingCount * 0.6),
-            followersCount: Math.round(s.ratingCount * 1.8),
-          },
-          tags: s.tags,
-          isActive: true,
-          isFeatured: s.isFeatured,
-          isVerified: true,
         },
+        upsert: true,
       },
-      { upsert: true, new: true },
-    );
+    };
+  });
 
-    storeIdMap[s.slug] = doc._id as mongoose.Types.ObjectId;
-    logger.info(`[SeedDemo]   Store: ${s.name} (${s.neighbourhood})`);
+  // Use type assertion to bypass strict Mongoose typings for bulkWrite operations
+  await (Store as any).bulkWrite(bulkOps as any[], { ordered: false });
+
+  // Build storeIdMap for downstream functions by querying the stores we just created
+  const storeIdMap: Record<string, mongoose.Types.ObjectId> = {};
+  const storedStores = await Store.find({ slug: { $in: STORE_DEFS.map(s => s.slug) } }).lean();
+  for (const store of storedStores) {
+    storeIdMap[store.slug as string] = store._id as mongoose.Types.ObjectId;
   }
 
-  logger.info(`[SeedDemo] ${STORE_DEFS.length} stores ensured`);
+  logger.info(`[SeedDemo] ${STORE_DEFS.length} stores ensured (bulkWrite)`);
   return storeIdMap;
 }
 
@@ -1131,80 +1158,85 @@ async function seedOffers(
 ): Promise<void> {
   logger.info('[SeedDemo] Seeding offers…');
 
+  // OPTIMIZATION: Use bulkWrite instead of sequential findOneAndUpdate
+  // Before: 38 sequential DB calls (one per offer)
+  // After: 1 bulk operation
   const now = new Date();
   const validEnd = daysFromNow(30);
 
-  for (const o of OFFER_DEFS) {
+  const bulkOps = OFFER_DEFS.map(o => {
     const storeId = storeIdMap[o.storeSlug] ?? Object.values(storeIdMap)[0] ?? new mongoose.Types.ObjectId();
-
     const titleKey = toSlug(o.title).slice(0, 80);
 
-    await Offer.findOneAndUpdate(
-      { title: o.title },
-      {
-        $setOnInsert: {
-          title: o.title,
-          subtitle: o.subtitle,
-          description: o.description,
-          image: o.imageUrl,
-          category: o.category,
-          type: o.type,
-          cashbackPercentage: o.cashbackPercentage,
-          location: {
-            type: 'Point',
-            coordinates: o.coordinates,
+    return {
+      updateOne: {
+        filter: { title: o.title },
+        update: {
+          $setOnInsert: {
+            title: o.title,
+            subtitle: o.subtitle,
+            description: o.description,
+            image: o.imageUrl,
+            category: o.category,
+            type: o.type,
+            cashbackPercentage: o.cashbackPercentage,
+            location: {
+              type: 'Point',
+              coordinates: o.coordinates,
+            },
+            store: {
+              id: storeId,
+              name: o.storeName,
+              logo: `https://images.unsplash.com/photo-seed-${titleKey}?w=200&auto=format`,
+              rating: 4.3,
+              verified: true,
+            },
+            validity: {
+              startDate: now,
+              endDate: validEnd,
+              isActive: true,
+            },
+            engagement: {
+              likesCount: Math.floor(Math.random() * 400) + 50,
+              sharesCount: Math.floor(Math.random() * 150) + 10,
+              viewsCount: Math.floor(Math.random() * 2000) + 200,
+            },
+            restrictions: {
+              minOrderValue: o.minOrderValue ?? 0,
+              userTypeRestriction: 'all',
+              usageLimitPerUser: 3,
+              usageLimit: 5000,
+            },
+            eligibility: {
+              rezPlusTiers: ['free', 'premium', 'vip'],
+              priveTiers: ['none', 'entry', 'signature', 'elite'],
+              requiredZones: [],
+              requireAll: false,
+            },
+            metadata: {
+              isNew: o.category === 'new_arrival',
+              isTrending: o.category === 'trending',
+              isBestSeller: o.cashbackPercentage >= 30,
+              isSpecial: o.type === 'special',
+              priority: o.category === 'mega' ? 10 : o.category === 'trending' ? 8 : 5,
+              tags: o.tags,
+              featured: ['mega', 'trending'].includes(o.category),
+            },
+            isFollowerExclusive: false,
+            visibleTo: 'all',
+            isFreeDelivery: o.isFreeDelivery ?? false,
+            redemptionCount: Math.floor(Math.random() * 800) + 20,
+            createdBy: systemUserId,
+            adminApproved: true,
           },
-          store: {
-            id: storeId,
-            name: o.storeName,
-            logo: `https://images.unsplash.com/photo-seed-${titleKey}?w=200&auto=format`,
-            rating: 4.3,
-            verified: true,
-          },
-          validity: {
-            startDate: now,
-            endDate: validEnd,
-            isActive: true,
-          },
-          engagement: {
-            likesCount: Math.floor(Math.random() * 400) + 50,
-            sharesCount: Math.floor(Math.random() * 150) + 10,
-            viewsCount: Math.floor(Math.random() * 2000) + 200,
-          },
-          restrictions: {
-            minOrderValue: o.minOrderValue ?? 0,
-            userTypeRestriction: 'all',
-            usageLimitPerUser: 3,
-            usageLimit: 5000,
-          },
-          eligibility: {
-            rezPlusTiers: ['free', 'premium', 'vip'],
-            priveTiers: ['none', 'entry', 'signature', 'elite'],
-            requiredZones: [],
-            requireAll: false,
-          },
-          metadata: {
-            isNew: o.category === 'new_arrival',
-            isTrending: o.category === 'trending',
-            isBestSeller: o.cashbackPercentage >= 30,
-            isSpecial: o.type === 'special',
-            priority: o.category === 'mega' ? 10 : o.category === 'trending' ? 8 : 5,
-            tags: o.tags,
-            featured: ['mega', 'trending'].includes(o.category),
-          },
-          isFollowerExclusive: false,
-          visibleTo: 'all',
-          isFreeDelivery: o.isFreeDelivery ?? false,
-          redemptionCount: Math.floor(Math.random() * 800) + 20,
-          createdBy: systemUserId,
-          adminApproved: true,
         },
+        upsert: true,
       },
-      { upsert: true, new: true },
-    );
-  }
+    };
+  });
 
-  logger.info(`[SeedDemo] ${OFFER_DEFS.length} offers ensured`);
+  await (Offer as any).bulkWrite(bulkOps as any[], { ordered: false });
+  logger.info(`[SeedDemo] ${OFFER_DEFS.length} offers ensured (bulkWrite)`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1262,13 +1294,15 @@ const FLASH_SALE_DEFS = [
 async function seedFlashSales(systemUserId: mongoose.Types.ObjectId): Promise<void> {
   logger.info('[SeedDemo] Seeding flash sales…');
 
-  for (const fs of FLASH_SALE_DEFS) {
-    const now = new Date();
-    const endTime = hoursFromNow(fs.endHours);
+  // OPTIMIZATION: Use bulkWrite instead of sequential findOneAndUpdate
+  // Before: 5 sequential DB calls (one per flash sale)
+  // After: 1 bulk operation
+  const now = new Date();
 
-    await FlashSale.findOneAndUpdate(
-      { title: fs.title },
-      {
+  const bulkOps = FLASH_SALE_DEFS.map(fs => ({
+    updateOne: {
+      filter: { title: fs.title },
+      update: {
         $setOnInsert: {
           title: fs.title,
           description: fs.description,
@@ -1277,7 +1311,7 @@ async function seedFlashSales(systemUserId: mongoose.Types.ObjectId): Promise<vo
           discountPercentage: fs.discountPercentage,
           priority: fs.priority,
           startTime: now,
-          endTime,
+          endTime: hoursFromNow(fs.endHours),
           maxQuantity: fs.maxQuantity,
           soldQuantity: Math.floor(fs.maxQuantity * 0.35),
           limitPerUser: 2,
@@ -1302,11 +1336,12 @@ async function seedFlashSales(systemUserId: mongoose.Types.ObjectId): Promise<vo
           createdBy: systemUserId,
         },
       },
-      { upsert: true, new: true },
-    );
-  }
+      upsert: true,
+    },
+  }));
 
-  logger.info(`[SeedDemo] ${FLASH_SALE_DEFS.length} flash sales ensured`);
+  await (FlashSale as any).bulkWrite(bulkOps as any[], { ordered: false });
+  logger.info(`[SeedDemo] ${FLASH_SALE_DEFS.length} flash sales ensured (bulkWrite)`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1389,14 +1424,15 @@ const BONUS_CAMPAIGN_DEFS = [
 async function seedBonusCampaigns(systemUserId: mongoose.Types.ObjectId): Promise<void> {
   logger.info('[SeedDemo] Seeding bonus campaigns…');
 
+  // OPTIMIZATION: Use bulkWrite instead of sequential findOneAndUpdate
+  // Before: 5 sequential DB calls (one per campaign)
+  // After: 1 bulk operation
   const now = new Date();
 
-  for (const bc of BONUS_CAMPAIGN_DEFS) {
-    const endTime = hoursFromNow(bc.endHours);
-
-    await BonusCampaign.findOneAndUpdate(
-      { slug: bc.slug },
-      {
+  const bulkOps = BONUS_CAMPAIGN_DEFS.map(bc => ({
+    updateOne: {
+      filter: { slug: bc.slug },
+      update: {
         $setOnInsert: {
           slug: bc.slug,
           title: bc.title,
@@ -1425,7 +1461,7 @@ async function seedBonusCampaigns(systemUserId: mongoose.Types.ObjectId): Promis
             currentGlobalClaims: Math.floor(Math.random() * 1500) + 200,
           },
           startTime: now,
-          endTime,
+          endTime: hoursFromNow(bc.endHours),
           display: {
             icon: bc.icon,
             backgroundColor: bc.backgroundColor,
@@ -1446,11 +1482,12 @@ async function seedBonusCampaigns(systemUserId: mongoose.Types.ObjectId): Promis
           createdBy: systemUserId,
         },
       },
-      { upsert: true, new: true },
-    );
-  }
+      upsert: true,
+    },
+  }));
 
-  logger.info(`[SeedDemo] ${BONUS_CAMPAIGN_DEFS.length} bonus campaigns ensured`);
+  await (BonusCampaign as any).bulkWrite(bulkOps as any[], { ordered: false });
+  logger.info(`[SeedDemo] ${BONUS_CAMPAIGN_DEFS.length} bonus campaigns ensured (bulkWrite)`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1578,54 +1615,59 @@ async function seedLockPriceDeals(
 ): Promise<void> {
   logger.info('[SeedDemo] Seeding lock price deals…');
 
-  for (const ld of LOCK_DEAL_DEFS) {
+  // OPTIMIZATION: Use bulkWrite instead of sequential findOneAndUpdate
+  // Before: 10 sequential DB calls (one per lock deal)
+  // After: 1 bulk operation
+  const bulkOps = LOCK_DEAL_DEFS.map(ld => {
     const storeId = storeIdMap[ld.storeSlug] ?? Object.values(storeIdMap)[0] ?? new mongoose.Types.ObjectId();
-
     const depositAmount = Math.round(ld.lockedPrice * (ld.depositPercent / 100));
     const balanceAmount = ld.lockedPrice - depositAmount;
 
-    await LockPriceDeal.findOneAndUpdate(
-      { title: ld.title },
-      {
-        $setOnInsert: {
-          title: ld.title,
-          description: ld.description,
-          image: ld.image,
-          store: storeId,
-          merchant: systemMerchantId,
-          storeName: ld.storeName,
-          originalPrice: ld.originalPrice,
-          lockedPrice: ld.lockedPrice,
-          currency: 'INR',
-          depositPercent: ld.depositPercent,
-          depositAmount,
-          balanceAmount,
-          validFrom: new Date(),
-          validUntil: daysFromNow(30),
-          pickupWindowDays: 7,
-          maxLocks: 200,
-          currentLocks: Math.floor(Math.random() * 80) + 10,
-          totalPickedUp: Math.floor(Math.random() * 50),
-          lockReward: { type: 'coins', amount: Math.round(depositAmount * 0.5) },
-          pickupReward: { type: 'cashback', amount: Math.round(balanceAmount * 0.05) },
-          earningsMultiplier: 1,
-          region: 'bangalore',
-          terms: [
-            'Must be redeemed at the specified partner store',
-            'Non-refundable after lock',
-            'Valid for 7 days from lock date',
-          ],
-          isActive: true,
-          isFeatured: ld.lockedPrice <= 199,
-          priority: ld.lockedPrice <= 199 ? 8 : 5,
-          tags: ['prepaid', 'lock-deal', 'bangalore', 'near-u'],
+    return {
+      updateOne: {
+        filter: { title: ld.title },
+        update: {
+          $setOnInsert: {
+            title: ld.title,
+            description: ld.description,
+            image: ld.image,
+            store: storeId,
+            merchant: systemMerchantId,
+            storeName: ld.storeName,
+            originalPrice: ld.originalPrice,
+            lockedPrice: ld.lockedPrice,
+            currency: 'INR',
+            depositPercent: ld.depositPercent,
+            depositAmount,
+            balanceAmount,
+            validFrom: new Date(),
+            validUntil: daysFromNow(30),
+            pickupWindowDays: 7,
+            maxLocks: 200,
+            currentLocks: Math.floor(Math.random() * 80) + 10,
+            totalPickedUp: Math.floor(Math.random() * 50),
+            lockReward: { type: 'coins', amount: Math.round(depositAmount * 0.5) },
+            pickupReward: { type: 'cashback', amount: Math.round(balanceAmount * 0.05) },
+            earningsMultiplier: 1,
+            region: 'bangalore',
+            terms: [
+              'Must be redeemed at the specified partner store',
+              'Non-refundable after lock',
+              'Valid for 7 days from lock date',
+            ],
+            isActive: true,
+            isFeatured: ld.lockedPrice <= 199,
+            priority: ld.lockedPrice <= 199 ? 8 : 5,
+            tags: ['prepaid', 'lock-deal', 'bangalore', 'near-u'],
+          },
         },
+        upsert: true,
       },
-      { upsert: true, new: true },
-    );
-  }
+    };
+  });
 
-  logger.info(`[SeedDemo] ${LOCK_DEAL_DEFS.length} lock price deals ensured`);
+  await (LockPriceDeal as any).bulkWrite(bulkOps as any[], { ordered: false });
+  logger.info(`[SeedDemo] ${LOCK_DEAL_DEFS.length} lock price deals ensured (bulkWrite)`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1758,13 +1800,16 @@ const TRIAL_OFFER_DEFS = [
 async function seedTrialOffers(systemMerchantId: mongoose.Types.ObjectId): Promise<void> {
   logger.info('[SeedDemo] Seeding trial offers…');
 
+  // OPTIMIZATION: Use bulkWrite instead of sequential findOneAndUpdate
+  // Before: 15 sequential DB calls (one per trial offer)
+  // After: 1 bulk operation
   const oneWeekFromNow = daysFromNow(7);
   const oneMonthFromNow = daysFromNow(30);
 
-  for (const t of TRIAL_OFFER_DEFS) {
-    await TrialOffer.findOneAndUpdate(
-      { title: t.title, merchantId: systemMerchantId },
-      {
+  const bulkOps = TRIAL_OFFER_DEFS.map(t => ({
+    updateOne: {
+      filter: { title: t.title, merchantId: systemMerchantId },
+      update: {
         $setOnInsert: {
           merchantId: systemMerchantId,
           title: t.title,
@@ -1796,11 +1841,12 @@ async function seedTrialOffers(systemMerchantId: mongoose.Types.ObjectId): Promi
           avgRating: parseFloat((3.8 + Math.random() * 1.0).toFixed(1)),
         },
       },
-      { upsert: true, new: true },
-    );
-  }
+      upsert: true,
+    },
+  }));
 
-  logger.info(`[SeedDemo] ${TRIAL_OFFER_DEFS.length} trial offers ensured`);
+  await (TrialOffer as any).bulkWrite(bulkOps as any[], { ordered: false });
+  logger.info(`[SeedDemo] ${TRIAL_OFFER_DEFS.length} trial offers ensured (bulkWrite)`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1903,10 +1949,13 @@ const VOUCHER_BRAND_DEFS = [
 async function seedVoucherBrands(): Promise<void> {
   logger.info('[SeedDemo] Seeding voucher brands…');
 
-  for (const v of VOUCHER_BRAND_DEFS) {
-    await VoucherBrand.findOneAndUpdate(
-      { name: v.name },
-      {
+  // OPTIMIZATION: Use bulkWrite instead of sequential findOneAndUpdate
+  // Before: 10 sequential DB calls (one per voucher brand)
+  // After: 1 bulk operation
+  const bulkOps = VOUCHER_BRAND_DEFS.map(v => ({
+    updateOne: {
+      filter: { name: v.name },
+      update: {
         $setOnInsert: {
           name: v.name,
           logo: `https://images.unsplash.com/photo-${(Math.abs(v.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % 9_000_000) + 500_000_000}?w=200&auto=format`,
@@ -1931,11 +1980,12 @@ async function seedVoucherBrands(): Promise<void> {
           viewCount: Math.floor(Math.random() * 5000) + 500,
         },
       },
-      { upsert: true, new: true },
-    );
-  }
+      upsert: true,
+    },
+  }));
 
-  logger.info(`[SeedDemo] ${VOUCHER_BRAND_DEFS.length} voucher brands ensured`);
+  await (VoucherBrand as any).bulkWrite(bulkOps as any[], { ordered: false });
+  logger.info(`[SeedDemo] ${VOUCHER_BRAND_DEFS.length} voucher brands ensured (bulkWrite)`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1996,13 +2046,16 @@ const HERO_BANNER_DEFS = [
 async function seedHeroBanners(systemUserId: mongoose.Types.ObjectId): Promise<void> {
   logger.info('[SeedDemo] Seeding hero banners…');
 
+  // OPTIMIZATION: Use bulkWrite instead of sequential findOneAndUpdate
+  // Before: 3 sequential DB calls (one per banner)
+  // After: 1 bulk operation
   const now = new Date();
   const validUntil = daysFromNow(30);
 
-  for (const b of HERO_BANNER_DEFS) {
-    await HeroBanner.findOneAndUpdate(
-      { title: b.title },
-      {
+  const bulkOps = HERO_BANNER_DEFS.map(b => ({
+    updateOne: {
+      filter: { title: b.title },
+      update: {
         $setOnInsert: {
           title: b.title,
           subtitle: b.subtitle,
@@ -2031,11 +2084,12 @@ async function seedHeroBanners(systemUserId: mongoose.Types.ObjectId): Promise<v
           createdBy: systemUserId,
         },
       },
-      { upsert: true, new: true },
-    );
-  }
+      upsert: true,
+    },
+  }));
 
-  logger.info(`[SeedDemo] ${HERO_BANNER_DEFS.length} hero banners ensured`);
+  await (HeroBanner as any).bulkWrite(bulkOps as any[], { ordered: false });
+  logger.info(`[SeedDemo] ${HERO_BANNER_DEFS.length} hero banners ensured (bulkWrite)`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -15,7 +15,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { MallBrand } from '../../types/mall.types';
 import MallTopRatedItem from './cards/MallTopRatedItem';
 import { colors } from '@/constants/theme';

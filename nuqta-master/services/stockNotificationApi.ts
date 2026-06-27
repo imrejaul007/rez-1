@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Stock Notifications API Service
  *

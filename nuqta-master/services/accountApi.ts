@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Account API Service
 // Aggregates dynamic badge data from existing endpoints for the account page
 

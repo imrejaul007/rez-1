@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Products API Service
 // Handles product catalog, search, and recommendations
 
@@ -158,20 +157,22 @@ class ProductsService {
 
   // Get single product by ID
   //
-  // Returns the unwrapped product payload directly so callers (and
-  // integration tests) can use `productDetails.id`, `productDetails.name`,
-  // etc. without going through `.data`.
+  // Returns the standard `{ success, data }` envelope so callers can use
+  // `response.success && response.data` (matches the apiClient convention
+  // and the consumers in app/cab, app/flight, app/hotel, app/train,
+  // app/bus, app/package, app/booking, app/product-page, and
+  // components/product/ProductQuickView).
   async getProductById(id: string): Promise<any> {
     try {
       const response = await apiClient.get<Product>(`/products/${id}`);
 
       if (response && response.success && response.data) {
-        return response.data;
+        return { success: true, data: response.data };
       }
 
       // Fallback for direct/mock payloads without a standard envelope.
       if (response && (response as any).id) {
-        return response;
+        return { success: true, data: response };
       }
 
       return response as any;

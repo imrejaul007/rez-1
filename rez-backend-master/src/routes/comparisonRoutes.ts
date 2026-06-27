@@ -19,8 +19,7 @@ const router = Router();
 router.use(generalLimiter);
 
 // Create a new store comparison
-router.post('/',   // comparisonLimiter,, // Disabled for development
-  requireAuth,
+router.post('/',     requireAuth,
   validateBody(Joi.object({
     storeIds: Joi.array().items(commonSchemas.objectId()).min(2).max(5).required(),
     name: Joi.string().trim().max(100)
@@ -29,8 +28,7 @@ router.post('/',   // comparisonLimiter,, // Disabled for development
 );
 
 // Get user's store comparisons
-router.get('/user/my-comparisons',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.get('/user/my-comparisons',     requireAuth,
   validateQuery(Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(50).default(20)
@@ -39,8 +37,7 @@ router.get('/user/my-comparisons',   // generalLimiter,, // Disabled for develo
 );
 
 // Get specific comparison by ID
-router.get('/:comparisonId',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.get('/:comparisonId',     requireAuth,
   validateParams(Joi.object({
     comparisonId: commonSchemas.objectId()
   })),
@@ -48,8 +45,7 @@ router.get('/:comparisonId',   // generalLimiter,, // Disabled for development
 );
 
 // Update comparison
-router.put('/:comparisonId',   // comparisonLimiter,, // Disabled for development
-  requireAuth,
+router.put('/:comparisonId',     requireAuth,
   validateParams(Joi.object({
     comparisonId: commonSchemas.objectId()
   })),
@@ -61,8 +57,7 @@ router.put('/:comparisonId',   // comparisonLimiter,, // Disabled for developme
 );
 
 // Delete comparison
-router.delete('/:comparisonId',   // comparisonLimiter,, // Disabled for development
-  requireAuth,
+router.delete('/:comparisonId',     requireAuth,
   validateParams(Joi.object({
     comparisonId: commonSchemas.objectId()
   })),
@@ -70,8 +65,7 @@ router.delete('/:comparisonId',   // comparisonLimiter,, // Disabled for develo
 );
 
 // Add store to comparison
-router.post('/:comparisonId/stores',   // comparisonLimiter,, // Disabled for development
-  requireAuth,
+router.post('/:comparisonId/stores',     requireAuth,
   validateParams(Joi.object({
     comparisonId: commonSchemas.objectId()
   })),
@@ -82,8 +76,7 @@ router.post('/:comparisonId/stores',   // comparisonLimiter,, // Disabled for d
 );
 
 // Remove store from comparison
-router.delete('/:comparisonId/stores/:storeId',   // comparisonLimiter,, // Disabled for development
-  requireAuth,
+router.delete('/:comparisonId/stores/:storeId',     requireAuth,
   validateParams(Joi.object({
     comparisonId: commonSchemas.objectId(),
     storeId: commonSchemas.objectId()
@@ -92,14 +85,12 @@ router.delete('/:comparisonId/stores/:storeId',   // comparisonLimiter,, // Dis
 );
 
 // Get comparison statistics
-router.get('/user/stats',   // generalLimiter,, // Disabled for development
-  requireAuth,
+router.get('/user/stats',     requireAuth,
   getComparisonStats
 );
 
 // Clear all comparisons
-router.delete('/user/clear-all',   // comparisonLimiter,, // Disabled for development
-  requireAuth,
+router.delete('/user/clear-all',     requireAuth,
   clearAllComparisons
 );
 

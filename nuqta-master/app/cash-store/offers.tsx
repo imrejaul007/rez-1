@@ -22,7 +22,7 @@ import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import cashStoreApi from '../../services/cashStoreApi';
 import couponService from '../../services/couponApi';
@@ -367,7 +367,7 @@ function OffersPage() {
               Check back soon for coupons, cashback deals & more!
             </Text>
             <Pressable
-              onPress={() => router.push('/cash-store' as any)}
+              onPress={() => router.push('/cash-store')}
               style={styles.browseBtn}
             >
               <Text style={styles.browseBtnText}>Browse Cash Store</Text>
@@ -414,7 +414,7 @@ function OffersPage() {
                   </View>
                   <Text style={styles.sectionTitle}>Featured Coupons</Text>
                   <Pressable
-                    onPress={() => router.push('/account/coupons' as any)}
+                    onPress={() => router.push('/account/coupons')}
                     style={styles.seeAllBtn}
                   >
                     <Text style={styles.seeAllText}>See All</Text>
@@ -432,7 +432,7 @@ function OffersPage() {
                   return (
                     <Pressable
                       key={coupon._id}
-                      onPress={() => router.push('/account/coupons' as any)}
+                      onPress={() => router.push('/account/coupons')}
                      
                       style={styles.couponCard}
                     >
@@ -477,7 +477,7 @@ function OffersPage() {
                   </View>
                   <Text style={styles.sectionTitle}>Double Cashback</Text>
                   <Pressable
-                    onPress={() => router.push('/offers/double-cashback' as any)}
+                    onPress={() => router.push('/offers/double-cashback')}
                     style={styles.seeAllBtn}
                   >
                     <Text style={styles.seeAllText}>See All</Text>
@@ -498,7 +498,7 @@ function OffersPage() {
                     return (
                       <Pressable
                         key={campaign._id}
-                        onPress={() => router.push('/offers/double-cashback' as any)}
+                        onPress={() => router.push('/offers/double-cashback')}
                        
                         style={styles.campaignCard}
                       >
@@ -636,7 +636,7 @@ function OffersPage() {
                   </View>
                   <Text style={styles.sectionTitle}>Top Cashback Brands</Text>
                   <Pressable
-                    onPress={() => router.push('/cash-store/brands' as any)}
+                    onPress={() => router.push('/cash-store/brands')}
                     style={styles.seeAllBtn}
                   >
                     <Text style={styles.seeAllText}>See All</Text>

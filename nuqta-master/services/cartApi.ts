@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Cart API Service
 // Handles shopping cart operations and management
 // Enhanced with comprehensive error handling, validation, and logging
@@ -12,12 +11,7 @@ import {
   validateCartItem as validateUnifiedCartItem,
   isCartItemAvailable
 } from '@/types/unified';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // Service booking details for cart items
 export interface ServiceBookingDetails {
@@ -285,11 +279,18 @@ function validateCartItem(item: any): boolean {
 class CartService {
   /**
    * Get current user's cart
+   *
+   * Returns the standard `{ success, data }` envelope so callers can use
+   * `response.success && response.data` (matches the apiClient convention
+   * used everywhere else, including product-page.tsx and category/[slug]).
    */
   async getCart(): Promise<any> {
     try {
       const response = await apiClient.get<Cart>('/cart');
-      return response.success ? response.data : response;
+      if (response && response.success && response.data) {
+        return { success: true, data: response.data };
+      }
+      return response;
     } catch (error: any) {
       if (error?.response) throw error;
       throw error;
@@ -298,11 +299,18 @@ class CartService {
 
   /**
    * Add item to cart
+   *
+   * Returns the standard `{ success, data }` envelope so callers can use
+   * `response.success && response.data` (matches the apiClient convention
+   * used everywhere else, including product-page.tsx and category/[slug]).
    */
   async addToCart(data: AddToCartRequest): Promise<any> {
     try {
       const response = await apiClient.post<Cart>('/cart/add', data);
-      return response.success ? response.data : response;
+      if (response && response.success && response.data) {
+        return { success: true, data: response.data };
+      }
+      return response;
     } catch (error: any) {
       if (error?.response) throw error;
       throw error;
@@ -455,13 +463,13 @@ class CartService {
   /**
    * Clear entire cart
    *
-   * Uses POST /cart/clear (per the checkout integration contract).
-   * Some legacy callers still issue DELETE /cart/clear — we keep both
-   * shapes supported but POST is the canonical one.
+   * Backend (cartRoutes.ts) only registers DELETE /cart/clear. Any POST to
+   * the same path returns 404, so this client uses DELETE — the canonical
+   * verb for "remove the resource at this URL".
    */
   async clearCart(): Promise<any> {
     try {
-      const response = await apiClient.post<{ message: string }>('/cart/clear');
+      const response = await apiClient.delete<{ message: string }>('/cart/clear');
       return response && response.success ? response.data : response;
     } catch (error: any) {
       if (error?.response) throw error;
@@ -608,7 +616,7 @@ class CartService {
       logApiRequest('GET', '/cart/validate');
 
       const response = await withRetry(
-        () => apiClient.post('/cart/validate', {}),
+        () => apiClient.get('/cart/validate'),
         { maxRetries: 2 }
       );
 

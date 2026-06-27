@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, Pressable, TextInput, StyleSheet, ActivityIndicator } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { RechargeWalletCardProps } from "@/types/profile";
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import paymentService from "@/services/paymentService";

@@ -46,16 +46,14 @@ router.post('/',
 
 // Get all videos with filtering
 router.get('/', 
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(videoSchemas.getVideos),
   getVideos
 );
 
 // Search videos
 router.get('/search', 
-  // searchLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     q: Joi.string().trim().min(2).max(100).required(),
     category: Joi.string().valid('trending_me', 'trending_her', 'waist', 'article', 'featured', 'challenge', 'tutorial', 'review'),
@@ -68,8 +66,7 @@ router.get('/search',
 
 // Get trending videos
 router.get('/trending', 
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateQuery(Joi.object({
     limit: Joi.number().integer().min(1).max(50).default(20),
     timeframe: Joi.string().valid('1d', '7d', '30d').default('7d')
@@ -79,8 +76,7 @@ router.get('/trending',
 
 // Get videos by category
 router.get('/category/:category', 
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     category: Joi.string().valid('trending_me', 'trending_her', 'waist', 'article', 'featured', 'challenge', 'tutorial', 'review').required()
   })),
@@ -94,8 +90,7 @@ router.get('/category/:category',
 
 // Get videos by creator
 router.get('/creator/:creatorId',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     creatorId: commonSchemas.objectId().required()
   })),
@@ -108,8 +103,7 @@ router.get('/creator/:creatorId',
 
 // Get videos by store
 router.get('/store/:storeId',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     // Accept both ObjectId format and string IDs (for mock data compatibility)
     storeId: Joi.string().trim().min(1).required()
@@ -143,8 +137,7 @@ router.get('/recommendations', generalLimiter, async (_req, res) => {
 
 // Get single video by ID
 router.get('/:videoId',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     // Accept both ObjectId format and string IDs (for mock data compatibility)
     videoId: Joi.string().trim().min(1).required()
@@ -154,8 +147,7 @@ router.get('/:videoId',
 
 // Like/Unlike video (requires authentication)
 router.post('/:videoId/like',
-  // generalLimiter,, // Disabled for development
-  authenticate,
+    authenticate,
   validateParams(Joi.object({
     videoId: commonSchemas.objectId().required()
   })),
@@ -182,8 +174,7 @@ router.post('/:videoId/view',
 
 // Add comment to video (requires authentication)
 router.post('/:videoId/comments', 
-  // generalLimiter,, // Disabled for development
-  authenticate,
+    authenticate,
   validateParams(Joi.object({
     videoId: commonSchemas.objectId().required()
   })),
@@ -195,8 +186,7 @@ router.post('/:videoId/comments',
 
 // Get video comments
 router.get('/:videoId/comments',
-  // generalLimiter,, // Disabled for development
-  optionalAuth,
+    optionalAuth,
   validateParams(Joi.object({
     videoId: commonSchemas.objectId().required()
   })),
@@ -228,8 +218,7 @@ router.post('/:videoId/comments/:commentId/like',
 
 // Report video (requires authentication)
 router.post('/:videoId/report',
-  // generalLimiter,, // Disabled for development
-  authenticate,
+    authenticate,
   validateParams(Joi.object({
     videoId: commonSchemas.objectId().required()
   })),

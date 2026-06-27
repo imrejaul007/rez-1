@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * internalPaymentRoutes.ts — Service-to-service payment sync endpoints.
  *
@@ -16,6 +15,56 @@ import { Router, Request, Response } from 'express';
 import { Order } from '../models/Order';
 import { logger } from '../config/logger';
 
+// Type definitions for webhook payloads
+interface WebhookSyncBody {
+  orderId?: string;
+  status?: string;
+  paymentId?: string;
+  idempotencyKey?: string;
+  secret?: string;
+}
+
+interface RefundNotifyBody {
+  merchantId?: string;
+  orderId?: string;
+  orderNumber?: string;
+  paymentId?: string;
+  refundId?: string;
+  amount?: number;
+  status?: string;
+  secret?: string;
+  userId?: string;
+}
+
+interface MerchantSuspendNotifyBody {
+  merchantId?: string;
+  reason?: string;
+  secret?: string;
+}
+
+interface SettlementNotifyBody {
+  merchantId?: string;
+  orderId?: string;
+  orderNumber?: string;
+  amount?: number;
+  platformFee?: number;
+  transactionId?: string;
+  secret?: string;
+}
+
+interface CoinsAwardedNotifyBody {
+  userId?: string;
+  amount?: number;
+  coinType?: string;
+  source?: string;
+  description?: string;
+  sourceId?: string;
+  secret?: string;
+}
+
+// Valid MongoDB ObjectId pattern
+const OBJECT_ID_PATTERN = /^[0-9a-fA-F]{24}$/;
+
 const router = Router();
 
 /**
@@ -32,7 +81,7 @@ const router = Router();
  *
  * Body: { orderId, status, paymentId, idempotencyKey, secret }
  */
-router.post('/webhook-sync', async (req: Request, res: Response) => {
+router.post('/webhook-sync', async (req: Request<object, object, WebhookSyncBody>, res: Response) => {
   try {
     const { orderId, status, paymentId, idempotencyKey, secret } = req.body;
 
@@ -47,8 +96,18 @@ router.post('/webhook-sync', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // Input validation: orderId is required and must be a valid ObjectId
     if (!orderId) {
       return res.status(400).json({ error: 'orderId is required' });
+    }
+    if (!OBJECT_ID_PATTERN.test(orderId)) {
+      logger.warn('[InternalPayments] Invalid orderId format', { orderId });
+      return res.status(400).json({ error: 'orderId must be a valid ObjectId' });
+    }
+
+    // Idempotency key length validation (max 64 chars to prevent abuse)
+    if (idempotencyKey && idempotencyKey.length > 64) {
+      return res.status(400).json({ error: 'idempotencyKey must be at most 64 characters' });
     }
 
     // BAK-CROSS-018 FIX: Idempotency check using Redis SET NX with 24h TTL.
@@ -84,8 +143,9 @@ router.post('/webhook-sync', async (req: Request, res: Response) => {
     }
 
     return res.json({ success: true });
-  } catch (err: any) {
-    logger.error('[InternalPayments] webhook-sync error', { error: err.message });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    logger.error('[InternalPayments] webhook-sync error', { error: errorMessage });
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -104,7 +164,7 @@ router.post('/webhook-sync', async (req: Request, res: Response) => {
  * Body: { merchantId, orderId, orderNumber, paymentId, refundId, amount, status, secret }
  *   status: 'refund_processed' | 'refund_failed' | 'refund_disputed'
  */
-router.post('/refund-notify', async (req: Request, res: Response) => {
+router.post('/refund-notify', async (req: Request<object, object, RefundNotifyBody>, res: Response) => {
   try {
     const { merchantId, orderId, orderNumber, paymentId, refundId, amount, status, secret, userId } = req.body;
 
@@ -118,8 +178,30 @@ router.post('/refund-notify', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // Input validation
     if (!merchantId || !orderId || !status) {
       return res.status(400).json({ error: 'merchantId, orderId, and status are required' });
+    }
+
+    // Validate ObjectId formats for merchantId and orderId
+    if (!OBJECT_ID_PATTERN.test(merchantId)) {
+      logger.warn('[InternalPayments] Invalid merchantId format', { merchantId });
+      return res.status(400).json({ error: 'merchantId must be a valid ObjectId' });
+    }
+    if (!OBJECT_ID_PATTERN.test(orderId)) {
+      logger.warn('[InternalPayments] Invalid orderId format', { orderId });
+      return res.status(400).json({ error: 'orderId must be a valid ObjectId' });
+    }
+
+    // Amount validation if provided
+    if (amount !== undefined && (typeof amount !== 'number' || amount < 0)) {
+      return res.status(400).json({ error: 'amount must be a positive number' });
+    }
+
+    // Validate userId format if provided
+    if (userId && !OBJECT_ID_PATTERN.test(userId)) {
+      logger.warn('[InternalPayments] refund-notify received invalid userId format', { userId });
+      return res.status(400).json({ error: 'userId must be a valid ObjectId' });
     }
 
     // CRITICAL-1 FIX: Emit refund event to both merchant AND consumer rooms.
@@ -210,8 +292,9 @@ router.post('/refund-notify', async (req: Request, res: Response) => {
     }
 
     return res.json({ success: true });
-  } catch (err: any) {
-    logger.error('[InternalPayments] refund-notify error', { error: err.message });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    logger.error('[InternalPayments] refund-notify error', { error: errorMessage });
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -232,7 +315,7 @@ router.post('/refund-notify', async (req: Request, res: Response) => {
  *
  * Body: { merchantId, reason?, secret }
  */
-router.post('/merchant-suspend-notify', async (req: Request, res: Response) => {
+router.post('/merchant-suspend-notify', async (req: Request<object, object, MerchantSuspendNotifyBody>, res: Response) => {
   try {
     const { merchantId, reason, secret } = req.body;
 
@@ -250,6 +333,12 @@ router.post('/merchant-suspend-notify', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'merchantId is required' });
     }
 
+    // Validate merchantId format
+    if (!OBJECT_ID_PATTERN.test(merchantId)) {
+      logger.warn('[InternalPayments] Invalid merchantId format', { merchantId });
+      return res.status(400).json({ error: 'merchantId must be a valid ObjectId' });
+    }
+
     if (global.io) {
       const room = `merchant-${merchantId}`;
       global.io.to(room).emit('merchant_suspended', {
@@ -262,8 +351,9 @@ router.post('/merchant-suspend-notify', async (req: Request, res: Response) => {
     }
 
     return res.json({ success: true });
-  } catch (err: any) {
-    logger.error('[InternalPayments] merchant-suspend-notify error', { error: err.message });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    logger.error('[InternalPayments] merchant-suspend-notify error', { error: errorMessage });
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -279,7 +369,7 @@ router.post('/merchant-suspend-notify', async (req: Request, res: Response) => {
  *
  * Body: { merchantId, orderId, orderNumber, amount, platformFee, transactionId, secret }
  */
-router.post('/settlement-notify', async (req: Request, res: Response) => {
+router.post('/settlement-notify', async (req: Request<object, object, SettlementNotifyBody>, res: Response) => {
   try {
     const { merchantId, orderId, orderNumber, amount, platformFee, transactionId, secret } = req.body;
 
@@ -295,6 +385,26 @@ router.post('/settlement-notify', async (req: Request, res: Response) => {
 
     if (!merchantId || !orderId || amount === undefined) {
       return res.status(400).json({ error: 'merchantId, orderId, and amount are required' });
+    }
+
+    // Input validation
+    if (!OBJECT_ID_PATTERN.test(merchantId)) {
+      logger.warn('[InternalPayments] Invalid merchantId format', { merchantId });
+      return res.status(400).json({ error: 'merchantId must be a valid ObjectId' });
+    }
+    if (!OBJECT_ID_PATTERN.test(orderId)) {
+      logger.warn('[InternalPayments] Invalid orderId format', { orderId });
+      return res.status(400).json({ error: 'orderId must be a valid ObjectId' });
+    }
+
+    // Amount validation: must be a positive number
+    if (typeof amount !== 'number' || amount < 0) {
+      return res.status(400).json({ error: 'amount must be a positive number' });
+    }
+
+    // Platform fee validation if provided
+    if (platformFee !== undefined && (typeof platformFee !== 'number' || platformFee < 0)) {
+      return res.status(400).json({ error: 'platformFee must be a positive number' });
     }
 
     // MISS-02 FIX: Emit settlement event to merchant's Socket.IO room.
@@ -339,8 +449,9 @@ router.post('/settlement-notify', async (req: Request, res: Response) => {
     }
 
     return res.json({ success: true });
-  } catch (err: any) {
-    logger.error('[InternalPayments] settlement-notify error', { error: err.message });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    logger.error('[InternalPayments] settlement-notify error', { error: errorMessage });
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -360,7 +471,7 @@ router.post('/settlement-notify', async (req: Request, res: Response) => {
  *
  * Body: { userId, amount, coinType, source, description, sourceId, secret }
  */
-router.post('/coins-awarded-notify', async (req: Request, res: Response) => {
+router.post('/coins-awarded-notify', async (req: Request<object, object, CoinsAwardedNotifyBody>, res: Response) => {
   try {
     const { userId, amount, coinType, source, description, sourceId, secret } = req.body;
 
@@ -376,6 +487,17 @@ router.post('/coins-awarded-notify', async (req: Request, res: Response) => {
 
     if (!userId || amount === undefined) {
       return res.status(400).json({ error: 'userId and amount are required' });
+    }
+
+    // Input validation
+    if (!OBJECT_ID_PATTERN.test(userId)) {
+      logger.warn('[InternalPayments] Invalid userId format', { userId });
+      return res.status(400).json({ error: 'userId must be a valid ObjectId' });
+    }
+
+    // Amount validation: must be a positive number
+    if (typeof amount !== 'number' || amount < 0) {
+      return res.status(400).json({ error: 'amount must be a positive number' });
     }
 
     // INC-4 FIX: Emit to the consumer's personal room so WalletContext auto-refreshes.
@@ -420,8 +542,9 @@ router.post('/coins-awarded-notify', async (req: Request, res: Response) => {
     }
 
     return res.json({ success: true });
-  } catch (err: any) {
-    logger.error('[InternalPayments] coins-awarded-notify error', { error: err.message });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    logger.error('[InternalPayments] coins-awarded-notify error', { error: errorMessage });
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Video Upload Hook
 // Manages state and logic for UGC video uploads
 

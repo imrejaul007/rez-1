@@ -126,7 +126,11 @@ module.exports = {
         : []),
     ],
     experiments: {
-      typedRoutes: true,
+      // typedRoutes regenerates .expo/types/router.d.ts on every config load,
+      // and Metro's file watcher treated each regeneration as a source change,
+      // driving an infinite rebundle cycle that OOM'd at 10 GB on this project.
+      // Re-enable locally (set typedRoutes: true) once the OOM is resolved.
+      typedRoutes: false,
     },
     extra: {
       eas: {

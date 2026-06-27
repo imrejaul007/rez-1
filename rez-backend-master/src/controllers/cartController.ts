@@ -985,6 +985,185 @@ export const validateCart = asyncHandler(async (req: Request, res: Response) => 
   }
 });
 
+// Get cart validation summary (aggregated counts of issues)
+export const getCartValidationSummary = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.userId) {
+    return sendUnauthorized(res, 'Authentication required');
+  }
+
+  try {
+    const cart = await Cart.getActiveCart(req.userId);
+
+    if (!cart || cart.items.length === 0) {
+      return sendSuccess(res, {
+        totalIssues: 0,
+        outOfStockCount: 0,
+        lowStockCount: 0,
+        priceChangeCount: 0,
+        unavailableCount: 0,
+        totalAffectedItems: 0,
+        isValid: true
+      }, 'Cart is empty');
+    }
+
+    const productIds = cart.items.map((item: any) => item.product).filter(Boolean);
+    const products = await Product.find({ _id: { $in: productIds } })
+      .select('name isActive inventory price')
+      .lean() as any[];
+    const productMap = new Map(products.map(p => [p._id.toString(), p]));
+
+    let outOfStockCount = 0;
+    let lowStockCount = 0;
+    let unavailableCount = 0;
+    let priceChangeCount = 0;
+    const affectedItems: string[] = [];
+
+    for (const item of cart.items) {
+      const product = item.product ? productMap.get(item.product.toString()) : null;
+
+      if (!product || !product.isActive || !product.inventory?.isAvailable) {
+        unavailableCount++;
+        affectedItems.push(item.product?.toString());
+        continue;
+      }
+
+      let availableStock = product.inventory.stock || 0;
+      const lowStockThreshold = product.inventory.lowStockThreshold || 5;
+
+      // Check variant stock
+      if (item.variant && item.variant.type && item.variant.value && product.inventory.variants) {
+        const variant = product.inventory.variants.find(
+          (v: any) => v.type.toLowerCase() === item.variant!.type.toLowerCase() &&
+                       v.value.toLowerCase() === item.variant!.value.toLowerCase()
+        );
+        if (variant) {
+          availableStock = variant.stock || 0;
+        }
+      }
+
+      if (availableStock === 0) {
+        outOfStockCount++;
+        affectedItems.push(item.product?.toString());
+      } else if (availableStock < item.quantity) {
+        outOfStockCount++;
+        affectedItems.push(item.product?.toString());
+      } else if (availableStock <= lowStockThreshold) {
+        lowStockCount++;
+      }
+
+      // Check for price changes
+      if (item.price && product.price && item.price !== product.price) {
+        priceChangeCount++;
+      }
+    }
+
+    const totalIssues = outOfStockCount + unavailableCount;
+    const totalAffectedItems = affectedItems.length;
+
+    sendSuccess(res, {
+      totalIssues,
+      outOfStockCount,
+      lowStockCount,
+      priceChangeCount,
+      unavailableCount,
+      totalAffectedItems,
+      isValid: totalIssues === 0
+    }, totalIssues === 0 ? 'Cart has no issues' : `Cart has ${totalIssues} issue(s)`);
+
+  } catch (error) {
+    throw new AppError('Failed to get cart validation summary', 500);
+  }
+});
+
+// Auto-fix cart by removing unavailable items and adjusting quantities
+export const autoFixCart = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.userId) {
+    return sendUnauthorized(res, 'Authentication required');
+  }
+
+  try {
+    const cart = await Cart.getActiveCart(req.userId);
+
+    if (!cart || cart.items.length === 0) {
+      return sendSuccess(res, {
+        removed: [],
+        updated: [],
+        message: 'Cart is already empty'
+      }, 'Cart is empty');
+    }
+
+    const productIds = cart.items.map((item: any) => item.product).filter(Boolean);
+    const products = await Product.find({ _id: { $in: productIds } })
+      .select('name isActive inventory price')
+      .lean() as any[];
+    const productMap = new Map(products.map(p => [p._id.toString(), p]));
+
+    const removed: string[] = [];
+    const updated: Array<{ productId: string; previousQuantity: number; newQuantity: number }> = [];
+    const itemsToKeep: any[] = [];
+
+    for (const item of cart.items) {
+      const product = item.product ? productMap.get(item.product.toString()) : null;
+
+      // Remove unavailable products
+      if (!product || !product.isActive || !product.inventory?.isAvailable) {
+        removed.push(item.product?.toString());
+        continue;
+      }
+
+      let availableStock = product.inventory.stock || 0;
+      const lowStockThreshold = product.inventory.lowStockThreshold || 5;
+
+      // Check variant stock
+      if (item.variant && item.variant.type && item.variant.value && product.inventory.variants) {
+        const variant = product.inventory.variants.find(
+          (v: any) => v.type.toLowerCase() === item.variant!.type.toLowerCase() &&
+                       v.value.toLowerCase() === item.variant!.value.toLowerCase()
+        );
+        if (variant) {
+          availableStock = variant.stock || 0;
+        }
+      }
+
+      if (availableStock === 0) {
+        removed.push(item.product?.toString());
+      } else if (availableStock < item.quantity) {
+        // Adjust quantity to available stock
+        updated.push({
+          productId: item.product?.toString(),
+          previousQuantity: item.quantity,
+          newQuantity: availableStock
+        });
+        item.quantity = availableStock;
+        itemsToKeep.push(item);
+      } else {
+        itemsToKeep.push(item);
+      }
+    }
+
+    // Update cart with filtered/adjusted items
+    cart.items = itemsToKeep;
+    await cart.calculateTotals();
+    await cart.save();
+
+    // Invalidate cart cache
+    await CacheInvalidator.invalidateCart(req.userId);
+
+    const message = removed.length > 0 || updated.length > 0
+      ? `Removed ${removed.length} item(s) and adjusted ${updated.length} item(s)`
+      : 'Cart is already valid';
+
+    sendSuccess(res, {
+      removed,
+      updated,
+      message
+    }, message);
+
+  } catch (error) {
+    throw new AppError('Failed to auto-fix cart', 500);
+  }
+});
+
 // Lock item at current price
 export const lockItem = asyncHandler(async (req: Request, res: Response) => {
   logger.info('🔒 [LOCK ITEM] Starting lock process');

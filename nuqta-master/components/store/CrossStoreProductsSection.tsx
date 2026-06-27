@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import ProductCard from '@/components/homepage/cards/ProductCard';
 import { usePersonalizedRecommendations } from '@/hooks/useRecommendations';
 import { ProductItem } from '@/types/homepage.types';

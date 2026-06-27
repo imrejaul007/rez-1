@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Cash Store API Service
  *

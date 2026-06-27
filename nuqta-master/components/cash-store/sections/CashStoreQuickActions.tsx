@@ -16,7 +16,7 @@ import {
   Dimensions} from 'react-native';
 import Animated, { useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { CashStoreQuickAction } from '../../../types/cash-store.types';
 import { colors } from '@/constants/theme';
 

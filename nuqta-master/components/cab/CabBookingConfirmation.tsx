@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/theme';
@@ -136,7 +136,7 @@ const CabBookingConfirmation: React.FC<CabBookingConfirmationProps> = ({
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Vehicle</Text>
             <Text style={styles.detailValue}>
-              {bookingData.vehicleType.charAt(0).toUpperCase() + bookingData.vehicleType.slice(1)}
+              {(bookingData.vehicleType || '').charAt(0).toUpperCase() + (bookingData.vehicleType || '').slice(1) || '—'}
             </Text>
           </View>
 

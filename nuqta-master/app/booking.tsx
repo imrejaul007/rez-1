@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useBackButton } from '@/hooks/useSafeNavigation';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FormPageSkeleton } from '@/components/skeletons';
 import { ThemedText } from '@/components/ThemedText';
@@ -645,7 +645,7 @@ function BookingPage() {
                 const isToday = date.toDateString() === new Date().toDateString();
                 return (
                   <Pressable
-                    key={index}
+                    key={date.toISOString()}
                     onPress={() => {
                       setSelectedDate(date);
                       setSelectedTime(null);

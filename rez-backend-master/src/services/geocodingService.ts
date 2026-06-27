@@ -1,5 +1,13 @@
 import { logger } from '../config/logger';
 import axios from 'axios';
+import { getCircuitBreaker } from '../utils/circuitBreaker';
+import { withTimeout } from '../utils/timeout';
+
+// Circuit breaker for geocoding providers
+const geocodingCircuit = getCircuitBreaker('geocoding-provider');
+
+// Geocoding timeout (10 seconds)
+const GEOCODING_TIMEOUT_MS = parseInt(process.env.GEOCODING_TIMEOUT_MS || '10000', 10);
 
 // Geocoding service interfaces
 export interface GeocodeResult {
@@ -49,14 +57,25 @@ class GeocodingService {
   }
 
   /**
-   * Reverse geocoding - Convert coordinates to address
+   * Reverse geocoding - Convert coordinates to address (with circuit breaker protection)
    */
   async reverseGeocode(request: GeocodeRequest): Promise<GeocodeResult> {
     try {
       if (this.useGoogleMaps) {
-        return await this.reverseGeocodeGoogle(request);
+        return await geocodingCircuit.execute(
+          () =>
+            withTimeout(this.reverseGeocodeGoogle(request), {
+              timeout: GEOCODING_TIMEOUT_MS,
+              operation: 'google-maps',
+            }),
+          () => this.getFallbackGeocode(request), // Fallback when circuit is open
+        );
       } else {
-        return await this.reverseGeocodeOpenCage(request);
+        return await geocodingCircuit.execute(
+          () =>
+            withTimeout(this.reverseGeocodeOpenCage(request), { timeout: GEOCODING_TIMEOUT_MS, operation: 'opencage' }),
+          () => this.getFallbackGeocode(request), // Fallback when circuit is open
+        );
       }
     } catch (error) {
       logger.error('Geocoding error:', error);
@@ -65,12 +84,27 @@ class GeocodingService {
   }
 
   /**
+   * Fallback geocoding when external service is unavailable
+   */
+  private getFallbackGeocode(request: GeocodeRequest): GeocodeResult {
+    logger.warn('[Geocoding] Using fallback geocode - external service unavailable');
+    return {
+      address: 'Unknown',
+      city: 'Unknown',
+      state: 'Unknown',
+      country: 'Unknown',
+      coordinates: [request.longitude, request.latitude],
+      formattedAddress: 'Location unavailable',
+    };
+  }
+
+  /**
    * Google Maps reverse geocoding
    */
   private async reverseGeocodeGoogle(request: GeocodeRequest): Promise<GeocodeResult> {
     const { latitude, longitude } = request;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${this.googleMapsApiKey}`;
-    
+
     const response = await axios.get(url);
     const data = response.data;
     if (data.status !== 'OK' || !data.results || data.results.length === 0) {
@@ -79,7 +113,7 @@ class GeocodingService {
 
     const result = data.results[0];
     const addressComponents = result.address_components;
-    
+
     // Extract address components
     let neighbourhood = '';
     let city = '';
@@ -121,7 +155,7 @@ class GeocodingService {
   private async reverseGeocodeOpenCage(request: GeocodeRequest): Promise<GeocodeResult> {
     const { latitude, longitude } = request;
     const url = `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${this.openCageApiKey}&limit=1`;
-    
+
     const response = await axios.get(url);
     const data = response.data;
 
@@ -133,22 +167,20 @@ class GeocodingService {
     const components = result.components;
 
     // Extract city - OpenCage uses different fields for different places
-    const city = components.city
-      || components.town
-      || components.village
-      || components.county
-      || components.state_district
-      || components.suburb
-      || components.locality
-      || components._normalized_city
-      || 'Unknown';
+    const city =
+      components.city ||
+      components.town ||
+      components.village ||
+      components.county ||
+      components.state_district ||
+      components.suburb ||
+      components.locality ||
+      components._normalized_city ||
+      'Unknown';
 
     // OpenCage neighbourhood: neighbourhood > suburb > quarter
-    const neighbourhood = components.neighbourhood
-      || components.suburb
-      || components.quarter
-      || components.residential
-      || undefined;
+    const neighbourhood =
+      components.neighbourhood || components.suburb || components.quarter || components.residential || undefined;
 
     return {
       address: result.formatted,
@@ -163,18 +195,32 @@ class GeocodingService {
   }
 
   /**
-   * Search addresses by query
+   * Search addresses by query (with circuit breaker protection)
    */
   async searchAddresses(request: SearchAddressRequest): Promise<AddressSearchResult[]> {
     try {
       if (this.useGoogleMaps) {
-        return await this.searchAddressesGoogle(request);
+        return await geocodingCircuit.execute(
+          () =>
+            withTimeout(this.searchAddressesGoogle(request), {
+              timeout: GEOCODING_TIMEOUT_MS,
+              operation: 'google-places',
+            }),
+          () => [], // Fallback: empty results when circuit is open
+        );
       } else {
-        return await this.searchAddressesOpenCage(request);
+        return await geocodingCircuit.execute(
+          () =>
+            withTimeout(this.searchAddressesOpenCage(request), {
+              timeout: GEOCODING_TIMEOUT_MS,
+              operation: 'opencage-search',
+            }),
+          () => [], // Fallback: empty results when circuit is open
+        );
       }
     } catch (error) {
       logger.error('Address search error:', error);
-      throw new Error('Failed to search addresses');
+      return []; // Return empty array on error
     }
   }
 
@@ -184,7 +230,7 @@ class GeocodingService {
   private async searchAddressesGoogle(request: SearchAddressRequest): Promise<AddressSearchResult[]> {
     const { query, limit = 5 } = request;
     const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&types=address&key=${this.googleMapsApiKey}`;
-    
+
     const response = await axios.get(url);
     const data = response.data;
 
@@ -193,7 +239,7 @@ class GeocodingService {
     }
 
     const results: AddressSearchResult[] = [];
-    
+
     for (const prediction of data.predictions.slice(0, limit)) {
       try {
         // Get place details for coordinates
@@ -236,22 +282,20 @@ class GeocodingService {
       const components = result.components || {};
 
       // Extract city - OpenCage uses different fields for different places
-      const city = components.city
-        || components.town
-        || components.village
-        || components.county
-        || components.state_district
-        || components.suburb
-        || components.locality
-        || components._normalized_city
-        || '';
+      const city =
+        components.city ||
+        components.town ||
+        components.village ||
+        components.county ||
+        components.state_district ||
+        components.suburb ||
+        components.locality ||
+        components._normalized_city ||
+        '';
 
       // Extract neighbourhood from search result
-      const neighbourhood = components.neighbourhood
-        || components.suburb
-        || components.quarter
-        || components.residential
-        || undefined;
+      const neighbourhood =
+        components.neighbourhood || components.suburb || components.quarter || components.residential || undefined;
 
       return {
         address: result.formatted,
@@ -289,7 +333,7 @@ class GeocodingService {
   private async getTimezoneGoogle(latitude: number, longitude: number): Promise<string> {
     const timestamp = Math.floor(Date.now() / 1000);
     const url = `https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=${timestamp}&key=${this.googleMapsApiKey}`;
-    
+
     const response = await axios.get(url);
     const data = response.data;
 
@@ -308,7 +352,7 @@ class GeocodingService {
     if (longitude >= 68 && longitude <= 97) {
       return 'Asia/Kolkata';
     }
-    
+
     // Default to UTC
     return 'UTC';
   }
@@ -318,28 +362,27 @@ class GeocodingService {
    */
   validateCoordinates(latitude: number, longitude: number): boolean {
     return (
-      latitude >= -90 && latitude <= 90 &&
-      longitude >= -180 && longitude <= 180 &&
-      !isNaN(latitude) && !isNaN(longitude)
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180 &&
+      !isNaN(latitude) &&
+      !isNaN(longitude)
     );
   }
 
   /**
    * Calculate distance between two coordinates (Haversine formula)
    */
-  calculateDistance(
-    lat1: number, lon1: number,
-    lat2: number, lon2: number
-  ): number {
+  calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371; // Earth's radius in kilometers
     const dLat = this.toRadians(lat2 - lat1);
     const dLon = this.toRadians(lon2 - lon1);
-    
-    const a = 
+
+    const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    
+      Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }

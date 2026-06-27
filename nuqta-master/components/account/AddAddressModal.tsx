@@ -13,7 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { showAlert } from '@/utils/alert';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from '@/components/ThemedText';
 import { ACCOUNT_COLORS } from '@/types/account.types';
 import { AddressType, AddressCreate } from '@/services/addressApi';

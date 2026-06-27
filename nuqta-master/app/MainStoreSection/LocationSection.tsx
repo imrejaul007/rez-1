@@ -13,7 +13,7 @@ import Animated, {
   useSharedValue,
   withSpring } from 'react-native-reanimated';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerImpact } from "@/utils/haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { colors } from '@/constants/theme';
@@ -23,6 +23,7 @@ import {
   BorderRadius,
   Shadows } from "@/constants/DesignSystem";
 import { catchAndWarn } from '@/utils/catchAndReport';
+import { safeOpenURL } from '@/utils/linking';
 
 export interface LocationSectionProps {
   address?: string;
@@ -57,17 +58,25 @@ function LocationSection({
         android: `geo:${latitude},${longitude}?q=${latitude},${longitude}(${address})` });
 
       if (scheme) {
-        Linking.openURL(scheme).catch(() => {
-          // Fallback to Google Maps web
-          Linking.openURL(
-            `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
+        // Phase 6 — web parity: safeOpenURL handles `geo:` → Google Maps web
+        // fallback on web, and passes through to Linking.openURL on native.
+        safeOpenURL(scheme, {
+          allowedSchemes: ['geo:', 'maps:', 'https:'],
+          webFallback: 'maps',
+        }).catch(() => {
+          // Final fallback to Google Maps web
+          safeOpenURL(
+            `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
+            { allowedSchemes: ['https:'] }
           ).catch(() => {});
         });
       }
     } else {
       // Search by address
       const encodedAddress = encodeURIComponent(address);
-      try { Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`); } catch (e) { catchAndWarn(e, 'LocationSection/openURL'); }
+      safeOpenURL(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, {
+        allowedSchemes: ['https:'],
+      }).catch((e) => catchAndWarn(e, 'LocationSection/openURL'));
     }
   };
 

@@ -9,7 +9,6 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  Image,
   ActivityIndicator} from 'react-native';
 import { platformAlertSimple } from '@/utils/platformAlert';
 import { useReorder } from '@/hooks/useReorder';

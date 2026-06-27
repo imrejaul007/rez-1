@@ -14,9 +14,13 @@ router.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'copilot' });
 });
 
-// TODO: Implement copilot routes when AI Copilot service is ready
-// - Chat endpoints
-// - Support ticket routing
-// - AI assistance
+// Copilot service not implemented - returning 501 Not Implemented
+router.use((req, res, next) => {
+  res.status(501).json({
+    error: 'Not Implemented',
+    message: 'AI Copilot service is not yet available',
+    service: 'copilot'
+  });
+});
 
 export default router;

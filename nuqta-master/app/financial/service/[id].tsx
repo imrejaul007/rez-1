@@ -26,7 +26,7 @@ import { DetailPageSkeleton } from '@/components/skeletons';
 import CachedImage from '@/components/ui/CachedImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
 import financialServicesApi, { FinancialService } from '@/services/financialServicesApi';
 import { fetchBill as fetchBillApi } from '@/services/billPaymentApi';

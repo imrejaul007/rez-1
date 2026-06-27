@@ -17,7 +17,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, Stack } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
@@ -34,12 +34,14 @@ import { SectionListSkeleton } from '@/components/skeletons';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useSafeBack } from '@/hooks/useSafeBack';
 
 type ModalMode = 'add' | 'edit' | null;
 
 function PaymentMethodsManagementPage() {
   const isMounted = useIsMounted();
   const router = useRouter();
+  const handleBack = useSafeBack();
   const {
     paymentMethods,
     isLoading,
@@ -645,7 +647,7 @@ function PaymentMethodsManagementPage() {
         <View style={styles.headerContent}>
           <Pressable
             style={styles.backButton}
-            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}
+            onPress={handleBack}
             accessibilityRole="button"
             accessibilityLabel="Go back"
             accessibilityHint="Double tap to return to previous screen"

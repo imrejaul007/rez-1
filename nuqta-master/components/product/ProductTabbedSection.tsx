@@ -13,7 +13,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerImpact } from '@/utils/haptics';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { BRAND } from '@/constants/brand';
@@ -318,7 +318,7 @@ export const ProductTabbedSection: React.FC<ProductTabbedSectionProps> = ({
                       ) : (
                         <View style={styles.userAvatarPlaceholder}>
                           <Text style={styles.userAvatarText}>
-                            {review.userName.charAt(0).toUpperCase()}
+                            {(review.userName || '?').charAt(0).toUpperCase()}
                           </Text>
                         </View>
                       )}

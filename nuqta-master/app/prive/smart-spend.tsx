@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import CachedImage from '@/components/ui/CachedImage';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { PRIVE_COLORS, PRIVE_SPACING, PRIVE_RADIUS } from '@/components/prive/priveTheme';
 import { PriveSkeletonBlock } from '@/components/prive/PriveSkeletonBlock';
 import priveApi, { SmartSpendItem, SmartSpendSection } from '@/services/priveApi';

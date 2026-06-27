@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Support Chat API Service
 // Handles all support chat backend communications
 
@@ -31,12 +30,7 @@ import type {
   ConversationTransfer,
   IssueCategory,
 } from '@/types/supportChat.types';
-
-const devLog = {
-  log: __DEV__ ? console.log.bind(console) : () => {},
-  warn: __DEV__ ? console.warn.bind(console) : () => {},
-  error: __DEV__ ? console.error.bind(console) : () => {},
-};
+import { devLog } from '@/utils/devLogger';
 
 // Map frontend IssueCategory values to backend-accepted category values
 const CATEGORY_MAP: Record<IssueCategory, string> = {

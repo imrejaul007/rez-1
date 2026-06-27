@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { InteractionManager } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { BRAND } from '@/constants/brand';
 import { useRezBalance, useWalletData, useBrandedCoins, useRefreshWallet, useSavingsInsights, useGetCurrencySymbol, useRegionState, useIsAuthenticated, useAuthLoading } from '@/stores/selectors';
 import { useQueryClient } from '@tanstack/react-query';

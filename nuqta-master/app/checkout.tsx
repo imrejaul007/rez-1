@@ -15,7 +15,7 @@ import { useCartValidation } from '@/hooks/useCartValidation';
 import StockWarningBanner from '@/components/cart/StockWarningBanner';
 import CartValidation from '@/components/cart/CartValidation';
 import CardOffersSection from '@/components/cart/CardOffersSection';
-import { useGetCurrencySymbol, useAuthUser } from '@/stores';
+import { useGetCurrencySymbol, useAuthUser } from '@/stores/selectors';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 
