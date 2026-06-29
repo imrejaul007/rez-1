@@ -24,7 +24,7 @@
     "test:e2e:build:android": "detox build --configuration android.emu.debug",
     "verify:production": "cross-env NODE_OPTIONS=--max-old-space-size=4096 ts-node scripts/verify-production-readiness.ts",
     "check:backend": "node scripts/check-backend.js",
-    "build:render": "cross-env NODE_OPTIONS=--max-old-space-size=8192 METRO_MAX_WORKERS=1 npx expo export --platform web",
+    "build:render": "cross-env NODE_OPTIONS=--max-old-space-size=6144 METRO_MAX_WORKERS=1 npx expo export --platform web",
     "serve:render": "npx serve dist -l tcp://0.0.0.0:$PORT",
     "serve:web": "npx serve dist"
   },

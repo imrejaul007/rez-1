@@ -62,7 +62,10 @@ module.exports = {
     },
     web: {
       bundler: 'metro',
-      output: 'static',
+      // Vercel free/starter builders have 8 GB RAM. Static SSG pre-renders every
+      // route and OOMs on this app's ~3500+ module graph. SPA export + Vercel
+      // rewrites (vercel.json) is the correct deploy mode for web hosting.
+      output: process.env.VERCEL || process.env.CI ? 'single' : 'static',
       favicon: './assets/images/favicon.png',
     },
     plugins: [
