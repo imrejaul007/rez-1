@@ -1,0 +1,62 @@
+services:
+  - type: web
+    name: rez-api-gateway
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      # Set this in Render dashboard per environment
+      - key: MONOLITH_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: BACKEND_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: GAMIFICATION_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: WALLET_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: PAYMENT_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: CATALOG_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: ANALYTICS_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: SEARCH_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: MARKETING_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: MEDIA_SERVICE_URL
+        sync: false
+      # Order service deployment URL — only one ORDER_SERVICE_URL key is
+      # allowed; the previous duplicate caused render to silently pick whichever
+      # entry was applied last.
+      # Set this in Render dashboard per environment
+      - key: ORDER_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: AUTH_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: NOTIFICATION_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: MERCHANT_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: FINANCE_SERVICE_URL
+        sync: false
+      # Set this in Render dashboard per environment
+      - key: ADS_SERVICE_URL
+        sync: false
+      # Karma Service deployment URL — impact economy / trust signal layer
+      # Set this in Render dashboard per environment
+      - key: KARMA_SERVICE_URL
+        sync: false
+    healthCheckPath: /health

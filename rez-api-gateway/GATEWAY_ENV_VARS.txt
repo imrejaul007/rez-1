@@ -1,0 +1,18 @@
+# Add these environment variables to the rez-api-gateway service on Render
+# Settings → Environment → Add Environment Variable for each
+
+AUTH_SERVICE_URL=https://rez-auth-service.onrender.com
+WALLET_SERVICE_URL=https://rez-wallet-service-36vo.onrender.com
+PAYMENT_SERVICE_URL=https://rez-payment-service.onrender.com
+ORDER_SERVICE_URL=https://rez-order-service.onrender.com
+SEARCH_SERVICE_URL=https://rez-search-service.onrender.com
+CATALOG_SERVICE_URL=https://rez-catalog-service.onrender.com
+MERCHANT_SERVICE_URL=https://rez-merchant-service.onrender.com
+GAMIFICATION_SERVICE_URL=https://rez-gamification-service.onrender.com
+MARKETING_SERVICE_URL=https://rez-marketing-service.onrender.com
+ANALYTICS_SERVICE_URL=https://analytics-events.onrender.com
+MEDIA_SERVICE_URL=https://rez-media-events.onrender.com
+NOTIFICATION_SERVICE_URL=https://rez-notification-events.onrender.com
+FINANCE_SERVICE_URL=https://rez-finance-service.onrender.com
+ADS_SERVICE_URL=https://rez-ads-service.onrender.com
+KARMA_SERVICE_URL=https://rez-karma-service.onrender.com

@@ -1,0 +1,26 @@
+name: Auto-Rebase Feature Branches
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  rebase:
+    name: Auto-rebase open PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch all branches
+        run: git fetch --all
+
+      - name: Find and rebase open PRs
+        run: |
+          for branch in $(git branch -r --format '%(refname:short)' | grep 'origin/feature/' | grep -v 'origin/main' | grep -v 'origin/master'); do
+            pr_number=$(gh pr view "$branch" --json number --jq '.number' 2>/dev/null || echo "")
+            if [ -n "$pr_number" ]; then
+              echo "Rebasing PR #$pr_number ($branch) onto main..."
+              git checkout "$branch" 2>/dev/null
+              git rebase main 2>/dev/null && git push --force-with-lease origin "$branch" 2>/dev/null && echo "  ✓ PR #$pr_number rebased" || echo "  ✗ PR #$pr_number rebase skipped (conflicts or no updates)"
+            fi
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

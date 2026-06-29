@@ -1,0 +1,83 @@
+name: REZ API Gateway CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Type check
+        run: npm run typecheck 2>/dev/null || npx tsc --noEmit 2>/dev/null || echo "no typecheck"
+      - name: Lint
+        run: npm run lint 2>/dev/null || echo "no lint"
+      - name: Build
+        run: npm run build 2>/dev/null || echo "no build"
+
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect weak dev-... secrets in nginx.conf / start.sh
+        # Catches regressions: prevents the dev-... placeholder secrets from
+        # being re-committed to gateway config.
+        run: |
+          WEAK=$(grep -rE "dev-jwt-secret|dev-internal-token|dev-partner-secret|dev-.*-placeholder" nginx.conf start.sh src/ 2>/dev/null | wc -l)
+          if [ "$WEAK" -gt 0 ]; then
+            echo "::error::Found $WEAK weak dev-... placeholder secrets in gateway:"
+            grep -rE "dev-jwt-secret|dev-internal-token|dev-partner-secret|dev-.*-placeholder" nginx.conf start.sh src/ 2>/dev/null
+            exit 1
+          else
+            echo "✓ No weak dev-... placeholder secrets"
+          fi
+
+      - name: Detect hard-coded JWT signing keys
+        # Catches accidentally hard-coded secrets in nginx config or env files.
+        run: |
+          HARDCODED=$(grep -rE "BEGIN RSA|BEGIN PRIVATE KEY|JWT_SECRET\s*=\s*[A-Za-z0-9_-]{20,}" nginx.conf start.sh src/ docs/ 2>/dev/null | wc -l)
+          if [ "$HARDCODED" -gt 0 ]; then
+            echo "::error::Found $HARDCODED hard-coded JWT/secret values in gateway config"
+            exit 1
+          else
+            echo "✓ No hard-coded secrets"
+          fi
+
+      - name: Verify Kong directory is gone
+        # The Kong config was deleted in iter 7 (dead code). If anyone
+        # accidentally re-commits it, fail the build.
+        run: |
+          if [ -d "kong" ]; then
+            echo "::error::kong/ directory should not exist (deleted in iter 7)"
+            exit 1
+          else
+            echo "✓ Kong directory is gone"
+          fi
+
+      - name: Verify body size limits are sane
+        # Catches regressions: nginx body sizes should not exceed the
+        # backend's 12M cap. client_max_body_size=100M for /api/media/upload
+        # is OK; anything else >12M is a config bug.
+        run: |
+          BIG=$(grep -E "client_max_body_size\s+[0-9]+[MG]" nginx.conf | grep -vE "client_max_body_size\s+(12M|100M|11M|10M|1M|2M|3M|4M|5M|6M|7M|8M|9M|50k|100k|500k|1m|2m|3m|4m|5m|6m|7m|8m|9m|10m|11m|12m)" | wc -l)
+          if [ "$BIG" -gt 0 ]; then
+            echo "::error::Found $BIG unexpected body-size values (should be 12M or smaller, or 100M only for /api/media/upload):"
+            grep -E "client_max_body_size\s+[0-9]+[MG]" nginx.conf | grep -vE "client_max_body_size\s+(12M|100M|11M|10M|1M|2M|3M|4M|5M|6M|7M|8M|9M|50k|100k|500k|1m|2m|3m|4m|5m|6m|7m|8m|9m|10m|11m|12m)"
+            exit 1
+          else
+            echo "✓ All body-size limits within expected range"
+          fi

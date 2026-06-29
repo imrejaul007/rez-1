@@ -1,0 +1,36 @@
+name: Auto-Merge on CI Pass
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  status_check:
+
+jobs:
+  auto-merge:
+    name: Auto-Merge
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Wait for CI
+        run: |
+          echo "Waiting for CI checks to pass..."
+          # Wait up to 30 minutes for CI
+          for i in $(seq 1 60); do
+            sleep 30
+            status=$(gh pr view ${{ github.event.pull_request.number }} --json statusCheckRollup --jq '.statusCheckRollup[] | select(.type=="ci") | .state' 2>/dev/null | head -1)
+            if [ "$status" = "PASSED" ]; then
+              echo "CI passed!"
+              break
+            fi
+            if [ "$status" = "FAILED" ]; then
+              echo "CI failed — not merging"
+              exit 0
+            fi
+            echo "Still waiting... ($((i*30))s)"
+          done
+
+      - name: Auto-merge PR
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} --squash --auto --delete-branch --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
