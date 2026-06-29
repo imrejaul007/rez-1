@@ -113,6 +113,9 @@
     "typescript": "~5.3.3"
   },
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "overrides": {
     "markdown-it": {
       "entities": "~2.0.0"

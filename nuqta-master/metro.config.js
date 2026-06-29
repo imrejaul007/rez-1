@@ -1,6 +1,43 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const fs = require('fs');
 const path = require('path');
 const os = require('os');
+
+/** Resolve markdown-it's entities@2 JSON map (missing in entities@6 on CI/Vercel). */
+function resolveEntitiesJsonPath() {
+  const bundledFallback = path.resolve(__dirname, 'web-shims/entities-maps.json');
+  const candidates = [
+    path.resolve(__dirname, 'node_modules/markdown-it/node_modules/entities/lib/maps/entities.json'),
+    bundledFallback,
+  ];
+
+  try {
+    const markdownItRoot = path.dirname(require.resolve('markdown-it/package.json'));
+    candidates.unshift(
+      path.join(markdownItRoot, 'node_modules/entities/lib/maps/entities.json')
+    );
+  } catch {
+    // markdown-it not installed yet (e.g. during first npm install)
+  }
+
+  try {
+    const pkgPath = require.resolve('entities/package.json');
+    const { version } = require(pkgPath);
+    const major = parseInt(String(version).split('.')[0], 10);
+    if (major < 3) {
+      candidates.unshift(path.join(path.dirname(pkgPath), 'lib/maps/entities.json'));
+    }
+  } catch {
+    // entities not resolvable — use bundled fallback
+  }
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return bundledFallback;
+}
+
+const entitiesJsonPath = resolveEntitiesJsonPath();
 
 const config = getDefaultConfig(__dirname);
 
@@ -186,12 +223,15 @@ config.resolver = {
 };
 
 // Fix: markdown-it@10 needs entities@2 (with lib/maps/entities.json),
-// but Metro hoists entities@6 which lacks that file. Add the nested path to watchFolders
-// so Metro can track and hash the file.
-config.watchFolders = [
-  ...(config.watchFolders || []),
-  path.resolve(__dirname, 'node_modules/markdown-it/node_modules/entities'),
-];
+// but Metro hoists entities@6 which lacks that file. Only watch the nested folder
+// when it exists — a missing watchFolder path crashes CI/Vercel with ENOENT stat errors.
+const markdownItEntitiesDir = path.resolve(
+  __dirname,
+  'node_modules/markdown-it/node_modules/entities'
+);
+if (fs.existsSync(markdownItEntitiesDir)) {
+  config.watchFolders = [...(config.watchFolders || []), markdownItEntitiesDir];
+}
 
 // =============================================================================
 // CACHE STORES
@@ -255,10 +295,6 @@ const webShimMap = new Map([
 const webPackageShimPrefix = '@stripe/stripe-react-native';
 const stripeShimPath = path.join(shimPath, 'stripe-react-native.js');
 
-const markdownItEntitiesJson = path.resolve(
-  __dirname, 'node_modules/markdown-it/node_modules/entities/lib/maps/entities.json'
-);
-
 // Fix: @tanstack/react-query v5.90+ with "type":"module" breaks Metro 0.80 resolution.
 // v5.6+ removed build/legacy/index.cjs; use build/modern/index.js (or package main).
 const tanstackReactQueryEntry = path.resolve(
@@ -282,7 +318,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   // Fix: redirect entities/lib/maps/entities.json to markdown-it's nested entities@2
   // (top-level entities@6 removed this file)
   if (moduleName === 'entities/lib/maps/entities.json') {
-    return { filePath: markdownItEntitiesJson, type: 'sourceFile' };
+    return { filePath: entitiesJsonPath, type: 'sourceFile' };
   }
 
   // Fix: @tanstack/react-query v5.90+ uses "type":"module" which breaks Metro 0.80
