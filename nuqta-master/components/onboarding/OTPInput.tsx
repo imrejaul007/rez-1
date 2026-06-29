@@ -16,16 +16,11 @@ import {
   Pressable,
   Text,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withSequence,
-} from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+import Animated from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@/constants/theme';
 import { BorderRadius } from '@/constants/DesignSystem';
+import { triggerImpact } from '@/utils/haptics';
 
 interface OTPInputProps {
   value: string;
@@ -60,10 +55,8 @@ function OTPInput({
   }, []);
 
   const handleChange = (text: string, index: number) => {
-    // Haptic feedback
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {}
+    // Haptic feedback (native only — no-op on web)
+    void triggerImpact('Light');
 
     // Handle paste - if text is 6 digits, fill all boxes
     if (text.length >= length) {

@@ -428,7 +428,7 @@ function HomeScreen() {
 
   // Load supplementary homepage data (wallet balance comes from WalletContext)
   const loadUserContext = useCallback(async () => {
-    if (!isAuthenticated || !authUser) {
+    if (!isAuthenticated || !authUser?.id) {
       setStatsState({ voucherCount: 0, newOffersCount: 0 });
       return;
     }
@@ -457,7 +457,7 @@ function HomeScreen() {
         newOffersCount: contextResult.value.data.offersCount || 0,
       });
     }
-  }, [isAuthenticated, authUser, getHomepageUserContext]);
+  }, [isAuthenticated, authUser?.id, getHomepageUserContext]);
 
   // Load user context once after interactions complete + authenticated
   React.useEffect(() => {

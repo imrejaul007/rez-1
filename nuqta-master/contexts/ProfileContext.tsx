@@ -68,7 +68,7 @@ export const ProfileProvider = ({ children }: ProfileProviderProps) => {
         });
       }
     }).catch(() => { /* non-blocking */ });
-  }, [authUser, isAuthenticated, authLoading]);
+  }, [authUser?.id, authUser?._id, isAuthenticated, authLoading]);
 
   // Fetch profile completion from backend (single source of truth)
   const refreshCompletionStatus = useCallback(async () => {

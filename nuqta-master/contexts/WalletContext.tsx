@@ -138,6 +138,8 @@ const WALLET_DEDUP_MS = 10_000; // 10 seconds dedup window
 export function WalletProvider({ children }: { children: ReactNode }) {
   const authUser = useAuthUser();
   const isAuthenticated = useIsAuthenticated();
+  const authUserId = authUser?.id ?? authUser?._id;
+  const authUserIsOnboarded = authUser?.isOnboarded ?? false;
 
   const [walletData, setWalletData] = useState<WalletData | null>(null);
   const [rawBackendData, setRawBackendData] = useState<any | null>(null);
@@ -206,10 +208,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     await fetchWalletRef.current(true);
   }, []); // Empty deps — stable identity
 
+  const authUserId = authUser?.id;
+  const authUserIsOnboarded = authUser?.isOnboarded;
+
   // Auto-fetch when user authenticates, clear on logout
   // Skip during onboarding to prevent thundering herd of API calls on Android
   useEffect(() => {
-    if (isAuthenticated && authUser && authUser.isOnboarded) {
+    if (isAuthenticated && authUserId && authUserIsOnboarded) {
       // Module-level dedup handles preventing duplicate fetches across remounts
       fetchWallet(false);
     } else if (!isAuthenticated) {
@@ -219,12 +224,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       _walletLastFetch = 0;
       if (abortRef.current) abortRef.current.abort();
     }
-  }, [isAuthenticated, authUser]);
+  }, [isAuthenticated, authUserId, authUserIsOnboarded]);
 
   // Retry wallet fetch if first attempt failed (e.g., 401 race on page refresh)
   // Waits 2s then retries once if walletData is still null
   useEffect(() => {
-    if (!isAuthenticated || !authUser?.isOnboarded) return;
+    if (!isAuthenticated || !authUserIsOnboarded) return;
     if (walletData) return; // Already loaded
     if (isLoading) return; // Still loading
 
@@ -235,7 +240,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }, 2000);
 
     return () => clearTimeout(retryTimer);
-  }, [isAuthenticated, authUser, walletData, isLoading, fetchWallet]);
+  }, [isAuthenticated, authUserIsOnboarded, walletData, isLoading, fetchWallet]);
 
   // Cleanup on unmount
   useEffect(() => {
