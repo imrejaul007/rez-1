@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { ProfileService } from '../services/profile.service';
 import { ProfileTransactionSchema } from '../schemas';
+import { err } from '../utils/response';
 
 const router = Router();
 
@@ -10,8 +11,8 @@ router.get('/summary', requireAuth, async (req: Request, res: Response) => {
   try {
     const summary = await ProfileService.getProfileSummary(req.userId!, req.userPhone!);
     res.json({ success: true, data: summary });
-  } catch (err: any) {
-    res.status(500).json(err('SRV_INTERNAL_ERROR', { message: err.message }));
+  } catch (error: any) {
+    res.status(500).json(err('SRV_INTERNAL_ERROR', { message: error.message }));
   }
 });
 
@@ -37,8 +38,8 @@ router.post('/transaction', requireAuth, async (req: Request, res: Response) => 
       category,
     });
     res.json({ success: true });
-  } catch (err: any) {
-    res.status(500).json(err('SRV_INTERNAL_ERROR', { message: err.message }));
+  } catch (error: any) {
+    res.status(500).json(err('SRV_INTERNAL_ERROR', { message: error.message }));
   }
 });
 
@@ -47,8 +48,8 @@ router.post('/engagement', requireAuth, async (req: Request, res: Response) => {
   try {
     await ProfileService.recordEngagement(req.userId!, req.userPhone!);
     res.json({ success: true });
-  } catch (err: any) {
-    res.status(500).json(err('SRV_INTERNAL_ERROR', { message: err.message }));
+  } catch (error: any) {
+    res.status(500).json(err('SRV_INTERNAL_ERROR', { message: error.message }));
   }
 });
 
@@ -71,8 +72,8 @@ router.get('/tier', requireAuth, async (req: Request, res: Response) => {
         nextTierAt,
       }
     });
-  } catch (err: any) {
-    res.status(500).json(err('SRV_INTERNAL_ERROR', { message: err.message }));
+  } catch (error: any) {
+    res.status(500).json(err('SRV_INTERNAL_ERROR', { message: error.message }));
   }
 });
 

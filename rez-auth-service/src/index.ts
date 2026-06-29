@@ -22,7 +22,6 @@ if (process.env.SENTRY_DSN) {
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import compression from 'compression';
 import mongoSanitize from 'express-mongo-sanitize';
 import { connectMongoDB, disconnectMongoDB } from './config/mongodb';
 import { redis } from './config/redis';
@@ -92,24 +91,9 @@ async function main(): Promise<void> {
 
   const app = express();
   app.set('trust proxy', 1); // P1: Trust nginx/Render LB X-Forwarded-For so req.ip reflects real client IP
-  if (process.env.SENTRY_DSN) {
-  // Sentry.Handlers removed in v8
-}
   app.use(helmet());
-  # ── Compression Configuration ────────────────────────────────────────────────
-  # PERFORMANCE: Compression is handled at the Nginx layer (API Gateway), NOT here.
-  #
-  # Why disabled at Express level:
-  # 1. Avoids double-compression: nginx compresses once at the edge, Express compressing
-  #    again wastes CPU with zero bandwidth benefit.
-  # 2. Better performance: nginx handles compression more efficiently (C code vs JS).
-  # 3. Single point of control: Compression settings are managed in nginx.conf.
-  #
-  # Brotli support: nginx handles Brotli negotiation and fallback to gzip automatically.
-  # Express compression package only supports gzip.
-  #
-  # If deploying WITHOUT nginx (direct to client/CDN), re-enable this:
-  // Compression is disabled - handled at nginx layer to avoid double-compression
+  // Compression is disabled — handled at nginx layer to avoid double-compression.
+  // Re-enable app.use(compression()) only if deploying without the API gateway.
 
   // SECURITY FIX: Validate CORS origins to prevent wildcard misconfiguration
   const rawOrigins = process.env.CORS_ORIGIN || 'https://rez.money,https://www.rez.money,https://admin.rez.money';
@@ -180,9 +164,6 @@ async function main(): Promise<void> {
   app.use('/internal', internalProfileRoutes);
   app.use('/api/v1/admin/oauth', oauthAdminRoutes);
   app.use('/api/v1/oauth', oauthPartnerRoutes);
-  if (process.env.SENTRY_DSN) {
-  // Sentry.Handlers removed in v8
-}
 
   // Global error handler — catches errors even when Sentry is not configured
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

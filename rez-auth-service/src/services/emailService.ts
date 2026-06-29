@@ -19,9 +19,6 @@ const TOKEN_TTL = 86400; // 24h
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@rez.money';
 const APP_URL = process.env.APP_URL || 'https://rez.money';
 
-// Email service timeout (10 seconds)
-const EMAIL_TIMEOUT_MS = parseInt(process.env.EMAIL_TIMEOUT_MS || '10000', 10);
-
 function makeToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
@@ -81,7 +78,6 @@ export async function sendVerificationEmail(
           </div>
         `,
         },
-        { timeout: EMAIL_TIMEOUT_MS }
       );
     });
   } catch (err) {

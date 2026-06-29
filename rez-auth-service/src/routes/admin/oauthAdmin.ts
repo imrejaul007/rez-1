@@ -117,8 +117,7 @@ router.post('/partners', requireInternalToken, async (req: Request, res: Respons
       hostname === '127.0.0.1' ||
       hostname.startsWith('192.168.') ||
       hostname.startsWith('10.') ||
-      hostname.startsWith('172.16') ||
-      parsed.protocol === 'file:'
+      hostname.startsWith('172.16')
     ) {
       res.status(400).json({ error: `redirect URI cannot use private network or localhost: ${uri}` });
       return;

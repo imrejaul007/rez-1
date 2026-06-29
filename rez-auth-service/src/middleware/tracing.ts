@@ -1,14 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 
-// Augment Express Response.locals with custom tracing fields
-declare module 'express' {
-  interface Response {
-    locals: Response['locals'] & {
-      traceId?: string;
-      spanId?: string;
-      requestId?: string;
-    };
+declare module 'express-serve-static-core' {
+  interface Locals {
+    traceId?: string;
+    spanId?: string;
+    requestId?: string;
   }
 }
 

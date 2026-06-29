@@ -428,7 +428,7 @@ async function completeLogin(req: Request, res: Response, user: any, fullPhone: 
     sendAuthLoginToRezMind({ user_id: userId, method: 'phone', success: true }).catch(() => {});
   }
 
-  const userResponse = buildUserResponse(user as AuthServiceUser);
+  const userResponse = buildUserResponse(user as unknown as AuthServiceUser);
   res.json({
     success: true,
     isNewUser,
@@ -541,7 +541,7 @@ router.post('/auth/mfa/verify-otp', authLimiter, async (req: Request, res: Respo
     // Update MFA last verified
     await MfaConfig.updateOne({ userId: new mongoose.Types.ObjectId(userId) }, { $set: { lastVerifiedAt: new Date() } });
 
-    const userResponse = buildUserResponse(user as AuthServiceUser);
+    const userResponse = buildUserResponse(user as unknown as AuthServiceUser);
 
     logger.info('SEC-005: MFA login successful', { userId });
 
@@ -694,7 +694,7 @@ async function loginPinHandler(req: Request, res: Response) {
       accessToken,
       refreshToken,
       tokens: { accessToken, refreshToken, expiresIn: parseInt(process.env.JWT_EXPIRES_IN_SECONDS || '900', 10) },
-      user: buildUserResponse(user as AuthServiceUser),
+      user: buildUserResponse(user as unknown as AuthServiceUser),
       deviceRisk,
     });
   } catch (err: any) {
@@ -805,21 +805,23 @@ async function completeOnboardingHandler(req: Request, res: Response) {
 
     if (profile) {
       // Nested profile fields — narrower allowlist than Zod's outer schema.
-      const allowed: (keyof OnboardingProfile)[] = ['firstName', 'lastName', 'avatar', 'dateOfBirth', 'gender', 'bio'];
+      const allowed = ['firstName', 'lastName', 'avatar', 'dateOfBirth', 'gender', 'bio'] as const;
+      const profileFields = profile as Record<string, unknown>;
       for (const key of allowed) {
-        if (profile[key] !== undefined) updateFields[`profile.${key}`] = profile[key];
+        if (profileFields[key] !== undefined) updateFields[`profile.${key}`] = profileFields[key];
       }
     }
     if (preferences) {
-      const allowed: (keyof OnboardingPreferences)[] = ['language', 'currency', 'notifications', 'theme', 'dietaryPreferences'];
+      const allowed = ['language', 'currency', 'notifications', 'theme', 'dietaryPreferences'] as const;
+      const preferenceFields = preferences as Record<string, unknown>;
       for (const key of allowed) {
-        if (preferences[key] !== undefined) updateFields[`preferences.${key}`] = preferences[key];
+        if (preferenceFields[key] !== undefined) updateFields[`preferences.${key}`] = preferenceFields[key];
       }
     }
 
     await Users.updateOne({ _id: user._id }, { $set: updateFields });
     const updated = await Users.findOne({ _id: user._id });
-    res.json({ success: true, data: buildUserResponse(updated as AuthServiceUser), message: 'Onboarding completed' });
+    res.json({ success: true, data: buildUserResponse(updated as unknown as AuthServiceUser), message: 'Onboarding completed' });
   } catch (err: any) {
     logger.error('Complete onboarding error', { error: err.message });
     throw new ApiError(500, 'Failed to complete onboarding');
@@ -858,21 +860,23 @@ async function updateProfileHandler(req: Request, res: Response) {
 
     // Email changes must go through /auth/email/verify/request — not allowed here
     if (profile) {
-      const allowed = ['firstName', 'lastName', 'avatar', 'dateOfBirth', 'gender', 'bio'];
+      const allowed = ['firstName', 'lastName', 'avatar', 'dateOfBirth', 'gender', 'bio'] as const;
+      const profileFields = profile as Record<string, unknown>;
       for (const key of allowed) {
-        if (profile[key] !== undefined) updateFields[`profile.${key}`] = profile[key];
+        if (profileFields[key] !== undefined) updateFields[`profile.${key}`] = profileFields[key];
       }
     }
     if (preferences) {
-      const allowed = ['language', 'currency', 'notifications', 'theme', 'dietaryPreferences'];
+      const allowed = ['language', 'currency', 'notifications', 'theme', 'dietaryPreferences'] as const;
+      const preferenceFields = preferences as Record<string, unknown>;
       for (const key of allowed) {
-        if (preferences[key] !== undefined) updateFields[`preferences.${key}`] = preferences[key];
+        if (preferenceFields[key] !== undefined) updateFields[`preferences.${key}`] = preferenceFields[key];
       }
     }
 
     await Users.updateOne({ _id: user._id }, { $set: updateFields });
     const updated = await Users.findOne({ _id: user._id });
-    res.json({ success: true, data: buildUserResponse(updated as AuthServiceUser) });
+    res.json({ success: true, data: buildUserResponse(updated as unknown as AuthServiceUser) });
   } catch (err: any) {
     logger.error('Update profile error', { error: err.message });
     throw new ApiError(500, 'Failed to update profile');
@@ -1394,7 +1398,7 @@ async function getMeHandler(req: Request, res: Response) {
     const Users = mongoose.connection.collection('users');
     const user = await Users.findOne({ _id: new mongoose.Types.ObjectId(decoded.userId) });
     if (!user) { throw new ApiError(404, 'User not found'); }
-    res.json({ success: true, data: buildUserResponse(user as AuthServiceUser) });
+    res.json({ success: true, data: buildUserResponse(user as unknown as AuthServiceUser) });
   } catch {
     throw new ApiError(401, 'Invalid token');
   }
@@ -1414,7 +1418,7 @@ router.get('/internal/auth/user/:id', requireInternalToken, async (req: Request,
     const Users = mongoose.connection.collection('users');
     const user = await Users.findOne({ _id: new mongoose.Types.ObjectId(req.params.id) });
     if (!user) { throw new ApiError(404, 'User not found'); }
-    res.json({ success: true, data: buildUserResponse(user as AuthServiceUser) });
+    res.json({ success: true, data: buildUserResponse(user as unknown as AuthServiceUser) });
   } catch (err: any) {
     logger.error('Internal get user error', { error: err.message });
     throw new ApiError(500, 'Internal server error');
