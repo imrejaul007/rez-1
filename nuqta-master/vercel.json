@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build:render",
-  "installCommand": "npm ci || npm install",
+  "installCommand": "npm install --legacy-peer-deps --include=dev",
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }

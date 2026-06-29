@@ -37,6 +37,21 @@ function resolveEntitiesJsonPath() {
   return bundledFallback;
 }
 
+function resolvePackageEntry(packageName, relativePaths) {
+  const candidates = relativePaths.map((rel) =>
+    path.resolve(__dirname, 'node_modules', packageName, rel)
+  );
+  try {
+    candidates.unshift(require.resolve(packageName));
+  } catch {
+    // Package not installed yet.
+  }
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
 const entitiesJsonPath = resolveEntitiesJsonPath();
 
 const config = getDefaultConfig(__dirname);
@@ -296,22 +311,23 @@ const webPackageShimPrefix = '@stripe/stripe-react-native';
 const stripeShimPath = path.join(shimPath, 'stripe-react-native.js');
 
 // Fix: @tanstack/react-query v5.90+ with "type":"module" breaks Metro 0.80 resolution.
-// v5.6+ removed build/legacy/index.cjs; use build/modern/index.js (or package main).
-const tanstackReactQueryEntry = path.resolve(
-  __dirname, 'node_modules/@tanstack/react-query/build/modern/index.js'
-);
-const tanstackQueryCoreEntry = path.resolve(
-  __dirname, 'node_modules/@tanstack/query-core/build/modern/index.js'
-);
+const tanstackReactQueryEntry = resolvePackageEntry('@tanstack/react-query', [
+  'build/modern/index.js',
+  'build/legacy/index.cjs',
+]);
+const tanstackQueryCoreEntry = resolvePackageEntry('@tanstack/query-core', [
+  'build/modern/index.js',
+  'build/legacy/index.cjs',
+]);
 
-const localforageFilePath = path.resolve(
-  __dirname, 'node_modules/localforage/dist/localforage.js'
-);
+const localforageFilePath = resolvePackageEntry('localforage', [
+  'dist/localforage.js',
+]);
 
 const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   // Fix: @sentry/integrations requires localforage whose dist file Metro can't resolve
-  if (moduleName === 'localforage') {
+  if (moduleName === 'localforage' && localforageFilePath) {
     return { filePath: localforageFilePath, type: 'sourceFile' };
   }
 
@@ -322,10 +338,10 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   }
 
   // Fix: @tanstack/react-query v5.90+ uses "type":"module" which breaks Metro 0.80
-  if (moduleName === '@tanstack/react-query') {
+  if (moduleName === '@tanstack/react-query' && tanstackReactQueryEntry) {
     return { filePath: tanstackReactQueryEntry, type: 'sourceFile' };
   }
-  if (moduleName === '@tanstack/query-core') {
+  if (moduleName === '@tanstack/query-core' && tanstackQueryCoreEntry) {
     return { filePath: tanstackQueryCoreEntry, type: 'sourceFile' };
   }
 
@@ -378,5 +394,14 @@ console.warn = (...args) => {
   }
   originalWarn.apply(console, args);
 };
+
+// Metro's Transformer verifies every watchFolder exists on disk. A missing path
+// (common on CI when npm hoists differently) silently kills transformer init,
+// which surfaces later as: Cannot read properties of undefined (reading 'transformFile').
+config.watchFolders = [...new Set(
+  (config.watchFolders || [])
+    .map((folder) => path.resolve(folder))
+    .filter((folder) => fs.existsSync(folder))
+)];
 
 module.exports = config;
