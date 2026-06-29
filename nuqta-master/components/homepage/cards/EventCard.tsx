@@ -39,7 +39,9 @@ function EventCard({
 
   // Memoize date formatting
   const formattedDate = useMemo(() => {
+    if (!event.date) return 'TBD';
     const date = new Date(event.date);
+    if (Number.isNaN(date.getTime())) return 'TBD';
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric'

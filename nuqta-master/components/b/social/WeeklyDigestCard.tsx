@@ -58,6 +58,9 @@ function formatRupeesFromPaise(paise: number): string {
 function formatDateRange(startIso: string, endIso: string): string {
   const start = new Date(startIso);
   const end = new Date(endIso);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return 'This week';
+  }
   return `${SHORT_DATE_FORMATTER.format(start)} – ${SHORT_DATE_FORMATTER.format(end)}`;
 }
 

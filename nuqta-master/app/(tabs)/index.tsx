@@ -66,6 +66,7 @@ const FeatureFlagGate = React.lazy(() => import('@/components/b/_shared/FeatureF
 const StreakFireIcon = React.lazy(() => import('@/components/b/gamification/StreakFireIcon'));
 const RezScoreCard = React.lazy(() => import('@/components/b/gamification/RezScoreCard'));
 import { useStreakDisplay } from '@/hooks/b/gamification/useStreakDisplay';
+import { useWeeklyDigest } from '@/hooks/b/social/useWeeklyDigest';
 // ── B-feature additive slot: Weekly Digest (Phase 1.4) ──
 const WeeklyDigestCard = React.lazy(() => import('@/components/b/social/WeeklyDigestCard'));
 // ── B-feature additive slot: Map View (Phase 1.5) ──
@@ -255,6 +256,7 @@ function HomeScreen() {
   const totalSaved = savingsInsights?.totalSaved ?? 0;
   // B-feature additive slot: Streak (Phase 1.3)
   const { currentStreakDays } = useStreakDisplay();
+  const weeklyDigest = useWeeklyDigest();
   // Zustand selectors for home tab — granular subscriptions
   const activeTab = useActiveTab();
   const setActiveTab = useSetActiveTab();
@@ -862,22 +864,13 @@ function HomeScreen() {
       </View>
 
       {/* ── B-feature additive slot: Weekly Digest preview (Phase 1.4) ── */}
-      <FeatureFlagGate flag="b.weeklyDigest">
-        <Suspense fallback={null}>
-          <WeeklyDigestCard
-            digest={{
-              weekStartIso: '2026-06-15',
-              weekEndIso: '2026-06-21',
-              headline: 'You saved ₹482 this week',
-              highlights: [
-                { emoji: '💰', label: 'Saved', value: '₹482' },
-                { emoji: '🔥', label: 'Streak', value: '5 days' },
-                { emoji: '🏷️', label: 'Vouchers', value: '3 new' },
-              ],
-            }}
-          />
-        </Suspense>
-      </FeatureFlagGate>
+      {weeklyDigest ? (
+        <FeatureFlagGate flag="b.weeklyDigest">
+          <Suspense fallback={null}>
+            <WeeklyDigestCard digest={weeklyDigest} />
+          </Suspense>
+        </FeatureFlagGate>
+      ) : null}
 
       {/* ── B-feature additive slot: Map View (Phase 1.5) ── */}
       <Suspense fallback={null}>
