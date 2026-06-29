@@ -30,16 +30,16 @@ export interface QRCodeData {
   storeId: string;
   storeName: string;
   merchantId?: string;
-  code: string;              // Unique QR code identifier
+  code: string; // Unique QR code identifier
   timestamp: number;
 }
 
 // Result of QR code generation
 export interface QRGenerationResult {
   success: boolean;
-  code: string;              // Unique QR code: REZ-STORE-{shortId}
-  qrImageUrl: string;        // Cloudinary URL of the QR image
-  qrDataUrl?: string;        // Base64 data URL (optional)
+  code: string; // Unique QR code: REZ-STORE-{shortId}
+  qrImageUrl: string; // Cloudinary URL of the QR image
+  qrDataUrl?: string; // Base64 data URL (optional)
   generatedAt: Date;
 }
 
@@ -135,7 +135,7 @@ export class QRCodeService {
           folder: `stores/${storeId}/qr`,
           quality: 'auto',
         });
-        qrImageUrl = uploadResult.secure_url;
+        qrImageUrl = uploadResult.secure_url || '';
       } catch (uploadError) {
         // If Cloudinary fails, generate a data URL as fallback
         logger.warn('Cloudinary upload failed, using data URL fallback:', uploadError);
@@ -217,7 +217,8 @@ export class QRCodeService {
         isActive: true,
       })
         .select('name slug logo category location paymentSettings rewardRules ratings isActive merchantId')
-        .populate('category', 'name slug icon').lean();
+        .populate('category', 'name slug icon')
+        .lean();
 
       if (!store) {
         return {

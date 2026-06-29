@@ -63,10 +63,12 @@ const uploadGalleryItemSchema = Joi.object({
   category: Joi.string().required().min(1).max(50),
   title: Joi.string().max(200).optional(),
   description: Joi.string().max(1000).optional(),
-  tags: Joi.alternatives().try(
-    Joi.array().items(Joi.string().max(50)),
-    Joi.string().max(500) // Allow string (will be parsed later)
-  ).optional(),
+  tags: Joi.alternatives()
+    .try(
+      Joi.array().items(Joi.string().max(50)),
+      Joi.string().max(500), // Allow string (will be parsed later)
+    )
+    .optional(),
   order: Joi.number().integer().min(0).optional(),
   isVisible: Joi.boolean().optional(),
   isCover: Joi.boolean().optional(),
@@ -83,12 +85,15 @@ const updateGalleryItemSchema = Joi.object({
 });
 
 const reorderGalleryItemsSchema = Joi.object({
-  items: Joi.array().items(
-    Joi.object({
-      id: Joi.string().required(),
-      order: Joi.number().integer().min(0).required(),
-    })
-  ).min(1).required(),
+  items: Joi.array()
+    .items(
+      Joi.object({
+        id: Joi.string().required(),
+        order: Joi.number().integer().min(0).required(),
+      }),
+    )
+    .min(1)
+    .required(),
 });
 
 const bulkDeleteSchema = Joi.object({
@@ -110,7 +115,7 @@ router.post(
       const { storeId } = req.params;
       const merchantId = req.merchantId!;
       const { category, title, description, tags: tagsRaw, order, isVisible, isCover } = req.body;
-      
+
       // Parse tags - handle both array and JSON string
       let tags: string[] | undefined;
       if (tagsRaw) {
@@ -123,11 +128,17 @@ router.post(
               tags = JSON.parse(tagsRaw);
             } else {
               // If not JSON, treat as comma-separated string
-              tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
+              tags = tagsRaw
+                .split(',')
+                .map((t) => t.trim())
+                .filter((t) => t.length > 0);
             }
           } catch (e) {
             // If JSON parse fails, treat as comma-separated string
-            tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
+            tags = tagsRaw
+              .split(',')
+              .map((t) => t.trim())
+              .filter((t) => t.length > 0);
           }
         }
       }
@@ -155,19 +166,13 @@ router.post(
       let thumbnail: string | undefined;
 
       if (isVideo) {
-        result = await CloudinaryService.uploadStoreGalleryVideo(
-          req.file.path,
-          merchantId,
-          storeId
-        );
+        result = await CloudinaryService.uploadStoreGalleryVideo(req.file.path, merchantId, storeId);
         // Generate thumbnail for video
-        thumbnail = CloudinaryService.generateVideoThumbnail(result.public_id);
+        if (result.public_id) {
+          thumbnail = CloudinaryService.generateVideoThumbnail(result.public_id);
+        }
       } else {
-        result = await CloudinaryService.uploadStoreGalleryImage(
-          req.file.path,
-          merchantId,
-          storeId
-        );
+        result = await CloudinaryService.uploadStoreGalleryImage(req.file.path, merchantId, storeId);
       }
 
       // Get current max order for this category
@@ -175,7 +180,9 @@ router.post(
         storeId,
         category: category.toLowerCase(),
         deletedAt: { $exists: false },
-      }).sort({ order: -1 }).lean();
+      })
+        .sort({ order: -1 })
+        .lean();
 
       const itemOrder = order !== undefined ? parseInt(order) : (maxOrderItem?.order || 0) + 1;
 
@@ -188,7 +195,7 @@ router.post(
             _id: { $ne: new mongoose.Types.ObjectId() }, // Will be set after creation
             deletedAt: { $exists: false },
           },
-          { $set: { isCover: false } }
+          { $set: { isCover: false } },
         );
       }
 
@@ -212,23 +219,27 @@ router.post(
 
       await galleryItem.save();
 
-      return sendSuccess(res, {
-        id: galleryItem._id,
-        url: galleryItem.url,
-        thumbnail: galleryItem.thumbnail,
-        type: galleryItem.type,
-        category: galleryItem.category,
-        title: galleryItem.title,
-        description: galleryItem.description,
-        tags: galleryItem.tags,
-        order: galleryItem.order,
-        isVisible: galleryItem.isVisible,
-        isCover: galleryItem.isCover,
-        views: galleryItem.views,
-        likes: galleryItem.likes,
-        shares: galleryItem.shares,
-        uploadedAt: galleryItem.uploadedAt,
-      }, 'Gallery item uploaded successfully');
+      return sendSuccess(
+        res,
+        {
+          id: galleryItem._id,
+          url: galleryItem.url,
+          thumbnail: galleryItem.thumbnail,
+          type: galleryItem.type,
+          category: galleryItem.category,
+          title: galleryItem.title,
+          description: galleryItem.description,
+          tags: galleryItem.tags,
+          order: galleryItem.order,
+          isVisible: galleryItem.isVisible,
+          isCover: galleryItem.isCover,
+          views: galleryItem.views,
+          likes: galleryItem.likes,
+          shares: galleryItem.shares,
+          uploadedAt: galleryItem.uploadedAt,
+        },
+        'Gallery item uploaded successfully',
+      );
     } catch (error: any) {
       // Clean up temp file on error
       if (req.file && fs.existsSync(req.file.path)) {
@@ -238,7 +249,7 @@ router.post(
       logger.error('❌ Gallery upload error:', error);
       return sendError(res, error.message || 'Failed to upload gallery item', 500);
     }
-  }
+  },
 );
 
 /**
@@ -250,21 +261,35 @@ router.post(
   '/:storeId/gallery/bulk',
   validateParams(Joi.object({ storeId: Joi.string().required() })),
   upload.array('files', 20), // Max 20 files
-  validateRequest(Joi.object({
-    category: Joi.string().required().min(1).max(50),
-    title: Joi.string().max(200).optional(), // Single title for all items
-    titles: Joi.alternatives().try(Joi.array().items(Joi.string().max(200)), Joi.string()).optional(), // Per-item titles (overrides title)
-    description: Joi.string().max(1000).optional(),
-    tags: Joi.alternatives().try(Joi.array().items(Joi.string().max(50)), Joi.string()).optional(),
-    isVisible: Joi.boolean().optional(),
-    isCover: Joi.boolean().optional(),
-  })),
+  validateRequest(
+    Joi.object({
+      category: Joi.string().required().min(1).max(50),
+      title: Joi.string().max(200).optional(), // Single title for all items
+      titles: Joi.alternatives()
+        .try(Joi.array().items(Joi.string().max(200)), Joi.string())
+        .optional(), // Per-item titles (overrides title)
+      description: Joi.string().max(1000).optional(),
+      tags: Joi.alternatives()
+        .try(Joi.array().items(Joi.string().max(50)), Joi.string())
+        .optional(),
+      isVisible: Joi.boolean().optional(),
+      isCover: Joi.boolean().optional(),
+    }),
+  ),
   async (req: Request, res: Response) => {
     try {
       const { storeId } = req.params;
       const merchantId = req.merchantId!;
-      const { category, title: singleTitle, titles: titlesRaw, description, tags: tagsRaw, isVisible, isCover } = req.body;
-      
+      const {
+        category,
+        title: singleTitle,
+        titles: titlesRaw,
+        description,
+        tags: tagsRaw,
+        isVisible,
+        isCover,
+      } = req.body;
+
       // Parse titles - prioritize per-item titles array, fallback to single title
       let titles: string[] | undefined;
       if (titlesRaw) {
@@ -294,7 +319,10 @@ router.post(
             tags = JSON.parse(tagsRaw);
           } catch {
             // If JSON parse fails, treat as comma-separated string
-            tags = tagsRaw.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
+            tags = tagsRaw
+              .split(',')
+              .map((t: string) => t.trim())
+              .filter((t: string) => t.length > 0);
           }
         }
       }
@@ -322,7 +350,9 @@ router.post(
         storeId,
         category: category.toLowerCase(),
         deletedAt: { $exists: false },
-      }).sort({ order: -1 }).lean();
+      })
+        .sort({ order: -1 })
+        .lean();
 
       let currentOrder = maxOrderItem?.order || 0;
 
@@ -338,18 +368,12 @@ router.post(
           let thumbnail: string | undefined;
 
           if (isVideo) {
-            result = await CloudinaryService.uploadStoreGalleryVideo(
-              file.path,
-              merchantId,
-              storeId
-            );
-            thumbnail = CloudinaryService.generateVideoThumbnail(result.public_id);
+            result = await CloudinaryService.uploadStoreGalleryVideo(file.path, merchantId, storeId);
+            if (result.public_id) {
+              thumbnail = CloudinaryService.generateVideoThumbnail(result.public_id);
+            }
           } else {
-            result = await CloudinaryService.uploadStoreGalleryImage(
-              file.path,
-              merchantId,
-              storeId
-            );
+            result = await CloudinaryService.uploadStoreGalleryImage(file.path, merchantId, storeId);
           }
 
           currentOrder += 1;
@@ -376,10 +400,10 @@ router.post(
             tags: tags || undefined,
             order: currentOrder,
             isVisible: isVisible !== 'false' && isVisible !== false && isVisible !== undefined ? isVisible : true,
-            isCover: isCover === 'true' || isCover === true ? (i === 0) : false, // Only first item can be cover
+            isCover: isCover === 'true' || isCover === true ? i === 0 : false, // Only first item can be cover
             uploadedAt: new Date(),
           });
-          
+
           logger.info(`✅ [Backend] Created gallery item ${i + 1}/${files.length}:`, {
             title: itemTitle,
             category: category.toLowerCase(),
@@ -410,12 +434,16 @@ router.post(
         }
       }
 
-      return sendSuccess(res, {
-        items: uploadedItems,
-        uploaded: uploadedItems.length,
-        failed: failedItems.length,
-        failedItems,
-      }, `${uploadedItems.length} items uploaded successfully`);
+      return sendSuccess(
+        res,
+        {
+          items: uploadedItems,
+          uploaded: uploadedItems.length,
+          failed: failedItems.length,
+          failedItems,
+        },
+        `${uploadedItems.length} items uploaded successfully`,
+      );
     } catch (error: any) {
       // Clean up temp files on error
       if (req.files && Array.isArray(req.files)) {
@@ -429,7 +457,7 @@ router.post(
       logger.error('❌ Bulk gallery upload error:', error);
       return sendError(res, error.message || 'Failed to upload gallery items', 500);
     }
-  }
+  },
 );
 
 /**
@@ -440,14 +468,16 @@ router.post(
 router.get(
   '/:storeId/gallery',
   validateParams(Joi.object({ storeId: Joi.string().required() })),
-  validateQuery(Joi.object({
-    category: Joi.string().optional(),
-    type: Joi.string().valid('image', 'video').optional(),
-    limit: Joi.number().integer().min(1).max(100).optional(),
-    offset: Joi.number().integer().min(0).optional(),
-    sortBy: Joi.string().valid('order', 'uploadedAt', 'views').optional(),
-    sortOrder: Joi.string().valid('asc', 'desc').optional(),
-  })),
+  validateQuery(
+    Joi.object({
+      category: Joi.string().optional(),
+      type: Joi.string().valid('image', 'video').optional(),
+      limit: Joi.number().integer().min(1).max(100).optional(),
+      offset: Joi.number().integer().min(0).optional(),
+      sortBy: Joi.string().valid('order', 'uploadedAt', 'views').optional(),
+      sortOrder: Joi.string().valid('asc', 'desc').optional(),
+    }),
+  ),
   async (req: Request, res: Response) => {
     try {
       const { storeId } = req.params;
@@ -518,7 +548,7 @@ router.get(
       ]);
 
       return sendSuccess(res, {
-        items: items.map(item => ({
+        items: items.map((item) => ({
           id: item._id,
           url: item.url,
           thumbnail: item.thumbnail,
@@ -537,7 +567,7 @@ router.get(
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
         })),
-        categories: categories.map(cat => ({
+        categories: categories.map((cat) => ({
           name: cat.name,
           count: cat.count,
         })),
@@ -549,7 +579,7 @@ router.get(
       logger.error('❌ Get gallery error:', error);
       return sendError(res, error.message || 'Failed to get gallery items', 500);
     }
-  }
+  },
 );
 
 /**
@@ -588,11 +618,7 @@ router.get(
             count: { $sum: 1 },
             coverImage: {
               $first: {
-                $cond: [
-                  { $eq: ['$isCover', true] },
-                  '$url',
-                  null,
-                ],
+                $cond: [{ $eq: ['$isCover', true] }, '$url', null],
               },
             },
           },
@@ -626,7 +652,7 @@ router.get(
       ]);
 
       return sendSuccess(res, {
-        categories: categories.map(cat => ({
+        categories: categories.map((cat) => ({
           name: cat.name,
           count: cat.count,
           coverImage: cat.coverImage,
@@ -636,7 +662,7 @@ router.get(
       logger.error('❌ Get gallery categories error:', error);
       return sendError(res, error.message || 'Failed to get gallery categories', 500);
     }
-  }
+  },
 );
 
 /**
@@ -646,10 +672,12 @@ router.get(
  */
 router.get(
   '/:storeId/gallery/:itemId',
-  validateParams(Joi.object({
-    storeId: Joi.string().required(),
-    itemId: Joi.string().required(),
-  })),
+  validateParams(
+    Joi.object({
+      storeId: Joi.string().required(),
+      itemId: Joi.string().required(),
+    }),
+  ),
   async (req: Request, res: Response) => {
     try {
       const { storeId, itemId } = req.params;
@@ -698,7 +726,7 @@ router.get(
       logger.error('❌ Get gallery item error:', error);
       return sendError(res, error.message || 'Failed to get gallery item', 500);
     }
-  }
+  },
 );
 
 /**
@@ -708,10 +736,12 @@ router.get(
  */
 router.put(
   '/:storeId/gallery/:itemId',
-  validateParams(Joi.object({
-    storeId: Joi.string().required(),
-    itemId: Joi.string().required(),
-  })),
+  validateParams(
+    Joi.object({
+      storeId: Joi.string().required(),
+      itemId: Joi.string().required(),
+    }),
+  ),
   validateRequest(updateGalleryItemSchema),
   async (req: Request, res: Response) => {
     try {
@@ -757,36 +787,40 @@ router.put(
               _id: { $ne: item._id },
               deletedAt: { $exists: false },
             },
-            { $set: { isCover: false } }
+            { $set: { isCover: false } },
           );
         }
       }
 
       await item.save();
 
-      return sendSuccess(res, {
-        id: item._id,
-        url: item.url,
-        thumbnail: item.thumbnail,
-        type: item.type,
-        category: item.category,
-        title: item.title,
-        description: item.description,
-        tags: item.tags,
-        order: item.order,
-        isVisible: item.isVisible,
-        isCover: item.isCover,
-        views: item.views,
-        likes: item.likes,
-        shares: item.shares,
-        uploadedAt: item.uploadedAt,
-        updatedAt: item.updatedAt,
-      }, 'Gallery item updated successfully');
+      return sendSuccess(
+        res,
+        {
+          id: item._id,
+          url: item.url,
+          thumbnail: item.thumbnail,
+          type: item.type,
+          category: item.category,
+          title: item.title,
+          description: item.description,
+          tags: item.tags,
+          order: item.order,
+          isVisible: item.isVisible,
+          isCover: item.isCover,
+          views: item.views,
+          likes: item.likes,
+          shares: item.shares,
+          uploadedAt: item.uploadedAt,
+          updatedAt: item.updatedAt,
+        },
+        'Gallery item updated successfully',
+      );
     } catch (error: any) {
       logger.error('❌ Update gallery item error:', error);
       return sendError(res, error.message || 'Failed to update gallery item', 500);
     }
-  }
+  },
 );
 
 /**
@@ -822,8 +856,8 @@ router.put(
             storeId,
             deletedAt: { $exists: false },
           },
-          { $set: { order: item.order } }
-        )
+          { $set: { order: item.order } },
+        ),
       );
 
       await Promise.all(updatePromises);
@@ -833,7 +867,7 @@ router.put(
       logger.error('❌ Reorder gallery items error:', error);
       return sendError(res, error.message || 'Failed to reorder gallery items', 500);
     }
-  }
+  },
 );
 
 /**
@@ -843,13 +877,17 @@ router.put(
  */
 router.put(
   '/:storeId/gallery/:itemId/set-cover',
-  validateParams(Joi.object({
-    storeId: Joi.string().required(),
-    itemId: Joi.string().required(),
-  })),
-  validateRequest(Joi.object({
-    category: Joi.string().optional(),
-  })),
+  validateParams(
+    Joi.object({
+      storeId: Joi.string().required(),
+      itemId: Joi.string().required(),
+    }),
+  ),
+  validateRequest(
+    Joi.object({
+      category: Joi.string().optional(),
+    }),
+  ),
   async (req: Request, res: Response) => {
     try {
       const { storeId, itemId } = req.params;
@@ -886,7 +924,7 @@ router.put(
           _id: { $ne: item._id },
           deletedAt: { $exists: false },
         },
-        { $set: { isCover: false } }
+        { $set: { isCover: false } },
       );
 
       // Set this item as cover
@@ -896,16 +934,20 @@ router.put(
       }
       await item.save();
 
-      return sendSuccess(res, {
-        id: item._id,
-        isCover: item.isCover,
-        category: item.category,
-      }, 'Cover image set successfully');
+      return sendSuccess(
+        res,
+        {
+          id: item._id,
+          isCover: item.isCover,
+          category: item.category,
+        },
+        'Cover image set successfully',
+      );
     } catch (error: any) {
       logger.error('❌ Set cover error:', error);
       return sendError(res, error.message || 'Failed to set cover image', 500);
     }
-  }
+  },
 );
 
 /**
@@ -915,10 +957,12 @@ router.put(
  */
 router.delete(
   '/:storeId/gallery/:itemId',
-  validateParams(Joi.object({
-    storeId: Joi.string().required(),
-    itemId: Joi.string().required(),
-  })),
+  validateParams(
+    Joi.object({
+      storeId: Joi.string().required(),
+      itemId: Joi.string().required(),
+    }),
+  ),
   async (req: Request, res: Response) => {
     try {
       const { storeId, itemId } = req.params;
@@ -977,7 +1021,7 @@ router.delete(
       logger.error('❌ Delete gallery item error:', error);
       return sendError(res, error.message || 'Failed to delete gallery item', 500);
     }
-  }
+  },
 );
 
 /**
@@ -1049,18 +1093,21 @@ router.delete(
             deletedAt: new Date(),
             isVisible: false,
           },
-        }
+        },
       );
 
-      return sendSuccess(res, {
-        deleted: result.modifiedCount,
-      }, `${result.modifiedCount} items deleted successfully`);
+      return sendSuccess(
+        res,
+        {
+          deleted: result.modifiedCount,
+        },
+        `${result.modifiedCount} items deleted successfully`,
+      );
     } catch (error: any) {
       logger.error('❌ Bulk delete gallery items error:', error);
       return sendError(res, error.message || 'Failed to delete gallery items', 500);
     }
-  }
+  },
 );
 
 export default router;
-

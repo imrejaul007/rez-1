@@ -11,20 +11,22 @@ import { Types } from 'mongoose';
  * Get active hero banners
  */
 export const getActiveBanners = asyncHandler(async (req: Request, res: Response) => {
-    const { page = 'offers', position = 'top', limit = 5 } = req.query;
+  const { page = 'offers', position = 'top', limit = 5 } = req.query;
 
-    const cacheKey = `hero-banners:${page}:${position}:${limit}`;
-    const cached = await redisService.get<any>(cacheKey);
-    if (cached) {
-      return sendSuccess(res, cached);
-    }
+  const cacheKey = `hero-banners:${page}:${position}:${limit}`;
+  const cached = await redisService.get<any>(cacheKey);
+  if (cached) {
+    return sendSuccess(res, cached);
+  }
 
-    const banners = await HeroBanner.findActiveBanners(page as string, position as string);
-    const limitedBanners = banners.slice(0, Number(limit));
+  const banners = await HeroBanner.findActiveBanners(page as string, position as string);
+  const limitedBanners = banners.slice(0, Number(limit));
 
-    redisService.set(cacheKey, limitedBanners, 300).catch((err) => logger.warn('[HeroBanner] Cache set for active banners failed', { error: err.message })); // 5min cache
+  redisService
+    .set(cacheKey, limitedBanners, 300)
+    .catch((err) => logger.warn('[HeroBanner] Cache set for active banners failed', { error: err.message })); // 5min cache
 
-    sendSuccess(res, limitedBanners, 'Active hero banners fetched successfully');
+  sendSuccess(res, limitedBanners, 'Active hero banners fetched successfully');
 });
 
 /**
@@ -32,29 +34,33 @@ export const getActiveBanners = asyncHandler(async (req: Request, res: Response)
  * Get banners for specific user (with targeting)
  */
 export const getBannersForUser = asyncHandler(async (req: Request, res: Response) => {
-    const { page = 'offers', limit = 5 } = req.query;
+  const { page = 'offers', limit = 5 } = req.query;
 
-    const userData = req.user ? {
-      userType: req.user.userType,
-      age: req.user.age,
-      location: req.user.location,
-      interests: req.user.interests
-    } : undefined;
+  const userData = req.user
+    ? {
+        userType: req.user.userType,
+        age: req.user.age,
+        location: req.user.location,
+        interests: req.user.interests,
+      }
+    : undefined;
 
-    // Cache by user type (not per-user) for better hit rate
-    const userType = userData?.userType || 'anonymous';
-    const cacheKey = `hero-banners:user:${userType}:${page}:${limit}`;
-    const cached = await redisService.get<any>(cacheKey);
-    if (cached) {
-      return sendSuccess(res, cached);
-    }
+  // Cache by user type (not per-user) for better hit rate
+  const userType = userData?.userType || 'anonymous';
+  const cacheKey = `hero-banners:user:${userType}:${page}:${limit}`;
+  const cached = await redisService.get<any>(cacheKey);
+  if (cached) {
+    return sendSuccess(res, cached);
+  }
 
-    const banners = await HeroBanner.findBannersForUser(userData, page as string);
-    const limitedBanners = banners.slice(0, Number(limit));
+  const banners = await HeroBanner.findBannersForUser(userData, page as string);
+  const limitedBanners = banners.slice(0, Number(limit));
 
-    redisService.set(cacheKey, limitedBanners, 300).catch((err) => logger.warn('[HeroBanner] Cache set for user-targeted banners failed', { error: err.message })); // 5min cache
+  redisService
+    .set(cacheKey, limitedBanners, 300)
+    .catch((err) => logger.warn('[HeroBanner] Cache set for user-targeted banners failed', { error: err.message })); // 5min cache
 
-    sendSuccess(res, limitedBanners, 'User-targeted hero banners fetched successfully');
+  sendSuccess(res, limitedBanners, 'User-targeted hero banners fetched successfully');
 });
 
 /**
@@ -62,22 +68,22 @@ export const getBannersForUser = asyncHandler(async (req: Request, res: Response
  * Get single banner by ID
  */
 export const getHeroBannerById = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    const banner = await HeroBanner.findById(id);
+  const banner = await HeroBanner.findById(id);
 
-    if (!banner) {
-      return sendError(res, 'Hero banner not found', 404);
-    }
+  if (!banner) {
+    return sendError(res, 'Hero banner not found', 404);
+  }
 
-    const isActive = banner.isCurrentlyActive();
+  const isActive = banner.isCurrentlyActive();
 
-    const bannerData = {
-      ...banner.toObject(),
-      isCurrentlyActive: isActive
-    };
+  const bannerData = {
+    ...banner.toObject(),
+    isCurrentlyActive: isActive,
+  };
 
-    sendSuccess(res, bannerData, 'Hero banner fetched successfully');
+  sendSuccess(res, bannerData, 'Hero banner fetched successfully');
 });
 
 /**
@@ -185,7 +191,7 @@ export const getAllHeroBanners = asyncHandler(async (req: Request, res: Response
     query.$or = [
       { title: { $regex: search, $options: 'i' } },
       { subtitle: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } }
+      { description: { $regex: search, $options: 'i' } },
     ];
   }
 
@@ -198,28 +204,30 @@ export const getAllHeroBanners = asyncHandler(async (req: Request, res: Response
   const skip = (pageNum - 1) * limitNum;
 
   const [banners, total] = await Promise.all([
-    HeroBanner.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNum)
-      .lean(),
-    HeroBanner.countDocuments(query)
+    HeroBanner.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+    HeroBanner.countDocuments(query),
   ]);
 
   const bannersWithStatus = banners.map((banner: any) => ({
     ...banner,
-    isCurrentlyActive: banner.isCurrentlyActive ? banner.isCurrentlyActive() : new Date() >= banner.validFrom && new Date() <= banner.validUntil
+    isCurrentlyActive: banner.isCurrentlyActive
+      ? banner.isCurrentlyActive()
+      : new Date() >= banner.validFrom && new Date() <= banner.validUntil,
   }));
 
-  sendSuccess(res, {
-    banners: bannersWithStatus,
-    pagination: {
-      page: pageNum,
-      limit: limitNum,
-      total,
-      pages: Math.ceil(total / limitNum)
-    }
-  }, 'All hero banners fetched successfully');
+  sendSuccess(
+    res,
+    {
+      banners: bannersWithStatus,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    },
+    'All hero banners fetched successfully',
+  );
 });
 
 /**
@@ -242,7 +250,7 @@ export const createHeroBanner = asyncHandler(async (req: Request, res: Response)
     validFrom,
     validUntil,
     targetAudience,
-    metadata
+    metadata,
   } = req.body;
 
   // Validate date range
@@ -275,9 +283,9 @@ export const createHeroBanner = asyncHandler(async (req: Request, res: Response)
       animation: metadata?.animation || 'fade',
       tags: metadata?.tags || [],
       colors: metadata?.colors || [],
-      shareBonus: metadata?.shareBonus || 50
+      shareBonus: metadata?.shareBonus || 50,
     },
-    createdBy
+    createdBy,
   });
 
   await banner.save();
@@ -285,7 +293,7 @@ export const createHeroBanner = asyncHandler(async (req: Request, res: Response)
   logger.info('[HeroBanner] Admin created new banner', {
     bannerId: banner._id,
     title: banner.title,
-    createdBy
+    createdBy,
   });
 
   sendSuccess(res, banner, 'Hero banner created successfully', 201);
@@ -304,9 +312,21 @@ export const updateHeroBanner = asyncHandler(async (req: Request, res: Response)
   }
 
   const allowedUpdates = [
-    'title', 'subtitle', 'description', 'image', 'ctaText', 'ctaAction',
-    'ctaUrl', 'backgroundColor', 'textColor', 'isActive', 'priority',
-    'validFrom', 'validUntil', 'targetAudience', 'metadata'
+    'title',
+    'subtitle',
+    'description',
+    'image',
+    'ctaText',
+    'ctaAction',
+    'ctaUrl',
+    'backgroundColor',
+    'textColor',
+    'isActive',
+    'priority',
+    'validFrom',
+    'validUntil',
+    'targetAudience',
+    'metadata',
   ];
 
   // Build update object with only provided fields
@@ -318,8 +338,9 @@ export const updateHeroBanner = asyncHandler(async (req: Request, res: Response)
       } else if (key === 'targetAudience' && req.body[key]) {
         updates[key] = req.body[key];
       } else if (key === 'metadata' && req.body[key]) {
-        // Merge with existing metadata
-        updates[key] = { ...banner.metadata.toObject(), ...req.body[key] };
+        // Merge with existing metadata - cast to any to handle typed schema
+        const existingMetadata = banner.metadata as unknown as Record<string, unknown>;
+        updates[key] = { ...existingMetadata, ...req.body[key] };
       } else {
         updates[key] = req.body[key];
       }
@@ -333,18 +354,14 @@ export const updateHeroBanner = asyncHandler(async (req: Request, res: Response)
     return sendError(res, 'Valid until date must be after valid from date', 400);
   }
 
-  const updatedBanner = await HeroBanner.findByIdAndUpdate(
-    id,
-    { $set: updates },
-    { new: true, runValidators: true }
-  );
+  const updatedBanner = await HeroBanner.findByIdAndUpdate(id, { $set: updates }, { new: true, runValidators: true });
 
   // Invalidate cache
   await redisService.del('hero-banners:*');
 
   logger.info('[HeroBanner] Admin updated banner', {
     bannerId: id,
-    updatedFields: Object.keys(updates)
+    updatedFields: Object.keys(updates),
   });
 
   sendSuccess(res, updatedBanner, 'Hero banner updated successfully');
@@ -369,7 +386,7 @@ export const deleteHeroBanner = asyncHandler(async (req: Request, res: Response)
 
   logger.info('[HeroBanner] Admin deleted banner', {
     bannerId: id,
-    title: banner.title
+    title: banner.title,
   });
 
   sendSuccess(res, { deletedId: id }, 'Hero banner deleted successfully');
@@ -395,11 +412,15 @@ export const toggleHeroBannerActive = asyncHandler(async (req: Request, res: Res
 
   logger.info('[HeroBanner] Admin toggled banner active status', {
     bannerId: id,
-    newStatus: banner.isActive
+    newStatus: banner.isActive,
   });
 
-  sendSuccess(res, {
-    _id: banner._id,
-    isActive: banner.isActive
-  }, `Banner ${banner.isActive ? 'activated' : 'deactivated'} successfully`);
+  sendSuccess(
+    res,
+    {
+      _id: banner._id,
+      isActive: banner.isActive,
+    },
+    `Banner ${banner.isActive ? 'activated' : 'deactivated'} successfully`,
+  );
 });

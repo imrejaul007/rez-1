@@ -8,14 +8,11 @@ import { cloudinaryCircuit } from './circuitBreaker';
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
   api_key: process.env.CLOUDINARY_API_KEY || '',
-  api_secret: process.env.CLOUDINARY_API_SECRET || ''
+  api_secret: process.env.CLOUDINARY_API_SECRET || '',
 });
 
 // Default Cloudinary upload timeout (30s). Override via CLOUDINARY_UPLOAD_TIMEOUT_MS.
-const CLOUDINARY_UPLOAD_TIMEOUT_MS = parseInt(
-  process.env.CLOUDINARY_UPLOAD_TIMEOUT_MS || '30000',
-  10
-);
+const CLOUDINARY_UPLOAD_TIMEOUT_MS = parseInt(process.env.CLOUDINARY_UPLOAD_TIMEOUT_MS || '30000', 10);
 
 async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   let timer: NodeJS.Timeout | undefined;
@@ -75,30 +72,28 @@ export function validateCloudinaryConfig(): boolean {
 export async function uploadToCloudinary(
   filePath: string | Buffer,
   folder: string = 'bills',
-  options: { disableFallback?: boolean; [key: string]: any } = {}
+  options: { disableFallback?: boolean; [key: string]: any } = {},
 ): Promise<CloudinaryUploadResult> {
   const { disableFallback, ...uploadOptions } = options;
   const circuitState = cloudinaryCircuit.getState();
 
-  const mergedOptions = {
+  const mergedOptions: Record<string, unknown> = {
     folder: `rez/${folder}`,
-    resource_type: 'auto',
-    transformation: [
-      { width: 1200, height: 1200, crop: 'limit', quality: 'auto' }
-    ],
-    ...uploadOptions
+    resource_type: 'auto' as const,
+    transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto' }],
+    ...uploadOptions,
   };
 
   try {
     const result = await cloudinaryCircuit.execute(
-      () =>
+      async () =>
         withTimeout(
           cloudinary.uploader.upload(
             typeof filePath === 'string' ? filePath : `data:image/jpeg;base64,${filePath.toString('base64')}`,
-            mergedOptions
+            mergedOptions,
           ),
           CLOUDINARY_UPLOAD_TIMEOUT_MS,
-          `uploader.upload(${typeof filePath === 'string' ? filePath : 'buffer'})`
+          `uploader.upload(${typeof filePath === 'string' ? filePath : 'buffer'})`,
         ),
       // Fallback: return placeholder
       () => ({
@@ -110,7 +105,7 @@ export async function uploadToCloudinary(
         height: 0,
         bytes: 0,
         isPlaceholder: true,
-      })
+      }),
     );
 
     // Generate thumbnail URL
@@ -120,7 +115,7 @@ export async function uploadToCloudinary(
           height: 300,
           crop: 'fill',
           quality: 'auto',
-          format: 'jpg'
+          format: 'jpg',
         })
       : '';
 
@@ -206,13 +201,11 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
  */
 export async function uploadMultipleToCloudinary(
   filePaths: string[],
-  folder: string = 'bills'
+  folder: string = 'bills',
 ): Promise<CloudinaryUploadResult[]> {
-  const results = await Promise.all(
-    filePaths.map(filePath => uploadToCloudinary(filePath, folder))
-  );
+  const results = await Promise.all(filePaths.map((filePath) => uploadToCloudinary(filePath, folder)));
 
-  const successCount = results.filter(r => !r.isPlaceholder).length;
+  const successCount = results.filter((r) => !r.isPlaceholder).length;
   logger.info('[CloudinaryUtils] Batch upload completed', {
     total: filePaths.length,
     successful: successCount,
@@ -246,7 +239,7 @@ export function getOptimizedImageUrl(
     crop?: string;
     quality?: string;
     format?: string;
-  } = {}
+  } = {},
 ): string {
   return cloudinary.url(publicId, {
     width: options.width || 800,
@@ -254,7 +247,7 @@ export function getOptimizedImageUrl(
     crop: options.crop || 'limit',
     quality: options.quality || 'auto',
     format: options.format || 'jpg',
-    fetch_format: 'auto'
+    fetch_format: 'auto',
   });
 }
 
@@ -263,5 +256,5 @@ export default {
   uploadToCloudinary,
   deleteFromCloudinary,
   uploadMultipleToCloudinary,
-  getOptimizedImageUrl
+  getOptimizedImageUrl,
 };

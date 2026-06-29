@@ -53,14 +53,14 @@ async function runStuckOrderDetection(): Promise<void> {
           filter: { _id: order._id },
           update: {
             $set: {
-              status: 'cancelled',
+              status: 'cancelled' as const,
               cancelReason: 'Auto-cancelled: payment not received within 1 hour',
               cancelledAt: now,
               'delivery.status': 'failed',
             },
             $push: {
               timeline: {
-                status: 'cancelled',
+                status: 'cancelled' as const,
                 message: 'Order auto-cancelled due to unpaid payment after 1 hour',
                 timestamp: now,
                 updatedBy: 'system',
@@ -284,14 +284,14 @@ async function runPaymentVerificationRecovery(): Promise<void> {
           filter: { _id: order._id },
           update: {
             $set: {
-              status: 'cancelled',
+              status: 'cancelled' as const,
               cancelReason: 'Auto-cancelled: payment not received within 2 hours',
               cancelledAt: now,
               'delivery.status': 'failed',
             },
             $push: {
               timeline: {
-                status: 'cancelled',
+                status: 'cancelled' as const,
                 message: 'Order auto-cancelled: payment timeout exceeded 2 hours',
                 timestamp: now,
                 updatedBy: 'system',

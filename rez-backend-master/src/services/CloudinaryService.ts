@@ -15,10 +15,7 @@ cloudinary.config({
 // Default Cloudinary upload timeout (30s). The cloudinary SDK does not
 // expose a `timeout` option directly, so we wrap with Promise.race.
 // Override with CLOUDINARY_UPLOAD_TIMEOUT_MS env var.
-const CLOUDINARY_UPLOAD_TIMEOUT_MS = parseInt(
-  process.env.CLOUDINARY_UPLOAD_TIMEOUT_MS || '30000',
-  10
-);
+const CLOUDINARY_UPLOAD_TIMEOUT_MS = parseInt(process.env.CLOUDINARY_UPLOAD_TIMEOUT_MS || '30000', 10);
 
 /**
  * Race a promise against a timeout.
@@ -80,7 +77,7 @@ export class CloudinaryService {
    */
   static async uploadFile(
     filePath: string,
-    options: CloudinaryUploadOptions & { disableFallback?: boolean } = {}
+    options: CloudinaryUploadOptions & { disableFallback?: boolean } = {},
   ): Promise<CloudinaryUploadResult> {
     const { disableFallback, ...uploadOptions } = options;
     const circuitState = cloudinaryCircuit.getState();
@@ -95,21 +92,22 @@ export class CloudinaryService {
 
     // Define the upload function
     const doUpload = async (): Promise<CloudinaryUploadResult> => {
-      const result = await cloudinaryCircuit.execute(
-        () =>
+      const result = await cloudinaryCircuit.execute<CloudinaryUploadResult>(
+        async () =>
           withTimeout(
             cloudinary.uploader.upload(filePath, defaultOptions),
             CLOUDINARY_UPLOAD_TIMEOUT_MS,
-            `uploader.upload(${filePath})`
+            `uploader.upload(${filePath})`,
           ),
         // Fallback: return placeholder response when circuit is open
-        () => ({
-          secure_url: '',
-          public_id: '',
-          url: '',
-          isPlaceholder: true,
-          localPath: filePath,
-        } as CloudinaryUploadResult)
+        () =>
+          ({
+            secure_url: '',
+            public_id: '',
+            url: '',
+            isPlaceholder: true,
+            localPath: filePath,
+          }) as CloudinaryUploadResult,
       );
 
       // Delete local file after successful upload
@@ -196,11 +194,9 @@ export class CloudinaryService {
    */
   static async uploadMultipleFiles(
     filePaths: string[],
-    options: CloudinaryUploadOptions & { disableFallback?: boolean } = {}
+    options: CloudinaryUploadOptions & { disableFallback?: boolean } = {},
   ): Promise<CloudinaryUploadResult[]> {
-    const results = await Promise.all(
-      filePaths.map((filePath) => this.uploadFile(filePath, options))
-    );
+    const results = await Promise.all(filePaths.map((filePath) => this.uploadFile(filePath, options)));
 
     const successCount = results.filter((r) => !r.isPlaceholder).length;
     logger.info('[CLOUDINARY] Batch upload completed', {
@@ -218,7 +214,7 @@ export class CloudinaryService {
   static async uploadProductImage(
     filePath: string,
     merchantId: string,
-    productId?: string
+    productId?: string,
   ): Promise<UploadApiResponse> {
     const folder = `merchants/${merchantId}/products${productId ? `/${productId}` : ''}`;
 
@@ -232,11 +228,7 @@ export class CloudinaryService {
         height: 800,
         crop: 'fill',
         quality: 'auto',
-        transformation: [
-          { width: 800, height: 800, crop: 'fill' },
-          { quality: 'auto' },
-          { fetch_format: 'auto' },
-        ],
+        transformation: [{ width: 800, height: 800, crop: 'fill' }, { quality: 'auto' }, { fetch_format: 'auto' }],
       });
       return result;
     } finally {
@@ -250,8 +242,8 @@ export class CloudinaryService {
   static async uploadProductThumbnail(
     filePath: string,
     merchantId: string,
-    productId?: string
-  ): Promise<UploadApiResponse> {
+    productId?: string,
+  ): Promise<CloudinaryUploadResult> {
     const folder = `merchants/${merchantId}/products${productId ? `/${productId}` : ''}/thumbnails`;
 
     return this.uploadFile(filePath, {
@@ -266,10 +258,7 @@ export class CloudinaryService {
   /**
    * Upload store logo
    */
-  static async uploadStoreLogo(
-    filePath: string,
-    merchantId: string
-  ): Promise<UploadApiResponse> {
+  static async uploadStoreLogo(filePath: string, merchantId: string): Promise<CloudinaryUploadResult> {
     const folder = `merchants/${merchantId}/store/logo`;
 
     const optimizedPath = await ImageProcessingService.processForUpload(filePath, 'storeLogo');
@@ -287,10 +276,7 @@ export class CloudinaryService {
   /**
    * Upload store banner
    */
-  static async uploadStoreBanner(
-    filePath: string,
-    merchantId: string
-  ): Promise<UploadApiResponse> {
+  static async uploadStoreBanner(filePath: string, merchantId: string): Promise<CloudinaryUploadResult> {
     const folder = `merchants/${merchantId}/store/banner`;
 
     const optimizedPath = await ImageProcessingService.processForUpload(filePath, 'storeBanner');
@@ -313,14 +299,14 @@ export class CloudinaryService {
     filePath: string,
     merchantId: string,
     resourceType: 'product' | 'store' = 'product',
-    options: { disableFallback?: boolean } = {}
+    options: { disableFallback?: boolean } = {},
   ): Promise<CloudinaryUploadResult> {
     const folder = `merchants/${merchantId}/${resourceType}/videos`;
     const circuitState = cloudinaryCircuit.getState();
 
     try {
       const result = await cloudinaryCircuit.execute(
-        () =>
+        async () =>
           withTimeout(
             cloudinary.uploader.upload(filePath, {
               folder,
@@ -328,15 +314,16 @@ export class CloudinaryService {
               quality: 'auto',
             }),
             CLOUDINARY_UPLOAD_TIMEOUT_MS,
-            `uploader.upload_video(${filePath})`
+            `uploader.upload_video(${filePath})`,
           ),
-        () => ({
-          secure_url: '',
-          public_id: '',
-          url: '',
-          isPlaceholder: true,
-          localPath: filePath,
-        } as CloudinaryUploadResult)
+        () =>
+          ({
+            secure_url: '',
+            public_id: '',
+            url: '',
+            isPlaceholder: true,
+            localPath: filePath,
+          }) as CloudinaryUploadResult,
       );
 
       // Delete local file
@@ -378,8 +365,8 @@ export class CloudinaryService {
   static async uploadStoreGalleryImage(
     filePath: string,
     merchantId: string,
-    storeId: string
-  ): Promise<UploadApiResponse> {
+    storeId: string,
+  ): Promise<CloudinaryUploadResult> {
     const folder = `merchants/${merchantId}/stores/${storeId}/gallery/images`;
 
     const optimizedPath = await ImageProcessingService.processForUpload(filePath, 'gallery');
@@ -404,14 +391,14 @@ export class CloudinaryService {
     filePath: string,
     merchantId: string,
     storeId: string,
-    options: { disableFallback?: boolean } = {}
+    options: { disableFallback?: boolean } = {},
   ): Promise<CloudinaryUploadResult> {
     const folder = `merchants/${merchantId}/stores/${storeId}/gallery/videos`;
     const circuitState = cloudinaryCircuit.getState();
 
     try {
       const result = await cloudinaryCircuit.execute(
-        () =>
+        async () =>
           withTimeout(
             cloudinary.uploader.upload(filePath, {
               folder,
@@ -419,15 +406,16 @@ export class CloudinaryService {
               quality: 'auto',
             }),
             CLOUDINARY_UPLOAD_TIMEOUT_MS,
-            `uploader.upload_video(${filePath})`
+            `uploader.upload_video(${filePath})`,
           ),
-        () => ({
-          secure_url: '',
-          public_id: '',
-          url: '',
-          isPlaceholder: true,
-          localPath: filePath,
-        } as CloudinaryUploadResult)
+        () =>
+          ({
+            secure_url: '',
+            public_id: '',
+            url: '',
+            isPlaceholder: true,
+            localPath: filePath,
+          }) as CloudinaryUploadResult,
       );
 
       // Delete local file
@@ -465,13 +453,16 @@ export class CloudinaryService {
   /**
    * Generate thumbnail for video
    */
-  static generateVideoThumbnail(publicId: string, options: {
-    width?: number;
-    height?: number;
-    time?: string | number; // Time in seconds or format like "00:00:01"
-  } = {}): string {
+  static generateVideoThumbnail(
+    publicId: string,
+    options: {
+      width?: number;
+      height?: number;
+      time?: string | number; // Time in seconds or format like "00:00:01"
+    } = {},
+  ): string {
     const { width = 400, height = 300, time = 1 } = options;
-    
+
     return cloudinary.url(publicId, {
       resource_type: 'video',
       transformation: [
@@ -538,11 +529,7 @@ export class CloudinaryService {
    * Check if Cloudinary is configured
    */
   static isConfigured(): boolean {
-    return !!(
-      process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
-    );
+    return !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
   }
 
   /**

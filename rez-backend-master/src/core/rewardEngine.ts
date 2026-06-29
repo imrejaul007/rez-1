@@ -27,14 +27,30 @@ const logger = createServiceLogger('reward-engine');
 // ─── Types ──────────────────────────────────────────────────
 
 export type RewardType =
-  | 'cashback' | 'referral' | 'game_prize' | 'achievement'
-  | 'bonus_campaign' | 'engagement' | 'creator_earning'
-  | 'tournament_prize' | 'leaderboard_prize' | 'event_reward'
-  | 'learning_reward' | 'social_impact' | 'survey'
-  | 'travel_cashback' | 'mall_affiliate' | 'prive_invite'
-  | 'challenge_reward' | 'partner_bonus' | 'spin_wheel'
-  | 'scratch_card' | 'quiz_game' | 'admin_adjustment'
-  | 'pick_approval' | 'program_task'
+  | 'cashback'
+  | 'referral'
+  | 'game_prize'
+  | 'achievement'
+  | 'bonus_campaign'
+  | 'engagement'
+  | 'creator_earning'
+  | 'tournament_prize'
+  | 'leaderboard_prize'
+  | 'event_reward'
+  | 'learning_reward'
+  | 'social_impact'
+  | 'survey'
+  | 'travel_cashback'
+  | 'mall_affiliate'
+  | 'prive_invite'
+  | 'challenge_reward'
+  | 'partner_bonus'
+  | 'spin_wheel'
+  | 'scratch_card'
+  | 'quiz_game'
+  | 'admin_adjustment'
+  | 'pick_approval'
+  | 'program_task'
   | 'prive_campaign'
   | 'bill_payment';
 
@@ -97,9 +113,14 @@ export interface ReversalResult {
 }
 
 export type RewardErrorCode =
-  | 'WALLET_FROZEN' | 'NO_WALLET' | 'INSUFFICIENT_BALANCE'
-  | 'TX_NOT_FOUND' | 'INVALID_REVERSAL' | 'AMOUNT_EXCEEDED'
-  | 'DUPLICATE_REWARD' | 'CAP_REACHED';
+  | 'WALLET_FROZEN'
+  | 'NO_WALLET'
+  | 'INSUFFICIENT_BALANCE'
+  | 'TX_NOT_FOUND'
+  | 'INVALID_REVERSAL'
+  | 'AMOUNT_EXCEEDED'
+  | 'DUPLICATE_REWARD'
+  | 'CAP_REACHED';
 
 export class RewardError extends Error {
   code: RewardErrorCode;
@@ -113,16 +134,17 @@ export class RewardError extends Error {
 // ─── Helpers ────────────────────────────────────────────────
 
 function generateIdempotencyKey(userId: string, referenceId: string, rewardType: string, source: string): string {
-  return crypto.createHash('sha256')
-    .update(`${userId}:${referenceId}:${rewardType}:${source}`)
-    .digest('hex');
+  return crypto.createHash('sha256').update(`${userId}:${referenceId}:${rewardType}:${source}`).digest('hex');
 }
 
 function mapCoinTypeToLedger(coinType: string): LedgerCoinType {
   switch (coinType) {
-    case 'promo': return 'promo';
-    case 'branded': return 'branded';
-    default: return 'nuqta';
+    case 'promo':
+      return 'promo';
+    case 'branded':
+      return 'branded';
+    default:
+      return 'nuqta';
   }
 }
 
@@ -130,9 +152,7 @@ async function calculateExpiryDate(coinType: 'rez' | 'prive' | 'promo' | 'brande
   let expiryDays: number;
   try {
     const config = await getCachedWalletConfig();
-    expiryDays = config?.coinExpiryConfig?.[coinType]?.expiryDays
-      ?? CURRENCY_RULES[coinType]?.expiryDays
-      ?? 0;
+    expiryDays = config?.coinExpiryConfig?.[coinType]?.expiryDays ?? CURRENCY_RULES[coinType]?.expiryDays ?? 0;
   } catch {
     expiryDays = CURRENCY_RULES[coinType]?.expiryDays ?? 0;
   }
@@ -145,7 +165,6 @@ async function calculateExpiryDate(coinType: 'rez' | 'prive' | 'promo' | 'brande
 // ─── Reward Engine ──────────────────────────────────────────
 
 class RewardEngine {
-
   /**
    * Single entry point for ALL reward issuance.
    *
@@ -164,16 +183,27 @@ class RewardEngine {
    */
   async issue(request: RewardRequest): Promise<RewardResult> {
     const {
-      userId, amount, rewardType, source, description,
-      operationType, referenceId, referenceModel,
-      category, coinType = 'rez', metadata = {},
-      skipCap = false, skipMultiplier = false, session,
-      merchantId, merchantLiability,
+      userId,
+      amount,
+      rewardType,
+      source,
+      description,
+      operationType,
+      referenceId,
+      referenceModel,
+      category,
+      coinType = 'rez',
+      metadata = {},
+      skipCap = false,
+      skipMultiplier = false,
+      session,
+      merchantId,
+      merchantLiability,
     } = request;
 
     // Step 0: Global reward kill-switch (checked via cached WalletConfig)
     try {
-      const config = await getCachedWalletConfig() as LeanWalletConfig | null;
+      const config = (await getCachedWalletConfig()) as LeanWalletConfig | null;
       if (config && config.rewardIssuanceEnabled === false) {
         logger.warn('Reward issuance DISABLED via kill-switch', { userId, amount, source });
         return this.emptyResult(source, description, category || null, `killswitch:${userId}:${Date.now()}`);
@@ -182,8 +212,17 @@ class RewardEngine {
       const killSwitch = config?.coinManagement?.globalKillSwitch;
       if (killSwitch?.active && killSwitch?.pausedTypes?.length) {
         if (killSwitch.pausedTypes.includes(coinType)) {
-          logger.warn(`[KILL_SWITCH] Coin issuance blocked for type: ${coinType}`, { reason: killSwitch.reason, userId, amount });
-          return this.emptyResult(source, description, category || null, `killswitch-type:${coinType}:${userId}:${Date.now()}`);
+          logger.warn(`[KILL_SWITCH] Coin issuance blocked for type: ${coinType}`, {
+            reason: killSwitch.reason,
+            userId,
+            amount,
+          });
+          return this.emptyResult(
+            source,
+            description,
+            category || null,
+            `killswitch-type:${coinType}:${userId}:${Date.now()}`,
+          );
         }
       }
     } catch {
@@ -191,8 +230,7 @@ class RewardEngine {
     }
 
     // Step 1: Deterministic idempotency key
-    const idempotencyKey = metadata?.idempotencyKey
-      || generateIdempotencyKey(userId, referenceId, rewardType, source);
+    const idempotencyKey = metadata?.idempotencyKey || generateIdempotencyKey(userId, referenceId, rewardType, source);
 
     // Step 2: Fast duplicate check (Redis)
     const dupeKey = `reward:issued:${idempotencyKey}`;
@@ -211,7 +249,7 @@ class RewardEngine {
       return this.emptyResult(source, description, category, idempotencyKey);
     }
 
-    const wallet = await Wallet.findOne({ user: userId }).lean() as LeanWallet | null;
+    const wallet = (await Wallet.findOne({ user: userId }).lean()) as LeanWallet | null;
     if (wallet && wallet.isFrozen) {
       throw new RewardError('WALLET_FROZEN', `Wallet is frozen: ${wallet.frozenReason || 'unknown'}`);
     }
@@ -222,16 +260,27 @@ class RewardEngine {
     if (!skipMultiplier && (source === 'cashback' || source === 'order' || source === 'review')) {
       try {
         const { default: UserStreak } = await import('../models/UserStreak');
-        const savingsStreak = await UserStreak.findOne({
+        const savingsStreak = (await UserStreak.findOne({
           user: userId,
           type: 'savings',
-        }).select('currentStreak').lean() as LeanUserStreak | null;
+        })
+          .select('currentStreak')
+          .lean()) as LeanUserStreak | null;
 
         const days = savingsStreak?.currentStreak ?? 0;
-        if (days >= 60) { streakMultiplier = 1.20; streakTierName = 'Smart Saver Elite'; }
-        else if (days >= 21) { streakMultiplier = 1.15; streakTierName = 'Gold Saver'; }
-        else if (days >= 7) { streakMultiplier = 1.10; streakTierName = 'Silver Saver'; }
-        else if (days >= 1) { streakMultiplier = 1.05; streakTierName = 'Bronze Saver'; }
+        if (days >= 60) {
+          streakMultiplier = 1.2;
+          streakTierName = 'Smart Saver Elite';
+        } else if (days >= 21) {
+          streakMultiplier = 1.15;
+          streakTierName = 'Gold Saver';
+        } else if (days >= 7) {
+          streakMultiplier = 1.1;
+          streakTierName = 'Silver Saver';
+        } else if (days >= 1) {
+          streakMultiplier = 1.05;
+          streakTierName = 'Bronze Saver';
+        }
       } catch {
         // Non-blocking — use 1.0 on any error
       }
@@ -254,8 +303,9 @@ class RewardEngine {
             success: true,
             transactionId: null,
             amount: 0,
-            newBalance: wallet ? wallet.balance?.available ?? 0 : 0,
-            source, description,
+            newBalance: wallet ? (wallet.balance?.available ?? 0) : 0,
+            source,
+            description,
             category: category || null,
             cappedReason: capCheck.reason,
             originalAmount: amount,
@@ -268,7 +318,11 @@ class RewardEngine {
         }
       } catch (capError) {
         // FAIL-CLOSED: If cap check service is down, block reward issuance to prevent runaway inflation
-        logger.error('Program cap check failed — BLOCKING reward issuance (fail-closed)', capError as Error, { userId, amount, source });
+        logger.error('Program cap check failed — BLOCKING reward issuance (fail-closed)', capError as Error, {
+          userId,
+          amount,
+          source,
+        });
         return this.emptyResult(source, description, category || null, idempotencyKey);
       }
     }
@@ -283,22 +337,30 @@ class RewardEngine {
     }
 
     // Step 6a: DB-level duplicate check (fallback if Redis missed)
-    const existingTx = await CoinTransaction.findOne({
+    const existingTx = (await CoinTransaction.findOne({
       user: userId,
       'metadata.idempotencyKey': idempotencyKey,
-    }).lean() as LeanCoinTransaction | null;
+    }).lean()) as LeanCoinTransaction | null;
     if (existingTx) {
       const dupeResult: RewardResult = {
         success: true,
         transactionId: existingTx._id as Types.ObjectId,
         amount: existingTx.amount,
         newBalance: existingTx.balance,
-        source, description,
+        source,
+        description,
         category: category || null,
         idempotencyKey,
         duplicate: true,
       };
-      redisService.set(dupeKey, JSON.stringify(dupeResult), 300).catch((err) => logger.warn('[RewardEngine] Redis cache set failed for duplicate result', { error: err.message, idempotencyKey }));
+      redisService
+        .set(dupeKey, JSON.stringify(dupeResult), 300)
+        .catch((err) =>
+          logger.warn('[RewardEngine] Redis cache set failed for duplicate result', {
+            error: err.message,
+            idempotencyKey,
+          }),
+        );
       return dupeResult;
     }
 
@@ -326,8 +388,9 @@ class RewardEngine {
           success: true,
           transactionId: null,
           amount: adjustedAmount,
-          newBalance: wallet ? wallet.balance?.available ?? 0 : 0,
-          source, description,
+          newBalance: wallet ? (wallet.balance?.available ?? 0) : 0,
+          source,
+          description,
           category: category || null,
           idempotencyKey,
           duplicate: true,
@@ -340,9 +403,13 @@ class RewardEngine {
     let multiplierBonus = 0;
     if (!skipMultiplier) {
       try {
-        const { bonus, programBonuses } = await specialProgramService.calculateMultiplierBonus(userId, adjustedAmount, source);
+        const { bonus, programBonuses } = await specialProgramService.calculateMultiplierBonus(
+          userId,
+          adjustedAmount,
+          source,
+        );
         if (bonus > 0) {
-          const slugLabel = programBonuses.map((pb: ProgramBonus) => pb.slug).join('+');
+          const slugLabel = programBonuses.map((pb) => pb.slug).join('+');
           await walletService.credit({
             userId,
             amount: bonus,
@@ -362,10 +429,22 @@ class RewardEngine {
           multiplierBonus = bonus;
 
           for (const pb of programBonuses) {
-            await specialProgramService.incrementMultiplierBonus(userId, pb.slug, pb.bonus).catch((err) => logger.error('[RewardEngine] Increment multiplier bonus failed', { error: err.message, userId, slug: pb.slug }));
+            await specialProgramService
+              .incrementMultiplierBonus(userId, pb.slug, pb.bonus)
+              .catch((err) =>
+                logger.error('[RewardEngine] Increment multiplier bonus failed', {
+                  error: err.message,
+                  userId,
+                  slug: pb.slug,
+                }),
+              );
           }
         }
-        await specialProgramService.incrementMonthlyEarnings(userId, adjustedAmount + multiplierBonus).catch((err) => logger.error('[RewardEngine] Increment monthly earnings failed', { error: err.message, userId }));
+        await specialProgramService
+          .incrementMonthlyEarnings(userId, adjustedAmount + multiplierBonus)
+          .catch((err) =>
+            logger.error('[RewardEngine] Increment monthly earnings failed', { error: err.message, userId }),
+          );
       } catch (err) {
         logger.error('Multiplier bonus failed (non-blocking)', err as Error, { userId, source });
       }
@@ -374,16 +453,26 @@ class RewardEngine {
     // Step 8: Merchant liability ledger entry (fire-and-forget)
     if (merchantId && merchantLiability && merchantLiability > 0) {
       this.recordMerchantLiability(
-        merchantId, merchantLiability, coinType,
-        operationType, referenceId, referenceModel, rewardType,
+        merchantId,
+        merchantLiability,
+        coinType,
+        operationType,
+        referenceId,
+        referenceModel,
+        rewardType,
       ).catch((err) => {
-        logger.error('Merchant liability ledger failed (non-blocking)', err as Error, { merchantId, merchantLiability });
+        logger.error('Merchant liability ledger failed (non-blocking)', err as Error, {
+          merchantId,
+          merchantLiability,
+        });
       });
     }
 
     // Step 9: Update UserLoyalty categoryCoins (non-blocking)
     if (category) {
-      this.updateUserLoyaltyCategory(userId, category, adjustedAmount).catch((err) => logger.error('[RewardEngine] UserLoyalty category update failed', { error: err.message, userId, category }));
+      this.updateUserLoyaltyCategory(userId, category, adjustedAmount).catch((err) =>
+        logger.error('[RewardEngine] UserLoyalty category update failed', { error: err.message, userId, category }),
+      );
     }
 
     // Step 10: Emit REWARD_ISSUED event
@@ -425,7 +514,11 @@ class RewardEngine {
       idempotencyKey,
     };
 
-    redisService.set(dupeKey, JSON.stringify(rewardResult), 300).catch((err) => logger.warn('[RewardEngine] Redis cache set failed for reward result', { error: err.message, idempotencyKey }));
+    redisService
+      .set(dupeKey, JSON.stringify(rewardResult), 300)
+      .catch((err) =>
+        logger.warn('[RewardEngine] Redis cache set failed for reward result', { error: err.message, idempotencyKey }),
+      );
 
     return rewardResult;
   }
@@ -444,7 +537,7 @@ class RewardEngine {
       description?: string;
       maxPromoPct?: number;
       allowedMerchantIds?: string[];
-    }
+    },
   ): Promise<RedemptionResult> {
     const wallet = await Wallet.findOne({ user: userId });
     if (!wallet) throw new RewardError('NO_WALLET', 'Wallet not found');
@@ -464,7 +557,7 @@ class RewardEngine {
       const rule = CURRENCY_RULES[coin.type];
       if (rule && rule.maxUsagePct < 100) {
         const pctLimit = options?.maxPromoPct ?? rule.maxUsagePct;
-        maxForThisType = Math.min(remaining, Math.round(totalAmount * pctLimit / 100));
+        maxForThisType = Math.min(remaining, Math.round((totalAmount * pctLimit) / 100));
       }
 
       // For branded coins, filter by allowedMerchantIds if specified
@@ -514,12 +607,12 @@ class RewardEngine {
       );
     }
 
-    const updatedWallet = await Wallet.findOne({ user: userId }).lean() as LeanWallet | null;
+    const updatedWallet = (await Wallet.findOne({ user: userId }).lean()) as LeanWallet | null;
     return {
       success: true,
       totalDeducted: totalAmount,
       steps,
-      newBalance: updatedWallet ? updatedWallet.balance?.available ?? 0 : 0,
+      newBalance: updatedWallet ? (updatedWallet.balance?.available ?? 0) : 0,
       transactionIds,
     };
   }
@@ -531,10 +624,10 @@ class RewardEngine {
   async reverseReward(
     originalTransactionId: string,
     reason: string,
-    options?: { session?: ClientSession; partialAmount?: number }
+    options?: { session?: ClientSession; partialAmount?: number },
   ): Promise<ReversalResult> {
     // 1. Find the original transaction
-    const original = await CoinTransaction.findById(originalTransactionId).lean() as LeanCoinTransaction | null;
+    const original = (await CoinTransaction.findById(originalTransactionId).lean()) as LeanCoinTransaction | null;
     if (!original) {
       throw new RewardError('TX_NOT_FOUND', `Transaction ${originalTransactionId} not found`);
     }
@@ -545,11 +638,11 @@ class RewardEngine {
     }
 
     // 3. Check idempotency (prevent double reversal)
-    const alreadyReversed = await CoinTransaction.findOne({
+    const alreadyReversed = (await CoinTransaction.findOne({
       user: original.user,
       'metadata.reversedTransactionId': originalTransactionId,
       type: 'spent',
-    }).lean() as LeanCoinTransaction | null;
+    }).lean()) as LeanCoinTransaction | null;
 
     if (alreadyReversed) {
       return {
@@ -606,24 +699,31 @@ class RewardEngine {
   // ─── Private Helpers ────────────────────────────────────────
 
   private emptyResult(
-    source: string, description: string,
-    category: MainCategorySlug | null | undefined, idempotencyKey: string,
+    source: string,
+    description: string,
+    category: MainCategorySlug | null | undefined,
+    idempotencyKey: string,
   ): RewardResult {
     return {
       success: true,
       transactionId: null,
       amount: 0,
       newBalance: 0,
-      source, description,
+      source,
+      description,
       category: category || null,
       idempotencyKey,
     };
   }
 
   private async recordMerchantLiability(
-    merchantId: string, amount: number, coinType: string,
-    operationType: LedgerOperationType, referenceId: string,
-    referenceModel: string, rewardType: string,
+    merchantId: string,
+    amount: number,
+    coinType: string,
+    operationType: LedgerOperationType,
+    referenceId: string,
+    referenceModel: string,
+    rewardType: string,
   ): Promise<void> {
     await ledgerService.recordEntry({
       debitAccount: { type: 'merchant_wallet', id: new Types.ObjectId(merchantId) },
@@ -638,31 +738,38 @@ class RewardEngine {
 
     // Also track in MerchantLiability aggregate (fire-and-forget)
     import('../services/liabilityService').then(({ liabilityService }) => {
-      const campaignType = rewardType === 'creator_pick_reward' ? 'creator_reward' as const
-        : rewardType === 'bonus_campaign' ? 'bonus_campaign' as const
-        : 'branded_coin_award' as const;
-      liabilityService.recordIssuance({
-        merchantId,
-        storeId: merchantId, // Merchant is the store owner
-        campaignType,
-        amount,
-        referenceId,
-        referenceModel,
-      }).catch((err) => logger.error('[RewardEngine] Merchant liability recording failed', { error: err.message, merchantId }));
+      const campaignType =
+        rewardType === 'creator_pick_reward'
+          ? ('creator_reward' as const)
+          : rewardType === 'bonus_campaign'
+            ? ('bonus_campaign' as const)
+            : ('branded_coin_award' as const);
+      liabilityService
+        .recordIssuance({
+          merchantId,
+          storeId: merchantId, // Merchant is the store owner
+          campaignType,
+          amount,
+          referenceId,
+          referenceModel,
+        })
+        .catch((err) =>
+          logger.error('[RewardEngine] Merchant liability recording failed', { error: err.message, merchantId }),
+        );
     });
   }
 
-  private async updateUserLoyaltyCategory(
-    userId: string, category: MainCategorySlug, amount: number,
-  ): Promise<void> {
+  private async updateUserLoyaltyCategory(userId: string, category: MainCategorySlug, amount: number): Promise<void> {
     try {
-      const loyalty = await UserLoyalty.findOne({ userId }) as LeanUserLoyalty | null;
+      const loyalty = (await UserLoyalty.findOne({ userId })) as LeanUserLoyalty | null;
       if (loyalty) {
         // If loyalty is from lean(), it won't have instance methods
         // We need to use the document version for updates
         const loyaltyDoc = await UserLoyalty.findOne({ userId });
         if (loyaltyDoc) {
-          const categoryCoinsMap = loyaltyDoc.categoryCoins as Map<string, { available: number; expiring: number }> | undefined;
+          const categoryCoinsMap = loyaltyDoc.categoryCoins as
+            | Map<string, { available: number; expiring: number }>
+            | undefined;
           const catCoins = categoryCoinsMap?.get(category) || { available: 0, expiring: 0 };
           catCoins.available += amount;
           if (!categoryCoinsMap) {
@@ -684,11 +791,11 @@ class RewardEngine {
     reason: string,
     session?: ClientSession,
   ): Promise<void> {
-    const bonusTx = await CoinTransaction.findOne({
+    const bonusTx = (await CoinTransaction.findOne({
       user: original.user,
       source: 'program_multiplier_bonus',
       'metadata.originalTransactionId': original._id,
-    }).lean() as LeanCoinTransaction | null;
+    }).lean()) as LeanCoinTransaction | null;
 
     if (bonusTx && bonusTx.amount > 0) {
       await walletService.debit({
