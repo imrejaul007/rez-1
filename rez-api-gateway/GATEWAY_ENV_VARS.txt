@@ -29,6 +29,10 @@ NOTIFICATION_SERVICE_URL=https://rez-1.onrender.com
 ADS_SERVICE_URL=https://rez-1.onrender.com
 KARMA_SERVICE_URL=https://rez-1.onrender.com
 
-# ── CORS (add your Vercel domain; pipe = OR in regex) ────────────────────────
-# Example: CORS_ORIGINS=localhost:8081|localhost:19006|rez-1\.vercel\.app|your-app\.vercel\.app
-CORS_ORIGINS=localhost:8081|localhost:19006|localhost:3000
+# ── CORS — production frontend: https://rez-1.vercel.app ─────────────────────
+# Pipe = OR in nginx regex. Escape dots: rez-1\.vercel\.app
+CORS_ORIGINS=localhost:8081|localhost:19006|localhost:3000|rez-1\.vercel\.app
+
+# ── Vercel (nuqta-master) — Project Settings → Environment Variables ─────────
+# EXPO_PUBLIC_API_BASE_URL=https://<your-gateway>.onrender.com/api
+# EXPO_PUBLIC_ENVIRONMENT=production

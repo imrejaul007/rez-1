@@ -26,7 +26,7 @@ export ADS_SERVICE_URL="${ADS_SERVICE_URL:-https://rez-1.onrender.com}"
 export KARMA_SERVICE_URL="${KARMA_SERVICE_URL:-https://rez-1.onrender.com}"
 
 # CORS allowlist for frontend (pipe-separated regex alternation, no scheme in pattern)
-export CORS_ORIGINS="${CORS_ORIGINS:-localhost:8081|localhost:19006|localhost:3000}"
+export CORS_ORIGINS="${CORS_ORIGINS:-localhost:8081|localhost:19006|localhost:3000|rez-1\.vercel\.app}"
 
 echo "[gateway] PORT=$PORT"
 echo "[gateway] CORS_ORIGINS  → $CORS_ORIGINS"
