@@ -390,22 +390,24 @@ function HomeScreen() {
   // Auto-complete onboarding for users who reached /(tabs) via shortcut path
   // (Android location-denied → notification-permission → tabs, skipping transactions-preview)
   // This triggers all deferred context providers to initialize
-  const onboardingCompletedRef = React.useRef(false);
+  const onboardingAttemptedRef = React.useRef(false);
+  const authUserId = authUser?.id;
+  const authUserIsOnboarded = authUser?.isOnboarded;
   React.useEffect(() => {
-    if (isAuthenticated && authUser && !authUser.isOnboarded && !onboardingCompletedRef.current) {
-      onboardingCompletedRef.current = true;
-      authActions.completeOnboarding({
-        preferences: {
-          notifications: { push: true, email: true, sms: true },
-          currency: getCurrency(),
-          language: getLocale().split('-')[0] || 'en',
-        },
-      }).catch(() => {
-        // If completeOnboarding API fails, reset so it can retry on next render
-        onboardingCompletedRef.current = false;
-      });
+    if (!isAuthenticated || !authUserId || authUserIsOnboarded || onboardingAttemptedRef.current) {
+      return;
     }
-  }, [isAuthenticated, authUser]);
+    onboardingAttemptedRef.current = true;
+    authActions.completeOnboarding({
+      preferences: {
+        notifications: { push: true, email: true, sms: true },
+        currency: getCurrency(),
+        language: getLocale().split('-')[0] || 'en',
+      },
+    }).catch(() => {
+      // Single attempt per session — resetting the ref caused infinite re-renders (React #185)
+    });
+  }, [isAuthenticated, authUserId, authUserIsOnboarded]);
 
   // Load supplementary homepage data (wallet balance comes from WalletContext)
   const loadUserContext = useCallback(async () => {

@@ -261,6 +261,7 @@ interface GamificationProviderProps {
 // ── Module-level dedup: survives component remounts caused by DeferredProviders ──
 let _gamificationInitialized = false;
 let _gamificationPending: Promise<void> | null = null;
+let _dailyCheckInSessionAttempted = false;
 
 export function GamificationProvider({ children }: GamificationProviderProps) {
   const [state, dispatch] = useReducer(gamificationReducer, initialState);
@@ -575,8 +576,8 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
       const today = new Date().toISOString().split('T')[0];
       const lastLogin = state.lastLoginDate?.split('T')[0];
 
-      if (lastLogin === today) {
-        // Already logged in today
+      if (lastLogin === today || _dailyCheckInSessionAttempted) {
+        // Already logged in today, or check-in already attempted this session
         return;
       }
 
@@ -585,6 +586,8 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
         const checkInStatusResponse = await pointsApi.getDailyCheckIn();
 
         if (checkInStatusResponse.success && checkInStatusResponse.data?.canCheckIn) {
+          _dailyCheckInSessionAttempted = true;
+
           // Optimistic update: increment streak immediately
           const optimisticStreak = (state.dailyStreak || 0) + 1;
           const optimisticDate = new Date().toISOString();
@@ -719,6 +722,7 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
       dispatch({ type: 'CLEAR_GAMIFICATION' });
       hasInitializedRef.current = false; // Reset on logout
       _gamificationInitialized = false;
+      _dailyCheckInSessionAttempted = false;
     }
   }, [isAuthenticated, isOnboarded]); // Remove callback dependencies to prevent loop
 

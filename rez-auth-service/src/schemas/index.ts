@@ -77,24 +77,41 @@ export const ProfileUpdateSchema = z.strictObject({
   bio: z.string().max(500).optional(),
 });
 
-/** Complete-onboarding payload. */
+/** Complete-onboarding payload — aligned with handler allowlist + mobile client shape. */
 export const CompleteOnboardingSchema = z.strictObject({
   profile: z
     .strictObject({
       name: z.string().min(1).max(120).optional(),
+      firstName: z.string().min(1).max(60).optional(),
+      lastName: z.string().min(1).max(60).optional(),
       email: z.string().email().max(254).optional(),
       dateOfBirth: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/)
         .optional(),
       gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).optional(),
+      avatar: z.string().url().max(2048).optional(),
+      bio: z.string().max(500).optional(),
     })
     .optional(),
   preferences: z
     .strictObject({
       categories: z.array(z.string().max(64)).max(50).optional(),
-      notifications: z.boolean().optional(),
+      notifications: z
+        .union([
+          z.boolean(),
+          z.strictObject({
+            push: z.boolean().optional(),
+            email: z.boolean().optional(),
+            sms: z.boolean().optional(),
+          }),
+        ])
+        .optional(),
       marketingEmails: z.boolean().optional(),
+      language: z.string().max(10).optional(),
+      currency: z.string().max(10).optional(),
+      theme: z.enum(['light', 'dark', 'system']).optional(),
+      dietaryPreferences: z.array(z.string().max(64)).max(20).optional(),
     })
     .optional(),
 });

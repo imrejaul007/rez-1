@@ -10,6 +10,9 @@ services:
         value: production
       - key: EXPOSE_DEV_OTP
         value: "false"
+      # Set to "true" during development so any 6-digit OTP works without SMS
+      - key: OTP_DEV_BYPASS
+        value: "true"
       # DATABASE
       - key: MONGODB_URI
         sync: false

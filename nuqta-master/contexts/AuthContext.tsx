@@ -505,7 +505,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // 2. Optimistic update - apply changes immediately
       const optimisticUser = state.user
-        ? { ...state.user, ...data, profile: { ...state.user.profile, ...data.profile } }
+        ? { ...state.user, ...data, isOnboarded: true, profile: { ...state.user.profile, ...data.profile } }
         : null;
       dispatch({ type: 'UPDATE_USER', payload: optimisticUser });
 
