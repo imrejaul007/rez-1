@@ -22,7 +22,8 @@ const LOCKOUT_TTL = 1800;     // 30 min
 let notifQueue: Queue | null = null;
 function getNotifQueue(): Queue {
   if (!notifQueue) {
-    notifQueue = new Queue('notification-events', { connection: redis });
+    // BullMQ vendors its own ioredis types; cast avoids duplicate-package TS mismatch on CI.
+    notifQueue = new Queue('notification-events', { connection: redis as any });
   }
   return notifQueue;
 }
