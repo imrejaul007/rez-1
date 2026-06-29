@@ -35,6 +35,10 @@ KARMA_SERVICE_URL=https://rez-1.onrender.com
 # Pipe = OR in nginx regex. Escape dots: rez-1\.vercel\.app
 CORS_ORIGINS=localhost:8081|localhost:19006|localhost:3000|rez-1\.vercel\.app
 
-# ── Vercel (nuqta-master) — Project Settings → Environment Variables ─────────
-# EXPO_PUBLIC_API_BASE_URL=https://<your-gateway>.onrender.com/api
+# ── Vercel (nuqta-master) — already configured target ────────────────────────
+# EXPO_PUBLIC_API_BASE_URL=https://rez-1-2.onrender.com/api
 # EXPO_PUBLIC_ENVIRONMENT=production
+#
+# ── Auth service (rez-1-1) — set on Render if hitting auth directly ──────────
+# CORS_ORIGIN=https://rez-1.vercel.app
+# (Gateway strips Origin upstream after deploy; this is a safety net.)

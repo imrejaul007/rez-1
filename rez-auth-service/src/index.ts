@@ -40,7 +40,7 @@ import oauthAdminRoutes from './routes/admin/oauthAdmin';
 import oauthPartnerRoutes from './routes/oauthPartnerRoutes';
 import { logger } from './config/logger';
 import { tracingMiddleware } from './middleware/tracing';
-import { errorResponse, errors } from './utils/response';
+import { errorResponse, errors, ApiError } from './utils/response';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 
@@ -96,8 +96,17 @@ async function main(): Promise<void> {
   // Re-enable app.use(compression()) only if deploying without the API gateway.
 
   // SECURITY FIX: Validate CORS origins to prevent wildcard misconfiguration
-  const rawOrigins = process.env.CORS_ORIGIN || 'https://rez.money,https://www.rez.money,https://admin.rez.money';
+  const rawOrigins =
+    process.env.CORS_ORIGIN ||
+    'https://rez-1.vercel.app,https://rez.money,https://www.rez.money,https://admin.rez.money';
   const allowedOrigins = rawOrigins.split(',').map(s => s.trim()).filter(Boolean);
+
+  const isAllowedCorsOrigin = (origin: string): boolean => {
+    if (allowedOrigins.includes(origin)) return true;
+    // Vercel preview + production deployments (*.vercel.app)
+    if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) return true;
+    return false;
+  };
 
   // SECURITY FIX: Reject wildcards in CORS origins (prevents accidentally allowing all origins)
   for (const origin of allowedOrigins) {
@@ -109,8 +118,8 @@ async function main(): Promise<void> {
 
   app.use(cors({
     origin: (origin, cb) => {
-      // Allow requests with no origin (server-to-server, curl, health checks)
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      // Allow requests with no origin (gateway proxy, server-to-server, curl, health checks)
+      if (!origin || isAllowedCorsOrigin(origin)) return cb(null, true);
       cb(new Error(`CORS blocked: ${origin}`));
     },
     allowedHeaders: [
@@ -183,6 +192,14 @@ async function main(): Promise<void> {
   // Global error handler — catches errors even when Sentry is not configured
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     const requestId = res.locals?.requestId;
+
+    if (err instanceof Error && err.message.startsWith('CORS blocked:')) {
+      return errorResponse(res, 403, err.message, 'CORS_BLOCKED');
+    }
+
+    if (err instanceof ApiError) {
+      return errorResponse(res, err);
+    }
 
     if (err instanceof Error && 'code' in err) {
       // Handle AppError from rez-shared — Error may have a 'code' property

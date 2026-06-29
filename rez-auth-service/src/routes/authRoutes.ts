@@ -243,6 +243,7 @@ async function sendOTPHandler(req: Request, res: Response) {
     res.json({ ...result, isNewUser, hasPIN });
   } catch (err: any) {
     logger.error('OTP send error', { error: err.message });
+    if (err instanceof ApiError) throw err;
     throw new ApiError(500, 'Failed to send OTP');
   }
 }
