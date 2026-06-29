@@ -1,18 +1,34 @@
-# Add these environment variables to the rez-api-gateway service on Render
-# Settings → Environment → Add Environment Variable for each
+# rez-api-gateway — Render Environment Variables
+# Dashboard: Render → rez-api-gateway → Environment
+#
+# IMPORTANT: The frontend (Vercel) must call the GATEWAY URL, NOT backend/auth directly:
+#   EXPO_PUBLIC_API_BASE_URL=https://<your-gateway-service>.onrender.com/api
+#
+# Routing (nginx.conf):
+#   /api/auth, /api/user/auth, /api/v1/mfa, /api/v1/oauth  → AUTH_SERVICE_URL
+#   /api/payment, /api/wallet, /api/merchant, etc.          → respective *_SERVICE_URL
+#   everything else (/api/cart, /api/stores, /socket.io/)   → MONOLITH_URL
 
-AUTH_SERVICE_URL=https://rez-auth-service.onrender.com
-WALLET_SERVICE_URL=https://rez-wallet-service-36vo.onrender.com
-PAYMENT_SERVICE_URL=https://rez-payment-service.onrender.com
-ORDER_SERVICE_URL=https://rez-order-service.onrender.com
-SEARCH_SERVICE_URL=https://rez-search-service.onrender.com
-CATALOG_SERVICE_URL=https://rez-catalog-service.onrender.com
-MERCHANT_SERVICE_URL=https://rez-merchant-service.onrender.com
-GAMIFICATION_SERVICE_URL=https://rez-gamification-service.onrender.com
-MARKETING_SERVICE_URL=https://rez-marketing-service.onrender.com
-ANALYTICS_SERVICE_URL=https://analytics-events.onrender.com
-MEDIA_SERVICE_URL=https://rez-media-events.onrender.com
-NOTIFICATION_SERVICE_URL=https://rez-notification-events.onrender.com
-FINANCE_SERVICE_URL=https://rez-finance-service.onrender.com
-ADS_SERVICE_URL=https://rez-ads-service.onrender.com
-KARMA_SERVICE_URL=https://rez-karma-service.onrender.com
+# ── Your deployed services ────────────────────────────────────────────────────
+MONOLITH_URL=https://rez-1.onrender.com
+AUTH_SERVICE_URL=https://rez-1-1.onrender.com
+
+# ── Microservices not deployed yet → route to monolith ───────────────────────
+SEARCH_SERVICE_URL=https://rez-1.onrender.com
+PAYMENT_SERVICE_URL=https://rez-1.onrender.com
+WALLET_SERVICE_URL=https://rez-1.onrender.com
+MERCHANT_SERVICE_URL=https://rez-1.onrender.com
+CATALOG_SERVICE_URL=https://rez-1.onrender.com
+MARKETING_SERVICE_URL=https://rez-1.onrender.com
+ORDER_SERVICE_URL=https://rez-1.onrender.com
+ANALYTICS_SERVICE_URL=https://rez-1.onrender.com
+GAMIFICATION_SERVICE_URL=https://rez-1.onrender.com
+MEDIA_SERVICE_URL=https://rez-1.onrender.com
+FINANCE_SERVICE_URL=https://rez-1.onrender.com
+NOTIFICATION_SERVICE_URL=https://rez-1.onrender.com
+ADS_SERVICE_URL=https://rez-1.onrender.com
+KARMA_SERVICE_URL=https://rez-1.onrender.com
+
+# ── CORS (add your Vercel domain; pipe = OR in regex) ────────────────────────
+# Example: CORS_ORIGINS=localhost:8081|localhost:19006|rez-1\.vercel\.app|your-app\.vercel\.app
+CORS_ORIGINS=localhost:8081|localhost:19006|localhost:3000

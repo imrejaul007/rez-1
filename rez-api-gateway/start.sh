@@ -5,24 +5,31 @@
 set -e
 
 export PORT="${PORT:-10000}"
-export MONOLITH_URL="${MONOLITH_URL:-https://rez-backend-8dfu.onrender.com}"
-export SEARCH_SERVICE_URL="${SEARCH_SERVICE_URL:-https://rez-search-service.onrender.com}"
-export AUTH_SERVICE_URL="${AUTH_SERVICE_URL:-https://rez-auth-service.onrender.com}"
-export PAYMENT_SERVICE_URL="${PAYMENT_SERVICE_URL:-https://rez-payment-service.onrender.com}"
-export WALLET_SERVICE_URL="${WALLET_SERVICE_URL:-https://rez-wallet-service.onrender.com}"
-export MERCHANT_SERVICE_URL="${MERCHANT_SERVICE_URL:-https://rez-merchant-service.onrender.com}"
-export CATALOG_SERVICE_URL="${CATALOG_SERVICE_URL:-https://rez-catalog-service-1.onrender.com}"
-export MARKETING_SERVICE_URL="${MARKETING_SERVICE_URL:-https://rez-marketing-service.onrender.com}"
-export ORDER_SERVICE_URL="${ORDER_SERVICE_URL:-http://localhost:4005}"
-export ANALYTICS_SERVICE_URL="${ANALYTICS_SERVICE_URL:-https://rez-analytics-service.onrender.com}"
-export GAMIFICATION_SERVICE_URL="${GAMIFICATION_SERVICE_URL:-https://rez-gamification-service-3b5d.onrender.com}"
-export MEDIA_SERVICE_URL="${MEDIA_SERVICE_URL:-http://localhost:3006}"
-export FINANCE_SERVICE_URL="${FINANCE_SERVICE_URL:-https://rez-finance-service.onrender.com}"
-export NOTIFICATION_SERVICE_URL="${NOTIFICATION_SERVICE_URL:-https://rez-notification-events.onrender.com}"
-export ADS_SERVICE_URL="${ADS_SERVICE_URL:-https://rez-backend-8dfu.onrender.com}"
-export KARMA_SERVICE_URL="${KARMA_SERVICE_URL:-https://rez-karma-service.onrender.com}"
+
+# Production defaults (imrejaul007/rez-1 on Render). Override in Render dashboard per environment.
+# MONOLITH = main API; AUTH = dedicated auth service. All other routes fall back to monolith.
+export MONOLITH_URL="${MONOLITH_URL:-https://rez-1.onrender.com}"
+export AUTH_SERVICE_URL="${AUTH_SERVICE_URL:-https://rez-1-1.onrender.com}"
+export SEARCH_SERVICE_URL="${SEARCH_SERVICE_URL:-https://rez-1.onrender.com}"
+export PAYMENT_SERVICE_URL="${PAYMENT_SERVICE_URL:-https://rez-1.onrender.com}"
+export WALLET_SERVICE_URL="${WALLET_SERVICE_URL:-https://rez-1.onrender.com}"
+export MERCHANT_SERVICE_URL="${MERCHANT_SERVICE_URL:-https://rez-1.onrender.com}"
+export CATALOG_SERVICE_URL="${CATALOG_SERVICE_URL:-https://rez-1.onrender.com}"
+export MARKETING_SERVICE_URL="${MARKETING_SERVICE_URL:-https://rez-1.onrender.com}"
+export ORDER_SERVICE_URL="${ORDER_SERVICE_URL:-https://rez-1.onrender.com}"
+export ANALYTICS_SERVICE_URL="${ANALYTICS_SERVICE_URL:-https://rez-1.onrender.com}"
+export GAMIFICATION_SERVICE_URL="${GAMIFICATION_SERVICE_URL:-https://rez-1.onrender.com}"
+export MEDIA_SERVICE_URL="${MEDIA_SERVICE_URL:-https://rez-1.onrender.com}"
+export FINANCE_SERVICE_URL="${FINANCE_SERVICE_URL:-https://rez-1.onrender.com}"
+export NOTIFICATION_SERVICE_URL="${NOTIFICATION_SERVICE_URL:-https://rez-1.onrender.com}"
+export ADS_SERVICE_URL="${ADS_SERVICE_URL:-https://rez-1.onrender.com}"
+export KARMA_SERVICE_URL="${KARMA_SERVICE_URL:-https://rez-1.onrender.com}"
+
+# CORS allowlist for frontend (pipe-separated regex alternation, no scheme in pattern)
+export CORS_ORIGINS="${CORS_ORIGINS:-localhost:8081|localhost:19006|localhost:3000}"
 
 echo "[gateway] PORT=$PORT"
+echo "[gateway] CORS_ORIGINS  → $CORS_ORIGINS"
 echo "[gateway] MONOLITH      → $MONOLITH_URL"
 echo "[gateway] SEARCH        → $SEARCH_SERVICE_URL"
 echo "[gateway] AUTH          → $AUTH_SERVICE_URL"
@@ -45,7 +52,7 @@ echo "[gateway] KARMA        → $KARMA_SERVICE_URL (not deployed, routes to mon
 # IMPORTANT: This list MUST match the envsubst list on the next line. If a
 # var is in envsubst but not validated, an unset var will leave a literal
 # ${VAR} string in the proxy_pass URL → silent 502s at runtime.
-for var in MONOLITH_URL SEARCH_SERVICE_URL AUTH_SERVICE_URL PAYMENT_SERVICE_URL \
+for var in CORS_ORIGINS MONOLITH_URL SEARCH_SERVICE_URL AUTH_SERVICE_URL PAYMENT_SERVICE_URL \
            WALLET_SERVICE_URL MERCHANT_SERVICE_URL CATALOG_SERVICE_URL \
            MARKETING_SERVICE_URL ORDER_SERVICE_URL ANALYTICS_SERVICE_URL \
            GAMIFICATION_SERVICE_URL MEDIA_SERVICE_URL FINANCE_SERVICE_URL \
