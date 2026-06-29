@@ -208,9 +208,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     await fetchWalletRef.current(true);
   }, []); // Empty deps — stable identity
 
-  const authUserId = authUser?.id;
-  const authUserIsOnboarded = authUser?.isOnboarded;
-
   // Auto-fetch when user authenticates, clear on logout
   // Skip during onboarding to prevent thundering herd of API calls on Android
   useEffect(() => {
