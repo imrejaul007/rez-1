@@ -215,7 +215,7 @@ export class CloudinaryService {
     filePath: string,
     merchantId: string,
     productId?: string,
-  ): Promise<UploadApiResponse> {
+  ): Promise<CloudinaryUploadResult> {
     const folder = `merchants/${merchantId}/products${productId ? `/${productId}` : ''}`;
 
     // Pre-process with Sharp before Cloudinary upload

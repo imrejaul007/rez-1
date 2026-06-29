@@ -1,4 +1,4 @@
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import path from 'path';
 import fs from 'fs';
 import { logger } from '../config/logger';
@@ -85,32 +85,20 @@ export async function uploadToCloudinary(
   };
 
   try {
-    const result = await cloudinaryCircuit.execute(
-      async () =>
-        withTimeout(
-          cloudinary.uploader.upload(
-            typeof filePath === 'string' ? filePath : `data:image/jpeg;base64,${filePath.toString('base64')}`,
-            mergedOptions,
-          ),
-          CLOUDINARY_UPLOAD_TIMEOUT_MS,
-          `uploader.upload(${typeof filePath === 'string' ? filePath : 'buffer'})`,
+    const uploadResult = await cloudinaryCircuit.execute<UploadApiResponse>(async () =>
+      withTimeout(
+        cloudinary.uploader.upload(
+          typeof filePath === 'string' ? filePath : `data:image/jpeg;base64,${filePath.toString('base64')}`,
+          mergedOptions,
         ),
-      // Fallback: return placeholder
-      () => ({
-        public_id: '',
-        url: '',
-        secure_url: '',
-        format: '',
-        width: 0,
-        height: 0,
-        bytes: 0,
-        isPlaceholder: true,
-      }),
+        CLOUDINARY_UPLOAD_TIMEOUT_MS,
+        `uploader.upload(${typeof filePath === 'string' ? filePath : 'buffer'})`,
+      ),
     );
 
     // Generate thumbnail URL
-    const thumbnailUrl = result.public_id
-      ? cloudinary.url(result.public_id, {
+    const thumbnailUrl = uploadResult.public_id
+      ? cloudinary.url(uploadResult.public_id, {
           width: 300,
           height: 300,
           crop: 'fill',
@@ -119,35 +107,15 @@ export async function uploadToCloudinary(
         })
       : '';
 
-    if (result.isPlaceholder) {
-      logger.warn('[CloudinaryUtils] Circuit open or upload failed - returning placeholder', {
-        fallbackReason: result.fallbackReason,
-        circuitState,
-      });
-      return {
-        url: '',
-        secureUrl: '',
-        publicId: '',
-        thumbnailUrl,
-        format: '',
-        width: 0,
-        height: 0,
-        bytes: 0,
-        isPlaceholder: true,
-        fallbackReason: 'circuit_open_or_upload_error',
-        circuitState,
-      };
-    }
-
     return {
-      url: result.url,
-      secureUrl: result.secure_url,
-      publicId: result.public_id,
+      url: uploadResult.url || '',
+      secureUrl: uploadResult.secure_url || '',
+      publicId: uploadResult.public_id || '',
       thumbnailUrl,
-      format: result.format,
-      width: result.width,
-      height: result.height,
-      bytes: result.bytes,
+      format: uploadResult.format || '',
+      width: uploadResult.width || 0,
+      height: uploadResult.height || 0,
+      bytes: uploadResult.bytes || 0,
       isPlaceholder: false,
     };
   } catch (error: any) {
