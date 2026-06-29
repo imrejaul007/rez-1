@@ -150,13 +150,19 @@ const CategoryCashbackGrid: React.FC<CategoryCashbackGridProps> = memo(({ onCate
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     fetchCashbackRates()
       .then((rates) => {
-        if (!isMounted()) return;
+        if (cancelled || !isMounted()) return;
         setCashbackRates(rates);
       })
       .catch(() => {});
-  }, [fetchCashbackRates]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchCashbackRates, isMounted]);
 
   // Get cashback rate for a category (API rate or default)
   const getCashbackRate = useCallback((categoryId: string): number => {

@@ -21,38 +21,51 @@ import { useIsMounted } from '@/hooks/useIsMounted';
 // Web Video Component - renders native HTML5 video on web platform
 const WebVideoPlayer: React.FC<{ uri: string; poster?: string }> = ({ uri, poster }) => {
   const videoRef = useRef<any>(null); // Use any for cross-platform compatibility
+  const isMounted = useIsMounted();
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (Platform.OS === 'web' && videoRef.current) {
-      const video = videoRef.current;
+    if (Platform.OS !== 'web' || !videoRef.current) return;
 
-      // Ensure video properties are set
-      video.muted = true;
-      video.loop = true;
-      video.playsInline = true;
+    const video = videoRef.current;
+    let cancelled = false;
 
-      // Try to play
-      const playVideo = async () => {
-        try {
-          await video.play();
-        } catch (err: any) {
-          // Retry after a short delay
-          setTimeout(async () => {
-            try {
-              await video.play();
-            } catch (e) {
-            }
-          }, 100);
-        }
-      };
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
 
-      if (video.readyState >= 2) {
-        playVideo();
-      } else {
-        video.addEventListener('loadeddata', playVideo, { once: true });
+    const playVideo = async () => {
+      if (cancelled) return;
+      try {
+        await video.play();
+      } catch {
+        if (cancelled || !isMounted()) return;
+        if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = setTimeout(async () => {
+          if (cancelled || !isMounted()) return;
+          try {
+            await video.play();
+          } catch {
+            // Autoplay may be blocked by browser policy
+          }
+        }, 100);
       }
+    };
+
+    if (video.readyState >= 2) {
+      playVideo();
+    } else {
+      video.addEventListener('loadeddata', playVideo, { once: true });
     }
-  }, [uri]);
+
+    return () => {
+      cancelled = true;
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
+    };
+  }, [uri, isMounted]);
 
   if (Platform.OS === 'web') {
     return (

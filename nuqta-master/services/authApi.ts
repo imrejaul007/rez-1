@@ -509,14 +509,14 @@ class AuthService {
     const startTime = Date.now();
 
     try {
-      logApiRequest('DELETE', '/user/auth/account');
+      logApiRequest('DELETE', '/auth/account');
 
       const response = await withRetry(
-        () => apiClient.delete<{ message: string }>('/user/auth/account'),
+        () => apiClient.delete<{ message: string }>('/auth/account'),
         { maxRetries: 1 }
       );
 
-      logApiResponse('DELETE', '/user/auth/account', response, Date.now() - startTime);
+      logApiResponse('DELETE', '/auth/account', response, Date.now() - startTime);
 
       // Clear token after account deletion
       if (response.success) {
@@ -581,14 +581,14 @@ class AuthService {
     const startTime = Date.now();
 
     try {
-      logApiRequest('GET', '/user/auth/statistics');
+      logApiRequest('GET', '/auth/statistics');
 
       const response = await withRetry(
-        () => apiClient.get('/user/auth/statistics'),
+        () => apiClient.get('/auth/statistics'),
         { maxRetries: 2 }
       );
 
-      logApiResponse('GET', '/user/auth/statistics', response, Date.now() - startTime);
+      logApiResponse('GET', '/auth/statistics', response, Date.now() - startTime);
 
       return response;
     } catch (error: any) {

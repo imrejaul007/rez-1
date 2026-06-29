@@ -308,21 +308,34 @@ function HomeScreen() {
   React.useEffect(() => {
     if (!currentLocation?.coordinates || serviceabilityChecked) return;
 
+    let cancelled = false;
     const lat = currentLocation.coordinates.latitude;
     const lng = currentLocation.coordinates.longitude;
 
     import('@/utils/serviceabilityCheck').then(({ checkAreaServiceability }) => {
+      if (cancelled) return;
       checkAreaServiceability(lat, lng).then(result => {
+        if (cancelled || !isMounted()) return;
         setIsAreaServiceable(result.isServiceable);
         setServiceabilityChecked(true);
 
-        // Auto-switch to Mall if area is not serviceable AND user is on Near U
         if (!result.isServiceable && activeTab === 'near-u') {
           setActiveTab('mall');
         }
       });
     });
-  }, [currentLocation?.coordinates?.latitude, currentLocation?.coordinates?.longitude]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    currentLocation?.coordinates?.latitude,
+    currentLocation?.coordinates?.longitude,
+    serviceabilityChecked,
+    activeTab,
+    isMounted,
+    setActiveTab,
+  ]);
 
   // Get recently viewed items
   const { items: recentlyViewedItems, isLoading: isLoadingRecentlyViewed, refresh: refreshRecentlyViewed } = useRecentlyViewed();
@@ -523,11 +536,12 @@ function HomeScreen() {
       } catch (error) {
         // silently handle
       } finally {
-        if (!isMounted()) return;
-        setRefreshing(false);
+        if (isMounted()) {
+          setRefreshing(false);
+        }
       }
     },
-    [actions, authUser, isAuthenticated, loadUserContext, refreshCart, refreshRecentlyViewed]);
+    [actions, authUser, isAuthenticated, isMounted, loadUserContext, refreshCart, refreshRecentlyViewed]);
 
   const handleSearchPress = useCallback(() => {
     router.push('/search');
@@ -909,6 +923,7 @@ function HomeScreen() {
             style={viewStyles.locationBannerBtn}
             onPress={async () => {
               await requestLocPermission();
+              // FIX: Extra safety check after await (React Error #185)
               if (!isMounted()) return;
               setLocationBannerDismissed(true);
             }}
@@ -917,6 +932,8 @@ function HomeScreen() {
           </Pressable>
           <Pressable
             onPress={async () => {
+              // FIX: Add isMounted check before state update (React Error #185)
+              if (!isMounted()) return;
               setLocationBannerDismissed(true);
               const { default: AS } = await import('@react-native-async-storage/async-storage');
               AS.setItem('location_banner_dismissed', 'true').catch(() => {});

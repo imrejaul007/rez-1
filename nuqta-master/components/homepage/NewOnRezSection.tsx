@@ -317,6 +317,7 @@ const NewOnNuqtaSection: React.FC = () => {
 
   // Refs to store data (avoids async state/closure issues)
   const incomingStoreRef = useRef<NewStore | null>(null);
+  const animationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const smallStoresRef = useRef<NewStore[]>([]);
 
   // Keep ref in sync with state
@@ -455,7 +456,11 @@ const NewOnNuqtaSection: React.FC = () => {
 
     // After animation completes, update data and reset positions smoothly
     const totalAnimationTime = ANIMATION_DURATION + STAGGER_DELAY * 2 + 250;
-    setTimeout(() => {
+    if (!isMounted()) return;
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    animationTimeoutRef.current = setTimeout(() => {
+      animationTimeoutRef.current = null;
+      if (!isMounted()) return;
       rotateStores();
 
       // Reset positions instantly
@@ -475,7 +480,17 @@ const NewOnNuqtaSection: React.FC = () => {
       setIncomingStore(null);
       setIsAnimating(false);
     }, totalAnimationTime);
-  }, [allStores, isPaused, isAnimating, currentIndex, rotateStores]);
+  }, [allStores, isPaused, isAnimating, currentIndex, rotateStores, isMounted]);
+
+  // Clear animation timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Fetch stores and set up initial display
   useEffect(() => {

@@ -43,6 +43,7 @@ export function useHomepage() {
   // not yet flushed (e.g. when the call happens outside `act()`).
   const refreshingRef = useRef(false);
   const isMountedRef = useRef(true);
+  const loadRequestIdRef = useRef(0);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -52,9 +53,10 @@ export function useHomepage() {
   }, []);
 
   const load = useCallback(async () => {
+    const requestId = ++loadRequestIdRef.current;
     try {
       const response = await fetchHomepageData();
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || requestId !== loadRequestIdRef.current) return;
       // Support both wrapped ({success, data}) and unwrapped payloads.
       if (response && typeof response === 'object' && 'data' in response && response.success === true) {
         setData(response.data ?? buildEmptyData());
@@ -67,19 +69,25 @@ export function useHomepage() {
         setError('Failed to load homepage data');
       }
     } catch (err: any) {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || requestId !== loadRequestIdRef.current) return;
       setError(err?.message || 'Failed to load homepage data');
     } finally {
-      if (isMountedRef.current) setLoading(false);
+      if (isMountedRef.current && requestId === loadRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     load();
+    return () => {
+      loadRequestIdRef.current += 1;
+    };
   }, [load]);
 
   const refresh = useCallback(() => {
     if (!isMountedRef.current) return;
+    const requestId = ++loadRequestIdRef.current;
     // Update the ref synchronously so consumers reading `refreshing` via the
     // returned object's getter observe the change immediately, even before
     // any subsequent React state update is committed.
@@ -89,7 +97,7 @@ export function useHomepage() {
     (async () => {
       try {
         const response = await fetchHomepageData();
-        if (!isMountedRef.current) return;
+        if (!isMountedRef.current || requestId !== loadRequestIdRef.current) return;
         if (response && typeof response === 'object' && 'data' in response && response.success === true) {
           setData(response.data ?? buildEmptyData());
           setError(null);
@@ -100,10 +108,10 @@ export function useHomepage() {
           setError('Failed to load homepage data');
         }
       } catch (err: any) {
-        if (!isMountedRef.current) return;
+        if (!isMountedRef.current || requestId !== loadRequestIdRef.current) return;
         setError(err?.message || 'Failed to load homepage data');
       } finally {
-        if (isMountedRef.current) {
+        if (isMountedRef.current && requestId === loadRequestIdRef.current) {
           refreshingRef.current = false;
         }
       }

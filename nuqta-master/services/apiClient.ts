@@ -271,7 +271,7 @@ class ApiClient {
 
   // Handle token refresh
   private async handleTokenRefresh(): Promise<boolean> {
-    if (this.isRefreshing && this.refreshPromise) {
+    if (this.refreshPromise) {
       return this.refreshPromise;
     }
 
@@ -279,18 +279,19 @@ class ApiClient {
       return false;
     }
 
-    this.isRefreshing = true;
-    this.refreshPromise = this.refreshTokenCallback();
+    this.refreshPromise = (async () => {
+      this.isRefreshing = true;
+      try {
+        return await this.refreshTokenCallback!();
+      } catch {
+        return false;
+      } finally {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
+      }
+    })();
 
-    try {
-      const success = await this.refreshPromise;
-      return success;
-    } catch (error) {
-      return false;
-    } finally {
-      this.isRefreshing = false;
-      this.refreshPromise = null;
-    }
+    return this.refreshPromise;
   }
 
   // Make HTTP request

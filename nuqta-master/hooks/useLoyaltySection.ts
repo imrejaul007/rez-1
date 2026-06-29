@@ -54,6 +54,14 @@ export function useLoyaltySection(options: UseLoyaltySectionOptions = {}): UseLo
   // Track if we've already fetched
   const hasFetchedRef = useRef(false);
   const locationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Get effective coordinates (GPS or region fallback)
   const getEffectiveCoordinates = useCallback(() => {
@@ -84,8 +92,10 @@ export function useLoyaltySection(options: UseLoyaltySectionOptions = {}): UseLo
   const fetchData = useCallback(async () => {
     // Return cached result if recent enough (prevents re-fetch on DeferredProvider remounts)
     if (_loyaltyCache && Date.now() - _loyaltyCacheTime < LOYALTY_CACHE_MS) {
-      setData(_loyaltyCache);
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setData(_loyaltyCache);
+        setIsLoading(false);
+      }
       hasFetchedRef.current = true;
       return;
     }
@@ -94,18 +104,23 @@ export function useLoyaltySection(options: UseLoyaltySectionOptions = {}): UseLo
     if (_loyaltyPending) {
       try {
         const cached = await _loyaltyPending;
+        if (!isMountedRef.current) return;
         if (cached) {
           setData(cached);
           setError(null);
         }
       } catch { /* handled below */ }
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
       hasFetchedRef.current = true;
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    if (isMountedRef.current) {
+      setIsLoading(true);
+      setError(null);
+    }
 
     _loyaltyPending = (async () => {
       try {
@@ -115,20 +130,28 @@ export function useLoyaltySection(options: UseLoyaltySectionOptions = {}): UseLo
         if (response.success && response.data) {
           _loyaltyCache = response.data;
           _loyaltyCacheTime = Date.now();
-          setData(response.data);
-          setError(null);
+          if (isMountedRef.current) {
+            setData(response.data);
+            setError(null);
+          }
           return response.data;
         } else {
-          setError(response.error || response.message || 'Failed to fetch loyalty data');
-          setData(null);
+          if (isMountedRef.current) {
+            setError(response.error || response.message || 'Failed to fetch loyalty data');
+            setData(null);
+          }
           return null;
         }
       } catch (err: any) {
-        setError(err?.message || 'Failed to fetch loyalty data');
-        setData(null);
+        if (isMountedRef.current) {
+          setError(err?.message || 'Failed to fetch loyalty data');
+          setData(null);
+        }
         return null;
       } finally {
-        setIsLoading(false);
+        if (isMountedRef.current) {
+          setIsLoading(false);
+        }
         hasFetchedRef.current = true;
         _loyaltyPending = null;
       }
@@ -172,7 +195,7 @@ export function useLoyaltySection(options: UseLoyaltySectionOptions = {}): UseLo
     if (hasFetchedRef.current && regionState.currentRegion) {
       fetchData();
     }
-  }, [regionState.currentRegion]);
+  }, [regionState.currentRegion, fetchData]);
 
   // Cleanup on unmount
   useEffect(() => {

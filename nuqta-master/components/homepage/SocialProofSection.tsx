@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { BRAND } from '@/constants/brand';
 import {
   View,
@@ -69,6 +69,7 @@ const SocialProofSection: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userCity, setUserCity] = useState<string>('');
   const isMounted = useIsMounted();
+  const rotateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fadeAnim = useSharedValue(1);
   const slideAnim = useSharedValue(0);
@@ -149,12 +150,13 @@ const SocialProofSection: React.FC = () => {
     if (activities.length <= 1) return;
 
     const rotateInterval = setInterval(() => {
-      // Fade out and slide
       fadeAnim.value = withTiming(0, { duration: 300 });
       slideAnim.value = withTiming(-20, { duration: 300 });
 
-      // After fade out, update index and fade back in
-      setTimeout(() => {
+      if (rotateTimeoutRef.current) clearTimeout(rotateTimeoutRef.current);
+      rotateTimeoutRef.current = setTimeout(() => {
+        rotateTimeoutRef.current = null;
+        if (!isMounted()) return;
         setCurrentIndex((prev) => (prev + 1) % activities.length);
         slideAnim.value = 20;
         fadeAnim.value = withTiming(1, { duration: 300 });
@@ -164,8 +166,12 @@ const SocialProofSection: React.FC = () => {
 
     return () => {
       clearInterval(rotateInterval);
+      if (rotateTimeoutRef.current) {
+        clearTimeout(rotateTimeoutRef.current);
+        rotateTimeoutRef.current = null;
+      }
     };
-  }, [activities.length, fadeAnim, slideAnim]);
+  }, [activities.length, fadeAnim, slideAnim, isMounted]);
 
   if (isLoading) {
     return null;

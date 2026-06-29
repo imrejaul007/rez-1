@@ -151,6 +151,7 @@ const FlashSales: React.FC<FlashSalesProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const refetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const earliestEndTime = useRef<Date | null>(null);
   const isMounted = useIsMounted();
 
@@ -212,17 +213,28 @@ const FlashSales: React.FC<FlashSalesProps> = ({
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
-        // Refetch after a short delay
-        setTimeout(() => fetchFlashSales(), 2000);
+        if (!isMounted()) return;
+        if (refetchTimeoutRef.current) clearTimeout(refetchTimeoutRef.current);
+        refetchTimeoutRef.current = setTimeout(() => {
+          refetchTimeoutRef.current = null;
+          if (isMounted()) {
+            fetchFlashSales();
+          }
+        }, 2000);
       }
     }, 1000);
 
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      if (refetchTimeoutRef.current) {
+        clearTimeout(refetchTimeoutRef.current);
+        refetchTimeoutRef.current = null;
       }
     };
-  }, [products, fetchFlashSales]);
+  }, [products, fetchFlashSales, isMounted]);
 
   const handleProductPress = (offerId: string) => {
     // Track click

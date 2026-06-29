@@ -20,6 +20,7 @@ import QuickActions from '@/components/store/QuickActions';
 import FastImage from '@/components/common/FastImage';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { colors } from '@/constants/theme';
+import { useIsMounted } from '@/hooks/useIsMounted';
 
 // Custom comparison function for React.memo
 const arePropsEqual = (prevProps: any, nextProps: any) => {
@@ -58,6 +59,8 @@ function StoreCard({
   const textSecondary = useThemeColor({ light: colors.neutral[500], dark: colors.neutral[400] }, 'text');
   const borderColor = useThemeColor({ light: colors.neutral[200], dark: colors.neutral[700] }, 'border');
   const primaryColor = useThemeColor({}, 'tint');
+  const isMounted = useIsMounted();
+  const scrollRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // State for banner slider
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -185,6 +188,15 @@ function StoreCard({
       }
     };
   }, [banners.length, width]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollRetryTimeoutRef.current) {
+        clearTimeout(scrollRetryTimeoutRef.current);
+        scrollRetryTimeoutRef.current = null;
+      }
+    };
+  }, []);
   
   // Track if scroll is from user interaction
   const isUserScrollingRef = useRef(false);
@@ -366,17 +378,18 @@ function StoreCard({
                     decelerationRate="fast"
                     estimatedItemSize={200}
                     onScrollToIndexFailed={(info) => {
-                      // Handle scroll to index failure - scroll to offset instead
-                      const wait = new Promise(resolve => setTimeout(resolve, 500));
-                      wait.then(() => {
-                        if (flatListRef.current) {
-                          const offset = info.index * width;
-                          flatListRef.current.scrollToOffset({
-                            offset,
-                            animated: true
-                          });
-                        }
-                      });
+                      if (scrollRetryTimeoutRef.current) {
+                        clearTimeout(scrollRetryTimeoutRef.current);
+                      }
+                      scrollRetryTimeoutRef.current = setTimeout(() => {
+                        scrollRetryTimeoutRef.current = null;
+                        if (!isMounted() || !flatListRef.current) return;
+                        const offset = info.index * width;
+                        flatListRef.current.scrollToOffset({
+                          offset,
+                          animated: true,
+                        });
+                      }, 500);
                     }}
                     style={{ width: '100%', height: 140 }}
                     contentContainerStyle={{ height: 140 }}

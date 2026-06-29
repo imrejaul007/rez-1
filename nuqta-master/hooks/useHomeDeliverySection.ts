@@ -100,16 +100,26 @@ export function useHomeDeliverySection(): UseHomeDeliverySectionReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Mounted ref to prevent state updates after unmount (React Error #185)
+  const isMountedRef = useRef(true);
+
   // Cache stores by subcategory to avoid redundant API calls
   const cache = useRef<Record<string, HomeDeliverySectionStore[]>>({});
   const fetchInProgress = useRef<Record<string, boolean>>({});
 
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
+
   const fetchStores = useCallback(async (subcategorySlug: string) => {
     // Check cache first
     if (cache.current[subcategorySlug] && cache.current[subcategorySlug].length > 0) {
-      setStores(cache.current[subcategorySlug]);
-      setLoading(false);
-      setError(null);
+      if (isMountedRef.current) {
+        setStores(cache.current[subcategorySlug]);
+        setLoading(false);
+        setError(null);
+      }
       return;
     }
 
@@ -119,8 +129,10 @@ export function useHomeDeliverySection(): UseHomeDeliverySectionReturn {
     }
 
     fetchInProgress.current[subcategorySlug] = true;
-    setLoading(true);
-    setError(null);
+    if (isMountedRef.current) {
+      setLoading(true);
+      setError(null);
+    }
 
     try {
       const response = await storesApi.getStoresBySubcategorySlug(
@@ -128,35 +140,38 @@ export function useHomeDeliverySection(): UseHomeDeliverySectionReturn {
         HOME_DELIVERY_SECTION_CONFIG.storesPerCategory
       );
 
+      if (!isMountedRef.current) return;
 
       if (response.success && response.data) {
         const rawStores = Array.isArray(response.data)
           ? response.data
           : (response.data.stores || []);
 
-        if (rawStores.length > 0) {
-        }
-
         const mappedStores = rawStores.map(mapBackendStoreToSection);
-
-        if (mappedStores.length > 0) {
-        }
 
         // Cache the results
         cache.current[subcategorySlug] = mappedStores;
-        setStores(mappedStores);
-        setError(null);
+        if (isMountedRef.current) {
+          setStores(mappedStores);
+          setError(null);
+          setLoading(false);
+        }
       } else {
         // If API returns no stores, set empty array (not an error)
         cache.current[subcategorySlug] = [];
-        setStores([]);
-        setError(null);
+        if (isMountedRef.current) {
+          setStores([]);
+          setError(null);
+          setLoading(false);
+        }
       }
     } catch (err: any) {
-      setError('Failed to load. Tap to retry.');
-      setStores([]);
+      if (isMountedRef.current) {
+        setError('Failed to load. Tap to retry.');
+        setStores([]);
+        setLoading(false);
+      }
     } finally {
-      setLoading(false);
       fetchInProgress.current[subcategorySlug] = false;
     }
   }, []);
