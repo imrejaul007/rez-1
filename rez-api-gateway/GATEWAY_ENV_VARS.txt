@@ -1,8 +1,10 @@
 # rez-api-gateway — Render Environment Variables
+# Public gateway URL: https://rez-1-2.onrender.com
 # Dashboard: Render → rez-api-gateway → Environment
 #
-# IMPORTANT: The frontend (Vercel) must call the GATEWAY URL, NOT backend/auth directly:
-#   EXPO_PUBLIC_API_BASE_URL=https://<your-gateway-service>.onrender.com/api
+# Frontend (Vercel): https://rez-1.vercel.app
+#   EXPO_PUBLIC_API_BASE_URL=https://rez-1-2.onrender.com/api
+#   EXPO_PUBLIC_ENVIRONMENT=production
 #
 # Routing (nginx.conf):
 #   /api/auth, /api/user/auth, /api/v1/mfa, /api/v1/oauth  → AUTH_SERVICE_URL
