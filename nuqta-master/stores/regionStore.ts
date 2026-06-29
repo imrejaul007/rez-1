@@ -114,10 +114,11 @@ const REGION_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 async function fetchRegionConfigFromServer(regionId: RegionId) {
   const now = Date.now();
   if (now - (regionConfigFetchedAt[regionId] || 0) < REGION_CACHE_TTL) return;
+  // Mark attempted immediately so 502/5xx does not cause retry storms
+  regionConfigFetchedAt[regionId] = now;
   try {
     const response = await apiClient.get(`/location/region/${regionId}`);
     if (response.success && response.data?.region) {
-      regionConfigFetchedAt[regionId] = now;
       const serverConfig = response.data.region as RegionConfig;
       useRegionStore.setState((s) => ({
         state: {
@@ -138,10 +139,10 @@ async function fetchRegionConfigFromServer(regionId: RegionId) {
 async function fetchAvailableRegions() {
   const now = Date.now();
   if (now - availableRegionsFetchedAt < REGION_CACHE_TTL) return;
+  availableRegionsFetchedAt = now;
   try {
     const response = await apiClient.get('/location/regions');
     if (response.success && response.data?.regions) {
-      availableRegionsFetchedAt = now;
       useRegionStore.setState((s) => ({
         state: { ...s.state, availableRegions: response.data.regions },
       }));
