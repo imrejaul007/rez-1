@@ -7,6 +7,7 @@
 // problem, not a per-screen bug.
 
 import apiClient from './apiClient';
+import { getConnectivityPingUrls } from '@/utils/connectionUtils';
 
 export type ConnectivityStatus = 'unknown' | 'online' | 'offline';
 
@@ -103,20 +104,31 @@ class ConnectivityService {
 
   private async ping(timeoutMs: number): Promise<ConnectivityResult> {
     const baseURL = apiClient.getBaseURL();
-    const healthURL = baseURL.replace(/\/api\/?$/, '') + '/health';
+    const pingUrls = getConnectivityPingUrls(baseURL);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     const started = Date.now();
     try {
-      const res = await fetch(healthURL, { method: 'GET', signal: controller.signal });
+      let res: Response | null = null;
+      for (const healthURL of pingUrls) {
+        try {
+          const attempt = await fetch(healthURL, { method: 'GET', signal: controller.signal });
+          if (attempt.ok) {
+            res = attempt;
+            break;
+          }
+        } catch {
+          // try next URL
+        }
+      }
       const latencyMs = Date.now() - started;
-      if (!res.ok) {
+      if (!res?.ok) {
         return {
           status: 'offline',
           latencyMs,
           checkedAt: new Date().toISOString(),
           baseURL,
-          error: `HTTP ${res.status}`,
+          error: res ? `HTTP ${res.status}` : 'Server unreachable',
         };
       }
       return {

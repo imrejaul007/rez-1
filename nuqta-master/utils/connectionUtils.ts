@@ -27,27 +27,50 @@ export interface ConnectionError {
 }
 
 /**
+ * URLs for API reachability checks. Prefer /status (gateway) over /health
+ * because browser ad blockers often block paths containing "health".
+ */
+export function getConnectivityPingUrls(apiBaseUrl: string): string[] {
+  const origin = apiBaseUrl.replace(/\/api\/?$/, '');
+  // On web, only use /status — ad blockers flag paths containing "health".
+  if (Platform.OS === 'web') {
+    return [`${origin}/status`];
+  }
+  return [`${origin}/status`, `${origin}/api/health`, `${origin}/health`];
+}
+
+/**
  * Check if backend API is reachable
  */
 export async function checkBackendConnectivity(): Promise<ConnectionStatus> {
   const startTime = Date.now();
 
   try {
-    const baseUrl = API_CONFIG.baseUrl.replace('/api', '');
-    const healthUrl = `${baseUrl}/health`;
+    const pingUrls = getConnectivityPingUrls(API_CONFIG.baseUrl);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const response = await fetch(healthUrl, {
-      method: 'GET',
-      signal: controller.signal,
-    });
+    let response: Response | null = null;
+    for (const healthUrl of pingUrls) {
+      try {
+        const attempt = await fetch(healthUrl, {
+          method: 'GET',
+          signal: controller.signal,
+        });
+        if (attempt.ok) {
+          response = attempt;
+          break;
+        }
+      } catch {
+        // try next URL
+      }
+    }
 
     clearTimeout(timeoutId);
     const latency = Date.now() - startTime;
 
-    if (response.ok) {
+    if (response?.ok) {
 
       return {
         isConnected: true,
@@ -60,7 +83,9 @@ export async function checkBackendConnectivity(): Promise<ConnectionStatus> {
       return {
         isConnected: true,
         isReachable: false,
-        error: `Server responded with status ${response.status}`,
+        error: response
+          ? `Server responded with status ${response.status}`
+          : 'Server unreachable',
         latency,
         timestamp: Date.now(),
       };
@@ -286,6 +311,7 @@ export function isConnectionError(error: any): boolean {
 
 export default {
   checkBackendConnectivity,
+  getConnectivityPingUrls,
   parseConnectionError,
   formatConnectionError,
   getPlatformApiUrl,

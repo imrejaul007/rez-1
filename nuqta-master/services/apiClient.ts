@@ -2,7 +2,12 @@
 // Base client for all backend API communications
 
 import { Platform } from 'react-native';
-import { parseConnectionError, formatConnectionError, isConnectionError } from '@/utils/connectionUtils';
+import {
+  parseConnectionError,
+  formatConnectionError,
+  isConnectionError,
+  getConnectivityPingUrls,
+} from '@/utils/connectionUtils';
 // Sentry is lazy-loaded: it pulls in 220+ modules. Only the error reporting
 // path needs it, so we defer the import until the first API error occurs.
 let _sentry: any = null;
@@ -687,21 +692,41 @@ class ApiClient {
     });
   }
 
-  // Health check
+  // Health check — uses /status on web to avoid ad-blocker false negatives.
   async healthCheck(): Promise<ApiResponse> {
     try {
-      const response = await fetch(`${this.baseURL.replace('/api', '')}/health`);
-      const data = await response.json();
+      const pingUrls = getConnectivityPingUrls(this.baseURL);
+      let response: Response | null = null;
+      let data: Record<string, unknown> = {};
+
+      for (const pingUrl of pingUrls) {
+        try {
+          const attempt = await fetch(pingUrl);
+          if (attempt.ok) {
+            response = attempt;
+            data = await attempt.json().catch(() => ({}));
+            break;
+          }
+        } catch {
+          // try next URL
+        }
+      }
+
+      if (!response?.ok) {
+        return {
+          success: false,
+          error: 'Cannot connect to server',
+        };
+      }
 
       return {
-        success: response.ok,
+        success: true,
         data,
-        error: response.ok ? undefined : data.error
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
-        error: 'Cannot connect to server'
+        error: 'Cannot connect to server',
       };
     }
   }
