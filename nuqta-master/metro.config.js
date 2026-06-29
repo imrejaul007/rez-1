@@ -222,9 +222,8 @@ config.resolver = {
     // Huge lookup-table packages we don't need
     /node_modules\/caniuse-lite\/data\/.*/,  // 5+ MB of browser compat data
     /node_modules\/regenerate-unicode-properties\/.*/,  // 1.5 MB of unicode data
-    /node_modules\/es-abstract\/.*/,  // 2,472 files of ECMAScript spec helpers — used by lodash etc but Metro scans them all
-    /node_modules\/lodash\/.*/,  // 1,048 files; only used by @expo/cli (dev tool) and jest-expo
-    /node_modules\/lodash-es\/.*/,
+    /node_modules\/es-abstract\/.*/,  // 2,472 files of ECMAScript spec helpers — Metro scans them all
+    // Do NOT block lodash — react-native-gesture-handler imports lodash/isEqual at runtime
     // JSON schema validators (often only used by build tools)
     /node_modules\/ajv\/.*/,  // 319 files, transitively required by some build tools
     /node_modules\/ajv-formats\/.*/,
