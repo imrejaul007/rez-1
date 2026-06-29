@@ -10,7 +10,7 @@ services:
 
     healthCheckPath: /health
 
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
 
     envVars:
@@ -132,7 +132,7 @@ services:
     branch: main
     autoDeploy: true
 
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm run start:worker
 
     envVars:
