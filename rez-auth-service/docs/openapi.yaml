@@ -1,0 +1,886 @@
+openapi: 3.0.0
+info:
+  title: ReZ Auth Service API
+  version: 1.0.0
+  description: |
+    ReZ Auth Service handles authentication, authorization, and user identity management.
+    Supports OTP-based login, PIN authentication, MFA/TOTP, OAuth2 partner authentication,
+    and JWT token management.
+  contact:
+    name: ReZ API Support
+    email: api-support@rez.money
+  license:
+    name: Proprietary
+    url: https://rez.money/terms
+
+servers:
+  - url: https://api.rez.money/auth
+    description: Production
+  - url: https://staging-api.rez.money/auth
+    description: Staging
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: OTP
+    description: One-time password authentication for consumers
+  - name: PIN
+    description: PIN-based login for returning users
+  - name: MFA
+    description: Multi-factor authentication with TOTP
+  - name: OAuth
+    description: OAuth2 partner application authentication
+  - name: Profile
+    description: User profile management
+  - name: Internal
+    description: Internal service-to-service endpoints
+
+paths:
+  # OTP Routes
+  /send-otp:
+    post:
+      summary: Send OTP
+      description: |
+        Sends a 6-digit OTP via SMS or WhatsApp for phone verification.
+        If the user has a PIN set, returns hasPIN:true to redirect to PIN login.
+        Rate limited: 3 per minute per phone, 5 per 15 minutes per IP.
+      tags: [OTP]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+                - countryCode
+              properties:
+                phone:
+                  type: string
+                  description: Phone number (digits only, 5-15 chars)
+                countryCode:
+                  type: string
+                  description: Country code (e.g., "+91")
+                  default: "+91"
+                channel:
+                  type: string
+                  enum: [sms, whatsapp]
+                  default: sms
+                force:
+                  type: boolean
+                  description: Force OTP send even if user has PIN set
+      responses:
+        '200':
+          description: OTP sent or PIN redirect
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  messageId:
+                    type: string
+                  isNewUser:
+                    type: boolean
+                  hasPIN:
+                    type: boolean
+        '429':
+          description: Rate limit exceeded
+
+  /verify-otp:
+    post:
+      summary: Verify OTP
+      description: |
+        Verifies the 6-digit OTP and issues JWT access and refresh tokens.
+        Creates a new user atomically on first verification.
+        If MFA is enabled, returns mfaRequired:true with a session token.
+      tags: [OTP]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+                - otp
+                - countryCode
+              properties:
+                phone:
+                  type: string
+                otp:
+                  type: string
+                  description: 6-digit OTP code
+                countryCode:
+                  type: string
+                  default: "+91"
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  isNewUser:
+                    type: boolean
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  mfaRequired:
+                    type: boolean
+                  mfaSessionToken:
+                    type: string
+                  user:
+                    type: object
+        '401':
+          description: Invalid OTP
+
+  # PIN Routes
+  /login-pin:
+    post:
+      summary: PIN Login
+      description: |
+        Authenticates returning users with a 4-6 digit PIN.
+        Issues JWT tokens upon successful authentication.
+        Rate limited: 5 failed attempts triggers 15-minute lockout.
+      tags: [PIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+                - pin
+                - countryCode
+              properties:
+                phone:
+                  type: string
+                pin:
+                  type: string
+                  description: 4-6 digit PIN
+                countryCode:
+                  type: string
+                  default: "+91"
+      responses:
+        '200':
+          description: Login successful
+        '401':
+          description: Invalid PIN
+        '429':
+          description: Account locked due to too many failed attempts
+
+  /auth/set-pin:
+    post:
+      summary: Set PIN
+      description: Sets a new PIN for the authenticated user.
+      tags: [PIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pin
+              properties:
+                pin:
+                  type: string
+                  description: 4-6 digit PIN
+      responses:
+        '200':
+          description: PIN set successfully
+        '400':
+          description: PIN is too common or invalid
+
+  /auth/has-pin:
+    get:
+      summary: Check PIN Status
+      description: Returns PIN status for a phone number. Used to determine login flow.
+      tags: [PIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: phone
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: query
+          schema:
+            type: string
+            default: "+91"
+      responses:
+        '200':
+          description: PIN status returned
+
+  # MFA Routes
+  /auth/mfa/setup:
+    post:
+      summary: Setup MFA
+      description: |
+        Generates a new TOTP secret and returns QR code URI for authenticator app setup.
+        MFA is not enabled until verify-setup is called.
+      tags: [MFA]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: MFA setup initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  keyUri:
+                    type: string
+                    description: otpauth:// URI for QR code
+                  backupCodes:
+                    type: array
+                    items:
+                      type: string
+                    description: One-time backup codes
+
+  /auth/mfa/verify-setup:
+    post:
+      summary: Verify MFA Setup
+      description: Verifies the first TOTP code and enables MFA for the account.
+      tags: [MFA]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: 6-digit TOTP code
+      responses:
+        '200':
+          description: MFA enabled
+        '401':
+          description: Invalid TOTP code
+
+  /auth/mfa/verify:
+    post:
+      summary: Verify MFA Code
+      description: Verifies TOTP code during MFA login challenge.
+      tags: [MFA]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: 6-digit TOTP code
+      responses:
+        '200':
+          description: MFA verified
+        '401':
+          description: Invalid code
+
+  /auth/mfa/verify-otp:
+    post:
+      summary: Complete MFA Login
+      description: Completes login after MFA verification (post OTP verification).
+      tags: [MFA]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mfaSessionToken
+                - totpCode
+              properties:
+                mfaSessionToken:
+                  type: string
+                  description: Session token from OTP verify response
+                totpCode:
+                  type: string
+                  description: 6-digit TOTP code
+      responses:
+        '200':
+          description: MFA login complete
+        '401':
+          description: Invalid session or code
+
+  /auth/mfa/backup-verify:
+    post:
+      summary: Verify Backup Code
+      description: Verifies a one-time backup code for account recovery.
+      tags: [MFA]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: Backup code in XXXX-XXXX format
+      responses:
+        '200':
+          description: Backup code verified
+        '401':
+          description: Invalid backup code
+
+  /auth/mfa/disable:
+    delete:
+      summary: Disable MFA
+      description: Disables MFA for the authenticated user. Requires valid TOTP code.
+      tags: [MFA]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: 6-digit TOTP code
+      responses:
+        '200':
+          description: MFA disabled
+        '401':
+          description: Invalid code
+
+  /auth/mfa/status:
+    get:
+      summary: Get MFA Status
+      description: Returns MFA status and backup codes count for current user.
+      tags: [MFA]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: MFA status returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  isEnabled:
+                    type: boolean
+                  enabledAt:
+                    type: string
+                    format: date-time
+                  unUsedBackupCodesCount:
+                    type: integer
+
+  # OAuth Routes
+  /oauth/authorize:
+    get:
+      summary: OAuth Authorize
+      description: |
+        OAuth2 authorization endpoint. Shows consent page for partner app authorization.
+        Partners: Rendez, Stay Owen, AdBazaar, REZ Now, Hotel PMS, Hotel Panel, NextaBiZ.
+      tags: [OAuth]
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: scope
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: response_type
+          in: query
+          schema:
+            type: string
+            enum: [code]
+      responses:
+        '200':
+          description: Authorization info returned
+
+  /oauth/consent:
+    post:
+      summary: OAuth Consent
+      description: Processes user consent and generates authorization code.
+      tags: [OAuth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+                - otp
+                - approved
+                - state
+              properties:
+                phone:
+                  type: string
+                otp:
+                  type: string
+                approved:
+                  type: boolean
+                state:
+                  type: string
+      responses:
+        '201':
+          description: Authorization code generated
+        '401':
+          description: Invalid credentials
+
+  /oauth/token:
+    post:
+      summary: Exchange Token
+      description: Exchanges authorization code for access and refresh tokens.
+      tags: [OAuth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - code
+                - client_id
+                - client_secret
+              properties:
+                grant_type:
+                  type: string
+                  enum: [authorization_code]
+                code:
+                  type: string
+                redirect_uri:
+                  type: string
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+      responses:
+        '200':
+          description: Tokens issued
+        '401':
+          description: Invalid client credentials
+
+  /oauth/refresh:
+    post:
+      summary: Refresh Token
+      description: Refreshes access token with rotation. Implements token reuse detection.
+      tags: [OAuth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - refresh_token
+                - client_id
+                - client_secret
+              properties:
+                grant_type:
+                  type: string
+                  enum: [refresh_token]
+                refresh_token:
+                  type: string
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+      responses:
+        '200':
+          description: New tokens issued
+        '401':
+          description: Token reuse detected
+
+  /oauth/userinfo:
+    get:
+      summary: Get OAuth User Info
+      description: Returns user profile information for authorized OAuth scopes.
+      tags: [OAuth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User info returned
+        '401':
+          description: Invalid token
+
+  /oauth/revoke:
+    post:
+      summary: Revoke Token
+      description: Revokes an OAuth access or refresh token.
+      tags: [OAuth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - client_id
+                - client_secret
+              properties:
+                token:
+                  type: string
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+      responses:
+        '200':
+          description: Token revoked
+
+  # Profile Routes
+  /profile:
+    get:
+      summary: Get Profile Summary
+      description: Returns unified profile with tier, LTV, and engagement data.
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile returned
+    patch:
+      summary: Update Profile
+      description: Updates user profile fields.
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile:
+                  type: object
+                  properties:
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    avatar:
+                      type: string
+                    dateOfBirth:
+                      type: string
+                    gender:
+                      type: string
+                    bio:
+                      type: string
+      responses:
+        '200':
+          description: Profile updated
+
+  /profile/tier:
+    get:
+      summary: Get User Tier
+      description: Returns current tier and lifetime value.
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Tier info returned
+
+  # Token Management
+  /auth/refresh:
+    post:
+      summary: Refresh Access Token
+      description: Rotates both access and refresh tokens.
+      tags: [Profile]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: New tokens issued
+        '401':
+          description: Invalid refresh token
+
+  /auth/logout:
+    post:
+      summary: Logout
+      description: Blacklists access and refresh tokens.
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Logged out
+
+  /auth/me:
+    get:
+      summary: Get Current User
+      description: Returns authenticated user's profile.
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile returned
+        '401':
+          description: Not authenticated
+
+  /auth/validate:
+    get:
+      summary: Validate Token
+      description: Validates JWT token for internal service use.
+      tags: [Internal]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token validity status
+
+  # Internal Routes
+  /internal/auth/user/{id}:
+    get:
+      summary: Get User by ID (Internal)
+      description: Look up a user by their ID. Requires internal token.
+      tags: [Internal]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User found
+        '404':
+          description: User not found
+
+  /internal/users:
+    get:
+      summary: Get User by Phone (Internal)
+      description: Look up a user by phone number.
+      tags: [Internal]
+      parameters:
+        - name: phone
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User found
+        '404':
+          description: User not found
+
+  /internal/users/bulk:
+    post:
+      summary: Bulk User Lookup (Internal)
+      description: Bulk lookup users by IDs. Max 1000 per request.
+      tags: [Internal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 1000
+      responses:
+        '200':
+          description: Users returned
+
+  /internal/users/patch-tests:
+    post:
+      summary: Record Patch Test (Internal)
+      description: Records patch test results for a customer.
+      tags: [Internal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customerPhone
+                - serviceCategory
+                - result
+              properties:
+                customerPhone:
+                  type: string
+                serviceCategory:
+                  type: string
+                result:
+                  type: string
+                  enum: [pass, reaction]
+                conductedBy:
+                  type: string
+      responses:
+        '200':
+          description: Patch test recorded
+
+  /internal/users/{id}/push-token:
+    post:
+      summary: Register Push Token (Internal)
+      description: Registers or updates push token for a user.
+      tags: [Internal]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - platform
+                - action
+              properties:
+                token:
+                  type: string
+                platform:
+                  type: string
+                  enum: [ios, android, web]
+                deviceName:
+                  type: string
+                action:
+                  type: string
+                  enum: [register, unregister]
+      responses:
+        '200':
+          description: Token updated
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        code:
+          type: string
+      required:
+        - success
+        - error
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        isVerified:
+          type: boolean
+        isOnboarded:
+          type: boolean
+        profile:
+          type: object
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        hasMore:
+          type: boolean

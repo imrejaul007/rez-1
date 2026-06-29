@@ -1,0 +1,151 @@
+name: "\U0001F41E Bug Report"
+description: Report a bug in a REZ service
+title: "[BUG] <short description>"
+labels: ["bug"]
+assignees: []
+projects: []
+
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug
+      placeholder: |
+        As a [user/developer], I noticed that [what happened].
+        When [steps to reproduce], then [observed result].
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Result
+      description: What should have happened
+      placeholder: |
+        The system should...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Result
+      description: What actually happened
+      placeholder: |
+        The system instead...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: Impact of the bug
+      options:
+        - Critical (production down, data loss, security breach)
+        - High (major feature broken, significant user impact)
+        - Medium (feature partially working, workaround exists)
+        - Low (cosmetic, minor inconvenience)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      description: Which part of the system is affected
+      options:
+        - Frontend (rez-app-consumer, rez-merchant, rezadmin, rez-web-menu)
+        - Backend (rezbackend monolith)
+        - Gateway (rez-api-gateway)
+        - Auth Service (rez-auth-service)
+        - Wallet Service (rez-wallet-service)
+        - Payment Service (rez-payment-service)
+        - Order Service (rez-order-service)
+        - Merchant Service (rez-merchant-service)
+        - Catalog Service (rez-catalog-service)
+        - Search Service (rez-search-service)
+        - Gamification Service (rez-gamification-service)
+        - Karma Service (rez-karma-service)
+        - Ads Service (rez-ads-service)
+        - Marketing Service (rez-marketing-service)
+        - Infrastructure (CI/CD, deployment, database)
+        - Integration (Hotel OTA, third-party APIs)
+    validations:
+      required: true
+
+  - type: input
+    id: service
+    attributes:
+      label: Affected Service(s)
+      description: Specific service(s) or package(s) impacted
+      placeholder: e.g., rez-wallet-service, rez-app-consumer
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Commit
+      description: Version number or git commit hash
+      placeholder: e.g., v1.2.3 or abc1234
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs / Stack Traces
+      description: Relevant logs or error messages
+      placeholder: |
+        ```
+        [paste error logs here]
+        ```
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: Any known workaround for this bug
+      placeholder: None / [describe workaround]
+
+  - type: textarea
+    id: root-cause
+    attributes:
+      label: Root Cause (for engineer)
+      description: |
+        Analysis of WHY this bug happened.
+        To be filled by assigned engineer.
+      placeholder: |
+        Root Cause:
+
+  - type: textarea
+    id: prevention
+    attributes:
+      label: Prevention (for engineer)
+      description: |
+        How this bug will NOT happen again.
+        To be filled by assigned engineer.
+      placeholder: |
+        1. Add test case: ...
+        2. Add CI validation: ...
+        3. Add architectural constraint: ...

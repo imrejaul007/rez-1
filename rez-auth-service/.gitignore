@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.js.map
+
+# Environment files - NEVER COMMIT THESE
+.env
+.env.*
+!.env.example
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.production
+.env.test
+
+# Claude Code
+.claude-flow/
+
+# NPM
+.npmrc
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Secrets and credentials
+*.pem
+*.key
+credentials.json
+secrets.json

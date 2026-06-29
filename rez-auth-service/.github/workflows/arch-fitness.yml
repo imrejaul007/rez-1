@@ -1,0 +1,93 @@
+name: REZ Auth Service — Architecture Fitness
+
+# Runs on every PR touching this service
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'rez-auth-service/**'
+      - '.github/workflows/arch-fitness.yml'
+
+jobs:
+  arch-fitness:
+    name: Architecture Fitness Checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rez-auth-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: No Console Logs Check
+        run: |
+          echo "Checking for console.log/console.error in source..."
+          CONSOLE_LOGS=$(find src -name '*.ts' -exec grep -l 'console\.\(log\|error\|warn\)' {} \; 2>/dev/null || echo "")
+          if [ -n "$CONSOLE_LOGS" ]; then
+            echo "❌ Found console logs in:"
+            echo "$CONSOLE_LOGS"
+            echo ""
+            echo "Use the centralized logger from rez-shared/telemetry instead."
+            echo "Example: import { logger } from '../shared/logger';"
+            exit 1
+          else
+            echo "✅ No console logs found"
+          fi
+
+      - name: No Math.random() Check
+        run: |
+          echo "Checking for Math.random() in source..."
+          MATH_RANDOM=$(find src -name '*.ts' -exec grep -n 'Math\.random()' {} \; 2>/dev/null || echo "")
+          if [ -n "$MATH_RANDOM" ]; then
+            echo "❌ Found Math.random() in:"
+            echo "$MATH_RANDOM"
+            echo ""
+            echo "Use crypto.randomUUID() or uuid library instead."
+            exit 1
+          else
+            echo "✅ No Math.random() found"
+          fi
+
+      - name: No Hardcoded Secrets Check
+        run: |
+          echo "Checking for hardcoded secrets..."
+          SECRETS=$(grep -rEn '(password|secret|api[_-]?key|token)\s*[:=]\s*["\047][^"\047]{3,64}["\047]' src/ --include='*.ts' 2>/dev/null || echo "")
+          # Filter out test/mock values and env var references
+          SECRETS=$(echo "$SECRETS" | grep -v 'process\.env' | grep -v 'test' | grep -v 'changeme' | grep -v 'your_' | grep -v 'example' || echo "")
+          if [ -n "$SECRETS" ]; then
+            echo "⚠️  Potential hardcoded secrets found:"
+            echo "$SECRETS"
+            echo ""
+            echo "Use process.env.YOUR_VAR_NAME instead."
+          else
+            echo "✅ No obvious hardcoded secrets found"
+          fi
+
+      - name: No Unbounded MongoDB Queries
+        run: |
+          echo "Checking for potentially unbounded .find() calls..."
+          # Look for .find() without .limit() on the same line
+          UNBOUNDED=$(grep -rn '\.find(' src/ --include='*.ts' | grep -v '\.limit(' | grep -v '//' || echo "")
+          if [ -n "$UNBOUNDED" ]; then
+            echo "⚠️  Found .find() without .limit():"
+            echo "$UNBOUNDED"
+            echo ""
+            echo "All list endpoints must enforce pagination (default limit=20, maxLimit=100)."
+            echo "Example: await Model.find(query).limit(Math.min(limit || 20, 100))"
+          else
+            echo "✅ No unbounded .find() calls detected"
+          fi
+
+      - name: Error Handling Check
+        run: |
+          echo "Checking for empty catch blocks..."
+          EMPTY_CATCH=$(grep -rn 'catch\s*([^)]*)\s*{[^}]*}' src/ --include='*.ts' | grep -v 'logger' | grep -v 'console' | grep -v 'error' | grep -v 'throw' || echo "")
+          if [ -n "$EMPTY_CATCH" ]; then
+            echo "⚠️  Found potentially empty catch blocks:"
+            echo "$EMPTY_CATCH"
+            echo ""
+            echo "Empty catch blocks silently swallow errors. Log the error and/or re-throw."
+          else
+            echo "✅ No empty catch blocks found"
+          fi

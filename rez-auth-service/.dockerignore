@@ -1,0 +1,15 @@
+node_modules
+.git
+.env
+.env.*
+*.log
+dist
+.next
+coverage
+.DS_Store
+*.md
+__tests__
+src/**/*.test.ts
+src/**/*.spec.ts
+.claude*
+*.tsbuildinfo

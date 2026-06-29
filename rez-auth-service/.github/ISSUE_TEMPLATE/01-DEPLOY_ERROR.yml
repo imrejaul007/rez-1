@@ -1,0 +1,150 @@
+name: "\U0001F6A7 Deployment Error"
+description: Report a build, deployment, or runtime error
+title: "[DEPLOY ERROR] <short description>"
+labels: ["deploy-error"]
+assignees: []
+projects: []
+
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Deployment Error Report
+
+        Every deployment error MUST be linked to a prevention action.
+
+  - type: dropdown
+    id: error-type
+    attributes:
+      label: Error Type
+      description: Category of the deployment error
+      options:
+        - Build Failure (missing dependency, syntax error, type error)
+        - Deployment Failure (ENV misconfiguration, build config, permissions)
+        - Runtime Crash (API crash, DB failure, timeout, unhandled exception)
+        - CI Pipeline Failure (test timeout, lint failure, coverage gate)
+        - Security Violation (audit failure, pentest finding)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Which environment was affected
+      options:
+        - Production (production.rez.money)
+        - Staging (staging.rez.money)
+        - Development (local)
+        - CI (GitHub Actions)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: service
+    attributes:
+      label: Affected Service
+      description: Which REZ service failed
+      options:
+        - Frontend - Consumer App (rez-app-consumer)
+        - Frontend - Merchant App (rezmerchant)
+        - Frontend - Admin Dashboard (rezadmin)
+        - Frontend - Web Menu (rez-web-menu)
+        - Frontend - REZ Now (rez-now)
+        - Backend - Monolith (rezbackend)
+        - Gateway (rez-api-gateway)
+        - Auth Service (rez-auth-service)
+        - Wallet Service (rez-wallet-service)
+        - Payment Service (rez-payment-service)
+        - Order Service (rez-order-service)
+        - Merchant Service (rez-merchant-service)
+        - Catalog Service (rez-catalog-service)
+        - Search Service (rez-search-service)
+        - Gamification Service (rez-gamification-service)
+        - Karma Service (rez-karma-service)
+        - Ads Service (rez-ads-service)
+        - Marketing Service (rez-marketing-service)
+        - CI Pipeline (GitHub Actions)
+        - Infrastructure (Render, Vercel, MongoDB, Redis)
+    validations:
+      required: true
+
+  - type: input
+    id: commit
+    attributes:
+      label: Commit SHA
+      description: Git commit that triggered this error
+      placeholder: e.g., abc1234f
+
+  - type: input
+    id: branch
+    attributes:
+      label: Branch
+      description: Branch that triggered this error
+      placeholder: e.g., main, feature/xyz
+
+  - type: input
+    id: workflow
+    attributes:
+      label: Workflow Run URL
+      description: Link to the failed GitHub Actions run
+      placeholder: https://github.com/imrejaul007/.../actions/runs/...
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: Full error output from CI/deployment logs
+      placeholder: |
+        ```
+        [paste relevant log lines here]
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: root-cause
+    attributes:
+      label: Root Cause Analysis
+      description: Why did this error happen?
+      placeholder: |
+        Root Cause:
+
+    validations:
+      required: true
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: Fix Applied
+      description: What was done to fix this error
+      placeholder: |
+        Fix:
+
+    validations:
+      required: true
+
+  - type: textarea
+    id: prevention
+    attributes:
+      label: Prevention Actions
+      description: How will this error be prevented in the future?
+      placeholder: |
+        1. Add CI check: ...
+        2. Add test case: ...
+        3. Add ENV validation: ...
+        4. Add architectural constraint: ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: recurrence-risk
+    attributes:
+      label: Recurrence Risk
+      options:
+        - Low (one-time mistake, unlikely to repeat)
+        - Medium (could recur if dependencies change)
+        - High (structural issue, likely to recur)
+    validations:
+      required: true

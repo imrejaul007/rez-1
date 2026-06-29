@@ -1,0 +1,93 @@
+name: "\U0001F3AF Feature Request"
+description: Propose a new feature or improvement
+title: "[FEATURE] <short description>"
+labels: ["feature"]
+assignees: []
+projects: []
+
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Request
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve?
+      placeholder: |
+        Users currently cannot...
+        This causes...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How should this feature work?
+      placeholder: |
+        We should add...
+        When [user action], then [system response].
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Other approaches that were considered
+      placeholder: |
+        Alternative 1: ...
+        Why rejected: ...
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Critical (blocks key user journey)
+        - High (important for business)
+        - Medium (nice to have)
+        - Low (cosmetic / minor)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: service
+    attributes:
+      label: Affected Service(s)
+      options:
+        - Frontend - Consumer App (rez-app-consumer)
+        - Frontend - Merchant App (rezmerchant)
+        - Frontend - Admin Dashboard (rezadmin)
+        - Frontend - Web Menu (rez-web-menu)
+        - Frontend - REZ Now (rez-now)
+        - Backend - Monolith (rezbackend)
+        - Gateway (rez-api-gateway)
+        - Auth Service (rez-auth-service)
+        - Wallet Service (rez-wallet-service)
+        - Payment Service (rez-payment-service)
+        - Order Service (rez-order-service)
+        - Merchant Service (rez-merchant-service)
+        - Catalog Service (rez-catalog-service)
+        - Search Service (rez-search-service)
+        - Gamification Service (rez-gamification-service)
+        - Karma Service (rez-karma-service)
+        - Ads Service (rez-ads-service)
+        - Marketing Service (rez-marketing-service)
+        - Cross-cutting (multiple services)
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: What needs to be true for this feature to be complete?
+      placeholder: |
+        - [ ] User can...
+        - [ ] System returns...
+        - [ ] Error handling for...

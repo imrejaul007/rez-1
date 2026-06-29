@@ -1,0 +1,67 @@
+services:
+  - type: web
+    name: rez-auth-service
+    runtime: node
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: node dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: EXPOSE_DEV_OTP
+        value: "false"
+      # DATABASE
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      # AUTH SECURITY (rotate these for production!)
+      - key: JWT_SECRET
+        value: "placeholder-change-me-openssl-rand-hex-64"
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        value: "placeholder-change-me-openssl-rand-hex-64"
+        sync: false
+      - key: JWT_ADMIN_SECRET
+        value: "placeholder-change-me-openssl-rand-hex-64"
+        sync: false
+      - key: JWT_MERCHANT_SECRET
+        value: "placeholder-change-me-openssl-rand-hex-64"
+        sync: false
+      - key: INTERNAL_SERVICE_TOKENS_JSON
+        value: "placeholder-change-me-openssl-rand-hex-32"
+        sync: false
+      # SECURITY KEYS
+      - key: OTP_HMAC_SECRET
+        value: "placeholder-change-me-openssl-rand-base64-64"
+        sync: false
+      - key: OTP_TOTP_ENCRYPTION_KEY
+        value: "6974402f4c7ec9634443c2b2b90a6ba4c2a400aafe642e0870452da8f83a2319"
+        sync: false
+      # TOKEN CONFIGURATION
+      - key: JWT_REFRESH_TTL_HOURS
+        value: "24"
+        # SECURITY: Reduced from 7 days to 24 hours
+      # NETWORK SECURITY
+      - key: ALLOWED_INTERNAL_IPS
+        sync: false
+        # Format: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+        # SECURITY: Configure for production!
+      # CORS & APP
+      - key: CORS_ORIGIN
+        sync: false
+      - key: APP_URL
+        sync: false
+      # EMAIL
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      # OBSERVABILITY
+      - key: SENTRY_DSN
+        sync: false
+      - key: OTEL_SERVICE_NAME
+        value: rez-auth-service
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        fromGroup: otlp-endpoint
+        sync: false

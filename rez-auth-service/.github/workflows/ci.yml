@@ -1,0 +1,49 @@
+name: REZ Auth Service CI
+
+on:
+  push:
+    paths:
+      - 'rez-auth-service/**'
+    branches: [main, develop]
+  pull_request:
+    paths:
+      - 'rez-auth-service/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rez-auth-service
+    services:
+      mongodb:
+        image: mongo:7
+        ports: ['27017:27017']
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping:1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: rez-auth-service/package-lock.json
+      - run: npm ci
+      - name: Security audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: false
+      - name: Type check / lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
