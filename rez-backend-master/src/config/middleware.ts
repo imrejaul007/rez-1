@@ -135,7 +135,7 @@ export function setupMiddleware(app: Express): void {
       }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', 'X-Rez-Region', 'X-Device-OS', 'X-Device-Fingerprint', 'X-Rez-Signature', 'X-Provider-Name'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', 'X-Rez-Region', 'X-Device-OS', 'X-Device-Fingerprint', 'X-Rez-Signature', 'X-Provider-Name', 'Idempotency-Key', 'X-App-Version', 'X-Correlation-ID', 'X-Request-ID'],
     exposedHeaders: ['X-CSRF-Token'],
     credentials: true,
     optionsSuccessStatus: 200

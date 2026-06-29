@@ -113,6 +113,21 @@ async function main(): Promise<void> {
       if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
       cb(new Error(`CORS blocked: ${origin}`));
     },
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'X-CSRF-Token',
+      'X-Rez-Region',
+      'X-Device-OS',
+      'X-Device-Fingerprint',
+      'X-Rez-Signature',
+      'X-Provider-Name',
+      'X-App-Version',
+      'X-Correlation-ID',
+      'X-Request-ID',
+      'Idempotency-Key',
+    ],
     credentials: true,
   }));
   app.use(express.json({ limit: '256kb' }));
