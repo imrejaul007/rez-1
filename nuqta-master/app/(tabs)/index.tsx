@@ -110,6 +110,7 @@ const SCROLL_EVENT_THROTTLE = Platform.OS === 'android' ? 32 : 16;
 // ── Module-level state: survives component remounts caused by DeferredProviders ──
 let _lastFocusRefreshTime = 0; // Throttle focus refreshes across remounts
 let _statsLoadedGlobal = false; // Prevent redundant stats loads across remounts
+let _onboardingAutoCompleteAttempted = false; // Prevent onboarding retry loop across remounts
 
 // Prefetch lazy chunks + API data in background after initial render
 // This ensures Mall/Cash Store are ready BEFORE the user taps the tab
@@ -389,15 +390,18 @@ function HomeScreen() {
 
   // Auto-complete onboarding for users who reached /(tabs) via shortcut path
   // (Android location-denied → notification-permission → tabs, skipping transactions-preview)
-  // This triggers all deferred context providers to initialize
-  const onboardingAttemptedRef = React.useRef(false);
+  // Module-level flag — component refs reset when DeferredProviders remount children after login.
   const authUserId = authUser?.id;
   const authUserIsOnboarded = authUser?.isOnboarded;
   React.useEffect(() => {
-    if (!isAuthenticated || !authUserId || authUserIsOnboarded || onboardingAttemptedRef.current) {
+    if (!isAuthenticated) {
+      _onboardingAutoCompleteAttempted = false;
       return;
     }
-    onboardingAttemptedRef.current = true;
+    if (!interactionsComplete || !authUserId || authUserIsOnboarded || _onboardingAutoCompleteAttempted) {
+      return;
+    }
+    _onboardingAutoCompleteAttempted = true;
     authActions.completeOnboarding({
       preferences: {
         notifications: { push: true, email: true, sms: true },
@@ -405,9 +409,9 @@ function HomeScreen() {
         language: getLocale().split('-')[0] || 'en',
       },
     }).catch(() => {
-      // Single attempt per session — resetting the ref caused infinite re-renders (React #185)
+      // Single attempt per session — do not reset module flag (React #185 on remount)
     });
-  }, [isAuthenticated, authUserId, authUserIsOnboarded]);
+  }, [interactionsComplete, isAuthenticated, authUserId, authUserIsOnboarded]);
 
   // Load supplementary homepage data (wallet balance comes from WalletContext)
   const loadUserContext = useCallback(async () => {

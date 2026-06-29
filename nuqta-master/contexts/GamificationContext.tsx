@@ -799,13 +799,11 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     computed,
   }), [state, stableActions, computed]);
 
-  // Sync to Zustand store for crash-safe fallback (synchronous to avoid one-frame lag)
+  // Sync to Zustand store for crash-safe fallback (useEffect — never setState during render)
   const _setFromProvider = useGamificationStore((s) => s._setFromProvider);
-  const prevGamificationValueRef = useRef(contextValue);
-  if (prevGamificationValueRef.current !== contextValue) {
-    prevGamificationValueRef.current = contextValue;
+  useEffect(() => {
     _setFromProvider(contextValue);
-  }
+  }, [contextValue, _setFromProvider]);
 
   return (
     <GamificationContext.Provider value={contextValue}>

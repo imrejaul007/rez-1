@@ -39,42 +39,37 @@ function LocationRegionSync() {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    // Sync location with region on app start
-    // This ensures Dubai is always the default location on fresh load
-    if (regionState.isInitialized && !hasInitialized.current) {
-      hasInitialized.current = true;
+    if (!regionState.isInitialized || hasInitialized.current) return;
+    hasInitialized.current = true;
 
-      const regionData = REGION_LOCATIONS[regionState.currentRegion];
-      if (regionData) {
-        // Check if current location matches the region
-        const currentCity = locationState.currentLocation?.address?.city;
-        const regionCity = regionData.name;
+    const regionData = REGION_LOCATIONS[regionState.currentRegion];
+    if (!regionData) return;
 
-        // Only update if no location or location doesn't match region
-        if (!locationState.currentLocation || currentCity !== regionCity) {
-          const defaultLocation: UserLocation = {
-            coordinates: {
-              latitude: regionData.coords.lat,
-              longitude: regionData.coords.lng,
-            },
-            address: {
-              address: `${regionData.name}, ${regionData.country}`,
-              city: regionData.name,
-              state: regionData.name,
-              country: regionData.country,
-              pincode: '',
-              formattedAddress: `${regionData.name}, ${regionData.country}`,
-            },
-            timezone: regionData.timezone,
-            lastUpdated: new Date(),
-            source: 'manual' as const,
-          };
+    const currentCity = locationState.currentLocation?.address?.city;
+    const regionCity = regionData.name;
 
-          setManualLocation(defaultLocation).catch(() => {});
-        }
-      }
+    if (!locationState.currentLocation || currentCity !== regionCity) {
+      const defaultLocation: UserLocation = {
+        coordinates: {
+          latitude: regionData.coords.lat,
+          longitude: regionData.coords.lng,
+        },
+        address: {
+          address: `${regionData.name}, ${regionData.country}`,
+          city: regionData.name,
+          state: regionData.name,
+          country: regionData.country,
+          pincode: '',
+          formattedAddress: `${regionData.name}, ${regionData.country}`,
+        },
+        timezone: regionData.timezone,
+        lastUpdated: new Date(),
+        source: 'manual' as const,
+      };
+
+      setManualLocation(defaultLocation).catch(() => {});
     }
-  }, [regionState.isInitialized, regionState.currentRegion, locationState.currentLocation, setManualLocation]);
+  }, [regionState.isInitialized, regionState.currentRegion, setManualLocation]);
 
   // This component doesn't render anything
   return null;

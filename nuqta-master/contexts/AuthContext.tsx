@@ -503,9 +503,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('User not authenticated');
       }
 
-      // 2. Optimistic update - apply changes immediately
+      // 2. Optimistic update - apply profile/preferences immediately (not isOnboarded — that gates deferred providers)
       const optimisticUser = state.user
-        ? { ...state.user, ...data, isOnboarded: true, profile: { ...state.user.profile, ...data.profile } }
+        ? { ...state.user, ...data, profile: { ...state.user.profile, ...data.profile } }
         : null;
       dispatch({ type: 'UPDATE_USER', payload: optimisticUser });
 
