@@ -4,11 +4,14 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     envVars:
-      # Set this in Render dashboard per environment
+      # Main backend monolith (rez-1.onrender.com)
       - key: MONOLITH_URL
         sync: false
-      # Set this in Render dashboard per environment
-      - key: BACKEND_URL
+      # Auth microservice (rez-1-1.onrender.com)
+      - key: AUTH_SERVICE_URL
+        sync: false
+      # Frontend CORS allowlist (pipe-separated regex, e.g. your-app\.vercel\.app)
+      - key: CORS_ORIGINS
         sync: false
       # Set this in Render dashboard per environment
       - key: GAMIFICATION_SERVICE_URL
@@ -39,9 +42,6 @@ services:
       # entry was applied last.
       # Set this in Render dashboard per environment
       - key: ORDER_SERVICE_URL
-        sync: false
-      # Set this in Render dashboard per environment
-      - key: AUTH_SERVICE_URL
         sync: false
       # Set this in Render dashboard per environment
       - key: NOTIFICATION_SERVICE_URL
