@@ -26,7 +26,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 import { connectMongoDB, disconnectMongoDB } from './config/mongodb';
 import { redis } from './config/redis';
 import { startHealthServer } from './health';
-import { closeQueue } from './services/otpService';
+import { closeQueue, logOtpDevBypassStatus } from './services/otpService';
 import authRoutes from './routes/authRoutes';
 import mfaRoutes from './routes/mfaRoutes';
 import internalRoutes from './routes/internalRoutes';
@@ -88,6 +88,7 @@ async function main(): Promise<void> {
   logger.info('Starting rez-auth-service...');
 
   await connectMongoDB();
+  logOtpDevBypassStatus();
 
   const app = express();
   app.set('trust proxy', 1); // P1: Trust nginx/Render LB X-Forwarded-For so req.ip reflects real client IP

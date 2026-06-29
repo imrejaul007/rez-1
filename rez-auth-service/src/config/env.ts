@@ -62,6 +62,8 @@ const envSchema = z.object({
     .min(32, 'OTP_HMAC_SECRET must be at least 32 characters')
     .describe('Used to generate and verify OTP codes'),
   EXPOSE_DEV_OTP: z.enum(['true', 'false']).default('false'),
+  /** When true, verifyOTP accepts any 6-digit code (development/staging only). */
+  OTP_DEV_BYPASS: z.enum(['true', 'false']).default('false'),
 
   // === TOTP/MFA Encryption [REQUIRED] ===
   // AES-256-GCM key for encrypting TOTP secrets at rest in MongoDB.

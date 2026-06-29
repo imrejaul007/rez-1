@@ -11,6 +11,18 @@ function hashOTP(otp: string, phone: string): string {
 
 const logger = createServiceLogger('otp');
 
+/** Dev/staging only: accept any 6-digit OTP when OTP_DEV_BYPASS=true. */
+function isOtpDevBypassEnabled(): boolean {
+  return process.env.OTP_DEV_BYPASS === 'true';
+}
+
+export function logOtpDevBypassStatus(): void {
+  if (!isOtpDevBypassEnabled()) return;
+  logger.warn(
+    '[DEV] OTP_DEV_BYPASS is enabled — any 6-digit code will pass verification. Disable before production go-live.',
+  );
+}
+
 const OTP_TTL = 300;          // 5 min
 const RATE_LIMIT_TTL = 900;   // 15 min
 const MAX_OTP_PER_WINDOW = 5;
@@ -211,6 +223,13 @@ export interface OtpVerifyResult {
  */
 export async function verifyOTP(phone: string, otp: string, countryCode = '+91'): Promise<OtpVerifyResult> {
   const fullPhone = `${countryCode}${phone}`;
+  const maskedPhone = fullPhone.replace(/(\+\d{1,3})\d{6}(\d{4})/, '$1******$2');
+
+  // Development bypass — skip Redis/SMS verification when explicitly enabled.
+  if (isOtpDevBypassEnabled() && /^\d{6}$/.test(otp)) {
+    logger.warn('[DEV] OTP bypass accepted', { phone: maskedPhone });
+    return { valid: true };
+  }
 
   try {
     // Check lockout

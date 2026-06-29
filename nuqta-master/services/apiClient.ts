@@ -475,7 +475,10 @@ class ApiClient {
 
         return {
           success: false,
-          error: responseData.message || `HTTP ${response.status}: ${response.statusText}`,
+          error:
+            responseData.error ||
+            responseData.message ||
+            `HTTP ${response.status}: ${response.statusText}`,
           errors: responseData.errors
         };
       }
