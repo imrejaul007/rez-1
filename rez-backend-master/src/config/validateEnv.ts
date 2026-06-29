@@ -35,14 +35,14 @@ const RECOMMENDED_ENV_VARS = [
   'RAZORPAY_KEY_SECRET',
   'CLOUDINARY_CLOUD_NAME',
   'CLOUDINARY_API_KEY',
-  'CLOUDINARY_API_SECRET'
+  'CLOUDINARY_API_SECRET',
+  'SENTRY_DSN',
 ];
 
 // Environment-specific validation rules
 const PRODUCTION_REQUIRED = [
   'REDIS_URL',
   'CORS_ORIGIN',
-  'SENTRY_DSN'
 ];
 
 /**
