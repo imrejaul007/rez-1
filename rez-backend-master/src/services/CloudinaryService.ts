@@ -305,7 +305,7 @@ export class CloudinaryService {
     const circuitState = cloudinaryCircuit.getState();
 
     try {
-      const result = await cloudinaryCircuit.execute(
+      const result = await cloudinaryCircuit.execute<CloudinaryUploadResult>(
         async () =>
           withTimeout(
             cloudinary.uploader.upload(filePath, {
@@ -397,7 +397,7 @@ export class CloudinaryService {
     const circuitState = cloudinaryCircuit.getState();
 
     try {
-      const result = await cloudinaryCircuit.execute(
+      const result = await cloudinaryCircuit.execute<CloudinaryUploadResult>(
         async () =>
           withTimeout(
             cloudinary.uploader.upload(filePath, {
