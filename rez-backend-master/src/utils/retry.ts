@@ -53,7 +53,7 @@ const DEFAULT_RETRYABLE_ERRORS = [
  * @returns True if the error should be retried
  */
 export function isRetryable(error: Error, retryableErrors: string[] = DEFAULT_RETRYABLE_ERRORS): boolean {
-  const errorCode = error.code || '';
+  const errorCode = (error as NodeJS.ErrnoException).code || '';
   const errorMessage = (error.message || '').toLowerCase();
   const errorStatus = String((error as any).status || (error as any).statusCode || '');
 

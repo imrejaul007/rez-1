@@ -88,7 +88,7 @@ export async function withTimeout<T>(
     // If timeout occurred and a fallback is provided, return it
     if (error instanceof TimeoutError && fallback !== undefined) {
       // Handle both fallback as value and fallback as function
-      return typeof fallback === 'function' ? fallback() : fallback;
+      return typeof fallback === 'function' ? (fallback as () => T)() : fallback;
     }
 
     // If it's a TimeoutError but no fallback, throw with custom message if provided

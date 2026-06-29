@@ -13,7 +13,7 @@ import mongoose from 'mongoose';
 import { createServiceLogger } from '../config/logger';
 import redisService from '../services/redisService';
 import { EmailService } from '../services/EmailService';
-import Merchant from '../models/Merchant';
+import { Merchant } from '../models/Merchant';
 import StorePayment from '../models/StorePayment';
 import { StoreVisit } from '../models/StoreVisit';
 import { CoinTransaction } from '../models/CoinTransaction';

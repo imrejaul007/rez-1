@@ -351,6 +351,11 @@ export class CircuitBreaker {
     }
   }
 
+  /** Alias for execute() — used by payment/SMS/email services */
+  exec<T>(fn: () => Promise<T>, fallback?: () => T | Promise<T>): Promise<T> {
+    return this.execute(fn, fallback);
+  }
+
   /**
    * Execute function with timeout wrapper
    */

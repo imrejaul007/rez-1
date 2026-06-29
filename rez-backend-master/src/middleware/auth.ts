@@ -72,7 +72,7 @@ const getJwtSecret = (role: string): string => {
 export const generateToken = (userId: string, role: string = 'user'): string => {
   const payload = { userId, role };
   const secret = getJwtSecret(role);
-  const expiresIn = (process.env.JWT_EXPIRES_IN || '15m') as string;
+  const expiresIn = (process.env.JWT_EXPIRES_IN || '15m') as SignOptions['expiresIn'];
   const options: SignOptions = { expiresIn };
 
   return jwt.sign(payload, secret, options);
@@ -91,7 +91,7 @@ export const generateRefreshToken = (userId: string): string => {
   }
 
   const secret = process.env.JWT_REFRESH_SECRET;
-  const expiresIn = (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as string;
+  const expiresIn = (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as SignOptions['expiresIn'];
   const options: SignOptions = { expiresIn };
 
   return jwt.sign(payload, secret, options);
@@ -315,7 +315,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
           }
           // Attach risk level for downstream handlers
           const deviceReq = req as AuthenticatedDeviceRequest;
-          deviceReq.deviceRisk = deviceStatus.riskLevel;
+          deviceReq.deviceRisk = deviceStatus.riskLevel as DeviceRiskLevel;
           deviceReq.deviceHash = deviceHash;
 
           // Fire-and-forget: register device usage

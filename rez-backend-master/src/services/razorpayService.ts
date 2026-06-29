@@ -189,8 +189,7 @@ export async function fetchPaymentDetails(paymentId: string) {
     const razorpay = getRazorpayInstance();
     const payment = await withTimeout(
       razorpay.payments.fetch(paymentId),
-      RAZORPAY_TIMEOUT_MS,
-      `payments.fetch(${paymentId})`
+      { timeout: RAZORPAY_TIMEOUT_MS, operation: `payments.fetch(${paymentId})` }
     );
     
     const paymentAmount = Number(payment.amount) / 100;
@@ -235,8 +234,7 @@ export async function createRefund(
     
     const refund = await withTimeout(
       razorpay.payments.refund(paymentId, options),
-      RAZORPAY_TIMEOUT_MS,
-      `payments.refund(${paymentId})`
+      { timeout: RAZORPAY_TIMEOUT_MS, operation: `payments.refund(${paymentId})` }
     );
     
     const refundAmount = refund.amount ? Number(refund.amount) / 100 : 0;
@@ -285,7 +283,7 @@ export function validateWebhookSignature(
     try {
       return crypto.timingSafeEqual(
         Buffer.from(expectedSignature),
-        Buffer.from(razorpaySignature)
+        Buffer.from(webhookSignature)
       );
     } catch (e) {
       // If buffers have different lengths, they can't be equal
@@ -364,8 +362,7 @@ export async function createRazorpayPayout(params: {
       logger.info('💸 [RAZORPAY] Calling real Razorpay X Payouts API');
       payout = await withTimeout(
         (razorpay as any).payouts.create(payoutData),
-        RAZORPAY_TIMEOUT_MS,
-        `payouts.create(${params.reference})`
+        { timeout: RAZORPAY_TIMEOUT_MS, operation: `payouts.create(${params.reference})` }
       );
       logger.info('✅ [RAZORPAY] Real payout created:', {
         payoutId: payout.id,
