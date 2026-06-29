@@ -144,14 +144,21 @@ export function setupMiddleware(app: Express): void {
   app.use(cors(corsOptions));
 
   // Mutation requests must have either Origin (browser) or Authorization (mobile/API)
-  // This prevents CSRF from non-browser contexts that omit the Origin header
+  // This prevents CSRF from non-browser contexts that omit the Origin header.
+  // The API gateway forwards the real browser origin as X-Client-Origin and clears
+  // Origin before proxying so upstream CORS middleware is not tripped.
   app.use((req, res, next) => {
     const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method);
     const hasOrigin = !!req.headers.origin;
+    const hasClientOrigin = !!req.headers['x-client-origin'];
     const hasAuth = !!req.headers.authorization;
     const isHealthCheck = req.path === '/health' || req.path === '/api/health';
+    const isPublicTelemetry =
+      req.path === '/api/t/events' ||
+      req.path === '/api/analytics/events' ||
+      req.path === '/api/analytics/batch';
 
-    if (isMutation && !hasOrigin && !hasAuth && !isHealthCheck) {
+    if (isMutation && !hasOrigin && !hasClientOrigin && !hasAuth && !isHealthCheck && !isPublicTelemetry) {
       return res.status(403).json({ success: false, message: 'Origin or authorization required' });
     }
     next();
