@@ -164,6 +164,9 @@ function toErrorMessage(err: unknown): string {
   return 'Unknown error';
 }
 
+/** Ref to store the last JSON snapshot for _setFromProvider deduplication. */
+const savingsSnapshotRef = { current: '' };
+
 // ---------------------------------------------------------------------------
 // Store factory
 // ---------------------------------------------------------------------------
@@ -506,8 +509,19 @@ export const createSavingsStore = () =>
       state: initialState,
       actions,
 
-      // FIX: Removed dead reference equality guard
+      // Guard against redundant provider updates using a content snapshot
       _setFromProvider: (data: SavingsContextShape) => {
+        const snapshot = JSON.stringify({
+          dashboard: data.state.dashboard,
+          summary: data.state.summary,
+          goals: data.state.goals,
+          history: data.state.history,
+          streak: data.state.streak,
+          projection: data.state.projection,
+          recommendations: data.state.recommendations,
+        });
+        if (savingsSnapshotRef.current === snapshot) return;
+        savingsSnapshotRef.current = snapshot;
         set({ state: data.state, actions: data.actions });
       },
     };

@@ -133,7 +133,9 @@ const PlayAndEarnSectionV2: React.FC = () => {
       }
     };
 
-    fetchGames();
+    fetchGames().catch(() => {
+      if (isMounted()) setError('Failed to load games');
+    });
   }, []);
 
   const handleViewAll = () => {

@@ -57,11 +57,11 @@ const PriveSectionContainer = lazyWithRetry(() =>
   import('@/components/prive/PriveSectionContainer').then(m => ({ default: m.PriveSectionContainer }))
 );
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import FeatureFlagGate from '@/components/b/_shared/FeatureFlagGate';
 // ── B-feature additive slot: Savings widget (Phase 1.1) ──
 const SavingsWidget = React.lazy(() => import('@/components/b/savings/SavingsWidget'));
 // ── B-feature additive slot: Coin Expiry Banner (Phase 1.2) ──
 const CoinExpiryBanner = React.lazy(() => import('@/components/b/wallet/CoinExpiryBanner'));
-const FeatureFlagGate = React.lazy(() => import('@/components/b/_shared/FeatureFlagGate'));
 // ── B-feature additive slot: Streak + REZ Score (Phase 1.3) ──
 const StreakFireIcon = React.lazy(() => import('@/components/b/gamification/StreakFireIcon'));
 const RezScoreCard = React.lazy(() => import('@/components/b/gamification/RezScoreCard'));
@@ -312,7 +312,8 @@ function HomeScreen() {
     const lat = currentLocation.coordinates.latitude;
     const lng = currentLocation.coordinates.longitude;
 
-    console.log('[Home] Checking serviceability for:', lat, lng);
+    // ponytail: log without raw coordinates; add coordinate logging behind a debug flag if needed
+    console.log('[Home] Checking serviceability for location');
 
     let cancelled = false;
 
@@ -322,27 +323,30 @@ function HomeScreen() {
       checkAreaServiceability(lat, lng).then(result => {
         if (cancelled || !isMounted()) return;
 
-        console.log('[Home] Serviceability result:', result);
+        console.log('[Home] Serviceability result:', result.isServiceable ? 'serviceable' : 'not serviceable');
 
-        setIsAreaServiceable(result.isServiceable);
-        setServiceabilityChecked(true);
+        // Wrap all state updates in setTimeout to prevent React Error #185
+        setTimeout(() => {
+          if (cancelled || !isMounted()) return;
+          setIsAreaServiceable(result.isServiceable);
+          setServiceabilityChecked(true);
 
-        // Only switch tabs if user is on near-u tab AND area is not serviceable
-        // Use setTimeout to break the sync cycle (React Error #185)
-        if (!result.isServiceable) {
-          // Capture current tab value in closure to avoid stale state
-          const currentTabAtCheck = activeTab;
-          setTimeout(() => {
+          // Only switch tabs if user is on near-u tab AND area is not serviceable
+          if (!result.isServiceable) {
+            const currentTabAtCheck = activeTab;
             if (currentTabAtCheck === 'near-u') {
               console.log('[Home] Area not serviceable, switching to mall tab');
               setActiveTab('mall');
             }
-          }, 0);
-        }
+          }
+        }, 0);
       }).catch((err) => {
-        console.error('[Home] Serviceability check failed:', err);
-        setIsAreaServiceable(true); // Default to serviceable on error
-        setServiceabilityChecked(true);
+        console.error('[Home] Serviceability check failed:', err?.message ?? err);
+        setTimeout(() => {
+          if (cancelled || !isMounted()) return;
+          setIsAreaServiceable(true); // Default to serviceable on error
+          setServiceabilityChecked(true);
+        }, 0);
       });
     }).catch((err) => {
       console.error('[Home] Failed to import serviceabilityCheck:', err);

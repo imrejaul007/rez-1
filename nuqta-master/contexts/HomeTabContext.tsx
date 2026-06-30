@@ -97,10 +97,9 @@ export const HomeTabProvider: React.FC<HomeTabProviderProps> = ({ children }) =>
       nextMode = 'near-u';
     }
 
+    // FIX: Separate setState calls to avoid nested updates (initial persistence sync only)
     setActiveModeState((prev) => {
-      if (prev !== nextMode) {
-        setPreviousMode(prev);
-      }
+      if (prev === nextMode) return prev;
       return nextMode;
     });
   }, [persistenceLoaded, storedMode, isPriveEligible]);
@@ -112,17 +111,16 @@ export const HomeTabProvider: React.FC<HomeTabProviderProps> = ({ children }) =>
         return;
       }
 
-      setActiveModeState((prev) => {
-        if (prev !== mode) {
-          setPreviousMode(prev);
-        }
-        return mode;
-      });
+      // FIX: Separate setState calls to avoid nested updates
+      if (activeMode !== mode) {
+        setPreviousMode(activeMode);
+      }
+      setActiveModeState(mode);
 
       // Persist asynchronously; fire-and-forget.
       saveMode(mode).catch(() => {});
     },
-    [isPriveEligible, saveMode]
+    [isPriveEligible, saveMode, activeMode]
   );
 
   const setActiveHomeTab = useCallback(

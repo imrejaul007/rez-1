@@ -67,6 +67,11 @@ const CachedImage = memo(({
   const imageUri = useMemo(() => {
     if (typeof rawUri === 'number') return rawUri;
     if (!rawUri) return rawUri;
+    // SSRF guard: only allow http/https. Other schemes (file://, content://, ftp://, etc.)
+    // would let untrusted image data bypass CDN/domain restrictions.
+    if (typeof rawUri === 'string' && !/^https?:\/\//i.test(rawUri)) {
+      return null;
+    }
     // If transformed URL failed, fall back to raw URL (no f_auto/q_auto)
     if (useRawUrl) return rawUri;
     // Auto-optimize Cloudinary URLs with f_auto, q_auto, and width-based resizing

@@ -246,7 +246,7 @@ const MarkerList = memo(function MarkerList({
 // MapPageContent
 // ---------------------------------------------------------------------------
 
-export function MapPageContent(): React.ReactElement {
+function MapPageContent(): React.ReactElement {
   const router = useRouter();
   const { stores, isLoading, error, refresh, userLocation } = useNearbyStores();
   const [permission, setPermission] = useState<PermissionState>('unknown');
@@ -545,6 +545,9 @@ export function MapPageContent(): React.ReactElement {
     </SafeAreaView>
   );
 }
+
+export { MapPageContent };
+export default MapPageContent;
 
 // ---------------------------------------------------------------------------
 // Styles

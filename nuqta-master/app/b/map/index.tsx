@@ -42,7 +42,11 @@ import MapLoadingPlaceholder from './MapLoadingPlaceholder';
 
 // Lazy-load the map content so react-native-maps native module is code-split
 // and only downloaded when the user navigates to this screen.
-const MapPageContent = lazy(() => import('./MapPageContent'));
+const MapPageContent = lazy(() =>
+  import('./MapPageContent').then((m) => ({
+    default: m.default ?? m.MapPageContent,
+  })),
+);
 
 // ---------------------------------------------------------------------------
 // Page body (extracted so the gate + boundary are at the bottom)

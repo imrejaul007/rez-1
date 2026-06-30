@@ -171,10 +171,10 @@ class MallApiService {
   /**
    * Get featured brands
    */
-  async getFeaturedBrands(limit: number = 10): Promise<MallBrand[]> {
+  async getFeaturedBrands(offset: number = 0, limit: number = 10): Promise<MallBrand[]> {
     try {
       const response = await apiClient.get(
-        `${MALL_ENDPOINTS.BRANDS_FEATURED}?limit=${limit}`
+        `${MALL_ENDPOINTS.BRANDS_FEATURED}?offset=${offset}&limit=${limit}`
       );
       return response.data || [];
     } catch (error) {
@@ -186,10 +186,10 @@ class MallApiService {
   /**
    * Get new arrivals
    */
-  async getNewArrivals(limit: number = 10): Promise<MallBrand[]> {
+  async getNewArrivals(offset: number = 0, limit: number = 10): Promise<MallBrand[]> {
     try {
       const response = await apiClient.get(
-        `${MALL_ENDPOINTS.BRANDS_NEW}?limit=${limit}`
+        `${MALL_ENDPOINTS.BRANDS_NEW}?offset=${offset}&limit=${limit}`
       );
       return response.data || [];
     } catch (error) {
@@ -216,10 +216,10 @@ class MallApiService {
   /**
    * Get luxury brands
    */
-  async getLuxuryBrands(limit: number = 10): Promise<MallBrand[]> {
+  async getLuxuryBrands(offset: number = 0, limit: number = 10): Promise<MallBrand[]> {
     try {
       const response = await apiClient.get(
-        `${MALL_ENDPOINTS.BRANDS_LUXURY}?limit=${limit}`
+        `${MALL_ENDPOINTS.BRANDS_LUXURY}?offset=${offset}&limit=${limit}`
       );
       return response.data || [];
     } catch (error) {
@@ -334,10 +334,10 @@ class MallApiService {
   /**
    * Get exclusive offers
    */
-  async getExclusiveOffers(limit: number = 10): Promise<MallOffer[]> {
+  async getExclusiveOffers(offset: number = 0, limit: number = 10): Promise<MallOffer[]> {
     try {
       const response = await apiClient.get(
-        `${MALL_ENDPOINTS.OFFERS_EXCLUSIVE}?limit=${limit}`
+        `${MALL_ENDPOINTS.OFFERS_EXCLUSIVE}?offset=${offset}&limit=${limit}`
       );
       return response.data || [];
     } catch (error) {
@@ -628,10 +628,10 @@ class MallApiService {
   /**
    * Get featured mall stores
    */
-  async getFeaturedMallStores(limit: number = 10): Promise<MallStoreData[]> {
+  async getFeaturedMallStores(offset: number = 0, limit: number = 10): Promise<MallStoreData[]> {
     try {
       const response = await apiClient.get(
-        `${MALL_ENDPOINTS.STORES_FEATURED}?limit=${limit}`
+        `${MALL_ENDPOINTS.STORES_FEATURED}?offset=${offset}&limit=${limit}`
       );
       return response.data || [];
     } catch (error) {
@@ -643,10 +643,10 @@ class MallApiService {
   /**
    * Get new mall stores
    */
-  async getNewMallStores(limit: number = 10): Promise<MallStoreData[]> {
+  async getNewMallStores(offset: number = 0, limit: number = 10): Promise<MallStoreData[]> {
     try {
       const response = await apiClient.get(
-        `${MALL_ENDPOINTS.STORES_NEW}?limit=${limit}`
+        `${MALL_ENDPOINTS.STORES_NEW}?offset=${offset}&limit=${limit}`
       );
       return response.data || [];
     } catch (error) {
@@ -658,10 +658,10 @@ class MallApiService {
   /**
    * Get top rated mall stores
    */
-  async getTopRatedMallStores(limit: number = 10): Promise<MallStoreData[]> {
+  async getTopRatedMallStores(offset: number = 0, limit: number = 10): Promise<MallStoreData[]> {
     try {
       const response = await apiClient.get(
-        `${MALL_ENDPOINTS.STORES_TOP_RATED}?limit=${limit}`
+        `${MALL_ENDPOINTS.STORES_TOP_RATED}?offset=${offset}&limit=${limit}`
       );
       return response.data || [];
     } catch (error) {
@@ -673,10 +673,10 @@ class MallApiService {
   /**
    * Get premium mall stores
    */
-  async getPremiumMallStores(limit: number = 10): Promise<MallStoreData[]> {
+  async getPremiumMallStores(offset: number = 0, limit: number = 10): Promise<MallStoreData[]> {
     try {
       const response = await apiClient.get(
-        `${MALL_ENDPOINTS.STORES_PREMIUM}?limit=${limit}`
+        `${MALL_ENDPOINTS.STORES_PREMIUM}?offset=${offset}&limit=${limit}`
       );
       return response.data || [];
     } catch (error) {

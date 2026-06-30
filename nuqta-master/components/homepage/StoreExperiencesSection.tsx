@@ -110,7 +110,16 @@ const StoreExperiencesSection: React.FC<StoreExperiencesSectionProps> = memo(({
     const fetchExperiences = async () => {
       try {
         setIsLoading(true);
-        const response = await experiencesApi.getHomepageExperiences(4);
+        // ponytail: AbortController avoids fetch hanging indefinitely; 8s limit covers cold starts
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        let response;
+        try {
+          response = await experiencesApi.getHomepageExperiences(4);
+        } finally {
+          clearTimeout(timeoutId);
+        }
 
         if (response.success && response.data && response.data.experiences.length > 0) {
           // Transform API data to component format
@@ -133,7 +142,8 @@ const StoreExperiencesSection: React.FC<StoreExperiencesSectionProps> = memo(({
           setExperiences(transformedExperiences);
         }
       } catch (error) {
-        // Keep using fallback data
+        // Keep using fallback data — network failures fall through silently
+        console.error('[StoreExperiences] fetch failed:', error?.message ?? error);
       } finally {
         if (!isMounted()) return;
         setIsLoading(false);

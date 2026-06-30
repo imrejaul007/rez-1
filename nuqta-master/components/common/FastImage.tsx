@@ -52,7 +52,9 @@ const FastImage = memo(({
   }, []);
 
   // Get source URI string
-  const imageUri = typeof source === 'string' ? source : source?.uri;
+  const rawUri = typeof source === 'string' ? source : source?.uri;
+  // SSRF guard: only allow http/https. Other schemes would let untrusted data bypass domain restrictions.
+  const imageUri = typeof rawUri === 'string' && !/^https?:\/\//i.test(rawUri) ? null : rawUri;
 
   // Container style
   const containerStyle = [

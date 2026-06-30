@@ -144,6 +144,13 @@ export function useMallSection(options: UseMallSectionOptions = {}): UseMallSect
   const lastFetchRef = useRef<number>(0);
   const isMountedRef = useRef(true);
 
+  // Pagination offsets for loadMore
+  const featuredOffsetRef = useRef(10);
+  const newArrivalsOffsetRef = useRef(10);
+  const topRatedOffsetRef = useRef(10);
+  const luxuryOffsetRef = useRef(10);
+  const exclusiveOffersOffsetRef = useRef(10);
+
   /**
    * Fetch all mall data
    * When useStores=true, fetches from Store model (in-app delivery marketplace)
@@ -290,32 +297,40 @@ export function useMallSection(options: UseMallSectionOptions = {}): UseMallSect
         // Store-based mall
         switch (section) {
           case 'featuredBrands': {
-            const moreFeaturedStores = await mallApi.getFeaturedMallStores(10);
+            const offset = featuredOffsetRef.current;
+            const moreFeaturedStores = await mallApi.getFeaturedMallStores(offset, 10);
             if (isMountedRef.current && moreFeaturedStores.length) {
+              featuredOffsetRef.current += moreFeaturedStores.length;
               setFeaturedBrands(prev => [...prev, ...moreFeaturedStores.map(transformStoreToMallBrand)]);
             }
             break;
           }
 
           case 'newArrivals': {
-            const moreNewStores = await mallApi.getNewMallStores(10);
-            if (isMountedRef.current) {
+            const offset = newArrivalsOffsetRef.current;
+            const moreNewStores = await mallApi.getNewMallStores(offset, 10);
+            if (isMountedRef.current && moreNewStores.length) {
+              newArrivalsOffsetRef.current += moreNewStores.length;
               setNewArrivals(prev => [...prev, ...moreNewStores.map(transformStoreToMallBrand)]);
             }
             break;
           }
 
           case 'luxuryBrands': {
-            const morePremiumStores = await mallApi.getPremiumMallStores(10);
-            if (isMountedRef.current) {
+            const offset = luxuryOffsetRef.current;
+            const morePremiumStores = await mallApi.getPremiumMallStores(offset, 10);
+            if (isMountedRef.current && morePremiumStores.length) {
+              luxuryOffsetRef.current += morePremiumStores.length;
               setLuxuryBrands(prev => [...prev, ...morePremiumStores.map(transformStoreToMallBrand)]);
             }
             break;
           }
 
           case 'topRatedBrands': {
-            const moreTopRatedStores = await mallApi.getTopRatedMallStores(10);
-            if (isMountedRef.current) {
+            const offset = topRatedOffsetRef.current;
+            const moreTopRatedStores = await mallApi.getTopRatedMallStores(offset, 10);
+            if (isMountedRef.current && moreTopRatedStores.length) {
+              topRatedOffsetRef.current += moreTopRatedStores.length;
               setTopRatedBrands(prev => [...prev, ...moreTopRatedStores.map(transformStoreToMallBrand)]);
             }
             break;
@@ -327,32 +342,40 @@ export function useMallSection(options: UseMallSectionOptions = {}): UseMallSect
         // Legacy brand-based mall
         switch (section) {
           case 'featuredBrands': {
-            const moreFeatured = await mallApi.getFeaturedBrands(10);
-            if (isMountedRef.current) {
+            const offset = featuredOffsetRef.current;
+            const moreFeatured = await mallApi.getFeaturedBrands(offset, 10);
+            if (isMountedRef.current && moreFeatured.length) {
+              featuredOffsetRef.current += moreFeatured.length;
               setFeaturedBrands(prev => [...prev, ...moreFeatured]);
             }
             break;
           }
 
           case 'newArrivals': {
-            const moreNewArrivals = await mallApi.getNewArrivals(10);
-            if (isMountedRef.current) {
+            const offset = newArrivalsOffsetRef.current;
+            const moreNewArrivals = await mallApi.getNewArrivals(offset, 10);
+            if (isMountedRef.current && moreNewArrivals.length) {
+              newArrivalsOffsetRef.current += moreNewArrivals.length;
               setNewArrivals(prev => [...prev, ...moreNewArrivals]);
             }
             break;
           }
 
           case 'luxuryBrands': {
-            const moreLuxury = await mallApi.getLuxuryBrands(10);
-            if (isMountedRef.current) {
+            const offset = luxuryOffsetRef.current;
+            const moreLuxury = await mallApi.getLuxuryBrands(offset, 10);
+            if (isMountedRef.current && moreLuxury.length) {
+              luxuryOffsetRef.current += moreLuxury.length;
               setLuxuryBrands(prev => [...prev, ...moreLuxury]);
             }
             break;
           }
 
           case 'exclusiveOffers': {
-            const moreOffers = await mallApi.getExclusiveOffers(10);
-            if (isMountedRef.current) {
+            const offset = exclusiveOffersOffsetRef.current;
+            const moreOffers = await mallApi.getExclusiveOffers(offset, 10);
+            if (isMountedRef.current && moreOffers.length) {
+              exclusiveOffersOffsetRef.current += moreOffers.length;
               setExclusiveOffers(prev => [...prev, ...moreOffers]);
             }
             break;

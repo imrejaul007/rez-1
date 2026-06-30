@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import asyncStorageService from '@/services/asyncStorageService';
 
@@ -21,6 +21,7 @@ export function useNetworkStatus() {
   });
 
   const [wasOffline, setWasOffline] = useState(false);
+  const wasConnectedRef = useRef(true);
 
   useEffect(() => {
     // Load offline mode from storage
@@ -33,29 +34,28 @@ export function useNetworkStatus() {
 
     // Subscribe to network state updates
     const unsubscribe = NetInfo.addEventListener(state => {
-
       const isConnected = state.isConnected ?? false;
       const isInternetReachable = state.isInternetReachable;
 
-      setNetworkStatus(prev => {
-        // Track if we were offline and are now online
-        if (!prev.isConnected && isConnected) {
-          setWasOffline(true);
-        } else if (prev.isConnected && !isConnected) {
-          // Was online, now offline
-        }
+      // Track offline → online transitions outside the setNetworkStatus updater.
+      // Calling setWasOffline inside the updater caused React Error #185.
+      if (!wasConnectedRef.current && isConnected) {
+        setWasOffline(true);
+      }
+      wasConnectedRef.current = isConnected;
 
-        return {
-          ...prev,
-          isConnected,
-          isInternetReachable,
-          type: state.type
-        };
-      });
+      setNetworkStatus(prev => ({
+        ...prev,
+        isConnected,
+        isInternetReachable,
+        type: state.type,
+      }));
     });
 
     // Initial check
     NetInfo.fetch().then(state => {
+      const isConnected = state.isConnected ?? false;
+      wasConnectedRef.current = isConnected;
       setNetworkStatus(prev => ({
         ...prev,
         isConnected: state.isConnected ?? false,

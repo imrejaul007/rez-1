@@ -180,19 +180,19 @@ function BrandsListingPage() {
         data = stores.map(transformStoreToMallBrand);
         total = data.length;
       } else if (activeFilter === 'featured') {
-        const stores = await mallApi.getFeaturedMallStores(50);
+        const stores = await mallApi.getFeaturedMallStores(0, 50);
         data = stores.map(transformStoreToMallBrand);
         total = data.length;
       } else if (activeFilter === 'new') {
-        const stores = await mallApi.getNewMallStores(50);
+        const stores = await mallApi.getNewMallStores(0, 50);
         data = stores.map(transformStoreToMallBrand);
         total = data.length;
       } else if (activeFilter === 'top-rated') {
-        const stores = await mallApi.getTopRatedMallStores(50);
+        const stores = await mallApi.getTopRatedMallStores(0, 50);
         data = stores.map(transformStoreToMallBrand);
         total = data.length;
       } else if (activeFilter === 'luxury') {
-        const stores = await mallApi.getPremiumMallStores(50);
+        const stores = await mallApi.getPremiumMallStores(0, 50);
         data = stores.map(transformStoreToMallBrand);
         total = data.length;
       } else if (activeFilter === 'trending') {

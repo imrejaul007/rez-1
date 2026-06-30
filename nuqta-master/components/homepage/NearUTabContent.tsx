@@ -570,17 +570,17 @@ const NearUTabContent: React.FC<NearUTabContentProps> = ({
       )}
       {featureLevel >= 5 && (
         <LazySection sectionId="play-earn-v2" scrollY={scrollY} height={250}
-          renderSection={() => <PlayAndEarnSectionV2 />} />
+          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={250} />}><PlayAndEarnSectionV2 /></Suspense>} />
       )}
       {featureLevel >= 2 && (
         <LazySection sectionId="bonus-zone" scrollY={scrollY} height={200}
-          renderSection={() => <BonusZoneHighlight />} />
+          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={200} />}><BonusZoneHighlight /></Suspense>} />
       )}
       <LazySection sectionId="new-on-rez" scrollY={scrollY} height={300}
-        renderSection={() => <NewOnRezSection />} />
+        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><NewOnRezSection /></Suspense>} />
       {segment !== 'verified_student' && (
         <LazySection sectionId="events-experiences" scrollY={scrollY} height={300}
-          renderSection={() => <EventsExperiencesSection />} />
+          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><EventsExperiencesSection /></Suspense>} />
       )}
 
       {/* ===== TIER 3: Below fold - viewport + React.lazy dynamic loading ===== */}
