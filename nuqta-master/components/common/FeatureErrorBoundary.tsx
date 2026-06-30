@@ -73,6 +73,13 @@ class FeatureErrorBoundary extends Component<FeatureErrorBoundaryProps, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ error, errorInfo });
 
+    console.error(`[FeatureErrorBoundary] ${this.props.featureName ?? 'Feature'} crashed`, {
+      message: error?.message,
+      name: error?.name,
+      stack: error?.stack,
+      componentStack: errorInfo?.componentStack,
+    });
+
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }

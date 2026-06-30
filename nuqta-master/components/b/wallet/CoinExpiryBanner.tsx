@@ -117,6 +117,7 @@ function UrgentBanner({
 }): React.ReactElement {
   // Most-urgent notice — already first because the hook sorts ASC.
   const top = notices[0];
+  if (!top) return <></>;
   const daysLabel = describeDays(top.daysLeft);
   const accessibilityLabel = `Warning: ${amountLabel} of ${top.coinName} ${top.severity === 'urgent' ? 'expires' : 'expiring'} in ${daysLabel}. Tap to use now.`;
 
@@ -186,6 +187,7 @@ function CompactBanner({
   onPress?: () => void;
 }): React.ReactElement {
   const top = notices[0];
+  if (!top) return <></>;
   const daysLabel = describeDays(top.daysLeft);
   const accessibilityLabel = `${amountLabel} of ${top.coinName} expiring in ${daysLabel}.`;
 

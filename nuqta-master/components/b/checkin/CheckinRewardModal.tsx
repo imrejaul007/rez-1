@@ -31,7 +31,7 @@
  *   - Modal root carries `accessibilityLabel` describing the reward.
  *   - Continue button exposes `accessibilityRole="button"`.
  */
-import React, { useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -178,7 +178,7 @@ function ConfettiBurstBase({ seed }: ConfettiBurstProps): React.ReactElement {
   );
 }
 
-const ConfettiBurst = React.memo(ConfettiBurstBase);
+const ConfettiBurst = memo(ConfettiBurstBase);
 
 // ---------------------------------------------------------------------------
 // Main modal
@@ -207,11 +207,8 @@ function CheckinRewardModalBase({
   onClose,
 }: CheckinRewardModalProps): React.ReactElement {
   // Stable seed so the random layout is consistent during the animation.
-  const seedRef = useRef<number>(0);
-  if (seedRef.current === 0) {
-    seedRef.current = Math.floor(Math.random() * 1000) + 1;
-  }
-  const seed = seedRef.current;
+  // Initialized lazily via useState to avoid mutating state during render.
+  const [seed] = useState<number>(() => Math.floor(Math.random() * 1000) + 1);
 
   const safeStreak = Number.isFinite(streakDays) && streakDays >= 0
     ? Math.floor(streakDays)
@@ -295,7 +292,7 @@ function GatedCheckinRewardModal(props: CheckinRewardModalProps): React.ReactEle
   );
 }
 
-const CheckinRewardModal = React.memo(GatedCheckinRewardModal);
+const CheckinRewardModal = memo(GatedCheckinRewardModal);
 export default CheckinRewardModal;
 
 // ---------------------------------------------------------------------------

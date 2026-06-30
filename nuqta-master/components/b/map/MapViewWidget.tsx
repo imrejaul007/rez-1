@@ -60,7 +60,7 @@ function MapViewWidgetBase(): React.ReactElement {
         </View>
       </View>
 
-      <Text style={styles.hint} accessibilityRole="text" aria-hidden="true">Tap to open</Text>
+      <Text style={styles.hint} accessibilityRole="text" aria-hidden={true}>Tap to open</Text>
     </Pressable>
   );
 }

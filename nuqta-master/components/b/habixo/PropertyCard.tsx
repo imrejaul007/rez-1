@@ -304,23 +304,13 @@ function PropertyCardBase({
           <Text style={styles.owner} numberOfLines={1}>
             {`Owner: ${property.ownerName}`}
           </Text>
-          {onPress !== undefined ? (
-            <View
-              accessibilityRole="button"
-              accessibilityLabel={`View details for ${property.title}`}
-              style={[styles.ctaBtn, { backgroundColor: tint }]}
-            >
-              <Text style={styles.ctaBtnText}>View details</Text>
-            </View>
-          ) : (
-            <View
-              accessibilityRole="button"
-              accessibilityLabel={`View details for ${property.title}`}
-              style={[styles.ctaBtn, { backgroundColor: tint }]}
-            >
-              <Text style={styles.ctaBtnText}>View details</Text>
-            </View>
-          )}
+          <View
+            accessibilityRole="button"
+            accessibilityLabel={`View details for ${property.title}`}
+            style={[styles.ctaBtn, { backgroundColor: tint }]}
+          >
+            <Text style={styles.ctaBtnText}>View details</Text>
+          </View>
         </View>
       </View>
     </View>

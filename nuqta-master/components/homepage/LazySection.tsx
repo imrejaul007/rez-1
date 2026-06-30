@@ -12,7 +12,8 @@
 
 import React, { ReactNode, useRef, useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Platform, Dimensions, ViewStyle, LayoutChangeEvent } from 'react-native';
-import Animated, { useSharedValue, useAnimatedReaction, useAnimatedStyle, withTiming, runOnJS, SharedValue } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedReaction, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface LazySectionProps {
@@ -171,10 +172,10 @@ const LazySection: React.FC<LazySectionProps> = ({
     }
   }, []);
 
-  // Use appropriate hook based on platform
-  const isVisible = Platform.OS === 'web'
-    ? useLazySectionWeb(ref, threshold, rootMargin, onVisible)
-    : useLazySectionNative(sectionY, scrollY, rootMargin, onVisible);
+  // Call both hooks in a stable order; each hook self-disables on the other platform.
+  const isVisibleWeb = useLazySectionWeb(ref, threshold, rootMargin, onVisible);
+  const isVisibleNative = useLazySectionNative(sectionY, scrollY, rootMargin, onVisible);
+  const isVisible = Platform.OS === 'web' ? isVisibleWeb : isVisibleNative;
 
   // Track if section has ever been loaded — fade in content
   useEffect(() => {
