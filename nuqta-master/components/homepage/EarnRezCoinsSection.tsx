@@ -10,7 +10,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import { useHomeTab } from '@/contexts/HomeTabContext';
+import { useSetActiveTab } from '@/stores/selectors';
+import { useHomeTabStore } from '@/stores/homeTabStore';
 import { BRAND } from '@/constants/brand';
 import { colors } from '@/constants/theme';
 
@@ -31,7 +32,10 @@ const COLORS = {
 
 const EarnNuqtaCoinsSection: React.FC = () => {
   const router = useRouter();
-  const { setActiveTab, scrollToTop } = useHomeTab();
+  const setActiveTab = useSetActiveTab();
+  const scrollToTop = () => {
+    useHomeTabStore.getState().scrollToTop?.();
+  };
 
   const handleViewAll = () => {
     router.push('/(tabs)/earn');
