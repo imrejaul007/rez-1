@@ -77,9 +77,10 @@ export function useStreaksGamification(): UseStreaksGamificationResult {
   const [coinBalance, setCoinBalance] = useState<number>(0);
 
   const isMountedRef = useRef(true);
+  const fetchControllerRef = useRef<AbortController | null>(null);
 
   // Fetch data from API with timeout protection
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (signal?: AbortSignal) => {
     if (!isMountedRef.current) return;
 
     try {
@@ -94,7 +95,7 @@ export function useStreaksGamification(): UseStreaksGamificationResult {
 
       // Race between API call and timeout
       const response = await Promise.race([
-        gamificationAPI.getPlayAndEarnData(),
+        gamificationAPI.getPlayAndEarnData(signal),
         timeoutPromise,
       ]).finally(() => clearTimeout(timeoutId));
 
@@ -163,9 +164,9 @@ export function useStreaksGamification(): UseStreaksGamificationResult {
         return true;
       }
 
-      return false;
+      throw new Error(response.error || 'Failed to claim reward');
     } catch (err) {
-      return false;
+      throw err;  // re-throw so caller can handle
     }
   }, []);
 
@@ -203,11 +204,21 @@ export function useStreaksGamification(): UseStreaksGamificationResult {
 
   // Fetch data on mount (only when authenticated)
   useEffect(() => {
+    // Cancel previous request
+    if (fetchControllerRef.current) {
+      fetchControllerRef.current.abort();
+    }
+    fetchControllerRef.current = new AbortController();
+
     if (isAuthenticated) {
-      fetchData();
+      fetchData(fetchControllerRef.current.signal);
     } else {
       setLoading(false);
     }
+
+    return () => {
+      fetchControllerRef.current?.abort();
+    };
   }, [fetchData, isAuthenticated]);
 
   // Campus rank (S-05)
@@ -215,9 +226,13 @@ export function useStreaksGamification(): UseStreaksGamificationResult {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+
+    const mountedRef = { current: true };
+    const controller = new AbortController();
+
     // Fetch campus leaderboard to find user rank
     apiClient.get('/leaderboard/campus').then((res: any) => {
-      if (!isMountedRef.current) return;
+      if (!mountedRef.current) return;
       const ranks = res?.data?.ranks || res?.data?.entries || [];
       // The API returns the user's rank in the response
       const myRank = res?.data?.myRank || res?.data?.userRank;
@@ -229,6 +244,11 @@ export function useStreaksGamification(): UseStreaksGamificationResult {
         if (myEntry) setCampusRank(myEntry.rank || ranks.indexOf(myEntry) + 1);
       }
     }).catch(() => { /* non-blocking */ });
+
+    return () => {
+      mountedRef.current = false;
+      controller.abort();
+    };
   }, [isAuthenticated]);
 
   return {

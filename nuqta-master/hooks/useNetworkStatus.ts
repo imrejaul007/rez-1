@@ -131,23 +131,23 @@ export function useNetworkStatus() {
         return;
       }
 
-      let unsubscribe: (() => void) | null = null;
+      let resolved = false;
 
       const timeoutId = setTimeout(() => {
-        // Clean up listener when timeout fires
-        if (unsubscribe) {
-          unsubscribe();
+        if (!resolved) {
+          resolved = true;
+          resolve(false);
         }
-        resolve(false);
       }, timeout);
 
-      unsubscribe = NetInfo.addEventListener(state => {
+      const unsubscribe = NetInfo.addEventListener(state => {
         if (state.isConnected) {
-          clearTimeout(timeoutId);
-          if (unsubscribe) {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeoutId);
             unsubscribe();
+            resolve(true);
           }
-          resolve(true);
         }
       });
     });

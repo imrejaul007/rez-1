@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -26,19 +26,19 @@ interface OffersGridProps {
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 72) / 2; // Account for padding and gap
 
-function OffersGrid({ 
-  offers, 
+function OffersGrid({
+  offers,
   onClaimOffer,
-  onViewTerms 
+  onViewTerms
 }: OffersGridProps) {
   // Normalize offers data (backend might send claimed or isClaimed)
-  const normalizedOffers = offers.map(offer => ({
+  const normalizedOffers = useMemo(() => offers.map(offer => ({
     ...offer,
     isClaimed: offer.isClaimed ?? offer.claimed ?? false
-  }));
+  })), [offers]);
 
-  const availableOffers = normalizedOffers.filter(offer => !offer.isClaimed);
-  const claimedOffers = normalizedOffers.filter(offer => offer.isClaimed);
+  const availableOffers = useMemo(() => normalizedOffers.filter(offer => !offer.isClaimed), [normalizedOffers]);
+  const claimedOffers = useMemo(() => normalizedOffers.filter(offer => offer.isClaimed), [normalizedOffers]);
 
   const handleClaimPress = (offer: ClaimableOffer) => {
     if (offer.isClaimed) {
@@ -65,7 +65,7 @@ function OffersGrid({
     );
   };
 
-  const renderOfferCard = (offer: ClaimableOffer) => {
+  const renderOfferCard = useCallback((offer: ClaimableOffer) => {
     const isExpiringSoon = new Date(offer.validUntil).getTime() - new Date().getTime() < 7 * 24 * 60 * 60 * 1000; // 7 days
 
     return (
@@ -165,7 +165,7 @@ function OffersGrid({
         </View>
       </Pressable>
     );
-  };
+  }, []);
 
   const renderSection = (title: string, sectionOffers: ClaimableOffer[], emptyMessage?: string) => (
     <View style={styles.section}>
@@ -522,4 +522,8 @@ const styles = StyleSheet.create({
   },
 });
 
-export default React.memo(OffersGrid);
+export default React.memo(OffersGrid, (prev, next) =>
+  prev.offers === next.offers &&
+  prev.onClaimOffer === next.onClaimOffer &&
+  prev.onViewTerms === next.onViewTerms
+);

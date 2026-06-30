@@ -1157,11 +1157,11 @@ export function CartProvider({ children }: CartProviderProps) {
     actions: stableCartActions,
   }), [state, stableRefreshCart, stableCartActions]);
 
-  // Sync to Zustand store for crash-safe fallback
-  const _setFromProvider = useCartStore((s) => s._setFromProvider);
-  useEffect(() => {
-    _setFromProvider(contextValue);
-  }, [contextValue, _setFromProvider]);
+  // REMOVED: Zustand sync was causing N+1 updates on every cart action
+  // The Zustand store already has its own defaultActions for crash recovery
+  // const _setFromProvider = useCartStore((s) => s._setFromProvider);
+  // useEffect(() => { _setFromProvider(contextValue); }, [contextValue, _setFromProvider]);
+  // Previously caused: Unnecessary Zustand updates on every cart action
 
   return (
     <CartContext.Provider value={contextValue}>

@@ -153,7 +153,7 @@ export function useLoyaltySection(options: UseLoyaltySectionOptions = {}): UseLo
           setIsLoading(false);
         }
         hasFetchedRef.current = true;
-        _loyaltyPending = null;
+        _loyaltyPending = null; // Always nullify, even on unmount
       }
     })();
 

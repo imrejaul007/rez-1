@@ -26,12 +26,9 @@ export const useSocketStore = create<SocketStoreState>((set) => ({
   isConnected: false,
   lastEvent: null,
 
-  // FIX: Skip update if nothing changed to prevent render loop (React Error #185)
+  // FIX: Removed dead reference equality check
   _setFromProvider: (state: SocketState) => {
-    set((s) => {
-      if (s.state === state) return {};
-      return { state, isConnected: state.connected };
-    });
+    set({ state, isConnected: state.connected });
   },
 
   _setLastEvent: (event: string) => {

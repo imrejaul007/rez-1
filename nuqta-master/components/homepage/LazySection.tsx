@@ -40,6 +40,8 @@ function useLazySectionWeb(
   onVisible?: () => void,
 ): boolean {
   const [isVisible, setIsVisible] = useState(false);
+  const onVisibleRef = useRef(onVisible);
+  onVisibleRef.current = onVisible;
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
@@ -51,7 +53,7 @@ function useLazySectionWeb(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          if (onVisible) onVisible();
+          if (onVisibleRef.current) onVisibleRef.current();
           // Disconnect after first visibility — section stays mounted
           observer.disconnect();
         }
@@ -67,7 +69,7 @@ function useLazySectionWeb(
     return () => {
       observer.disconnect();
     };
-  }, [ref, threshold, rootMargin, onVisible]);
+  }, [threshold, rootMargin]);
 
   return isVisible;
 }
@@ -128,7 +130,7 @@ function useLazySectionNative(
         runOnJS(markVisible)();
       }
     },
-    [sectionY, rootMargin, scrollY]  // FIX: Added scrollY to deps
+    [sectionY, rootMargin]
   );
 
   return isVisible;
@@ -180,7 +182,7 @@ const LazySection: React.FC<LazySectionProps> = ({
       setHasLoaded(true);
       fadeAnim.value = withTiming(1, { duration: 200 });
     }
-  }, [isVisible, hasLoaded]);
+  }, [isVisible, hasLoaded, fadeAnim]);
 
   const shouldRenderContent = hasLoaded && (keepMounted || isVisible || !unloadWhenOffscreen);
 

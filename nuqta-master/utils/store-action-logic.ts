@@ -376,11 +376,19 @@ export function handleButtonDestination(
       }).catch(() => {});
       break;
 
-    case 'url':
-      Linking.canOpenURL(destination.value).then(supported => {
-        if (supported) safeOpenURL(destination.value, { allowedSchemes: STORE_ACTION_ALLOWED_SCHEMES }).catch(() => {});
-      }).catch(() => {});
+    case 'url': {
+      // Guard against arbitrary-scheme URLs in admin-defined destinations.
+      // https: is the only safe scheme for arbitrary URLs; tel/geo/mailto
+      // should use their own button types, not 'url'.
+      const urlScheme = (() => {
+        try { return new URL(destination.value).protocol; }
+        catch { /* malformed URL — will be blocked below */ }
+      })();
+      if (urlScheme === 'https:' || urlScheme === 'http:') {
+        safeOpenURL(destination.value, { allowedSchemes: ['https:', 'http:'] }).catch(() => {});
+      }
       break;
+    }
 
     case 'maps':
       // Value can be coordinates "lat,lng" or address

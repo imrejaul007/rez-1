@@ -21,7 +21,7 @@
  * a coherent unit.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
   AccessibilityRole,
   Animated,
@@ -65,24 +65,33 @@ function StoreMapInfoCardBase({
 
   useEffect(() => {
     translateY.setValue(120);
-    Animated.timing(translateY, {
+    const animation = Animated.timing(translateY, {
       toValue: 0,
       duration: SLIDE_DURATION_MS,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
-    }).start();
-  }, [store.id, translateY]);
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [store.id]);
 
   // The design tokens don't yet expose `background.elevated`. Resolve to
   // `secondary` so the call site is forward-compatible.
   const surface =
     (colors.background as { elevated?: string }).elevated ?? colors.background.secondary;
 
-  const offersLabel = `${store.offersCount} offer${store.offersCount === 1 ? '' : 's'} live`;
-  const cashbackLabel =
-    typeof store.cashbackPercent === 'number' && store.cashbackPercent > 0
-      ? `${store.cashbackPercent}% cashback`
-      : null;
+  // ponytail: useMemo avoids re-computing derived strings on unrelated parent re-renders.
+  const offersLabel = useMemo(
+    () => `${store.offersCount} offer${store.offersCount === 1 ? '' : 's'} live`,
+    [store.offersCount],
+  );
+  const cashbackLabel = useMemo(
+    () =>
+      typeof store.cashbackPercent === 'number' && store.cashbackPercent > 0
+        ? `${store.cashbackPercent}% cashback`
+        : null,
+    [store.cashbackPercent],
+  );
 
   return (
     <Animated.View
@@ -90,10 +99,11 @@ function StoreMapInfoCardBase({
         styles.container,
         { backgroundColor: surface, transform: [{ translateY }] },
       ]}
-      accessibilityRole={'summary' as AccessibilityRole}
-      accessibilityLabel={`${store.name}, ${formatDistance(store.distanceKm)}${
+      accessibilityRole={'dialog' as AccessibilityRole}
+      accessibilityLabel={`Store details for ${store.name}. ${formatDistance(store.distanceKm)}${
         store.category ? `, ${store.category}` : ''
-      }`}
+      }. ${offersLabel}${cashbackLabel ? `. ${cashbackLabel}` : ''}.`}
+      accessibilityLiveRegion="polite"
     >
       <View style={styles.headerRow}>
         <View style={styles.titleBlock}>
@@ -108,7 +118,7 @@ function StoreMapInfoCardBase({
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close store details"
+          accessibilityLabel={`Close store details for ${store.name}`}
           onPress={onClose}
           hitSlop={spacing.sm}
           style={({ pressed }) => [styles.closeBtn, pressed && styles.closeBtnPressed]}
@@ -199,9 +209,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.circular(16),
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.circular(22),
     backgroundColor: colors.background.tertiary,
     alignItems: 'center',
     justifyContent: 'center',

@@ -182,8 +182,11 @@ function normaliseEarnStore(
     ? raw.earningOpportunities.length
     : 0;
 
+  const storeId = typeof raw._id === 'string' ? raw._id : typeof raw.id === 'string' ? raw.id : null;
+  if (!storeId) return null;
+
   return {
-    id: raw._id,
+    id: storeId,
     name: raw.name,
     category: raw.category,
     distanceKm: distanceKmFinal,
@@ -209,9 +212,9 @@ function normaliseGenericStore(raw: unknown, userLat: number, userLng: number): 
   if (typeof id !== 'string' || typeof name !== 'string') return null;
 
   // Coordinates may be at `address.coordinates` or `location.coordinates`.
-  const address = r.address as { coordinates?: [number, number] } | undefined;
+  const addrObj = r.address as { coordinates?: [number, number]; formattedAddress?: string } | undefined;
   const location = r.location as { coordinates?: [number, number] } | undefined;
-  const coords = address?.coordinates ?? location?.coordinates;
+  const coords = addrObj?.coordinates ?? location?.coordinates;
   if (!Array.isArray(coords) || coords.length < 2) return null;
   const [lng, lat] = coords;
   if (typeof lat !== 'number' || typeof lng !== 'number') return null;
@@ -263,6 +266,7 @@ function normaliseGenericStore(raw: unknown, userLat: number, userLng: number): 
     distanceKm: distanceKmValue,
     latitude: lat,
     longitude: lng,
+    address: addrObj?.formattedAddress ?? (r.address as string | undefined),
     isOpen,
     offersCount,
     isPartner: offersCount > 0 || Boolean(cashbackPercent),
@@ -308,6 +312,7 @@ export function useNearbyStores(radiusKm: number = RADIUS_KM): UseNearbyStoresRe
   const [refreshTick, setRefreshTick] = useState<number>(0);
 
   const fetchStores = useCallback(async (): Promise<void> => {
+    const abortController = new AbortController();
     setIsLoading(true);
     setError(null);
 
@@ -323,6 +328,7 @@ export function useNearbyStores(radiusKm: number = RADIUS_KM): UseNearbyStoresRe
         lng: userLng,
         radius: radiusKm,
         limit: MAX_STORES,
+        signal: abortController.signal,
       });
       if (earnResponse.success && Array.isArray(earnResponse.data)) {
         for (const raw of earnResponse.data) {
@@ -333,26 +339,30 @@ export function useNearbyStores(radiusKm: number = RADIUS_KM): UseNearbyStoresRe
 
       setStores(shapeAndSort(collected));
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to load nearby stores';
+      // AbortError means component unmounted or coords changed — skip state update.
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      // ponytail: sanitize error for logs — don't expose internal stack traces
+      const sanitizedError = err instanceof Error ? err.message : 'Failed to load nearby stores';
       try {
         logger.warn(
           'b_map_nearby_stores_failed',
-          { error: String(err), radiusKm },
+          { error: sanitizedError, radiusKm },
           'B Features',
         );
       } catch {
         /* logger is optional */
       }
       setStores([]);
-      setError(message);
+      setError(sanitizedError);
     } finally {
+      if (abortController.signal.aborted) return;
       setIsLoading(false);
     }
   }, [coords, radiusKm]);
 
   useEffect(() => {
     void fetchStores();
-  }, [fetchStores, refreshTick]);
+  }, [fetchStores, refreshTick]); // refreshTick intentionally included — refresh() bumps it
 
   const refresh = useCallback((): void => {
     setRefreshTick((t) => t + 1);

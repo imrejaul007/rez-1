@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Linking, Platform } from 'react-native';
-import { catchAndWarn } from '@/utils/catchAndReport';
-import { safeCallPhone } from '@/utils/linking';
+import { safeCallPhone, safeOpenURL } from '@/utils/linking';
 import CachedImage from '@/components/ui/CachedImage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { OrderLocationUpdate } from '@/hooks/useOrderTracking';
@@ -53,30 +52,35 @@ function DeliveryMap({ locationUpdate, deliveryAddress, storeLocation }: Deliver
   }, [locationUpdate?.estimatedArrival]);
 
   const handleCallDriver = () => {
+    // safeCallPhone handles its own errors internally — no try/catch needed.
     if (locationUpdate?.deliveryPartner.phone) {
-      try {
-        // Phase 6: web parity — tel: doesn't place calls on web, so the
-        // safeOpenURL helper shows a modal with the number instead.
-        safeCallPhone(locationUpdate.deliveryPartner.phone, 'Call delivery partner');
-      } catch (e) { catchAndWarn(e, 'DeliveryMap/handleCallDriver'); }
+      void safeCallPhone(locationUpdate.deliveryPartner.phone, 'Call delivery partner');
     }
   };
 
   const openInMaps = () => {
-    try {
-      if (locationUpdate?.location) {
-        const { latitude, longitude } = locationUpdate.location;
-        const url = Platform.select({
-          ios: `maps://app?daddr=${latitude},${longitude}`,
-          android: `google.navigation:q=${latitude},${longitude}`,
-          default: `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
-        });
-        if (url) Linking.openURL(url).catch(() => {});
-      } else if (deliveryAddress?.latitude && deliveryAddress?.longitude) {
-        const url = `https://www.google.com/maps/dir/?api=1&destination=${deliveryAddress.latitude},${deliveryAddress.longitude}`;
-        Linking.openURL(url).catch(() => {});
+    // ponytail: no try/catch needed — safeOpenURL never throws
+    const openCoords = (lat: number, lng: number) => {
+      // Guard against malformed API data (NaN/Infinity out-of-range coordinates).
+      if (
+        !Number.isFinite(lat) || !Number.isFinite(lng) ||
+        lat < -90 || lat > 90 || lng < -180 || lng > 180
+      ) {
+        return;
       }
-    } catch (e) { catchAndWarn(e, 'DeliveryMap/openInMaps'); }
+      const url = Platform.select({
+        ios: `maps://app?daddr=${lat},${lng}`,
+        android: `google.navigation:q=${lat},${lng}`,
+        default: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+      }) as string;
+      if (url) safeOpenURL(url, { allowedSchemes: ['https:', 'maps:', 'geo:'] }).catch(() => {});
+    };
+
+    if (locationUpdate?.location) {
+      openCoords(locationUpdate.location.latitude, locationUpdate.location.longitude);
+    } else if (deliveryAddress?.latitude && deliveryAddress?.longitude) {
+      openCoords(deliveryAddress.latitude, deliveryAddress.longitude);
+    }
   };
 
   // Build static map URL for web fallback
@@ -88,9 +92,18 @@ function DeliveryMap({ locationUpdate, deliveryAddress, storeLocation }: Deliver
 
     if (!lat && !destLat) return null;
 
+    // Validate: reject NaN/Infinity/out-of-range coords before embedding in URL.
+    const centerLat = lat || destLat;
+    const centerLng = lng || destLng;
+    if (
+      !Number.isFinite(centerLat) || !Number.isFinite(centerLng) ||
+      centerLat < -90 || centerLat > 90 ||
+      centerLng < -180 || centerLng > 180
+    ) {
+      return null;
+    }
+
     // Use OpenStreetMap static map (no API key needed)
-    const centerLat = lat || destLat || 0;
-    const centerLng = lng || destLng || 0;
     return `https://staticmap.openstreetmap.de/staticmap.php?center=${centerLat},${centerLng}&zoom=14&size=600x300&markers=${centerLat},${centerLng},red-pushpin`;
   };
 

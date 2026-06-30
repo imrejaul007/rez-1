@@ -62,8 +62,7 @@ export const useWalletStore = create<WalletStoreState>((set, get) => ({
           s.totalBalance === data.totalBalance &&
           s.availableBalance === data.availableBalance &&
           s.isLoading === data.isLoading &&
-          s.isRefreshing === data.isRefreshing &&
-          s.error === data.error) {
+          s.isRefreshing === data.isRefreshing) {
         return {};
       }
       return data;

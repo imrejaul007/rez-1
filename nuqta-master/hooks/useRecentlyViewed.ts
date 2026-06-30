@@ -3,7 +3,7 @@
  * Manages recently viewed stores and products using local AsyncStorage
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import asyncStorageService from '@/services/asyncStorageService';
 import {
   RecentlyViewedItem,
@@ -26,6 +26,9 @@ export const useRecentlyViewed = (): UseRecentlyViewedResult => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Unmount guard ref
+  const isMountedRef = useRef(true);
+
   // Fetch items from storage
   const fetchItems = useCallback(async () => {
     try {
@@ -34,11 +37,17 @@ export const useRecentlyViewed = (): UseRecentlyViewedResult => {
       const data = await asyncStorageService.getRecentlyViewedUnified();
       // Sort by viewedAt descending (most recent first)
       const sorted = [...data].sort((a, b) => b.viewedAt - a.viewedAt);
+      // FIX: Check isMounted before setting state
+      if (!isMountedRef.current) return;
       setItems(sorted);
     } catch (err) {
-      setError(err as Error);
+      if (isMountedRef.current) {
+        setError(err as Error);
+      }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -76,7 +85,11 @@ export const useRecentlyViewed = (): UseRecentlyViewedResult => {
 
   // Initial fetch on mount
   useEffect(() => {
+    isMountedRef.current = true;
     fetchItems();
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [fetchItems]);
 
   return {

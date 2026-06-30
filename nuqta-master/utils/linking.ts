@@ -185,9 +185,14 @@ function openOnWeb(
   if (scheme === 'geo:') {
     const fallback = options.webFallback ?? 'maps';
     if (fallback === 'modal') {
+      // ponytail: scheme is geo:, only show the label portion from the parsed payload
+      const label = (() => {
+        const qIdx = url.indexOf('?q=');
+        return qIdx >= 0 ? decodeURIComponent(url.slice(qIdx + 3).split('&')[0].split('(')[0]) : 'this location';
+      })();
       showAlert(
         options.modalTitle ?? 'Location',
-        `Open this location in Google Maps:\n\n${url}`,
+        `Open "${label}" in Google Maps on your phone.`,
         [{ text: 'OK', style: 'default' }],
         'info'
       );
@@ -201,10 +206,10 @@ function openOnWeb(
     const [latStr, lngStr] = (coordsPart ?? '').split(',');
     const lat = Number((latStr ?? '').trim());
     const lng = Number((lngStr ?? '').trim());
-    const mapsUrl =
-      Number.isFinite(lat) && Number.isFinite(lng)
-        ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
-        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(payload)}`;
+    // Always use lat,lng query; never pass raw payload to avoid leaking unexpected URL content.
+    const mapsUrl = Number.isFinite(lat) && Number.isFinite(lng)
+      ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+      : `https://www.google.com/maps/search/?api=1`; // safe fallback — no raw payload
     try {
       window.open(mapsUrl, '_blank', 'noopener,noreferrer');
       return { ok: true, method: 'web-maps' };
@@ -214,14 +219,14 @@ function openOnWeb(
   }
 
   // Other schemes (sms:, whatsapp:, rez:, etc.) — try the URL as-is; on
-  // failure, surface a modal so the user can copy the URL.
+  // failure, surface a generic modal without echoing the raw URL.
   try {
     window.open(url, '_blank', 'noopener,noreferrer');
     return { ok: true, method: 'web-redirect' };
   } catch (error) {
     showAlert(
       options.modalTitle ?? 'Open link',
-      `Could not open this URL on web. Please open it on your phone:\n\n${url}`,
+      'This link could not be opened on web. Please open it on your phone.',
       [{ text: 'OK', style: 'default' }],
       'info'
     );
@@ -252,6 +257,13 @@ export async function safeOpenGeo(
   longitude: number,
   label?: string
 ): Promise<SafeOpenURLResult> {
+  if (
+    !Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+    latitude < -90 || latitude > 90 ||
+    longitude < -180 || longitude > 180
+  ) {
+    return { ok: false, reason: 'invalid-url' };
+  }
   const q = label
     ? `?q=${latitude},${longitude}(${encodeURIComponent(label)})`
     : `?q=${latitude},${longitude}`;

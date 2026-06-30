@@ -59,7 +59,7 @@ export const useScratchCard = (): UseScratchCardReturn => {
       }, 1000);
     }
     return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
-  }, [cooldownSeconds > 0]); // Only re-setup when transitioning to/from cooldown
+  }, [cooldownSeconds]); // Only re-setup when transitioning to/from cooldown
 
   const checkEligibility = useCallback(async (): Promise<void> => {
     try {

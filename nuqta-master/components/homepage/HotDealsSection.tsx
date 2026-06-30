@@ -33,8 +33,18 @@ interface HotDealsSectionProps {
 }
 
 const HOT_DEALS_CACHE_TTL_MS = 2 * 60 * 1000;
+const MAX_CACHE_SIZE = 50;
 const hotDealsCache = new Map<number, { data: HotDealProduct[]; at: number }>();
 const hotDealsInFlight = new Map<number, Promise<HotDealProduct[]>>();
+
+// Evict oldest cache entries when over size limit
+function evictOldestCacheEntry(): void {
+  if (hotDealsCache.size > MAX_CACHE_SIZE) {
+    const entries = [...hotDealsCache.entries()];
+    entries.sort((a, b) => a[1].at - b[1].at);
+    hotDealsCache.delete(entries[0][0]);
+  }
+}
 
 function HotDealsSection({
   title = 'Hot deals',
@@ -74,6 +84,7 @@ function HotDealsSection({
       }
 
       hotDealsCache.set(limit, { data, at: Date.now() });
+      evictOldestCacheEntry();
       return data;
     })();
 

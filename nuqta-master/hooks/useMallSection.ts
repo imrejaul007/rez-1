@@ -289,66 +289,74 @@ export function useMallSection(options: UseMallSectionOptions = {}): UseMallSect
       if (useStores) {
         // Store-based mall
         switch (section) {
-          case 'featuredBrands':
-            const moreFeaturedStores = await mallApi.getFeaturedMallStores(featuredBrands.length + 10);
-            if (isMountedRef.current) {
-              setFeaturedBrands(moreFeaturedStores.map(transformStoreToMallBrand));
+          case 'featuredBrands': {
+            const moreFeaturedStores = await mallApi.getFeaturedMallStores(10);
+            if (isMountedRef.current && moreFeaturedStores.length) {
+              setFeaturedBrands(prev => [...prev, ...moreFeaturedStores.map(transformStoreToMallBrand)]);
             }
             break;
+          }
 
-          case 'newArrivals':
-            const moreNewStores = await mallApi.getNewMallStores(newArrivals.length + 10);
+          case 'newArrivals': {
+            const moreNewStores = await mallApi.getNewMallStores(10);
             if (isMountedRef.current) {
-              setNewArrivals(moreNewStores.map(transformStoreToMallBrand));
+              setNewArrivals(prev => [...prev, ...moreNewStores.map(transformStoreToMallBrand)]);
             }
             break;
+          }
 
-          case 'luxuryBrands':
-            const morePremiumStores = await mallApi.getPremiumMallStores(luxuryBrands.length + 10);
+          case 'luxuryBrands': {
+            const morePremiumStores = await mallApi.getPremiumMallStores(10);
             if (isMountedRef.current) {
-              setLuxuryBrands(morePremiumStores.map(transformStoreToMallBrand));
+              setLuxuryBrands(prev => [...prev, ...morePremiumStores.map(transformStoreToMallBrand)]);
             }
             break;
+          }
 
-          case 'topRatedBrands':
-            const moreTopRatedStores = await mallApi.getTopRatedMallStores(topRatedBrands.length + 10);
+          case 'topRatedBrands': {
+            const moreTopRatedStores = await mallApi.getTopRatedMallStores(10);
             if (isMountedRef.current) {
-              setTopRatedBrands(moreTopRatedStores.map(transformStoreToMallBrand));
+              setTopRatedBrands(prev => [...prev, ...moreTopRatedStores.map(transformStoreToMallBrand)]);
             }
             break;
+          }
 
           default:
         }
       } else {
         // Legacy brand-based mall
         switch (section) {
-          case 'featuredBrands':
-            const moreFeatured = await mallApi.getFeaturedBrands(featuredBrands.length + 10);
+          case 'featuredBrands': {
+            const moreFeatured = await mallApi.getFeaturedBrands(10);
             if (isMountedRef.current) {
-              setFeaturedBrands(moreFeatured);
+              setFeaturedBrands(prev => [...prev, ...moreFeatured]);
             }
             break;
+          }
 
-          case 'newArrivals':
-            const moreNewArrivals = await mallApi.getNewArrivals(newArrivals.length + 10);
+          case 'newArrivals': {
+            const moreNewArrivals = await mallApi.getNewArrivals(10);
             if (isMountedRef.current) {
-              setNewArrivals(moreNewArrivals);
+              setNewArrivals(prev => [...prev, ...moreNewArrivals]);
             }
             break;
+          }
 
-          case 'luxuryBrands':
-            const moreLuxury = await mallApi.getLuxuryBrands(luxuryBrands.length + 10);
+          case 'luxuryBrands': {
+            const moreLuxury = await mallApi.getLuxuryBrands(10);
             if (isMountedRef.current) {
-              setLuxuryBrands(moreLuxury);
+              setLuxuryBrands(prev => [...prev, ...moreLuxury]);
             }
             break;
+          }
 
-          case 'exclusiveOffers':
-            const moreOffers = await mallApi.getExclusiveOffers(exclusiveOffers.length + 10);
+          case 'exclusiveOffers': {
+            const moreOffers = await mallApi.getExclusiveOffers(10);
             if (isMountedRef.current) {
-              setExclusiveOffers(moreOffers);
+              setExclusiveOffers(prev => [...prev, ...moreOffers]);
             }
             break;
+          }
 
           default:
         }
@@ -356,7 +364,7 @@ export function useMallSection(options: UseMallSectionOptions = {}): UseMallSect
     } catch (_err) {
       // silently handle
     }
-  }, [useStores, featuredBrands.length, newArrivals.length, luxuryBrands.length, topRatedBrands.length, exclusiveOffers.length]);
+  }, [useStores]);
 
   // Initial fetch
   useEffect(() => {

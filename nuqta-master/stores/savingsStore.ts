@@ -506,12 +506,9 @@ export const createSavingsStore = () =>
       state: initialState,
       actions,
 
-      // FIX: Skip update if nothing changed to prevent render loop (React Error #185)
+      // FIX: Removed dead reference equality guard
       _setFromProvider: (data: SavingsContextShape) => {
-        set((s) => {
-          if (s.state === data.state && s.actions === data.actions) return {};
-          return { state: data.state, actions: data.actions };
-        });
+        set({ state: data.state, actions: data.actions });
       },
     };
   });

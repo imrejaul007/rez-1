@@ -902,6 +902,8 @@ function HomeScreen() {
       <View style={viewStyles.bStreakScoreSlot}>
         <Suspense fallback={null}>
           <StreakFireIcon streakDays={currentStreakDays} />
+        </Suspense>
+        <Suspense fallback={null}>
           <RezScoreCard />
         </Suspense>
       </View>

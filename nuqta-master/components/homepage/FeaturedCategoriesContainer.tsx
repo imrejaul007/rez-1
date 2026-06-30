@@ -11,6 +11,10 @@ interface FeaturedCategoriesContainerProps {
   productsPerCategory?: number;
 }
 
+// Module-level cache for featured categories
+let _categoriesCache: Category[] | null = null;
+let _categoriesCacheTime = 0;
+
 function FeaturedCategoriesContainer({
   productsPerCategory = 10,
 }: FeaturedCategoriesContainerProps) {

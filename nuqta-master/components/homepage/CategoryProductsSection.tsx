@@ -33,6 +33,7 @@ function CategoryProductsSection({
   limit = 10,
 }: CategoryProductsSectionProps) {
   const router = useRouter();
+  const MAX_CACHE_SIZE = 50;
   const cacheKey = `${categorySlug}:${limit}`;
   const now = Date.now();
   const cachedEntry = categoryProductsCache.get(cacheKey);
@@ -64,6 +65,10 @@ function CategoryProductsSection({
       });
       if (response.success && response.data) {
         categoryProductsCache.set(cacheKey, { data: response.data, at: Date.now() });
+        if (categoryProductsCache.size > MAX_CACHE_SIZE) {
+          const oldest = [...categoryProductsCache.entries()].sort((a, b) => a[1].at - b[1].at)[0];
+          categoryProductsCache.delete(oldest[0]);
+        }
         return response.data;
       }
       throw new Error('Failed to load products');

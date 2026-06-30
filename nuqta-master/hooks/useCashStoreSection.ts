@@ -275,6 +275,7 @@ export function useCashStoreSection(
   const [selectedCategory, setSelectedCategory] = useState<CashStoreCategoryFilterKey>('all');
   const [isCategoryLoading, setIsCategoryLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isTravelLoading, setIsTravelLoading] = useState(true);
 
   // Filtered data when a category is selected (server-side filtered)
   const [filteredTopBrandsOverride, setFilteredTopBrandsOverride] = useState<CashStoreBrand[] | null>(null);
@@ -290,9 +291,13 @@ export function useCashStoreSection(
     if (travelFetchedRef.current) return;
     travelFetchedRef.current = true;
 
+    let isMounted = true;
+    const controller = new AbortController();
+
     (async () => {
       try {
-        const response = await travelApi.getCategories();
+        const response = await travelApi.getCategories(controller.signal);
+        if (!isMounted) return;
         if (response.success && response.data && response.data.length > 0) {
           setTravelDeals(
             response.data.map((cat: any) => ({
@@ -307,10 +312,20 @@ export function useCashStoreSection(
             }))
           );
         }
-      } catch {
-        // Keep DEFAULT_TRAVEL_DEALS as fallback
+      } catch (err) {
+        // Log error
+        console.error('[useCashStoreSection] Travel fetch failed:', err);
+      } finally {
+        if (isMounted) {
+          setIsTravelLoading(false);
+        }
       }
     })();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, []);
 
   // ── Derived server data (memoised from query results) ──────────────
@@ -424,14 +439,27 @@ export function useCashStoreSection(
 
   // ── Category change handler (server-side filtering) ────────────────
 
+  const categoryAbortRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
     // "All" = restore base data (clear overrides)
     if (selectedCategory === 'all') {
+      // Cancel any in-flight category fetch
+      if (categoryAbortRef.current) {
+        categoryAbortRef.current.abort();
+        categoryAbortRef.current = null;
+      }
       setFilteredTopBrandsOverride(null);
       setFilteredTrendingDealsOverride(null);
       setFilteredHighCashbackDealsOverride(null);
       return;
     }
+
+    // Cancel previous category fetch
+    if (categoryAbortRef.current) {
+      categoryAbortRef.current.abort();
+    }
+    categoryAbortRef.current = new AbortController();
 
     let cancelled = false;
 
@@ -448,7 +476,7 @@ export function useCashStoreSection(
           params.category = selectedCategory;
         }
 
-        const result = await cashStoreApi.getBrands(params);
+        const result = await cashStoreApi.getBrands(params, categoryAbortRef.current?.signal);
         const brands = result.brands || [];
 
         if (!cancelled) {
@@ -461,15 +489,11 @@ export function useCashStoreSection(
           );
         }
       } catch {
-        // On error, restore "All" data so UI isn't stuck on stale filter
+        // Handle error but DON'T call setSelectedCategory - it re-fires the effect!
         if (!cancelled) {
           setFilteredTopBrandsOverride(null);
           setFilteredTrendingDealsOverride(null);
           setFilteredHighCashbackDealsOverride(null);
-          setSelectedCategory('all');
-        }
-      } finally {
-        if (!cancelled) {
           setIsCategoryLoading(false);
         }
       }

@@ -276,7 +276,11 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
   // Track if impressions were already sent for current tab items
   const [impressionsSent, setImpressionsSent] = useState<Set<string>>(new Set());
 
-  // Fetch admin-managed section data
+  // Use ref to avoid stale closure and prevent infinite loops
+  const currentRegionRef = useRef(currentRegion);
+  currentRegionRef.current = currentRegion;
+
+  // Fetch admin-managed section data - stable callback without region dependency
   const fetchSectionData = useCallback(async (isRefresh = false) => {
     try {
       if (!isRefresh) {
@@ -284,24 +288,26 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
       }
       setSectionError(null);
 
-      const response = await realOffersApi.getHomepageDealsSection(currentRegion);
+      // Use ref to get current region value without causing callback recreation
+      const regionId = currentRegionRef.current;
+      const response = await realOffersApi.getHomepageDealsSection(regionId);
 
       if (response.success && response.data) {
         const { section, enabledTabs: apiEnabledTabs, tabs } = response.data;
 
-        // Update section config
+        // Update section config using functional update
         if (section) {
           if (!isMounted()) return;
           setSectionConfig(section);
         }
 
-        // Update enabled tabs (sorted by sortOrder)
+        // Update enabled tabs (sorted by sortOrder) using functional update
         if (apiEnabledTabs && apiEnabledTabs.length > 0) {
           const sortedTabs = [...apiEnabledTabs].sort((a, b) => a.sortOrder - b.sortOrder);
           setEnabledTabs(sortedTabs);
         }
 
-        // Update tab items
+        // Update tab items using functional updates
         if (tabs?.offers?.items) {
           setOffersTabItems(tabs.offers.items);
         }
@@ -312,7 +318,7 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
           setExclusiveTabItems(tabs.exclusive.items);
         }
 
-        // Reset impressions tracking on refresh
+        // Reset impressions tracking on refresh using functional update
         if (isRefresh) {
           setImpressionsSent(new Set());
         }
@@ -325,12 +331,12 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
       setSectionLoading(false);
       setRefreshing(false);
     }
-  }, [currentRegion]);
+  }, []); // No dependencies - uses ref internally
 
-  // Fetch section data on mount
+  // Fetch section data on mount and only when region actually changes
   useEffect(() => {
     fetchSectionData();
-  }, [fetchSectionData]);
+  }, [currentRegion, fetchSectionData]);
 
   // Set active tab from enabled tabs when they load
   useEffect(() => {
@@ -413,6 +419,7 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
       ),
       -1
     );
+    return () => { shimmerAnim.value = 0; };
   }, []);
 
   const shimmerStyle = useAnimatedStyle(() => ({

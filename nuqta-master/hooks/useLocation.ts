@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Platform } from 'react-native';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -59,12 +60,17 @@ const defaultAddress: LocationAddress = {
  */
 export function useLocationPermission() {
   const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'undetermined' | 'restricted'>(
-    'undetermined'
+    Platform.OS === 'web' ? 'granted' : 'undetermined'
   );
-  const [isLocationEnabled, setIsLocationEnabled] = useState(false);
+  const [isLocationEnabled, setIsLocationEnabled] = useState(Platform.OS === 'web');
   const [isRequesting, setIsRequesting] = useState(false);
 
   const requestPermission = useCallback(async () => {
+    if (Platform.OS === 'web') {
+      setPermissionStatus('granted');
+      setIsLocationEnabled(true);
+      return true;
+    }
     setIsRequesting(true);
     try {
       const result = await Location.requestForegroundPermissionsAsync();
@@ -98,6 +104,41 @@ export function useCurrentLocation() {
   const getCurrentLocation = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    if (Platform.OS === 'web') {
+      // Web: Use browser's navigator.geolocation API
+      if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        return new Promise<null>((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const coords: LocationCoordinates = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+              };
+              const userLocation: UserLocation = {
+                coordinates: coords,
+                address: { ...defaultAddress, formattedAddress: '' },
+                lastUpdated: new Date(),
+                source: 'gps' as const,
+              };
+              setCurrentLocation(userLocation);
+              setIsLoading(false);
+              resolve(userLocation);
+            },
+            (err) => {
+              setError(err.message);
+              setIsLoading(false);
+              resolve(null);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+          );
+        });
+      } else {
+        setIsLoading(false);
+        setError('Geolocation not supported');
+        return null;
+      }
+    }
     try {
       const position = await Location.getCurrentPositionAsync({});
       const coords: LocationCoordinates = {

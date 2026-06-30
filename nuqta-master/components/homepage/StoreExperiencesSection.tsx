@@ -17,11 +17,12 @@ import { useGetCurrencySymbol } from '@/stores/selectors';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
 
-// Fallback store experience configurations generator - Nuqta palette
-const getFallbackStoreExperiences = (currencySymbol: string): StoreExperienceCardProps[] => [
+// Module-level fallback store experience configurations - Nuqta palette
+// Currency symbol will be replaced when needed
+const BASE_FALLBACK_EXPERIENCES: Omit<StoreExperienceCardProps, 'title' | 'subtitle'>[] = [
   {
-    title: '60-Minute Delivery',
-    subtitle: 'Fashion, beauty, grocery & essentials',
+    title: '', // Will be set with currency
+    subtitle: '',
     icon: '⚡',
     buttonText: 'Shop Now',
     gradientColors: [colors.nileBlue, '#243f55'] as const,
@@ -29,8 +30,8 @@ const getFallbackStoreExperiences = (currencySymbol: string): StoreExperienceCar
     buttonTextColor: colors.nileBlue,
   },
   {
-    title: `${currencySymbol}1 Store`,
-    subtitle: `${currencySymbol}1 products + delivery cashback on sharing`,
+    title: '', // Will be set with currency
+    subtitle: '',
     icon: '🏷️',
     buttonText: 'Explore Deals',
     gradientColors: [colors.lightPeach, colors.brand.sand] as const,
@@ -57,6 +58,18 @@ const getFallbackStoreExperiences = (currencySymbol: string): StoreExperienceCar
   },
 ];
 
+// Generator that creates currency-specific fallbacks
+const getFallbackStoreExperiences = (currencySymbol: string): StoreExperienceCardProps[] =>
+  BASE_FALLBACK_EXPERIENCES.map((exp, index) => {
+    if (index === 0) {
+      return { ...exp, title: '60-Minute Delivery', subtitle: 'Fashion, beauty, grocery & essentials' } as StoreExperienceCardProps;
+    }
+    if (index === 1) {
+      return { ...exp, title: `${currencySymbol}1 Store`, subtitle: `${currencySymbol}1 products + delivery cashback on sharing` } as StoreExperienceCardProps;
+    }
+    return exp as StoreExperienceCardProps;
+  });
+
 // Map experience types to gradient colors and button text colors - Nuqta palette
 const EXPERIENCE_STYLES: Record<string, { gradientColors: readonly [string, string]; buttonTextColor: string; buttonText: string }> = {
   fastDelivery: { gradientColors: [colors.nileBlue, '#243f55'], buttonTextColor: colors.nileBlue, buttonText: 'Shop Now' },
@@ -76,10 +89,22 @@ const StoreExperiencesSection: React.FC<StoreExperiencesSectionProps> = memo(({
 }) => {
   const getCurrencySymbol = useGetCurrencySymbol();
   const currencySymbol = getCurrencySymbol();
-  const fallbackExperiences = getFallbackStoreExperiences(currencySymbol);
   const [isLoading, setIsLoading] = useState(true);
-  const [experiences, setExperiences] = useState<StoreExperienceCardProps[]>(fallbackExperiences);
+  const [experiences, setExperiences] = useState<StoreExperienceCardProps[]>([]);
   const isMounted = useIsMounted();
+
+  // Memoized fallback experiences
+  const fallbackExperiences = React.useMemo(
+    () => getFallbackStoreExperiences(currencySymbol),
+    [currencySymbol]
+  );
+
+  // Set initial experiences once on mount
+  React.useEffect(() => {
+    if (experiences.length === 0 && !isLoading) {
+      setExperiences(fallbackExperiences);
+    }
+  }, [fallbackExperiences, experiences.length, isLoading]);
 
   useEffect(() => {
     const fetchExperiences = async () => {

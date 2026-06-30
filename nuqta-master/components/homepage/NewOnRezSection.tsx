@@ -351,9 +351,9 @@ const NewOnNuqtaSection: React.FC = () => {
     // Featured cycles through stores (separate from waterfall)
     setCurrentIndex((prev) => {
       const nextIndex = (prev + 1) % allStores.length;
-      setFeaturedStore(allStores[nextIndex]);
       return nextIndex;
     });
+    setFeaturedStore(allStores[(prev + 1) % allStores.length]);
   }, [allStores]);
 
   // Animation trigger function - Smooth waterfall cascade with staggered timing

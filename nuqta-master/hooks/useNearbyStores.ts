@@ -181,6 +181,13 @@ export function useNearbyStores(options: UseNearbyStoresOptions = {}): UseNearby
       setIsLoading(false);
       setError('Unable to determine location');
     }
+
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = null;
+      }
+    };
   }, [autoFetch, fetchNearbyStores, getEffectiveCoordinates, isLocationLoading, regionState.isLoading]);
 
   // Refetch when region changes (important for currency and regional data)
@@ -189,7 +196,8 @@ export function useNearbyStores(options: UseNearbyStoresOptions = {}): UseNearby
       // Region changed after initial fetch - refetch with new region context
       fetchNearbyStores();
     }
-  }, [currentRegion]); // Only depend on currentRegion, not fetchNearbyStores to avoid loops
+    // FIX: Added fetchNearbyStores to deps so effect re-runs when it changes
+  }, [currentRegion, fetchNearbyStores]);
 
   // Cleanup timeout on unmount
   useEffect(() => {

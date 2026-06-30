@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { create } from 'zustand';
 import { Platform } from 'react-native';
 import {
@@ -70,16 +69,16 @@ export const useLocationStore = create<LocationStoreState>((set, get) => ({
 
       if (Platform.OS === 'web') {
         const webLocation = await (await getWebLocationService()).getCurrentLocation();
-        if (webLocation) {
+        if (webLocation?.coordinates?.latitude != null && webLocation?.coordinates?.longitude != null) {
           const userLocation: UserLocation = {
             coordinates: webLocation.coordinates,
             address: {
-              address: webLocation.address.formattedAddress,
-              city: webLocation.address.city || '',
-              state: webLocation.address.state || '',
-              country: webLocation.address.country || '',
-              pincode: webLocation.address.postalCode || '',
-              formattedAddress: webLocation.address.formattedAddress,
+              address: webLocation.address?.formattedAddress || '',
+              city: webLocation.address?.city || '',
+              state: webLocation.address?.state || '',
+              country: webLocation.address?.country || '',
+              pincode: webLocation.address?.postalCode || '',
+              formattedAddress: webLocation.address?.formattedAddress || '',
             },
             lastUpdated: new Date(),
             source: 'gps' as const,
@@ -142,6 +141,10 @@ export const useLocationStore = create<LocationStoreState>((set, get) => ({
         try {
           const coordinates = await locSvc.getCurrentLocation();
           const geocodedLocation = await locSvc.reverseGeocode(coordinates);
+          if (!geocodedLocation?.formattedAddress) {
+            set(s => ({ state: { ...s.state, isLoading: false } }));
+            return false;
+          }
           const userLocation: UserLocation = {
             coordinates,
             address: geocodedLocation,

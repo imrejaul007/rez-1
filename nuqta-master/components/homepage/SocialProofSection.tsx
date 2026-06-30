@@ -14,7 +14,6 @@ import * as Location from 'expo-location';
 import socialProofApi from '@/services/socialProofApi';
 import { useGetCurrencySymbol } from '@/stores/selectors';
 import { colors } from '@/constants/theme';
-import { useIsMounted } from '@/hooks/useIsMounted';
 
 const { width } = Dimensions.get('window');
 
@@ -68,8 +67,14 @@ const SocialProofSection: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userCity, setUserCity] = useState<string>('');
-  const isMounted = useIsMounted();
+  const isMountedRef = useRef(true);
   const rotateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Mount/unmount tracking with ref pattern
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
 
   const fadeAnim = useSharedValue(1);
   const slideAnim = useSharedValue(0);
@@ -93,7 +98,7 @@ const SocialProofSection: React.FC = () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        if (!isMounted()) return;
+        if (!isMountedRef.current) return;
         setIsLoading(false);
         return;
       }
@@ -106,7 +111,7 @@ const SocialProofSection: React.FC = () => {
       try {
         const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
         city = geocode?.[0]?.city || geocode?.[0]?.region || '';
-        if (!isMounted()) return;
+        if (!isMountedRef.current) return;
         setUserCity(city);
       } catch (geocodeError) {
         // Geocoding not available, continue without city name
@@ -121,7 +126,7 @@ const SocialProofSection: React.FC = () => {
       });
 
       if (response.success && response.data) {
-        if (!isMounted()) return;
+        if (!isMountedRef.current) return;
         setActivities(response.data.activities || []);
         setStoreAggregates(response.data.storeAggregates || []);
         setCityWideStats(response.data.cityWideStats || null);
@@ -129,7 +134,7 @@ const SocialProofSection: React.FC = () => {
     } catch (error) {
       // silently handle
     } finally {
-      if (!isMounted()) return;
+      if (!isMountedRef.current) return;
       setIsLoading(false);
     }
   }, []);
@@ -156,7 +161,7 @@ const SocialProofSection: React.FC = () => {
       if (rotateTimeoutRef.current) clearTimeout(rotateTimeoutRef.current);
       rotateTimeoutRef.current = setTimeout(() => {
         rotateTimeoutRef.current = null;
-        if (!isMounted()) return;
+        if (!isMountedRef.current) return;
         setCurrentIndex((prev) => (prev + 1) % activities.length);
         slideAnim.value = 20;
         fadeAnim.value = withTiming(1, { duration: 300 });
@@ -171,7 +176,7 @@ const SocialProofSection: React.FC = () => {
         rotateTimeoutRef.current = null;
       }
     };
-  }, [activities.length, fadeAnim, slideAnim, isMounted]);
+  }, [activities.length, fadeAnim, slideAnim]);
 
   if (isLoading) {
     return null;

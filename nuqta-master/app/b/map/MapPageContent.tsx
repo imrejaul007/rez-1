@@ -6,7 +6,7 @@
  * react-native-maps module is only loaded when the user navigates to /b/map.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -26,6 +26,7 @@ import { useNearbyStores, NearbyStore } from '@/hooks/b/map/useNearbyStores';
 import { colors, spacing, typography, borderRadius, shadows } from '@/constants/theme';
 import logger from '@/utils/logger';
 import { platformAlert } from '@/utils/platformAlert';
+import { safeOpenURL } from '@/utils/linking';
 
 // `react-native-maps` is native-only. We lazy-load it so web builds don't
 // fail to bundle. If it's missing (web) we render a friendly fallback.
@@ -56,10 +57,21 @@ if (Platform.OS !== 'web') {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Maps = require('react-native-maps');
-    MapViewNative = Maps.default ?? Maps.MapView;
-    MarkerNative = Maps.Marker;
-    PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
-  } catch {
+    // Defensive: handle cases where exports might be undefined
+    MapViewNative = Maps.default ?? Maps.MapView ?? null;
+    MarkerNative = Maps.Marker ?? null;
+    PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE ?? null;
+
+    if (MapViewNative == null || MarkerNative == null) {
+      console.warn('[MapPageContent] react-native-maps loaded but components are null:', {
+        hasDefault: Maps.default != null,
+        hasMapView: Maps.MapView != null,
+        hasMarker: Maps.Marker != null,
+        hasProvider: Maps.PROVIDER_GOOGLE != null,
+      });
+    }
+  } catch (err) {
+    console.error('[MapPageContent] Failed to load react-native-maps:', err);
     MapViewNative = null;
     MarkerNative = null;
     PROVIDER_GOOGLE = null;
@@ -84,6 +96,47 @@ const FILTERS: FilterChip[] = [
   { key: 'cashback', label: 'Cashback' },
   { key: 'open', label: 'Open now' },
 ];
+
+// ponytail: memoized filter chip list — prevents re-rendering 4 Pressables
+// when parent re-renders (e.g. mapReady, selectedStore, loading state changes).
+const MemoFilterChips = memo(function MemoFilterChips({
+  filter,
+  onSelect,
+}: {
+  filter: FilterKey;
+  onSelect: (f: FilterKey) => void;
+}): React.ReactElement {
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.filterBar}
+      contentContainerStyle={styles.filterContent}
+    >
+      {FILTERS.map((chip) => {
+        const isActive = chip.key === filter;
+        return (
+          <Pressable
+            key={chip.key}
+            accessibilityRole="button"
+            accessibilityLabel={`Filter: ${chip.label}`}
+            accessibilityState={{ selected: isActive }}
+            onPress={() => onSelect(chip.key)}
+            style={({ pressed }) => [
+              styles.chip,
+              isActive && styles.chipActive,
+              pressed && styles.chipPressed,
+            ]}
+          >
+            <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+              {chip.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+});
 
 const DEFAULT_REGION: RegionShape = {
   latitude: 12.9716, // Bangalore fallback.
@@ -130,6 +183,64 @@ function logScreenView(): void {
     /* logger is optional */
   }
 }
+
+// ---------------------------------------------------------------------------
+// Memoized marker — prevents re-creating MarkerNative + StoreMapMarker
+// when filteredStores hasn't changed (e.g. filter switch or store select).
+// ---------------------------------------------------------------------------
+
+// ponytail: tracksViewChanges={false} already set on MarkerNative handles
+// native-side stability; JS-side memoization adds redundant cost for <50 markers.
+// Lifting to a pure memo here keeps the pattern consistent for future scale.
+//
+// IMPORTANT: This component is defined at module scope where MarkerNative might be null
+// (on web or if the native module fails to load). We add a null guard inside
+// to prevent React Error #306 ("Element type is invalid").
+const MemoMarker = memo(function MemoMarker({
+  store,
+  onPress,
+}: {
+  store: NearbyStore;
+  onPress: (s: NearbyStore) => void;
+}): React.ReactElement | null {
+  // Defensive: Handle case where MarkerNative is not loaded (web or failed module)
+  if (MarkerNative == null) {
+    console.warn('[MapPageContent] MemoMarker rendered but MarkerNative is null');
+    return null;
+  }
+
+  return (
+    <MarkerNative
+      coordinate={{ latitude: store.latitude, longitude: store.longitude }}
+      onPress={() => onPress(store)}
+      tracksViewChanges={false}
+    >
+      <StoreMapMarker store={store} />
+    </MarkerNative>
+  );
+});
+
+// ---------------------------------------------------------------------------
+// MarkerList — isolated so only this sub-tree re-renders on filter change.
+// Keeping the <MapViewNative> parent stable avoids native reconciliation
+// when the user switches filter chips.
+// ---------------------------------------------------------------------------
+const MarkerList = memo(function MarkerList({
+  stores,
+  onPress,
+}: {
+  stores: NearbyStore[];
+  onPress: (s: NearbyStore) => void;
+}): React.ReactElement | null {
+  if (MarkerNative == null) return null;
+  return (
+    <>
+      {stores.map((store) => (
+        <MemoMarker key={store.id} store={store} onPress={onPress} />
+      ))}
+    </>
+  );
+});
 
 // ---------------------------------------------------------------------------
 // MapPageContent
@@ -196,14 +307,32 @@ export function MapPageContent(): React.ReactElement {
   const handleNavigate = useCallback((): void => {
     if (!selectedStore) return;
     const { latitude, longitude } = selectedStore;
+    // Validate coordinates are finite numbers within valid ranges.
+    // NaN/Infinity could produce malformed URLs.
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      platformAlert('Invalid location', 'Store location data is unavailable.');
+      return;
+    }
     const label = encodeURIComponent(selectedStore.name);
     const url = Platform.select({
       ios: `maps:0,0?q=${label}@${latitude},${longitude}`,
       android: `geo:${latitude},${longitude}?q=${latitude},${longitude}(${label})`,
       default: `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
     }) as string;
-    Linking.openURL(url).catch(() => {
-      platformAlert('Could not open maps', 'Please try again later.');
+    safeOpenURL(url, {
+      allowedSchemes: ['geo:', 'maps:', 'https:'],
+      webFallback: 'maps',
+    }).then((result) => {
+      if (!result.ok && result.reason !== 'blocked-scheme') {
+        platformAlert('Could not open maps', 'Please try again later.');
+      }
     });
   }, [selectedStore]);
 
@@ -224,6 +353,8 @@ export function MapPageContent(): React.ReactElement {
   }, [userLocation]);
 
   const handleOpenSettings = useCallback((): void => {
+    // No-op on web — Linking is native-only and permission flow differs
+    if (Platform.OS === 'web') return;
     Linking.openSettings().catch(() => {
       platformAlert('Settings unavailable', 'Please enable location in Settings.');
     });
@@ -300,38 +431,10 @@ export function MapPageContent(): React.ReactElement {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterBar}
-        contentContainerStyle={styles.filterContent}
-        refreshControl={undefined}
-      >
-        {FILTERS.map((chip) => {
-          const isActive = chip.key === filter;
-          return (
-            <Pressable
-              key={chip.key}
-              accessibilityRole="button"
-              accessibilityLabel={`Filter: ${chip.label}`}
-              accessibilityState={{ selected: isActive }}
-              onPress={() => setFilter(chip.key)}
-              style={({ pressed }) => [
-                styles.chip,
-                isActive && styles.chipActive,
-                pressed && styles.chipPressed,
-              ]}
-            >
-              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
-                {chip.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <MemoFilterChips filter={filter} onSelect={setFilter} />
 
       <View style={styles.mapWrap}>
-        {MapViewNative && MarkerNative ? (
+        {MapViewNative != null && MarkerNative != null ? (
           <MapViewNative
             ref={(node: unknown) => {
               mapRef.current = node as typeof mapRef.current;
@@ -343,23 +446,15 @@ export function MapPageContent(): React.ReactElement {
             showsMyLocationButton={false}
             onMapReady={() => setMapReady(true)}
           >
-            {filteredStores.map((store) => (
-              <MarkerNative
-                key={store.id}
-                coordinate={{
-                  latitude: store.latitude,
-                  longitude: store.longitude,
-                }}
-                onPress={() => handleSelect(store)}
-                tracksViewChanges={false}
-              >
-                <StoreMapMarker store={store} />
-              </MarkerNative>
-            ))}
+            <MarkerList stores={filteredStores} onPress={handleSelect} />
           </MapViewNative>
         ) : (
           // Web / unsupported: friendly fallback panel.
-          <View style={styles.webFallback}>
+          <View
+            style={styles.webFallback}
+            accessibilityRole="text"
+            accessibilityLabel={`Map unavailable on web. ${filteredStores.length} store${filteredStores.length === 1 ? '' : 's'} nearby. Open the app on iOS or Android to see them on a map.`}
+          >
             <Text style={styles.webFallbackTitle}>Map preview unavailable on this platform</Text>
             <Text style={styles.webFallbackSub}>
               {filteredStores.length} store{filteredStores.length === 1 ? '' : 's'} nearby.
@@ -370,7 +465,7 @@ export function MapPageContent(): React.ReactElement {
 
         {/* Loading overlay */}
         {isLoading && !mapReady ? (
-          <View style={styles.overlay} pointerEvents="none">
+          <View style={styles.overlay} pointerEvents="none" accessibilityLiveRegion="polite">
             <ActivityIndicator size="large" color={colors.gold} />
             <Text style={styles.overlayText}>Finding stores near you...</Text>
           </View>
@@ -378,7 +473,7 @@ export function MapPageContent(): React.ReactElement {
 
         {/* Error overlay */}
         {!isLoading && error ? (
-          <View style={styles.overlay} pointerEvents="auto">
+          <View style={styles.overlay} pointerEvents="auto" accessibilityLiveRegion="assertive">
             <Text style={styles.errorTitle}>Couldn't load nearby stores</Text>
             <Text style={styles.errorSub}>{error}</Text>
             <Pressable
@@ -394,21 +489,23 @@ export function MapPageContent(): React.ReactElement {
 
         {/* Empty overlay */}
         {!isLoading && !error && stores.length === 0 ? (
-          <View style={styles.overlay} pointerEvents="auto">
+          <View style={styles.overlay} pointerEvents="auto" accessibilityLiveRegion="polite">
             <Text style={styles.emptyTitle}>No stores nearby yet</Text>
             <Text style={styles.emptySub}>Try widening the search</Text>
           </View>
         ) : null}
 
-        {/* Recenter FAB */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Recenter on my location"
-          onPress={handleRecenter}
-          style={({ pressed }) => [styles.fab, pressed && styles.btnPressed]}
-        >
-          <Text style={styles.fabText}>{'◎'}</Text>
-        </Pressable>
+        {/* Recenter FAB — hidden on web where native map is unavailable */}
+        {Platform.OS !== 'web' && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Recenter on my location"
+            onPress={handleRecenter}
+            style={({ pressed }) => [styles.fab, pressed && styles.btnPressed]}
+          >
+            <Text style={styles.fabText}>{'◎'}</Text>
+          </Pressable>
+        )}
 
         {/* Selected-store info card */}
         {selectedStore ? (
@@ -492,13 +589,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   chip: {
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.base,
     borderRadius: borderRadius.full,
     backgroundColor: colors.background.secondary,
     borderWidth: 1,
     borderColor: colors.border.default,
     marginRight: spacing.sm,
+    minHeight: 44,
   },
   chipActive: {
     backgroundColor: colors.gold,

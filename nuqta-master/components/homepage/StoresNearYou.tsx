@@ -43,7 +43,8 @@ const StoresNearYou: React.FC<StoresNearYouProps> = ({ onMapViewPress }) => {
     if (onMapViewPress) {
       onMapViewPress();
     } else {
-      router.push('/explore/map');
+      // Unified: Use /b/map (b.map feature flag) for consistent feature flagging
+      router.push('/b/map');
     }
   };
 

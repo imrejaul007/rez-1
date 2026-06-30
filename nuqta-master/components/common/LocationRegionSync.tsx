@@ -34,15 +34,16 @@ const REGION_LOCATIONS: Record<RegionId, { name: string; coords: { lat: number; 
 };
 
 function LocationRegionSync() {
-  const regionState = useRegionStore((s) => s.state);
+  const isInitialized = useRegionStore((s) => s.state.isInitialized);
+  const currentRegion = useRegionStore((s) => s.state.currentRegion);
   const { state: locationState, setManualLocation } = useLocation();
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (!regionState.isInitialized || hasInitialized.current) return;
+    if (!isInitialized || hasInitialized.current) return;
     hasInitialized.current = true;
 
-    const regionData = REGION_LOCATIONS[regionState.currentRegion];
+    const regionData = REGION_LOCATIONS[currentRegion];
     if (!regionData) return;
 
     const currentCity = locationState.currentLocation?.address?.city;
@@ -71,7 +72,7 @@ function LocationRegionSync() {
         console.error('[LocationRegionSync] Error:', err);
       });
     }
-  }, [regionState.isInitialized, regionState.currentRegion, setManualLocation]);
+  }, [isInitialized, currentRegion, setManualLocation, locationState.currentLocation?.address?.city]);
 
   // This component doesn't render anything
   return null;

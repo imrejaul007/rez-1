@@ -16,6 +16,7 @@ import {
 } from '@/types/homepage.types';
 import { initialHomepageState } from '@/data/homepageData';
 import { HomepageUserContext } from '@/services/homepageDataService';
+import homepageDataService from '@/services/homepageDataService';
 
 // ── Helpers ──
 
@@ -37,11 +38,7 @@ export function useHomepage() {
   const [data, setData] = useState<any>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Track refreshing via a ref so the returned object can expose a live
-  // value via a getter — this lets tests observe the state change
-  // synchronously after calling `refresh()`, even when the React update is
-  // not yet flushed (e.g. when the call happens outside `act()`).
-  const refreshingRef = useRef(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const isMountedRef = useRef(true);
   const loadRequestIdRef = useRef(0);
 
@@ -88,12 +85,7 @@ export function useHomepage() {
   const refresh = useCallback(() => {
     if (!isMountedRef.current) return;
     const requestId = ++loadRequestIdRef.current;
-    // Update the ref synchronously so consumers reading `refreshing` via the
-    // returned object's getter observe the change immediately, even before
-    // any subsequent React state update is committed.
-    refreshingRef.current = true;
-    // Fire and forget — the test asserts that `refreshing` flips true
-    // synchronously after calling refresh().
+    setIsRefreshing(true);
     (async () => {
       try {
         const response = await fetchHomepageData();
@@ -112,7 +104,7 @@ export function useHomepage() {
         setError(err?.message || 'Failed to load homepage data');
       } finally {
         if (isMountedRef.current && requestId === loadRequestIdRef.current) {
-          refreshingRef.current = false;
+          setIsRefreshing(false);
         }
       }
     })();
@@ -150,32 +142,24 @@ export function useHomepage() {
 
   const getUserContext = useCallback((): HomepageUserContext | null => {
     try {
-      const homepageDataService = require('@/services/homepageDataService').default;
       return homepageDataService.getLastUserContext();
     } catch {
       return null;
     }
   }, []);
 
-  // Expose `refreshing` via a getter backed by `refreshingRef` so that
-  // synchronous reads (e.g. from tests that call `refresh()` and then
-  // inspect the result without awaiting a re-render) observe the latest
-  // value immediately.
   const result: any = {
     // Flat test-facing API
     loading,
     data,
     error,
     refresh,
+    refreshing: isRefreshing,
     // Backwards-compatible
     state,
     actions,
     getUserContext,
   };
-  Object.defineProperty(result, 'refreshing', {
-    get: () => refreshingRef.current,
-    enumerable: true,
-  });
   return result;
 }
 
@@ -183,11 +167,13 @@ export function useHomepage() {
 
 export function useHomepageSection(sectionId: string) {
   const homepage = useHomepage();
-  const sections = homepage.state.sections || [];
-  const section = sections.find((s: any) => s.id === sectionId);
+  const section = useMemo(
+    () => homepage.state.sections?.find((s: any) => s.id === sectionId) || null,
+    [homepage.state.sections, sectionId]
+  );
 
   return {
-    section: section || null,
+    section,
     loading: homepage.loading,
     error: homepage.error,
     refresh: homepage.refresh,

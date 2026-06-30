@@ -231,9 +231,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (isLoading) return; // Still loading
 
     const retryTimer = setTimeout(() => {
-      if (!walletData && _walletLastFetch === 0) {
-        fetchWallet(false);
-      }
+      fetchWallet(false);  // fetchWallet has its own dedup
     }, 2000);
 
     return () => clearTimeout(retryTimer);

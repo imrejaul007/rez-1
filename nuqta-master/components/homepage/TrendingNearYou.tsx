@@ -126,7 +126,7 @@ const AutoPlayVideo: React.FC<{
     return () => {
       videoRef.current?.unloadAsync();
     };
-  }, []);
+  }, [uri]);
 
   useEffect(() => {
     const startPlayback = async () => {
@@ -252,6 +252,10 @@ const SkeletonCard: React.FC = () => {
 
   useEffect(() => {
     shimmerAnim.value = withRepeat(withSequence(withTiming(1, { duration: 1000 }), withTiming(0, { duration: 1000 })), -1);
+    return () => {
+  shimmerAnim.value = 0;
+  shimmerAnim.cancelAnimation?.();
+};
   }, [shimmerAnim]);
 
   const shimmerStyle = useAnimatedStyle(() => ({

@@ -65,12 +65,8 @@ export const useAuthStore = create<AuthStoreState>((set) => ({
   state: initialState,
   actions: defaultActions,
 
-  // Called by AuthProvider on every render to keep store in sync
-  // FIX: Skip update if nothing changed to prevent render loop (React Error #185)
+  // FIX: Removed dead reference equality check
   _setFromProvider: (state: AuthState, actions: AuthActions) => {
-    set((s) => {
-      if (s.state === state && s.actions === actions) return {};
-      return { state, actions };
-    });
+    set({ state, actions });
   },
 }));

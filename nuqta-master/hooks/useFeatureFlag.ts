@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { remoteFeatureConfig } from '@/services/remoteFeatureConfig';
 
 /**
@@ -13,6 +13,12 @@ import { remoteFeatureConfig } from '@/services/remoteFeatureConfig';
 export function useFeatureFlag(key: string): boolean {
   const [enabled, setEnabled] = useState(() => remoteFeatureConfig.isEnabled(key));
 
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
   useEffect(() => {
     // If already loaded, sync immediately
     if (remoteFeatureConfig.isLoaded) {
@@ -22,6 +28,7 @@ export function useFeatureFlag(key: string): boolean {
 
     // Poll until loaded (flags fetched from backend), then stop
     const interval = setInterval(() => {
+      if (!mountedRef.current) { clearInterval(interval); return; }
       if (remoteFeatureConfig.isLoaded) {
         setEnabled(remoteFeatureConfig.isEnabled(key));
         clearInterval(interval);

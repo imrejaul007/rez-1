@@ -126,9 +126,8 @@ export const OfflineQueueProvider: React.FC<OfflineQueueProviderProps> = ({
           await refreshQueue();
         }
 
-        // Only setup listeners if still mounted (prevents leak on slow init)
+        // Listeners are registered in a dedicated useEffect below
         if (mounted) {
-          setupEventListeners();
           setupNetworkMonitoring();
         }
 
@@ -388,23 +387,23 @@ export const OfflineQueueProvider: React.FC<OfflineQueueProviderProps> = ({
 
   /**
    * Setup event listeners for queue service
+   * Uses useEffect pattern for proper cleanup
    */
-  const setupEventListeners = () => {
-    // Queue change event
-    billUploadQueueService.on('queue:change', (event: QueueEvent) => {
-      refreshQueue();
-    });
+  useEffect(() => {
+    const onQueueChange = () => refreshQueue();
+    const onQueueSynced = () => refreshQueue();
+    const onQueueError = (e: QueueEvent) => setError(e.error || 'Unknown error');
 
-    // Sync complete event
-    billUploadQueueService.on('queue:synced', (event: QueueEvent) => {
-      refreshQueue();
-    });
+    billUploadQueueService.on('queue:change', onQueueChange);
+    billUploadQueueService.on('queue:synced', onQueueSynced);
+    billUploadQueueService.on('queue:error', onQueueError);
 
-    // Error event
-    billUploadQueueService.on('queue:error', (event: QueueEvent) => {
-      setError(event.error || 'Unknown error');
-    });
-  };
+    return () => {
+      billUploadQueueService.off('queue:change', onQueueChange);
+      billUploadQueueService.off('queue:synced', onQueueSynced);
+      billUploadQueueService.off('queue:error', onQueueError);
+    };
+  }, []);
 
   /**
    * Setup network monitoring

@@ -56,7 +56,7 @@ export function useOrderListSocket() {
     return () => {
       socket.off(ORDER_LIST_UPDATED, handleListUpdate);
     };
-  }, [socket]);
+  }, [socket, callbackRef]);
 
   return {
     lastUpdate,

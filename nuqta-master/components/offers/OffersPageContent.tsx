@@ -190,9 +190,8 @@ export const OffersPageContent: React.FC<OffersPageContentProps> = ({
     }
     // Refresh real API data
     refreshData();
-    // Small delay for UX
+    // Removed artificial delay
     if (!isMounted()) return;
-    await new Promise((resolve) => setTimeout(resolve, 500));
     setRefreshing(false);
   }, [onRefresh, refreshData]);
 

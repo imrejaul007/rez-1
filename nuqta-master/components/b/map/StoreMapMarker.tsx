@@ -19,7 +19,7 @@
  *   ```
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { borderRadius, colors, shadows, spacing, typography } from '@/constants/theme';
 import type { NearbyStore } from '@/hooks/b/map/useNearbyStores';
@@ -57,30 +57,42 @@ function StoreMapMarkerBase({
     store.distanceKm,
   )} away`;
 
-  const badgeStyle = [
-    styles.badge,
-    {
-      width: size,
-      height: size,
-      borderRadius: borderRadius.circular(size),
-      backgroundColor: badgeColor,
-    },
-  ];
+  // ponytail: useMemo avoids re-allocating the style array on every render.
+  // size and badgeColor are both derived from stable props, so this is cheap.
+  const badgeStyle = useMemo(
+    () => [
+      styles.badge,
+      {
+        width: size,
+        height: size,
+        borderRadius: borderRadius.circular(size),
+        backgroundColor: badgeColor,
+      },
+    ],
+    [size, badgeColor],
+  );
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
       onPress={onPress}
-      hitSlop={spacing.xs}
+      hitSlop={spacing.sm}
       style={({ pressed }) => [
         styles.outer,
         Platform.OS === 'web' ? null : shadows.medium,
         pressed && styles.pressed,
       ]}
     >
-      <View style={badgeStyle} accessible={false}>
-        <Text style={[styles.initial, size >= 44 && styles.initialLarge]}>
+      <View
+        style={badgeStyle}
+        accessible={false}
+        accessibilityElementsHidden
+      >
+        <Text
+          style={[styles.initial, size >= 44 && styles.initialLarge]}
+          accessible={false}
+        >
           {initial}
         </Text>
       </View>
@@ -91,6 +103,7 @@ function StoreMapMarkerBase({
           { borderTopColor: badgeColor },
         ]}
         accessible={false}
+        accessibilityElementsHidden
       />
     </Pressable>
   );

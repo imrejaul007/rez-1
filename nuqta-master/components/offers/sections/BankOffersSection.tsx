@@ -31,6 +31,103 @@ interface BankOffersSectionProps {
   onViewAll?: () => void;
 }
 
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: Spacing.lg,
+  },
+  card: {
+    width: 200,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+  },
+  bankLogoContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: colors.background.primary,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
+    ...Shadows.subtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  bankLogo: {
+    width: 36,
+    height: 36,
+  },
+  bankLogoPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: colors.infoScale[400],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bankLogoText: {
+    color: colors.background.primary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  bankInfo: {
+    flex: 1,
+  },
+  bankName: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  cardTypeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  cardTypeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    marginLeft: 3,
+    textTransform: 'uppercase',
+  },
+  content: {
+    padding: Spacing.md,
+  },
+  offerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: PALETTE.nileBlue,
+    marginBottom: 4,
+  },
+  maxDiscount: {
+    fontSize: 11,
+    fontWeight: '500',
+    marginBottom: Spacing.xs,
+  },
+  terms: {
+    fontSize: 10,
+    fontWeight: '500',
+    marginBottom: Spacing.sm,
+  },
+  minAmount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  minAmountText: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+});
+
 export const BankOffersSection: React.FC<BankOffersSectionProps> = ({
   offers,
   onViewAll,
@@ -72,111 +169,25 @@ export const BankOffersSection: React.FC<BankOffersSectionProps> = ({
     }
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      marginBottom: Spacing.lg,
-    },
-    card: {
-      width: 200,
-      backgroundColor: isDark ? theme.colors.background.card : colors.background.primary,
-      borderRadius: BorderRadius.lg,
-      borderWidth: 1,
-      borderColor: isDark ? theme.colors.border.light : colors.neutral[200],
-      overflow: 'hidden',
-      ...(isDark ? {} : Shadows.medium),
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: Spacing.md,
-      backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : colors.tint.blue,
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? 'rgba(59, 130, 246, 0.2)' : colors.tint.blueLight,
-    },
-    bankLogoContainer: {
-      width: 44,
-      height: 44,
-      borderRadius: 10,
-      backgroundColor: colors.background.primary,
-      overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: colors.neutral[200],
-      ...Shadows.subtle,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginRight: Spacing.sm,
-    },
-    bankLogo: {
-      width: 36,
-      height: 36,
-    },
-    bankLogoPlaceholder: {
-      width: '100%',
-      height: '100%',
-      backgroundColor: colors.infoScale[400],
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    bankLogoText: {
-      color: colors.background.primary,
-      fontSize: 16,
-      fontWeight: '700',
-    },
-    bankInfo: {
-      flex: 1,
-    },
-    bankName: {
-      fontSize: 13,
-      fontWeight: '700',
-      color: theme.colors.text.primary,
-      marginBottom: 2,
-    },
-    cardTypeBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      alignSelf: 'flex-start',
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 4,
-    },
-    cardTypeText: {
-      fontSize: 9,
-      fontWeight: '700',
-      marginLeft: 3,
-      textTransform: 'uppercase',
-    },
-    content: {
-      padding: Spacing.md,
-    },
-    offerTitle: {
-      fontSize: 16,
-      fontWeight: '800',
-      color: PALETTE.nileBlue,
-      marginBottom: 4,
-    },
-    maxDiscount: {
-      fontSize: 11,
-      fontWeight: '500',
-      color: theme.colors.text.secondary,
-      marginBottom: Spacing.xs,
-    },
-    terms: {
-      fontSize: 10,
-      fontWeight: '500',
-      color: theme.colors.text.tertiary,
-      marginBottom: Spacing.sm,
-    },
-    minAmount: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    minAmountText: {
-      fontSize: 10,
-      fontWeight: '600',
-      color: theme.colors.text.tertiary,
-      marginLeft: 4,
-    },
-  });
+  // Dynamic styles based on theme
+  const dynamicCardStyle = {
+    backgroundColor: isDark ? theme.colors.background.card : colors.background.primary,
+    borderColor: isDark ? theme.colors.border.light : colors.neutral[200],
+    ...(isDark ? {} : Shadows.medium),
+  };
+  const dynamicHeaderStyle = {
+    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : colors.tint.blue,
+    borderBottomColor: isDark ? 'rgba(59, 130, 246, 0.2)' : colors.tint.blueLight,
+  };
+  const dynamicTextStyle = {
+    color: theme.colors.text.primary,
+  };
+  const dynamicSecondaryTextStyle = {
+    color: theme.colors.text.secondary,
+  };
+  const dynamicTertiaryTextStyle = {
+    color: theme.colors.text.tertiary,
+  };
 
   return (
     <View style={styles.container}>
@@ -194,11 +205,11 @@ export const BankOffersSection: React.FC<BankOffersSectionProps> = ({
           return (
             <Pressable
               key={offer.id}
-              style={styles.card}
+              style={[styles.card, dynamicCardStyle]}
               onPress={() => handleOfferPress(offer)}
-             
+
             >
-              <View style={styles.header}>
+              <View style={[styles.header, dynamicHeaderStyle]}>
                 <View style={styles.bankLogoContainer}>
                   {offer.bankLogo ? (
                     <CachedImage
@@ -216,7 +227,7 @@ export const BankOffersSection: React.FC<BankOffersSectionProps> = ({
                   )}
                 </View>
                 <View style={styles.bankInfo}>
-                  <Text style={styles.bankName} numberOfLines={1}>
+                  <Text style={[styles.bankName, dynamicTextStyle]} numberOfLines={1}>
                     {offer.bankName}
                   </Text>
                   <View
@@ -239,10 +250,10 @@ export const BankOffersSection: React.FC<BankOffersSectionProps> = ({
 
               <View style={styles.content}>
                 <Text style={styles.offerTitle}>{offer.offerTitle}</Text>
-                <Text style={styles.maxDiscount}>
+                <Text style={[styles.maxDiscount, dynamicSecondaryTextStyle]}>
                   Max discount: {currencySymbol}{offer.maxDiscount}
                 </Text>
-                <Text style={styles.terms} numberOfLines={1}>
+                <Text style={[styles.terms, dynamicTertiaryTextStyle]} numberOfLines={1}>
                   {offer.terms}
                 </Text>
                 <View style={styles.minAmount}>
@@ -251,7 +262,7 @@ export const BankOffersSection: React.FC<BankOffersSectionProps> = ({
                     size={12}
                     color={theme.colors.text.tertiary}
                   />
-                  <Text style={styles.minAmountText}>
+                  <Text style={[styles.minAmountText, dynamicTertiaryTextStyle]}>
                     Min. {currencySymbol}{offer.minTransactionAmount}
                   </Text>
                 </View>

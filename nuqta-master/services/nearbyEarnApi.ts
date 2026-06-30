@@ -16,13 +16,13 @@ export interface NearbyStore {
   name: string;
   logo?: string;
   category?: string;
-  distance: number; // in meters
-  location: {
-    coordinates: [number, number]; // [lng, lat]
+  distance?: number; // in meters, may be absent
+  location?: {
+    coordinates?: [number, number]; // [lng, lat]
     address?: string;
   };
-  earningOpportunities: EarningOpportunity[];
-  totalCashbackPercent: number;
+  earningOpportunities?: EarningOpportunity[];
+  totalCashbackPercent?: number;
 }
 
 class NearbyEarnApi {
@@ -47,8 +47,12 @@ class NearbyEarnApi {
         return { success: true, data: stores };
       }
       return { success: true, data: [] };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (err: unknown) {
+      // FIX: `err: unknown` + instanceof guard — plain objects thrown by some
+      // network libraries have `.message === undefined`, making the error
+      // silently unreadable to the user without this check.
+      const message = err instanceof Error ? err.message : String(err ?? 'Unknown error');
+      return { success: false, error: message };
     }
   }
 }

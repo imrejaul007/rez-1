@@ -351,7 +351,8 @@ export function useStoreDiscovery(limit: number = 10): UseStoreDiscoveryReturn {
         errorTop: error?.message || 'Failed to load top stores',
       }));
     }
-  }, [fetchTopStores]);
+  // FIX CRITICAL: Empty deps prevents infinite loop
+  }, []);
 
   /**
    * Refresh popular stores
@@ -368,7 +369,8 @@ export function useStoreDiscovery(limit: number = 10): UseStoreDiscoveryReturn {
         errorPopular: error?.message || 'Failed to load popular stores',
       }));
     }
-  }, [fetchPopularStores]);
+  // FIX CRITICAL: Empty deps prevents infinite loop
+  }, []);
 
   /**
    * Refresh all stores

@@ -9,6 +9,7 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
+  Platform,
   RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,21 +23,36 @@ import { MapViewSkeleton } from '@/components/skeletons';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
-import { Platform } from 'react-native';
+
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 // Real MapView — native only
+// Defensive: Initialize as null and handle undefined explicitly
 let MapView: any = null;
 let Marker: any = null;
 let PROVIDER_GOOGLE: any = null;
+
 if (Platform.OS !== 'web') {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Maps = require('react-native-maps');
-    MapView = Maps.default;
-    Marker = Maps.Marker;
-    PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
-  } catch {
-    // react-native-maps not available
+    // Handle cases where exports might be undefined
+    MapView = Maps.default ?? Maps.MapView ?? null;
+    Marker = Maps.Marker ?? null;
+    PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE ?? null;
+
+    if (MapView == null || Marker == null) {
+      console.warn('[ExploreMap] react-native-maps loaded but components are null:', {
+        hasDefault: Maps.default != null,
+        hasMapView: Maps.MapView != null,
+        hasMarker: Maps.Marker != null,
+      });
+    }
+  } catch (err) {
+    console.error('[ExploreMap] Failed to load react-native-maps:', err);
+    MapView = null;
+    Marker = null;
+    PROVIDER_GOOGLE = null;
   }
 }
 
@@ -191,11 +207,21 @@ const ExploreMapPage = () => {
 
       {/* Header */}
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          style={styles.backButton}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.nileBlue} />
         </Pressable>
         <Text style={styles.headerTitle}>Stores in {regionName}</Text>
-        <Pressable style={styles.searchButton} onPress={() => navigateTo('/explore/search')}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Search stores"
+          style={styles.searchButton}
+          onPress={() => navigateTo('/explore/search')}
+        >
           <Ionicons name="search" size={24} color={colors.nileBlue} />
         </Pressable>
       </View>
@@ -207,36 +233,42 @@ const ExploreMapPage = () => {
         style={styles.categoryScroll}
         contentContainerStyle={styles.categoryContainer}
       >
-        {categories.map((cat) => (
-          <Pressable
-            key={cat.id}
-            style={[
-              styles.categoryChip,
-              selectedCategory === cat.id && styles.categoryChipActive,
-            ]}
-            onPress={() => setSelectedCategory(cat.id)}
-          >
-            <Ionicons
-              name={cat.icon as any}
-              size={16}
-              color={selectedCategory === cat.id ? colors.background.primary : colors.neutral[500]}
-            />
-            <Text
+        {categories.map((cat) => {
+          const isActive = selectedCategory === cat.id;
+          return (
+            <Pressable
+              key={cat.id}
+              accessibilityRole="button"
+              accessibilityLabel={`Filter by ${cat.label}${isActive ? ', selected' : ''}`}
+              accessibilityState={{ selected: isActive }}
               style={[
-                styles.categoryLabel,
-                selectedCategory === cat.id && styles.categoryLabelActive,
+                styles.categoryChip,
+                isActive && styles.categoryChipActive,
               ]}
+              onPress={() => setSelectedCategory(cat.id)}
             >
-              {cat.label}
-            </Text>
-          </Pressable>
-        ))}
+              <Ionicons
+                name={cat.icon as any}
+                size={16}
+                color={isActive ? colors.background.primary : colors.neutral[500]}
+              />
+              <Text
+                style={[
+                  styles.categoryLabel,
+                  isActive && styles.categoryLabelActive,
+                ]}
+              >
+                {cat.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       {/* Interactive Map */}
       <View style={styles.mapContainer}>
         {/* Real MapView on native, mock on web */}
-        {MapView && effectiveCoordinates ? (
+        {MapView != null && Marker != null && effectiveCoordinates ? (
           <MapView
             style={StyleSheet.absoluteFill}
             provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
@@ -250,6 +282,7 @@ const ExploreMapPage = () => {
             showsMyLocationButton
           >
             {stores.slice(0, 20).map((store) => {
+              if (Marker == null) return null;
               const coords = (store as any).location?.coordinates;
               if (!coords || coords.length < 2) return null;
               const [lng, lat] = coords;
@@ -298,6 +331,10 @@ const ExploreMapPage = () => {
             return (
               <Pressable
                 key={store.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Store: ${store.name}${
+                  store.distance ? `, ${store.distance} away` : ''
+                }. Double tap to open.`}
                 style={[
                   styles.storeMarker,
                   { left: `${pos.left}%`, top: `${pos.top}%` },
@@ -307,21 +344,36 @@ const ExploreMapPage = () => {
                   setSelectedStore(store.id);
                   navigateTo(`/MainStorePage?storeId=${store.id}`);
                 }}
-               
               >
                 {/* Pulse effect */}
-                <View style={[styles.markerPulse, { backgroundColor: color.shadow }]} />
+                <View
+                  style={[styles.markerPulse, { backgroundColor: color.shadow }]}
+                  accessible={false}
+                  accessibilityElementsHidden
+                />
 
                 {/* Pin shape */}
-                <View style={[styles.markerPin, { backgroundColor: color.bg }]}>
-                  <Text style={styles.markerInitial}>
+                <View
+                  style={[styles.markerPin, { backgroundColor: color.bg }]}
+                  accessible={false}
+                  accessibilityElementsHidden
+                >
+                  <Text style={styles.markerInitial} accessible={false}>
                     {store.name?.charAt(0)?.toUpperCase() || 'S'}
                   </Text>
                 </View>
-                <View style={[styles.markerTail, { borderTopColor: color.bg }]} />
+                <View
+                  style={[styles.markerTail, { borderTopColor: color.bg }]}
+                  accessible={false}
+                  accessibilityElementsHidden
+                />
 
                 {/* Label */}
-                <View style={styles.markerLabelContainer}>
+                <View
+                  style={styles.markerLabelContainer}
+                  accessible={false}
+                  accessibilityElementsHidden
+                >
                   <Text style={styles.markerLabel} numberOfLines={1}>
                     {store.name?.split(' ')[0]}
                   </Text>
@@ -368,11 +420,19 @@ const ExploreMapPage = () => {
 
           {/* Zoom Controls */}
           <View style={styles.zoomControls}>
-            <Pressable style={styles.zoomBtn}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Zoom in"
+              style={styles.zoomBtn}
+            >
               <Ionicons name="add" size={20} color={colors.neutral[700]} />
             </Pressable>
             <View style={styles.zoomDivider} />
-            <Pressable style={styles.zoomBtn}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Zoom out"
+              style={styles.zoomBtn}
+            >
               <Ionicons name="remove" size={20} color={colors.neutral[700]} />
             </Pressable>
           </View>
@@ -389,7 +449,12 @@ const ExploreMapPage = () => {
       {/* Store List */}
       <View style={styles.storeListHeader}>
         <Text style={styles.storeListTitle}>Nearby Stores</Text>
-        <Pressable style={styles.viewAllBtn} onPress={() => navigateTo('/explore/stores')}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="View all stores"
+          style={styles.viewAllBtn}
+          onPress={() => navigateTo('/explore/stores')}
+        >
           <Text style={styles.viewAllText}>View All</Text>
           <Ionicons name="chevron-forward" size={16} color={colors.lightMustard} />
         </Pressable>
@@ -400,7 +465,9 @@ const ExploreMapPage = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.storeListContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.lightMustard]} />
+          Platform.OS !== 'web'
+            ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.lightMustard]} />
+            : undefined
         }
       >
         {/* Loading State */}
@@ -440,12 +507,13 @@ const ExploreMapPage = () => {
           return (
             <Pressable
               key={store.id}
+              accessibilityRole="button"
+              accessibilityLabel={`${store.name}${store.distance ? `, ${store.distance} away` : ''}${isOpen ? ', open now' : ', closed'}.`}
               style={[
                 styles.storeCard,
                 selectedStore === store.id && styles.storeCardSelected,
               ]}
               onPress={() => navigateTo(`/MainStorePage?storeId=${store.id}`)}
-             
             >
               {/* Store Icon */}
               <View style={[styles.storeIcon, { backgroundColor: color.bg }]}>
@@ -940,6 +1008,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    minHeight: 44,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   viewAllText: {
     fontSize: 13,
