@@ -1,17 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { platformAlertSimple } from '@/utils/platformAlert';
-import * as HomepageApi from '@/services/homepageApi';
-// Use a local reference so jest can mock the named export `fetchHomepageData`.
-// Falls back to HomepageApiService.fetchHomepageData (static class method) in
-// production where the service module is not replaced.
-const fetchHomepageData = (HomepageApi as any).fetchHomepageData
-  ? (HomepageApi as any).fetchHomepageData
-  : ((HomepageApi as any).default?.fetchHomepageData ?? (() => Promise.resolve(null)));
-
 import {
   HomepageState,
-  UseHomepageDataResult,
   HomepageSection,
 } from '@/types/homepage.types';
 import { initialHomepageState } from '@/data/homepageData';
@@ -27,6 +18,21 @@ function buildEmptyData() {
     products: [],
     deals: [],
   };
+}
+
+function sectionsObjectToArray(sectionsByKey: Record<string, HomepageSection> | null | undefined): HomepageSection[] {
+  if (!sectionsByKey || typeof sectionsByKey !== 'object') {
+    return initialHomepageState.sections.map(section => ({
+      ...section,
+      items: [],
+      loading: false,
+      error: null,
+    }));
+  }
+
+  return Object.values(sectionsByKey)
+    .filter(Boolean)
+    .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
 }
 
 // ── Main Homepage Hook ──
@@ -51,22 +57,20 @@ export function useHomepage() {
 
   const load = useCallback(async () => {
     const requestId = ++loadRequestIdRef.current;
+    setLoading(true);
     try {
-      const response = await fetchHomepageData();
+      const response = await homepageDataService.fetchAllSectionsWithBatch();
       if (!isMountedRef.current || requestId !== loadRequestIdRef.current) return;
-      // Support both wrapped ({success, data}) and unwrapped payloads.
-      if (response && typeof response === 'object' && 'data' in response && response.success === true) {
-        setData(response.data ?? buildEmptyData());
-        setError(null);
-      } else if (response && typeof response === 'object') {
-        // Unwrapped payload (test mocks): treat the object as data directly.
-        setData(response);
-        setError(null);
-      } else {
-        setError('Failed to load homepage data');
-      }
+      setData({
+        sections: sectionsObjectToArray(response),
+      });
+      setError(null);
     } catch (err: any) {
       if (!isMountedRef.current || requestId !== loadRequestIdRef.current) return;
+      setData({
+        sections: sectionsObjectToArray(null),
+        ...buildEmptyData(),
+      });
       setError(err?.message || 'Failed to load homepage data');
     } finally {
       if (isMountedRef.current && requestId === loadRequestIdRef.current) {
@@ -82,39 +86,32 @@ export function useHomepage() {
     };
   }, [load]);
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     if (!isMountedRef.current) return;
     const requestId = ++loadRequestIdRef.current;
     setIsRefreshing(true);
-    (async () => {
-      try {
-        const response = await fetchHomepageData();
-        if (!isMountedRef.current || requestId !== loadRequestIdRef.current) return;
-        if (response && typeof response === 'object' && 'data' in response && response.success === true) {
-          setData(response.data ?? buildEmptyData());
-          setError(null);
-        } else if (response && typeof response === 'object') {
-          setData(response);
-          setError(null);
-        } else {
-          setError('Failed to load homepage data');
-        }
-      } catch (err: any) {
-        if (!isMountedRef.current || requestId !== loadRequestIdRef.current) return;
-        setError(err?.message || 'Failed to load homepage data');
-      } finally {
-        if (isMountedRef.current && requestId === loadRequestIdRef.current) {
-          setIsRefreshing(false);
-        }
+    try {
+      const response = await homepageDataService.fetchAllSectionsWithBatch();
+      if (!isMountedRef.current || requestId !== loadRequestIdRef.current) return;
+      setData({
+        sections: sectionsObjectToArray(response),
+      });
+      setError(null);
+    } catch (err: any) {
+      if (!isMountedRef.current || requestId !== loadRequestIdRef.current) return;
+      setError(err?.message || 'Failed to load homepage data');
+    } finally {
+      if (isMountedRef.current && requestId === loadRequestIdRef.current) {
+        setIsRefreshing(false);
       }
-    })();
+    }
   }, []);
 
   const state: HomepageState = useMemo(
     () => ({
       loading,
       error,
-      sections: initialHomepageState.sections,
+      sections: data?.sections ?? initialHomepageState.sections,
       user: { preferences: [] },
       lastRefresh: data ? new Date().toISOString() : initialHomepageState.lastRefresh,
     }),
@@ -443,7 +440,7 @@ export function useHomepageNavigation() {
 
 export function useHomepagePerformance() {
   const homepage = useHomepage();
-  const sections = homepage.state.sections || [];
+  const sections = useMemo(() => homepage.state.sections || [], [homepage.state.sections]);
 
   const getLoadingStats = useCallback(() => {
     const totalSections = sections.length;

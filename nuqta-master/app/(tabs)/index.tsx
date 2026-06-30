@@ -997,7 +997,15 @@ function HomeScreen() {
       ]}>
         {/* Near-U Tab Content - All sections with viewport-based lazy loading */}
         {activeTab === 'near-u' && (
-          <FeatureErrorBoundary featureName="Near-U" compact={false}>
+          <FeatureErrorBoundary
+            featureName="Near-U"
+            compact={false}
+            onReset={() => {
+              actions.refreshAllSections(true).catch((err: any) => {
+                console.error('[Home] Near-U retry failed:', err?.message ?? err);
+              });
+            }}
+          >
             <Suspense fallback={<TabContentFallback />}>
               <NearUTabContent
                 state={state}
