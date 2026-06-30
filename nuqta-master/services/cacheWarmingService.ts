@@ -397,6 +397,22 @@ class CacheWarmingService {
   }
 
   /**
+   * Resume warming when app comes to foreground
+   */
+  onAppForeground(): void {
+    // Resume warming if it was paused on background
+    try {
+      if (this.state.isPaused) {
+        this.resumeWarming?.();
+      }
+      // Optionally refresh cache on foreground
+      this.startWarming?.({ force: false }).catch(() => {});
+    } catch (err) {
+      console.error('[CacheWarmingService] onAppForeground error:', err);
+    }
+  }
+
+  /**
    * Cleanup service and remove listeners
    */
   destroy(): void {

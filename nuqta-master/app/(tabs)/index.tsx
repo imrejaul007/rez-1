@@ -308,6 +308,8 @@ function HomeScreen() {
   React.useEffect(() => {
     if (!currentLocation?.coordinates || serviceabilityChecked) return;
 
+    console.log('[Home] Checking serviceability for:', currentLocation.coordinates);
+
     let cancelled = false;
     const lat = currentLocation.coordinates.latitude;
     const lng = currentLocation.coordinates.longitude;
@@ -316,13 +318,25 @@ function HomeScreen() {
       if (cancelled) return;
       checkAreaServiceability(lat, lng).then(result => {
         if (cancelled || !isMounted()) return;
+
+        console.log('[Home] Serviceability result:', result);
+
         setIsAreaServiceable(result.isServiceable);
         setServiceabilityChecked(true);
 
         if (!result.isServiceable && activeTab === 'near-u') {
+          console.log('[Home] Area not serviceable, switching to mall tab');
           setActiveTab('mall');
         }
+      }).catch((err) => {
+        console.error('[Home] Serviceability check failed:', err);
+        setIsAreaServiceable(true); // Default to serviceable on error
+        setServiceabilityChecked(true);
       });
+    }).catch((err) => {
+      console.error('[Home] Failed to import serviceabilityCheck:', err);
+      setIsAreaServiceable(true);
+      setServiceabilityChecked(true);
     });
 
     return () => {
