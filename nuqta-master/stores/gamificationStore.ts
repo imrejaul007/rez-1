@@ -134,7 +134,31 @@ export const useGamificationStore = create<GamificationStoreState>((set) => ({
   computed: defaultComputed,
 
   // Called by GamificationProvider on every render to keep store in sync
+  // FIX: Use JSON snapshot for deeper comparison to catch nested changes
   _setFromProvider: (data: GamificationContextShape) => {
-    set({ state: data.state, actions: data.actions, computed: data.computed });
+    set((s) => {
+      // Use JSON snapshot for deeper comparison
+      // Catches nested changes like array length, coin balance, etc.
+      const prevSnapshot = JSON.stringify({
+        achievementsLen: s.state.achievements?.length,
+        coinBalance: s.state.coinBalance,
+        challengesLen: s.state.challenges?.length,
+        dailyStreak: s.state.dailyStreak,
+        isLoading: s.state.isLoading,
+        error: s.state.error,
+      });
+      const newSnapshot = JSON.stringify({
+        achievementsLen: data.state.achievements?.length,
+        coinBalance: data.state.coinBalance,
+        challengesLen: data.state.challenges?.length,
+        dailyStreak: data.state.dailyStreak,
+        isLoading: data.state.isLoading,
+        error: data.state.error,
+      });
+      if (prevSnapshot === newSnapshot) {
+        return {};
+      }
+      return { state: data.state, actions: data.actions, computed: data.computed };
+    });
   },
 }));

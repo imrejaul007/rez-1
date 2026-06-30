@@ -42,7 +42,9 @@ function HeroBanner({ totalSaved = 0, onScanPayPress, onViewWalletPress }: HeroB
           nearbyText: 'Near you',
         });
       }
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error('[HeroBanner] Error:', err);
+    });
     return () => { cancelled = true; };
   }, []);
 

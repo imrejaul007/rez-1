@@ -18,6 +18,11 @@ export function useCreateTicket() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.support.tickets() });
     },
+    onError: (error) => {
+      // FIX: Log error for debugging
+      console.error('[useCreateTicket] Error:', error);
+      // Could show toast here
+    },
   });
 }
 
@@ -34,6 +39,11 @@ export function useSendMessage() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.support.messages(variables.ticketId),
       });
+    },
+    onError: (error) => {
+      // FIX: Log error for debugging
+      console.error('[useSendMessage] Error:', error);
+      // Could show toast here
     },
   });
 }

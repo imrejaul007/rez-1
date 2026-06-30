@@ -223,7 +223,9 @@ export const useRegionStore = create<RegionStoreState>((set, get) => ({
         if (typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.setItem(REGION_STORAGE_KEY, regionId);
         }
-        AsyncStorage.setItem(REGION_STORAGE_KEY, regionId).catch(() => {});
+        AsyncStorage.setItem(REGION_STORAGE_KEY, regionId).catch((err) => {
+      console.error('[regionStore] Error:', err);
+    });
       }
 
       // Fetch fresh configs from server
@@ -390,7 +392,18 @@ export const useRegionStore = create<RegionStoreState>((set, get) => ({
 }));
 
 // Initialize on import — reads stored region, sets apiClient headers
-useRegionStore.getState()._initialize();
+// FIX: Defer on web until DOM is ready; run immediately on native
+if (typeof document !== 'undefined') {
+  if (document.readyState !== 'loading') {
+    useRegionStore.getState()._initialize();
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      useRegionStore.getState()._initialize();
+    });
+  }
+} else {
+  useRegionStore.getState()._initialize();
+}
 
 /**
  * Global getter for non-React code that needs current region.

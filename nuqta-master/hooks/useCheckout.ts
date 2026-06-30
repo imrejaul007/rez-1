@@ -130,7 +130,9 @@ export const useCheckout = (retryOrderId?: string): UseCheckoutReturn => {
       // Skip on initial mount — initializeCheckout already handles it
       if (!hasInitializedRef.current) return;
       // Refresh wallet in background so coin balances are fresh
-      refreshSharedWallet().catch(() => {});
+      refreshSharedWallet().catch((err) => {
+  console.error('[useCheckout] Error:', err);
+});
     }, [refreshSharedWallet])
   );
 

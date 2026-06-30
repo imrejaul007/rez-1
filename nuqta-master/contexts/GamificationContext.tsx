@@ -352,6 +352,8 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
   }, [processCoinQueue]);
 
   // Sync coins from wallet via shared WalletContext (SINGLE SOURCE OF TRUTH)
+  // FIX: availableBalance is in deps to prevent stale closure — callback re-creates
+  // when wallet balance changes so we always read the latest value
   const syncCoinsFromWallet = useCallback(async (forceRefresh = false) => {
     try {
       // Only refresh wallet if forced — WalletContext already fetches on mount
@@ -401,7 +403,9 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
             const timeDiff = Date.now() - parseInt(cacheTime, 10);
             if (timeDiff < CACHE_DURATION) {
               // Sync coins from wallet in background (non-blocking)
-              syncCoinsFromWallet().catch(() => {});
+              syncCoinsFromWallet().catch((err) => {
+          console.error('[GamificationContext] Error:', err);
+        });
               dispatch({ type: 'GAMIFICATION_LOADING', payload: false });
               return;
             }
@@ -427,12 +431,16 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
                   },
                 });
               }
-            }).catch(() => {})
+            }).catch((err) => {
+        console.error('[GamificationContext] Error:', err);
+      })
           );
         }
 
         if (state.featureFlags.ENABLE_COINS) {
-          fetches.push(syncCoinsFromWallet().catch(() => {}));
+          fetches.push(syncCoinsFromWallet().catch((err) => {
+          console.error('[GamificationContext] Error:', err);
+        }));
         }
 
         if (state.featureFlags.ENABLE_CHALLENGES) {
@@ -452,7 +460,9 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
                 }));
                 dispatch({ type: 'CHALLENGES_LOADED', payload: mappedChallenges });
               }
-            }).catch(() => {})
+            }).catch((err) => {
+        console.error('[GamificationContext] Error:', err);
+      })
           );
         }
 
@@ -715,7 +725,9 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
       Promise.all([
         loadGamificationData(),
         updateDailyStreak()
-      ]).catch(() => {}).finally(() => {
+      ]).catch((err) => {
+          console.error('[GamificationContext] Error:', err);
+        }).finally(() => {
         isLoadingDataRef.current = false;
       });
     } else if (!isAuthenticated) {
@@ -736,7 +748,7 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     return () => {
       if (saveToCacheTimerRef.current) clearTimeout(saveToCacheTimerRef.current);
     };
-  }, [isAuthenticated, isOnboarded, state.achievements, state.coinBalance, state.challenges, state.dailyStreak]); // saveToCache removed — stable identity via ref
+  }, [isAuthenticated, isOnboarded]); // saveToCache has stable identity (empty deps, reads from ref)
 
   // Computed values — memoized on specific state slices (not entire state object)
   const computed = useMemo(() => {
@@ -800,9 +812,23 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
   }), [state, stableActions, computed]);
 
   // Sync to Zustand store for crash-safe fallback (useEffect — never setState during render)
+  // FIX: Use a ref to track the last synced context to prevent infinite loops.
+  // Previously, whenever state changed, contextValue changed, triggering this effect,
+  // which updated Zustand, which caused re-renders, which changed state again → infinite loop.
   const _setFromProvider = useGamificationStore((s) => s._setFromProvider);
+  const lastSyncedContextRef = useRef<string | null>(null);
   useEffect(() => {
-    _setFromProvider(contextValue);
+    const contextKey = JSON.stringify({
+      achievementsLen: contextValue.state.achievements.length,
+      coinBalance: contextValue.state.coinBalance.total,
+      challengesLen: contextValue.state.challenges.length,
+      dailyStreak: contextValue.state.dailyStreak,
+    });
+    // Only sync if the data actually changed (not just object reference)
+    if (contextKey !== lastSyncedContextRef.current) {
+      lastSyncedContextRef.current = contextKey;
+      _setFromProvider(contextValue);
+    }
   }, [contextValue, _setFromProvider]);
 
   return (

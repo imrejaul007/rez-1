@@ -57,14 +57,18 @@ const BrandPartnerships: React.FC<BrandPartnershipsProps> = ({
     if (brands.length > 0) {
       // Track views for analytics (fire and forget)
       brands.forEach(brand => {
-        brandApiService.trackBrandView(brand.id).catch(() => {});
+        brandApiService.trackBrandView(brand.id).catch((err) => {
+        console.error('[BrandPartnerships] Error:', err);
+      });
       });
     }
   }, [brands]);
 
   const handleBrandPress = async (brand: BrandPartnership) => {
     // Track click for analytics
-    brandApiService.trackBrandClick(brand.id).catch(() => {});
+    brandApiService.trackBrandClick(brand.id).catch((err) => {
+        console.error('[BrandPartnerships] Error:', err);
+      });
 
     if (onBrandPress) {
       onBrandPress(brand.id);

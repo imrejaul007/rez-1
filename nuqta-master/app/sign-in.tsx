@@ -76,6 +76,9 @@ function SignInScreen() {
   const [otpTimer, setOtpTimer] = useState(0);
   const [canResendOTP, setCanResendOTP] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  // Warming-up state: shown when backend is cold-starting (e.g. Render free tier)
+  const [isWarmingUp, setIsWarmingUp] = useState(false);
+  const [warmupAttempts, setWarmupAttempts] = useState(0);
 
   // Animation values
   const cardScale = useSharedValue(0.95);
@@ -146,6 +149,10 @@ function SignInScreen() {
       await actions.sendOTP(formattedPhone);
       if (!isMounted()) return;
 
+      // Clear warming-up state on success
+      setIsWarmingUp(false);
+      setWarmupAttempts(0);
+
       // Animate transition to OTP step
       cardScale.value = withSequence(withTiming(0.98, { duration: 100 }), withSpring(1));
       setStep('otp');
@@ -158,17 +165,38 @@ function SignInScreen() {
       const errorMessage = error?.message || authError || 'Failed to send OTP.';
       const errorCode = (error?.code || error?.response?.data?.code || '').toString().toUpperCase();
 
+      // Detect cold-start / backend-waking errors (timeout, 502, network, server may be slow)
+      const isColdStart =
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('502') ||
+        errorMessage.includes('503') ||
+        errorMessage.includes('slow') ||
+        errorMessage.includes('unresponsive') ||
+        errorMessage.includes('network') ||
+        errorMessage.includes('ECONNREFUSED') ||
+        errorMessage.includes('cold');
+
+      if (isColdStart) {
+        setIsWarmingUp(true);
+        setWarmupAttempts(prev => prev + 1);
+        setErrors(prev => ({ ...prev, phoneNumber: '' }));
+        return;
+      }
+
       if (errorCode.includes('RATE_LIMIT') || errorCode.includes('TOO_MANY')) {
         setErrors(prev => ({ ...prev, phoneNumber: 'Too many requests. Please wait.' }));
+        setIsWarmingUp(false);
         return;
       }
 
       if (errorMessage.toLowerCase().includes('user not found')) {
         setErrors(prev => ({ ...prev, phoneNumber: 'This number is not registered.' }));
+        setIsWarmingUp(false);
         platformAlertConfirm('User Not Found', 'Please sign up first.', () => router.push('/onboarding/splash'), 'Sign Up');
       } else {
         setErrors(prev => ({ ...prev, phoneNumber: errorMessage }));
         showError(errorMessage);
+        setIsWarmingUp(false);
       }
       actions.clearError();
     }
@@ -299,6 +327,25 @@ function SignInScreen() {
                     <Text style={styles.errorText}>{errors.phoneNumber}</Text>
                   ) : null}
                 </View>
+
+                {/* Warming-up card: shown when backend is cold-starting */}
+                {isWarmingUp && (
+                  <Animated.View entering={FadeIn.duration(400)} style={styles.warmupCard}>
+                    <Ionicons name="server-outline" size={28} color={COLORS.gold} />
+                    <Text style={styles.warmupTitle}>Waking up server...</Text>
+                    <Text style={styles.warmupSubtitle}>
+                      Backend is starting after inactivity.{'\n'}
+                      This takes up to 2 minutes on free hosting.{'\n'}
+                      We'll retry automatically.
+                    </Text>
+                    <View style={styles.warmupAttemptsRow}>
+                      <LoadingSpinner size="small" color={COLORS.gold} />
+                      <Text style={styles.warmupAttemptsText}>
+                        Attempt {warmupAttempts} of 4
+                      </Text>
+                    </View>
+                  </Animated.View>
+                )}
 
                 <Pressable
                   style={({ pressed }) => [
@@ -466,6 +513,20 @@ const styles = StyleSheet.create({
   footerButton: { paddingVertical: 12, paddingHorizontal: 24 },
   footerText: { color: COLORS.text.tertiary, fontSize: 14 },
   footerLink: { color: COLORS.gold, fontWeight: '700' },
+  // Warming-up card styles
+  warmupCard: {
+    backgroundColor: 'rgba(255, 205, 87, 0.08)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 205, 87, 0.3)',
+    padding: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
+  warmupTitle: { fontSize: 15, fontWeight: '700', color: COLORS.nileBlue, textAlign: 'center' },
+  warmupSubtitle: { fontSize: 12, color: COLORS.text.secondary, textAlign: 'center', lineHeight: 18 },
+  warmupAttemptsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  warmupAttemptsText: { fontSize: 12, color: COLORS.text.tertiary, fontWeight: '500' },
 });
 
 export default withErrorBoundary(SignInScreen, 'SignIn');

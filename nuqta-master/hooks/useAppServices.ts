@@ -40,13 +40,17 @@ export function useAppServices(fontsLoaded: boolean) {
       if (previousState.match(/inactive|background/) && nextAppState === 'active') {
         import('@/services/cacheWarmingService').then(mod => {
           mod.default.onAppForeground();
-        }).catch(() => {});
+        }).catch((err) => {
+          console.error('[useAppServices] Error (foreground):', err);
+        });
       }
 
       if (nextAppState === 'background') {
         import('@/services/cacheWarmingService').then(mod => {
           mod.default.onAppBackground();
-        }).catch(() => {});
+        }).catch((err) => {
+          console.error('[useAppServices] Error (background):', err);
+        });
       }
     });
 
@@ -61,8 +65,8 @@ export function useAppServices(fontsLoaded: boolean) {
     navigator.serviceWorker
       .getRegistrations()
       .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
-      .catch(() => {
-        // silently ignore in dev
+      .catch((err) => {
+        console.error('[useAppServices] Error (service worker):', err);
       });
   }, []);
 
@@ -99,7 +103,9 @@ export function useAppServices(fontsLoaded: boolean) {
         // Lazy-import ToastManager to avoid circular deps at init time
         import('@/components/common/ToastManager').then(mod => {
           mod.showToast?.({ message: 'Taking longer than usual...', type: 'info', duration: 3000 });
-        }).catch(() => {}); // Silent: toast is non-critical
+        }).catch((err) => {
+          console.error('[useAppServices] Error (toast):', err);
+        });
       });
 
       errorReporter.setAppVersion(APP_CONFIG.version);
@@ -134,7 +140,9 @@ export function useAppServices(fontsLoaded: boolean) {
             data: { type: state.type, isInternetReachable: state.isInternetReachable },
           });
         });
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error('[useAppServices] Error (NetInfo):', err);
+      });
     } catch (error) {
       errorReporter.captureError(
         error instanceof Error ? error : new Error('App initialization failed'),
@@ -155,10 +163,12 @@ export function useAppServices(fontsLoaded: boolean) {
       const { default: cacheWarmingService } = await import('@/services/cacheWarmingService');
       cacheWarmingService.startWarming().then(() => {
         setCacheWarmed(true);
-      }).catch(() => {
+      }).catch((err) => {
+        console.error('[useAppServices] Error (cache warming):', err);
         setCacheWarmed(true);
       });
-    } catch {
+    } catch (err) {
+      console.error('[useAppServices] Error (cache warming):', err);
       setCacheWarmed(true);
     }
   };
@@ -173,7 +183,9 @@ export function useAppServices(fontsLoaded: boolean) {
   const handleQueueSyncComplete = useCallback((result: any) => {
     import('@/services/billUploadAnalytics').then(({ billUploadAnalytics }) => {
       billUploadAnalytics.trackSyncCompleted(result.processed || 0);
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error('[useAppServices] Error (bill analytics):', err);
+    });
   }, []);
 
   const handleErrorBoundaryError = useCallback((error: Error, errorInfo: React.ErrorInfo) => {

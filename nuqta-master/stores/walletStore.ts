@@ -54,8 +54,20 @@ export const useWalletStore = create<WalletStoreState>((set, get) => ({
   ...defaults,
 
   // Called by WalletProvider on every render to keep store in sync
+  // FIX: Compare actual data fields, not object reference
   _setFromProvider: (data: WalletStoreData) => {
-    set(data);
+    set((s) => {
+      // Only skip update if ALL relevant fields are the same
+      if (s.rezBalance === data.rezBalance &&
+          s.totalBalance === data.totalBalance &&
+          s.availableBalance === data.availableBalance &&
+          s.isLoading === data.isLoading &&
+          s.isRefreshing === data.isRefreshing &&
+          s.error === data.error) {
+        return {};
+      }
+      return data;
+    });
   },
 
   // Optimistic balance adjustment for instant UI feedback after earning coins.

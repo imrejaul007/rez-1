@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -212,15 +212,22 @@ export function useLocationHistory() {
   const [isLoading, setIsLoading] = useState(false);
   const [error] = useState<string | null>(null);
 
+  // FIX: Use ref to avoid stale closure - ref always points to current state
+  const historyRef = useRef(history);
+  useEffect(() => {
+    historyRef.current = history;
+  }, [history]);
+
   const loadHistory = useCallback(async () => {
     setIsLoading(true);
     try {
       // In a real implementation, this would call a service
-      return history;
+      // Use ref to get fresh state, not closed-over value
+      return historyRef.current;
     } finally {
       setIsLoading(false);
     }
-  }, [history]);
+  }, []); // Empty deps - reads from ref, not closure
 
   const clearHistory = useCallback(async () => {
     setHistory([]);

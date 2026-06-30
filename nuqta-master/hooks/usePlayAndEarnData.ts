@@ -264,7 +264,9 @@ export function usePlayAndEarnData() {
     if (authLoading || !isAuthenticated) return;
     realOffersApi.getExclusiveZones().then(res => {
       if (res.success && res.data) setExclusiveZones(res.data);
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error('[usePlayAndEarnData] API error:', err);
+    });
   }, [authLoading, isAuthenticated]);
 
   // Liked picks (local state, not from API)
@@ -275,7 +277,11 @@ export function usePlayAndEarnData() {
 
   // Live countdown timer for tournaments
   const [liveTournaments, setLiveTournaments] = useState<LiveTournament[]>([]);
-  const tournamentsFromQuery = games.data?.tournaments || [];
+  // FIX: Use useMemo to prevent array reference churn that causes re-renders
+  const tournamentsFromQuery = useMemo(() =>
+    games.data?.tournaments || [],
+    [games.data?.tournaments]
+  );
 
   useEffect(() => {
     setLiveTournaments(tournamentsFromQuery);

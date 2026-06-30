@@ -66,7 +66,11 @@ export const useAuthStore = create<AuthStoreState>((set) => ({
   actions: defaultActions,
 
   // Called by AuthProvider on every render to keep store in sync
+  // FIX: Skip update if nothing changed to prevent render loop (React Error #185)
   _setFromProvider: (state: AuthState, actions: AuthActions) => {
-    set({ state, actions });
+    set((s) => {
+      if (s.state === state && s.actions === actions) return {};
+      return { state, actions };
+    });
   },
 }));

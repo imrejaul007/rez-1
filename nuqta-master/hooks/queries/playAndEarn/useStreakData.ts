@@ -28,9 +28,16 @@ export function useStreakData() {
   return useQuery<StreakQueryData>({
     queryKey: queryKeys.playAndEarn.streak(),
     queryFn: async () => {
+      // FIX: Wrap each call in catch to prevent one failure from killing all
       const [streakResponse, streakBonusesResponse] = await Promise.all([
-        streakApi.getStreakStatus('login'),
-        streakApi.getStreakBonuses(),
+        streakApi.getStreakStatus('login').catch(err => {
+          console.error('[useStreakData] streakApi error:', err);
+          return { success: false, data: null };
+        }),
+        streakApi.getStreakBonuses().catch(err => {
+          console.error('[useStreakData] bonusesApi error:', err);
+          return { success: false, data: [] };
+        }),
       ]);
 
       let currentStreak = 0;

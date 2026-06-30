@@ -255,6 +255,11 @@ export class RequestDeduplicator {
     this.stats.active = Math.max(0, this.stats.active - 1);
   }
 
+  // TODO (React #185): Add AbortController support for component unmount cleanup
+  // When a component unmounts during an in-flight request, we should abort it
+  // to prevent stale promise references causing render loops.
+  // See: https://github.com/tannerlinsley/react-query/discussions/2649
+
   /**
    * Print statistics to console
    */

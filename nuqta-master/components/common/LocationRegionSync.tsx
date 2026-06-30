@@ -67,7 +67,9 @@ function LocationRegionSync() {
         source: 'manual' as const,
       };
 
-      setManualLocation(defaultLocation).catch(() => {});
+      setManualLocation(defaultLocation).catch((err) => {
+        console.error('[LocationRegionSync] Error:', err);
+      });
     }
   }, [regionState.isInitialized, regionState.currentRegion, setManualLocation]);
 

@@ -230,8 +230,15 @@ class AuthService {
         });
 
         const response = await withRetry(
-          () => apiClient.post<{ message: string; expiresIn: number }>('/auth/send-otp', data),
-          { maxRetries: 2 }
+          () => apiClient.post<{ message: string; expiresIn: number }>(
+            '/auth/send-otp',
+            data,
+            { timeout: 60_000 } // 60s timeout — enough for Render free tier cold start (1-3 min worst case)
+          ),
+          {
+            maxRetries: 3,  // 3 retries × (5s + 10s + 20s) = up to 35s of backoff
+            coldStartMode: true, // 5s → 10s → 20s backoff; handles Render cold starts
+          }
         );
 
         logApiResponse('POST', '/auth/send-otp', { success: response.success }, Date.now() - startTime);

@@ -157,7 +157,9 @@ const CategoryCashbackGrid: React.FC<CategoryCashbackGridProps> = memo(({ onCate
         if (cancelled || !isMounted()) return;
         setCashbackRates(rates);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('[CategoryCashbackGrid] Error:', err);
+      });
 
     return () => {
       cancelled = true;

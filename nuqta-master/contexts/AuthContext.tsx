@@ -310,7 +310,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Fire-and-forget: set onboarding flag (non-blocking)
       if (response.data.user.isOnboarded) {
-        AsyncStorage.setItem('onboarding_completed', 'true').catch(() => {});
+        AsyncStorage.setItem('onboarding_completed', 'true').catch((err) => {
+  console.error('[AuthContext] Error:', err);
+});
       }
 
       // Set auth token in API client
@@ -590,7 +592,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Fire-and-forget: set onboarding flag (non-blocking)
         if (storedUser.isOnboarded) {
-          AsyncStorage.setItem('onboarding_completed', 'true').catch(() => {});
+          AsyncStorage.setItem('onboarding_completed', 'true').catch((err) => {
+  console.error('[AuthContext] Error:', err);
+});
         }
 
         // Reset explicit logout flag since auth is restored
@@ -619,14 +623,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
               if (isCancelledRef.current) return;
               // Update stored user data if changed
               if (JSON.stringify(response.data) !== JSON.stringify(storedUser)) {
-                authStorage.saveUser(response.data).catch(() => {});
+                authStorage.saveUser(response.data).catch((err) => {
+  console.error('[AuthContext] Error:', err);
+});
                 dispatch({ type: 'UPDATE_USER', payload: response.data });
               }
               // Fire-and-forget: non-critical flag writes
               if (response.data.isOnboarded) {
-                AsyncStorage.setItem('onboarding_completed', 'true').catch(() => {});
+                AsyncStorage.setItem('onboarding_completed', 'true').catch((err) => {
+  console.error('[AuthContext] Error:', err);
+});
               }
-              AsyncStorage.setItem('lastProfileSync', Date.now().toString()).catch(() => {});
+              AsyncStorage.setItem('lastProfileSync', Date.now().toString()).catch((err) => {
+  console.error('[AuthContext] Error:', err);
+});
             } else {
               await tryRefreshToken();
             }

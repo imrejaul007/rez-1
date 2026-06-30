@@ -75,11 +75,10 @@ export const useToastStore = create<ToastStoreState>((set, get) => ({
     const { queue } = get();
     if (queue.length > 0) {
       const [next, ...rest] = queue;
-      // Small delay for smooth transition between toasts
+      set({ currentToast: null }); // Clear FIRST
       setTimeout(() => {
-        set({ currentToast: next, queue: rest });
+        set({ currentToast: next, queue: rest }); // THEN show next
       }, 300);
-      set({ currentToast: null });
     } else {
       set({ currentToast: null });
     }

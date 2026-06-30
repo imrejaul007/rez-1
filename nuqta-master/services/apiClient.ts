@@ -595,24 +595,23 @@ class ApiClient {
   async post<T>(
     endpoint: string,
     data?: any,
-    options?: { deduplicate?: boolean }
+    options?: { deduplicate?: boolean; timeout?: number }
   ): Promise<ApiResponse<T>> {
     // POST requests are NOT deduplicated by default (usually mutating)
     const shouldDeduplicate = options?.deduplicate === true;
+    const requestOptions: RequestOptions = { method: 'POST', body: data };
+    if (options?.timeout !== undefined) requestOptions.timeout = options.timeout;
 
     if (shouldDeduplicate) {
       const requestKey = createRequestKey(`POST:${this.baseURL}${endpoint}`, data);
 
       return globalDeduplicator.dedupe(
         requestKey,
-        () => this.makeRequest<T>(endpoint, { method: 'POST', body: data })
+        () => this.makeRequest<T>(endpoint, requestOptions)
       );
     }
 
-    return this.makeRequest<T>(endpoint, {
-      method: 'POST',
-      body: data
-    });
+    return this.makeRequest<T>(endpoint, requestOptions);
   }
 
   // PUT request (optional deduplication)

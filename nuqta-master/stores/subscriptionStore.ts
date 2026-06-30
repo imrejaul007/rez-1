@@ -193,7 +193,11 @@ export const useSubscriptionStore = create<SubscriptionStoreState>((set, get) =>
     },
 
     subscribe: async (tier, billingCycle, paymentMethod, promoCode, source) => {
-      const prev = get().state;
+      // FIX: Deep copy the subscription to prevent aliasing issues
+      const prevState = get().state;
+      const prevSubscription = prevState.currentSubscription
+        ? JSON.parse(JSON.stringify(prevState.currentSubscription))
+        : null;
       // Optimistic update: set subscribing flag
       set(s => ({
         state: {
@@ -215,11 +219,11 @@ export const useSubscriptionStore = create<SubscriptionStoreState>((set, get) =>
         useToastStore.getState().showSuccess('Successfully subscribed!');
         return result;
       } catch (error) {
-        // Rollback to previous state
+        // Rollback to previous state (using deep copy to prevent aliasing)
         set(s => ({
           state: {
             ...s.state,
-            currentSubscription: prev.currentSubscription,
+            currentSubscription: prevSubscription,
             isSubscribing: false,
           },
         }));

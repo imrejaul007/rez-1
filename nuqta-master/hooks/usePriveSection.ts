@@ -379,7 +379,9 @@ export const usePriveSection = (): UsePriveSectionReturn => {
 
 
         // Sync wallet after earning coins
-        refreshWallet().catch(() => {});
+        refreshWallet().catch((err) => {
+        console.error('[usePriveSection] Error:', err);
+      });
       }
     } catch (err) {
       // Don't fabricate streak data on failure — show error

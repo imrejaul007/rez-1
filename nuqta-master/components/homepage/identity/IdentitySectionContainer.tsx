@@ -67,7 +67,10 @@ function IdentitySectionContainer() {
       if (data) {
         hydrateFromBackend(data);
       }
-    }).catch(() => {});
+    }).catch((err) => {
+      // FIX: Log errors instead of silently swallowing them
+      console.error('[IdentitySectionContainer] fetchIdentityFromProfile failed:', err);
+    });
   }, [isAuthenticated, authLoading]);
 
   // Fetch leaderboard data for verified users
@@ -76,9 +79,15 @@ function IdentitySectionContainer() {
     if (featureLevel < 2) return;
 
     if (segment === 'verified_student' && instituteName) {
-      identityApi.getCampusLeaderboard(instituteName).then((data) => { if (isMounted()) setLeaderboardData(data); }).catch(() => {});
+      identityApi.getCampusLeaderboard(instituteName).then((data) => { if (isMounted()) setLeaderboardData(data); }).catch((err) => {
+        // FIX: Log errors instead of silently swallowing them
+        console.error('[IdentitySectionContainer] getCampusLeaderboard failed:', err);
+      });
     } else if (segment === 'verified_employee' && companyName) {
-      identityApi.getCompanyLeaderboard(companyName).then((data) => { if (isMounted()) setLeaderboardData(data); }).catch(() => {});
+      identityApi.getCompanyLeaderboard(companyName).then((data) => { if (isMounted()) setLeaderboardData(data); }).catch((err) => {
+        // FIX: Log errors instead of silently swallowing them
+        console.error('[IdentitySectionContainer] getCompanyLeaderboard failed:', err);
+      });
     }
   }, [isAuthenticated, authLoading, segment, featureLevel, instituteName, companyName]);
 

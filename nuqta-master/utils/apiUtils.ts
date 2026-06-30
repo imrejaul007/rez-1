@@ -15,6 +15,10 @@ export interface RetryConfig {
   retryDelay: number;
   retryableStatuses: number[];
   backoffMultiplier: number;
+  /** When true, uses coldStart delays (5s → 10s → 20s) instead of default (1s → 2s → 4s).
+   *  Ideal for endpoints that may hit a cold-starting backend (e.g. Render free tier).
+   *  Max total wait: ~35s across 3 retries. */
+  coldStartMode?: boolean;
 }
 
 export interface TimeoutConfig {
@@ -48,6 +52,7 @@ export async function withRetry<T>(
     retryDelay,
     retryableStatuses,
     backoffMultiplier,
+    coldStartMode,
   } = { ...DEFAULT_RETRY_CONFIG, ...config };
 
   // If maxRetries is 0, just execute once without retry logic
@@ -75,7 +80,9 @@ export async function withRetry<T>(
       }
 
       // Calculate delay with exponential backoff
-      const delay = retryDelay * Math.pow(backoffMultiplier, attempt - 1);
+      // coldStartMode: 5s → 10s → 20s (matches Render free tier 1-3 min cold start budget)
+      const effectiveRetryDelay = coldStartMode ? 5000 : retryDelay;
+      const delay = effectiveRetryDelay * Math.pow(backoffMultiplier, attempt - 1);
 
       await sleep(delay);
     }

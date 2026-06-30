@@ -111,7 +111,12 @@ export const useHomeTabStore = create<HomeTabState>((set) => ({
     // End transition
     if (_transitionTimer) clearTimeout(_transitionTimer);
     _transitionTimer = setTimeout(() => {
-      set({ isTransitioning: false });
+      // FIX: Safety check - only update if store state still makes sense
+      const currentState = useHomeTabStore.getState();
+      // Only clear transitioning flag if it's been set (prevents stale updates)
+      if (currentState.isTransitioning) {
+        set({ isTransitioning: false });
+      }
     }, 250);
   },
 
@@ -171,7 +176,9 @@ export const useHomeTabStore = create<HomeTabState>((set) => ({
           isCashStoreActive: tab === 'cash',
         });
       }
-    }).catch(() => {}).finally(() => set({ isLoaded: true }));
+    }).catch((err) => {
+      console.error('[homeTabStore] Error:', err);
+    }).finally(() => set({ isLoaded: true }));
   },
 
   scrollToTop: () => {
@@ -183,5 +190,15 @@ export const useHomeTabStore = create<HomeTabState>((set) => ({
   },
 }));
 
-// Auto-load persisted tab on import
-useHomeTabStore.getState().loadPersistedTab();
+// FIX: Auto-load persisted tab on import; defer on web until DOM is ready
+if (typeof document !== 'undefined') {
+  if (document.readyState !== 'loading') {
+    useHomeTabStore.getState().loadPersistedTab();
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      useHomeTabStore.getState().loadPersistedTab();
+    });
+  }
+} else {
+  useHomeTabStore.getState().loadPersistedTab();
+}

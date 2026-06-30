@@ -153,9 +153,13 @@ class HomepageDataService {
                   priority: 'high'
                 });
               })
-              .catch(() => {});
+              .catch((err) => {
+  console.error('[homepageDataService] Error:', err);
+});
           }
-        }).catch(() => {});
+        }).catch((err) => {
+  console.error('[homepageDataService] Error:', err);
+});
 
         return { data: cachedData, fromCache: true, isOffline: false };
       }
@@ -306,9 +310,13 @@ class HomepageDataService {
                   });
                 }
               })
-              .catch(() => {});
+              .catch((err) => {
+  console.error('[homepageDataService] Error:', err);
+});
           }
-        }).catch(() => {});
+        }).catch((err) => {
+  console.error('[homepageDataService] Error:', err);
+});
 
         return {
           ...sectionTemplate,
@@ -1136,7 +1144,9 @@ class HomepageDataService {
                   });
                 }
               })
-              .catch(() => {});
+              .catch((err) => {
+  console.error('[homepageDataService] Error:', err);
+});
             return cachedSections;
           }
           // Cache was empty — ignore it and fetch fresh
@@ -1155,7 +1165,9 @@ class HomepageDataService {
           cacheService.set(batchCacheKey, sections, {
             ttl: this.CACHE_TTL,
             priority: 'high'
-          }).catch(() => {});
+          }).catch((err) => {
+  console.error('[homepageDataService] Error:', err);
+});
         }
         return sections;
       } catch (error) {

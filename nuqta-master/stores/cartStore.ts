@@ -280,7 +280,11 @@ export const useCartStore = create<CartStoreState>((set) => ({
   actions: defaultActions,
 
   // Called by CartProvider on every render to keep store in sync
+  // FIX: Skip update if nothing changed to prevent render loop (React Error #185)
   _setFromProvider: (data: CartContextShape) => {
-    set({ state: data.state, refreshCart: data.refreshCart, actions: data.actions });
+    set((s) => {
+      if (s.state === data.state && s.refreshCart === data.refreshCart && s.actions === data.actions) return {};
+      return { state: data.state, refreshCart: data.refreshCart, actions: data.actions };
+    });
   },
 }));

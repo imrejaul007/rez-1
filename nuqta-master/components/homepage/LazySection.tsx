@@ -128,7 +128,7 @@ function useLazySectionNative(
         runOnJS(markVisible)();
       }
     },
-    [sectionY, rootMargin]
+    [sectionY, rootMargin, scrollY]  // FIX: Added scrollY to deps
   );
 
   return isVisible;
@@ -216,7 +216,8 @@ export default React.memo(LazySection, (prev, next) => {
     prev.height === next.height &&
     prev.threshold === next.threshold &&
     prev.keepMounted === next.keepMounted &&
-    prev.scrollY === next.scrollY
+    prev.scrollY === next.scrollY &&
+    prev.onVisible === next.onVisible  // FIX: Include onVisible in comparator
   );
 });
 

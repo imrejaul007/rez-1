@@ -306,4 +306,8 @@ const styles = StyleSheet.create({
 export { FeatureErrorBoundary };
 
 // Default export (used by most consumers that import via `import X from ...`)
-export default React.memo(FeatureErrorBoundary);
+// NOTE: React.memo REMOVED - error boundaries must re-render when internal state changes (hasError).
+// Memo was preventing the boundary from properly updating after catching an error,
+// which was contributing to React Error #185 (Maximum update depth exceeded).
+// See: https://react.dev/reference/react/Component#catching-rendering-errors-with-error-boundaries
+export default FeatureErrorBoundary;

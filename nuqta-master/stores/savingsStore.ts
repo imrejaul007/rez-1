@@ -506,8 +506,12 @@ export const createSavingsStore = () =>
       state: initialState,
       actions,
 
+      // FIX: Skip update if nothing changed to prevent render loop (React Error #185)
       _setFromProvider: (data: SavingsContextShape) => {
-        set({ state: data.state, actions: data.actions });
+        set((s) => {
+          if (s.state === data.state && s.actions === data.actions) return {};
+          return { state: data.state, actions: data.actions };
+        });
       },
     };
   });

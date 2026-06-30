@@ -421,7 +421,8 @@ function HomeScreen() {
         currency: getCurrency(),
         language: getLocale().split('-')[0] || 'en',
       },
-    }).catch(() => {
+    }).catch((err) => {
+      console.error('[Home] Error:', err);
       // Single attempt per session — do not reset module flag (React #185 on remount)
     });
   }, [interactionsComplete, isAuthenticated, authUserId, authUserIsOnboarded]);
@@ -525,7 +526,9 @@ function HomeScreen() {
         // Refresh all user data in background (non-blocking)
         if (authUser && isAuthenticated) {
           // Single API call for all user-specific data
-          loadUserContext().catch(() => {});
+          loadUserContext().catch((err) => {
+            console.error('[Home] Error:', err);
+          });
 
           // Refresh cart context
           refreshCart();
@@ -995,16 +998,20 @@ function HomeScreen() {
 
         {/* Mall Tab Content */}
         {activeTab === 'mall' && (
-          <Suspense fallback={<TabContentFallback />}>
-            <MallSectionContainer />
-          </Suspense>
+          <FeatureErrorBoundary featureName="Mall" compact={false}>
+            <Suspense fallback={<TabContentFallback />}>
+              <MallSectionContainer />
+            </Suspense>
+          </FeatureErrorBoundary>
         )}
 
         {/* Cash Store Tab Content */}
         {activeTab === 'cash' && (
-          <Suspense fallback={<TabContentFallback />}>
-            <CashStoreSectionContainer />
-          </Suspense>
+          <FeatureErrorBoundary featureName="Cash Store" compact={false}>
+            <Suspense fallback={<TabContentFallback />}>
+              <CashStoreSectionContainer />
+            </Suspense>
+          </FeatureErrorBoundary>
         )}
 
         {/* Privé Tab Content */}

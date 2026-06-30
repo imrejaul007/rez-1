@@ -82,7 +82,19 @@ export const usePriveStore = create<PriveStoreState>((set) => ({
   ...defaults,
 
   // Called by PriveProvider on every render to keep store in sync
+  // FIX: Compare actual state, not object reference
   _setFromProvider: (data: PriveContextShape) => {
-    set(data);
+    set((s) => {
+      // Compare key fields to avoid unnecessary re-renders
+      if (s.isLoading === data.isLoading &&
+          s.isRefreshing === data.isRefreshing &&
+          s.error === data.error &&
+          s.lastFetchedAt === data.lastFetchedAt &&
+          s.hasAccess === data.hasAccess &&
+          s.tier === data.tier) {
+        return {};
+      }
+      return data;
+    });
   },
 }));

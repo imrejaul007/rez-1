@@ -1074,7 +1074,9 @@ export function CartProvider({ children }: CartProviderProps) {
           dispatch({ type: 'SET_ONLINE_STATUS', payload: netState.isConnected ?? false });
         }
       });
-    }).catch(() => {});
+    }).catch((err) => {
+  console.error('[CartContext] Error:', err);
+});
 
     return () => {
       isMounted = false;
