@@ -213,16 +213,9 @@ const LazySection: React.FC<LazySectionProps> = ({
   );
 };
 
-export default React.memo(LazySection, (prev, next) => {
-  return (
-    prev.sectionId === next.sectionId &&
-    prev.height === next.height &&
-    prev.threshold === next.threshold &&
-    prev.keepMounted === next.keepMounted &&
-    prev.scrollY === next.scrollY &&
-    prev.onVisible === next.onVisible  // FIX: Include onVisible in comparator
-  );
-});
+// Note: Removed React.memo comparator to avoid 'prev is not defined' error
+// The component will use default memo behavior
+export default React.memo(LazySection);
 
 const styles = StyleSheet.create({
   container: {
