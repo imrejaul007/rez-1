@@ -265,8 +265,18 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }), [isLoading, isRefreshing]);
 
   // Combined value for legacy WalletContext consumers
+  // FIX: Don't spread - pass primitives directly to avoid creating new object every render
   const combinedValue = useMemo<WalletContextType>(() => ({
-    ...dataValue, ...loadingValue,
+    walletData: dataValue.walletData,
+    rawBackendData: dataValue.rawBackendData,
+    availableBalance: dataValue.availableBalance,
+    rezBalance: dataValue.rezBalance,
+    totalBalance: dataValue.totalBalance,
+    brandedCoins: dataValue.brandedCoins,
+    savingsInsights: dataValue.savingsInsights,
+    refreshWallet: dataValue.refreshWallet,
+    isLoading: loadingValue.isLoading,
+    isRefreshing: loadingValue.isRefreshing,
   }), [dataValue, loadingValue]);
 
   // Sync to Zustand store for crash-safe fallback

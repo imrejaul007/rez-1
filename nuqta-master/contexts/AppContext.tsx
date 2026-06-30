@@ -412,6 +412,7 @@ export function AppProvider({ children }: AppProviderProps) {
   }, [state.settings.preferences]);
 
   // Memoize context value to prevent unnecessary re-renders
+  // FIX: All actions use useCallback with [] deps (stable), state is the only volatile dep
   const contextValue: AppContextType = useMemo(() => ({
     state,
     actions: {
@@ -431,22 +432,7 @@ export function AppProvider({ children }: AppProviderProps) {
       isFirstTime,
       formattedCurrency,
     },
-  }), [
-    state,
-    loadSettings,
-    updateSettings,
-    setColorScheme,
-    setLanguage,
-    updateNotifications,
-    updatePrivacy,
-    updatePreferences,
-    resetSettings,
-    clearError,
-    markAppAsLaunched,
-    effectiveColorScheme,
-    isFirstTime,
-    formattedCurrency,
-  ]);
+  }), [state, effectiveColorScheme, isFirstTime, formattedCurrency]);
 
   return (
     <AppContext.Provider value={contextValue}>

@@ -309,7 +309,8 @@ export function PriveProvider({ children }: { children: ReactNode }) {
   );
 
   // ── Memoised context value ───────────────────────────────────────────────
-
+  // FIX: Only primitive/primitively-stable state slices to avoid re-creating on every render
+  // Actions are useCallback with stable deps so they maintain identity
   const value = useMemo<PriveContextType>(
     () => ({
       // Raw state
@@ -336,6 +337,7 @@ export function PriveProvider({ children }: { children: ReactNode }) {
       trackOfferClick,
     }),
     [
+      // Only primitive/primitively-stable state slices
       state.dashboard,
       state.eligibility,
       state.programConfig,
@@ -343,16 +345,8 @@ export function PriveProvider({ children }: { children: ReactNode }) {
       state.isRefreshing,
       state.error,
       state.lastFetchedAt,
-      tier,
-      hasAccess,
-      featuredOffers,
-      highlights,
-      dailyProgress,
-      isFeatureEnabled,
-      refreshAll,
-      refreshEligibilityAction,
-      checkIn,
-      trackOfferClick,
+      // Derived values depend on state slices already listed above
+      // Actions are stable (useCallback with stable deps) - no need to list
     ],
   );
 

@@ -812,9 +812,8 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
   }), [state, stableActions, computed]);
 
   // Sync to Zustand store for crash-safe fallback (useEffect — never setState during render)
-  // FIX: Use a ref to track the last synced context to prevent infinite loops.
-  // Previously, whenever state changed, contextValue changed, triggering this effect,
-  // which updated Zustand, which caused re-renders, which changed state again → infinite loop.
+  // FIX: Use a ref to track the last synced snapshot to prevent infinite loops (React #185).
+  // gamificationStore._setFromProvider also deep-compares before writing.
   const _setFromProvider = useGamificationStore((s) => s._setFromProvider);
   const lastSyncedContextRef = useRef<string | null>(null);
   useEffect(() => {
@@ -824,7 +823,6 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
       challengesLen: contextValue.state.challenges.length,
       dailyStreak: contextValue.state.dailyStreak,
     });
-    // Only sync if the data actually changed (not just object reference)
     if (contextKey !== lastSyncedContextRef.current) {
       lastSyncedContextRef.current = contextKey;
       _setFromProvider(contextValue);

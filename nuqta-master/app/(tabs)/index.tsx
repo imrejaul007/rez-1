@@ -306,16 +306,19 @@ function HomeScreen() {
   const [serviceabilityChecked, setServiceabilityChecked] = React.useState(false);
 
   React.useEffect(() => {
+    // Only run once when location is first available
     if (!currentLocation?.coordinates || serviceabilityChecked) return;
 
-    console.log('[Home] Checking serviceability for:', currentLocation.coordinates);
-
-    let cancelled = false;
     const lat = currentLocation.coordinates.latitude;
     const lng = currentLocation.coordinates.longitude;
 
+    console.log('[Home] Checking serviceability for:', lat, lng);
+
+    let cancelled = false;
+
     import('@/utils/serviceabilityCheck').then(({ checkAreaServiceability }) => {
-      if (cancelled) return;
+      if (cancelled || !isMounted()) return;
+
       checkAreaServiceability(lat, lng).then(result => {
         if (cancelled || !isMounted()) return;
 
@@ -324,9 +327,17 @@ function HomeScreen() {
         setIsAreaServiceable(result.isServiceable);
         setServiceabilityChecked(true);
 
-        if (!result.isServiceable && activeTab === 'near-u') {
-          console.log('[Home] Area not serviceable, switching to mall tab');
-          setActiveTab('mall');
+        // Only switch tabs if user is on near-u tab AND area is not serviceable
+        // Use setTimeout to break the sync cycle (React Error #185)
+        if (!result.isServiceable) {
+          // Capture current tab value in closure to avoid stale state
+          const currentTabAtCheck = activeTab;
+          setTimeout(() => {
+            if (currentTabAtCheck === 'near-u') {
+              console.log('[Home] Area not serviceable, switching to mall tab');
+              setActiveTab('mall');
+            }
+          }, 0);
         }
       }).catch((err) => {
         console.error('[Home] Serviceability check failed:', err);
@@ -342,14 +353,9 @@ function HomeScreen() {
     return () => {
       cancelled = true;
     };
-  }, [
-    currentLocation?.coordinates?.latitude,
-    currentLocation?.coordinates?.longitude,
-    serviceabilityChecked,
-    activeTab,
-    isMounted,
-    setActiveTab,
-  ]);
+    // Only re-run when location changes; tab switch uses setTimeout + closure to avoid #185
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentLocation?.coordinates?.latitude, currentLocation?.coordinates?.longitude, serviceabilityChecked]);
 
   // Get recently viewed items
   const { items: recentlyViewedItems, isLoading: isLoadingRecentlyViewed, refresh: refreshRecentlyViewed } = useRecentlyViewed();
