@@ -11,7 +11,7 @@ import {
   StatusBar,
   Platform,
   ActivityIndicator,
-  Dimensions} from 'react-native';
+  useWindowDimensions} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -22,7 +22,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { FormPageSkeleton } from '@/components/skeletons';
+import { FormPageSkeleton } from '@/components/skeletons/FormPageSkeleton';
 import paymentService, { PaymentMethod, PaymentResponse } from '@/services/paymentService';
 import PaymentValidator from '@/services/paymentValidation';
 import apiClient from '@/services/apiClient';
@@ -32,8 +32,13 @@ import { getCurrencySymbol as getPaymentCurrencySymbol } from '@/config/payment'
 import * as WebBrowser from 'expo-web-browser';
 import { platformAlertSimple, platformAlertConfirm, platformAlertDestructive } from '@/utils/platformAlert';
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
-import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
-import { colors } from '@/constants/theme';
+import {
+  colors,
+  spacing as Spacing,
+  borderRadius as BorderRadius,
+  shadows as Shadows,
+  typography as Typography,
+} from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { devLog, prodLog } from '@/utils/logger';
 
@@ -44,8 +49,6 @@ try {
 } catch (error) {
   // Not available in Expo Go
 }
-
-const { width, height } = Dimensions.get('window');
 
 // FIX: Razorpay Key validation - fail fast if missing in production
 const RAZORPAY_KEY_ID = process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || '';
@@ -603,11 +606,11 @@ function PaymentPage() {
 
   const getMethodColor = (type: string) => {
     switch (type) {
-      case 'card': return Colors.info;
-      case 'upi': return Colors.brand.purple;
+      case 'card': return colors.info;
+      case 'upi': return colors.brand.purple;
       case 'wallet': return colors.brand.pink;
-      case 'netbanking': return Colors.success;
-      default: return Colors.text.tertiary;
+      case 'netbanking': return colors.success;
+      default: return colors.text.tertiary;
     }
   };
 
@@ -623,14 +626,14 @@ function PaymentPage() {
           style={[styles.gatewayOption, paymentGateway === 'stripe' && styles.gatewayOptionActive]}
           onPress={() => setPaymentGateway('stripe')}
         >
-          <Ionicons name="card" size={16} color={paymentGateway === 'stripe' ? Colors.text.inverse : Colors.text.tertiary} />
+          <Ionicons name="card" size={16} color={paymentGateway === 'stripe' ? colors.text.inverse : colors.text.tertiary} />
           <Text style={[styles.gatewayOptionText, paymentGateway === 'stripe' && styles.gatewayOptionTextActive]}>Stripe</Text>
         </Pressable>
         <Pressable
           style={[styles.gatewayOption, paymentGateway === 'razorpay' && styles.gatewayOptionActive]}
           onPress={() => setPaymentGateway('razorpay')}
         >
-          <Ionicons name="shield-checkmark" size={16} color={paymentGateway === 'razorpay' ? Colors.text.inverse : Colors.text.tertiary} />
+          <Ionicons name="shield-checkmark" size={16} color={paymentGateway === 'razorpay' ? colors.text.inverse : colors.text.tertiary} />
           <Text style={[styles.gatewayOptionText, paymentGateway === 'razorpay' && styles.gatewayOptionTextActive]}>Razorpay</Text>
         </Pressable>
       </View>
@@ -652,7 +655,7 @@ function PaymentPage() {
       {renderGatewayToggle()}
 
       <View style={styles.securityBadge}>
-        <Ionicons name="shield-checkmark" size={16} color={Colors.success} />
+        <Ionicons name="shield-checkmark" size={16} color={colors.success} />
         <ThemedText style={styles.securityBadgeText}>
           {isStripe ? 'Secured by Stripe - PCI Level 1' : 'Secured by Razorpay - PCI DSS Compliant'}
         </ThemedText>
@@ -660,7 +663,7 @@ function PaymentPage() {
 
       {currency !== 'INR' && (
         <View style={styles.currencyBadge}>
-          <Ionicons name="globe-outline" size={14} color={Colors.info} />
+          <Ionicons name="globe-outline" size={14} color={colors.info} />
           <ThemedText style={styles.currencyBadgeText}>
             Paying in {currency} via Stripe
           </ThemedText>
@@ -679,7 +682,7 @@ function PaymentPage() {
             colors={['#635BFF', '#7B73FF']}
             style={styles.stripePayButtonGradient}
           >
-            <Ionicons name="card" size={22} color={Colors.text.inverse} />
+            <Ionicons name="card" size={22} color={colors.text.inverse} />
             <Text style={styles.stripePayButtonText}>
               Pay {displayCurrencySymbol}{amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} with Stripe
             </Text>
@@ -697,7 +700,7 @@ function PaymentPage() {
              
             >
               <View style={[styles.methodIconContainer, { backgroundColor: getMethodColor(method.type) }]}>
-                <Ionicons name={getMethodIcon(method.type)} size={24} color={Colors.text.inverse} />
+                <Ionicons name={getMethodIcon(method.type)} size={24} color={colors.text.inverse} />
               </View>
               <View style={styles.methodInfo}>
                 <ThemedText style={styles.methodName}>{method.name}</ThemedText>
@@ -710,7 +713,7 @@ function PaymentPage() {
                 </View>
               </View>
               <View style={styles.methodArrow}>
-                <Ionicons name="chevron-forward" size={20} color={Colors.text.tertiary} />
+                <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
               </View>
             </Pressable>
           ))}
@@ -732,7 +735,7 @@ function PaymentPage() {
   const renderProcessing = () => (
     <View style={styles.processingContainer}>
       <View style={styles.processingIcon}>
-        <ActivityIndicator size="large" color={Colors.brand.purple} />
+        <ActivityIndicator size="large" color={colors.brand.purple} />
       </View>
 
       <ThemedText style={styles.processingTitle}>Processing Payment</ThemedText>
@@ -755,7 +758,7 @@ function PaymentPage() {
       </View>
 
       <View style={styles.securityInfo}>
-        <Ionicons name="lock-closed" size={16} color={Colors.success} />
+        <Ionicons name="lock-closed" size={16} color={colors.success} />
         <ThemedText style={styles.securityText}>256-bit SSL Encrypted</ThemedText>
       </View>
     </View>
@@ -764,11 +767,11 @@ function PaymentPage() {
   if (isLoading) {
     return (
       <ThemedView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor={Colors.brand.purple} />
-        <LinearGradient colors={[Colors.brand.purple, Colors.brand.purpleLight]} style={styles.headerBg}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.brand.purple} />
+        <LinearGradient colors={[colors.brand.purple, colors.brand.purpleLight]} style={styles.headerBg}>
           <View style={styles.headerContainer}>
             <Pressable style={styles.backButton} onPress={handleBackPress}>
-              <Ionicons name="arrow-back" size={24} color={Colors.text.inverse} />
+              <Ionicons name="arrow-back" size={24} color={colors.text.inverse} />
             </Pressable>
             <ThemedText style={styles.headerTitle}>Payment</ThemedText>
             <View style={styles.placeholder} />
@@ -783,11 +786,11 @@ function PaymentPage() {
 
   return (
     <ThemedView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.brand.purple} />
-      <LinearGradient colors={[Colors.brand.purple, Colors.brand.purpleLight]} style={styles.headerBg}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.brand.purple} />
+      <LinearGradient colors={[colors.brand.purple, colors.brand.purpleLight]} style={styles.headerBg}>
         <View style={styles.headerContainer}>
           <Pressable style={styles.backButton} onPress={handleBackPress}>
-            <Ionicons name="arrow-back" size={24} color={Colors.text.inverse} />
+            <Ionicons name="arrow-back" size={24} color={colors.text.inverse} />
           </Pressable>
           <ThemedText style={styles.headerTitle}>Payment</ThemedText>
           <View style={styles.placeholder} />
@@ -821,7 +824,7 @@ function PaymentPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.secondary},
+    backgroundColor: colors.background.secondary},
   headerBg: {
     paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 50,
     paddingBottom: 30,
@@ -837,7 +840,7 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 5},
   headerTitle: {
-    color: Colors.text.inverse,
+    color: colors.text.inverse,
     ...Typography.h3,
     fontWeight: 'bold'},
   placeholder: {
@@ -850,7 +853,7 @@ const styles = StyleSheet.create({
     ...Typography.body,
     marginBottom: 5},
   amountValue: {
-    color: Colors.text.inverse,
+    color: colors.text.inverse,
     fontSize: 32,
     fontWeight: '900'},
   currencyLabel: {
@@ -866,26 +869,26 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     flexGrow: 1},
   stepContainer: {
-    backgroundColor: Colors.background.primary,
+    backgroundColor: colors.background.primary,
     borderRadius: BorderRadius['2xl'],
     padding: Spacing.xl,
     marginTop: Spacing.base,
     marginBottom: Spacing.base,
     ...Shadows.strong,
     borderWidth: 1,
-    borderColor: Colors.border.default},
+    borderColor: colors.border.default},
   stepTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: colors.text.primary,
     marginBottom: Spacing.sm},
   stepSubtitle: {
     ...Typography.bodyLarge,
-    color: Colors.text.tertiary,
+    color: colors.text.tertiary,
     marginBottom: Spacing.base},
   gatewayToggle: {
     flexDirection: 'row',
-    backgroundColor: Colors.background.secondary,
+    backgroundColor: colors.background.secondary,
     borderRadius: BorderRadius.md,
     padding: Spacing.xs,
     marginBottom: Spacing.base},
@@ -898,17 +901,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     gap: 6},
   gatewayOptionActive: {
-    backgroundColor: Colors.brand.purple},
+    backgroundColor: colors.brand.purple},
   gatewayOptionText: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.text.tertiary},
+    color: colors.text.tertiary},
   gatewayOptionTextActive: {
-    color: Colors.text.inverse},
+    color: colors.text.inverse},
   securityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.successScale[50],
+    backgroundColor: colors.successScale[50],
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.sm,
@@ -916,12 +919,12 @@ const styles = StyleSheet.create({
     gap: 6},
   securityBadgeText: {
     ...Typography.bodySmall,
-    color: Colors.success,
+    color: colors.success,
     fontWeight: '600'},
   currencyBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.infoScale[50],
+    backgroundColor: colors.infoScale[50],
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.sm,
@@ -929,7 +932,7 @@ const styles = StyleSheet.create({
     gap: 6},
   currencyBadgeText: {
     ...Typography.bodySmall,
-    color: Colors.info,
+    color: colors.info,
     fontWeight: '600'},
   stripePayButton: {
     marginTop: Spacing.sm,
@@ -949,7 +952,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     gap: 10},
   stripePayButtonText: {
-    color: Colors.text.inverse,
+    color: colors.text.inverse,
     fontSize: 17,
     fontWeight: '700'},
   methodsGrid: {
@@ -958,11 +961,11 @@ const styles = StyleSheet.create({
   methodCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background.primary,
+    backgroundColor: colors.background.primary,
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
     borderWidth: 2,
-    borderColor: Colors.border.default,
+    borderColor: colors.border.default,
     ...Shadows.medium,
     marginHorizontal: Spacing.xs},
   methodIconContainer: {
@@ -978,11 +981,11 @@ const styles = StyleSheet.create({
   methodName: {
     fontSize: 17,
     fontWeight: '700',
-    color: Colors.text.primary,
+    color: colors.text.primary,
     marginBottom: Spacing.xs},
   methodGateway: {
     ...Typography.bodySmall,
-    color: Colors.text.tertiary,
+    color: colors.text.tertiary,
     marginBottom: 6},
   methodDetails: {
     flexDirection: 'row',
@@ -990,34 +993,34 @@ const styles = StyleSheet.create({
     alignItems: 'center'},
   methodFee: {
     ...Typography.bodySmall,
-    color: Colors.success,
+    color: colors.success,
     fontWeight: '600',
-    backgroundColor: Colors.successScale[50],
+    backgroundColor: colors.successScale[50],
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: 6},
   methodTime: {
     ...Typography.bodySmall,
-    color: Colors.text.tertiary,
+    color: colors.text.tertiary,
     fontWeight: '500'},
   methodArrow: {
     padding: Spacing.sm,
-    backgroundColor: Colors.background.secondary,
+    backgroundColor: colors.background.secondary,
     borderRadius: BorderRadius.md,
     marginLeft: Spacing.sm},
   supportedMethods: {
     marginTop: Spacing.xl,
     paddingTop: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: Colors.border.default},
+    borderTopColor: colors.border.default},
   supportedTitle: {
     ...Typography.body,
     fontWeight: '600',
-    color: Colors.text.secondary,
+    color: colors.text.secondary,
     marginBottom: Spacing.sm},
   supportedText: {
     ...Typography.bodySmall,
-    color: Colors.text.tertiary,
+    color: colors.text.tertiary,
     lineHeight: 20},
   processingContainer: {
     alignItems: 'center',
@@ -1027,11 +1030,11 @@ const styles = StyleSheet.create({
   processingTitle: {
     ...Typography.h2,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: colors.text.primary,
     marginBottom: Spacing.sm},
   processingSubtitle: {
     ...Typography.bodyLarge,
-    color: Colors.text.tertiary,
+    color: colors.text.tertiary,
     textAlign: 'center',
     marginBottom: 30,
     paddingHorizontal: Spacing.lg},
@@ -1042,28 +1045,28 @@ const styles = StyleSheet.create({
   progressBar: {
     width: '100%',
     height: 8,
-    backgroundColor: Colors.border.default,
+    backgroundColor: colors.border.default,
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: Spacing.md},
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.brand.purpleLight,
+    backgroundColor: colors.brand.purpleLight,
     borderRadius: 4},
   progressText: {
     ...Typography.body,
-    color: Colors.text.tertiary},
+    color: colors.text.tertiary},
   securityInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.successScale[50],
+    backgroundColor: colors.successScale[50],
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.xl,
     gap: Spacing.sm},
   securityText: {
     ...Typography.bodySmall,
-    color: Colors.success,
+    color: colors.success,
     fontWeight: '600'},
   loadingContainer: {
     flex: 1,
@@ -1072,6 +1075,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: Spacing.md,
     ...Typography.bodyLarge,
-    color: Colors.text.tertiary}});
+    color: colors.text.tertiary}});
 
 export default withErrorBoundary(PaymentPage, 'PaymentRazorpay');

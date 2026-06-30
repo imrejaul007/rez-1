@@ -28,7 +28,10 @@ export const useSocketStore = create<SocketStoreState>((set) => ({
 
   // FIX: Removed dead reference equality check
   _setFromProvider: (state: SocketState) => {
-    set({ state, isConnected: state.connected });
+    set(s => {
+      if (s.state?.connected === state?.connected) return {};
+      return { state, isConnected: state.connected };
+    });
   },
 
   _setLastEvent: (event: string) => {

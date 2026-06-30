@@ -28,6 +28,7 @@
 import { useCallback, useMemo } from 'react';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import logger from '@/utils/logger';
+import { EMPTY_OBJECT } from '@/utils/zustandStable';
 import type { BFeatureFlag, BFeatureFlagMap } from '@/types/b-features.types';
 
 /**
@@ -44,7 +45,7 @@ const selectFeatureFlags = (s: ReturnType<typeof useSubscriptionStore.getState>)
   // (a narrower union). We widen to `Record<string, boolean>` here so callers
   // can ask for any B flag without TypeScript complaining.
   const flags = (s.state as { featureFlags?: Record<string, boolean> }).featureFlags;
-  return flags ?? {};
+  return flags ?? EMPTY_OBJECT;
 };
 
 const selectSubscriptionActions = (
@@ -58,9 +59,9 @@ const selectSubscriptionActions = (
  * inside a callback). All React callers should prefer `useFeatureFlagValue`.
  */
 export function readFeatureFlag(flag: BFeatureFlag): boolean {
-  const flags = useSubscriptionStore.getState().state.featureFlags as
-    | Record<string, boolean | undefined>
-    | undefined;
+  // FIX: Use Zustand getState() directly
+  const { state } = useSubscriptionStore.getState();
+  const flags = state.featureFlags as Record<string, boolean | undefined> | undefined;
   const value = flags?.[flag];
   return value !== false;
 }

@@ -87,6 +87,19 @@ function resolveBaseURL(rawUrl: string): string {
   return url;
 }
 
+// Get the appropriate base URL based on the endpoint
+function getBaseURLForEndpoint(endpoint: string): string {
+  // Auth endpoints go to the dedicated auth service
+  if (endpoint.startsWith('/auth')) {
+    if (process.env.EXPO_PUBLIC_AUTH_SERVICE_URL) {
+      return process.env.EXPO_PUBLIC_AUTH_SERVICE_URL;
+    }
+  }
+
+  // Return the main API URL for all other endpoints
+  return pickEnvBaseURL();
+}
+
 function pickEnvBaseURL(): string {
   const fromExpoExtra = readExpoExtraApiUrl();
   const env = process.env.EXPO_PUBLIC_ENVIRONMENT;
@@ -311,7 +324,9 @@ class ApiClient {
       timeout = Number(process.env.EXPO_PUBLIC_API_TIMEOUT) || 8000
     } = options;
 
-    const url = `${this.baseURL}${endpoint}`;
+    // Get the appropriate base URL for this endpoint (auth goes to auth service, others to main API)
+    const baseURL = getBaseURLForEndpoint(endpoint);
+    const url = `${baseURL}${endpoint}`;
 
     // Get current region dynamically (in case it changed since constructor)
     const currentRegion = getRegionFn ? getRegionFn() : this.currentRegion;
@@ -580,7 +595,8 @@ class ApiClient {
     if (shouldDeduplicate) {
       // Include region in request key so region changes trigger new requests
       const currentRegion = getRegionFn ? getRegionFn() : this.currentRegion;
-      const requestKey = createRequestKey(`${this.baseURL}${url}:region=${currentRegion}`, params);
+      const baseURL = getBaseURLForEndpoint(endpoint);
+      const requestKey = createRequestKey(`${baseURL}${url}:region=${currentRegion}`, params);
 
       return globalDeduplicator.dedupe(
         requestKey,

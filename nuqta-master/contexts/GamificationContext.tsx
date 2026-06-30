@@ -357,15 +357,18 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
   const syncCoinsFromWallet = useCallback(async (forceRefresh = false) => {
     try {
       // Only refresh wallet if forced — WalletContext already fetches on mount
-      // Checking availableBalance === 0 caused duplicate calls since wallet may still be loading
       if (forceRefresh) {
         await refreshSharedWallet();
       }
 
-      // Update gamification coin balance from shared context
-      // Note: availableBalance comes from the WalletContext closure
+      const nextTotal = availableBalance;
+      // Skip dispatch when balance unchanged — prevents provider/store churn loops
+      if (nextTotal === stateForCacheRef.current.coinBalance?.total) {
+        return;
+      }
+
       const coinBalance: CoinBalance = {
-        total: availableBalance,
+        total: nextTotal,
         earned: 0,
         spent: 0,
         pending: 0,

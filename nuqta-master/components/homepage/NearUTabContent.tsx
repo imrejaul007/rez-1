@@ -522,7 +522,7 @@ const NearUTabContent: React.FC<NearUTabContentProps> = ({
       )}
       {segment === 'verified_student' && (
         <LazySection sectionId="events-priority" scrollY={scrollY} height={300}
-          renderSection={() => <EventsExperiencesSection />} />
+          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><EventsExperiencesSection /></Suspense>} />
       )}
       {segment === 'verified_teacher' && (
         <LazySection sectionId="beauty-priority" scrollY={scrollY} height={300}

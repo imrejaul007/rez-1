@@ -111,6 +111,7 @@ const SCROLL_EVENT_THROTTLE = Platform.OS === 'android' ? 32 : 16;
 let _lastFocusRefreshTime = 0; // Throttle focus refreshes across remounts
 let _statsLoadedGlobal = false; // Prevent redundant stats loads across remounts
 let _onboardingAutoCompleteAttempted = false; // Prevent onboarding retry loop across remounts
+let _serviceabilityCheckedGlobal = false; // Prevent serviceability re-check on error-boundary retry
 
 // Prefetch lazy chunks + API data in background after initial render
 // This ensures Mall/Cash Store are ready BEFORE the user taps the tab
@@ -303,11 +304,11 @@ function HomeScreen() {
 
   // Serviceability check — auto-switch to Mall if no local stores nearby
   const [isAreaServiceable, setIsAreaServiceable] = React.useState(true);
-  const [serviceabilityChecked, setServiceabilityChecked] = React.useState(false);
+  const [serviceabilityChecked, setServiceabilityChecked] = React.useState(_serviceabilityCheckedGlobal);
 
   React.useEffect(() => {
-    // Only run once when location is first available
-    if (!currentLocation?.coordinates || serviceabilityChecked) return;
+    // Only run once when location is first available (module flag survives Try Again remounts)
+    if (!currentLocation?.coordinates || serviceabilityChecked || _serviceabilityCheckedGlobal) return;
 
     const lat = currentLocation.coordinates.latitude;
     const lng = currentLocation.coordinates.longitude;
@@ -330,6 +331,7 @@ function HomeScreen() {
           if (cancelled || !isMounted()) return;
           setIsAreaServiceable(result.isServiceable);
           setServiceabilityChecked(true);
+          _serviceabilityCheckedGlobal = true;
 
           // Only switch tabs if user is on near-u tab AND area is not serviceable
           if (!result.isServiceable) {
@@ -346,12 +348,17 @@ function HomeScreen() {
           if (cancelled || !isMounted()) return;
           setIsAreaServiceable(true); // Default to serviceable on error
           setServiceabilityChecked(true);
+          _serviceabilityCheckedGlobal = true;
         }, 0);
       });
     }).catch((err) => {
       console.error('[Home] Failed to import serviceabilityCheck:', err);
-      setIsAreaServiceable(true);
-      setServiceabilityChecked(true);
+      setTimeout(() => {
+        if (!isMounted()) return;
+        setIsAreaServiceable(true);
+        setServiceabilityChecked(true);
+        _serviceabilityCheckedGlobal = true;
+      }, 0);
     });
 
     return () => {

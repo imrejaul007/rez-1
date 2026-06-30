@@ -57,12 +57,19 @@ export const useWalletStore = create<WalletStoreState>((set, get) => ({
   // FIX: Compare actual data fields, not object reference
   _setFromProvider: (data: WalletStoreData) => {
     set((s) => {
+      const insights = data.savingsInsights;
+      const prevInsights = s.savingsInsights;
       // Only skip update if ALL relevant fields are the same
       if (s.rezBalance === data.rezBalance &&
           s.totalBalance === data.totalBalance &&
           s.availableBalance === data.availableBalance &&
           s.isLoading === data.isLoading &&
-          s.isRefreshing === data.isRefreshing) {
+          s.isRefreshing === data.isRefreshing &&
+          s.walletData === data.walletData &&
+          s.brandedCoins === data.brandedCoins &&
+          prevInsights?.totalSaved === insights?.totalSaved &&
+          prevInsights?.thisMonth === insights?.thisMonth &&
+          prevInsights?.avgPerVisit === insights?.avgPerVisit) {
         return {};
       }
       return data;

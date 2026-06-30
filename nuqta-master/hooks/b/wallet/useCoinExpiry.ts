@@ -24,6 +24,7 @@
 import { useMemo } from 'react';
 import { useWalletStore } from '@/stores/walletStore';
 import logger from '@/utils/logger';
+import { EMPTY_ARRAY } from '@/utils/zustandStable';
 import type {
   CoinExpiryNotice,
   CoinExpirySeverity,
@@ -198,7 +199,7 @@ function toNotice(coin: ExpiringCoin): CoinExpiryNotice {
  * `expiryDate`.
  */
 export function useCoinExpiry(): UseCoinExpiryResult {
-  const brandedCoins = useWalletStore((s) => s.brandedCoins);
+  const brandedCoins = useWalletStore((s) => s.brandedCoins ?? EMPTY_ARRAY);
 
   return useMemo<UseCoinExpiryResult>(() => {
     const safeArray = Array.isArray(brandedCoins) ? brandedCoins : [];

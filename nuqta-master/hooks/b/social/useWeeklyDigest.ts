@@ -34,6 +34,7 @@ import { useWalletStore } from '@/stores/walletStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { useUserIdentityStore } from '@/stores/userIdentityStore';
 import logger from '@/utils/logger';
+import { EMPTY_ARRAY } from '@/utils/zustandStable';
 import type {
   AchievementRef,
   WeeklyDigestSummary,
@@ -263,7 +264,9 @@ function deriveUserName(statedIdentity: string | null | undefined): string {
 export function useWeeklyDigest(): WeeklyDigestSummary | null {
   // Granular selectors keep re-renders cheap.
   const savingsInsights = useWalletStore((s) => s.savingsInsights);
-  const recentTransactions = useWalletStore((s) => s.walletData?.recentTransactions ?? []);
+  const recentTransactions = useWalletStore(
+    (s) => s.walletData?.recentTransactions ?? EMPTY_ARRAY,
+  );
 
   const dailyStreak = useGamificationStore((s) => s.state.dailyStreak);
   const achievementQueue = useGamificationStore((s) => s.state.achievementQueue);

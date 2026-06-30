@@ -63,13 +63,6 @@ function CoinExpiryBannerBase({
     return 'compact';
   }, [variant, notices, isUrgent]);
 
-  // Nothing to show — render nothing at all.
-  if (notices.length === 0) return null;
-  if (totalExpiringPaise <= 0 && effectiveVariant === 'compact') return null;
-
-  const amountLabel =
-    formatPrice(totalExpiringPaise / 100, 'INR', false) ?? '₹0';
-
   const handlePress = useCallback(() => {
     if (!onPress) return;
     logger.info(
@@ -83,6 +76,13 @@ function CoinExpiryBannerBase({
     );
     onPress();
   }, [onPress, effectiveVariant, notices.length, totalExpiringPaise]);
+
+  // Nothing to show — render nothing at all (hooks must run before any return).
+  if (notices.length === 0) return null;
+  if (totalExpiringPaise <= 0 && effectiveVariant === 'compact') return null;
+
+  const amountLabel =
+    formatPrice(totalExpiringPaise / 100, 'INR', false) ?? '₹0';
 
   if (effectiveVariant === 'urgent') {
     return (

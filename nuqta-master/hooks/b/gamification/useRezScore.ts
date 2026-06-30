@@ -55,6 +55,7 @@ import { useMemo } from 'react';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { useWalletStore } from '@/stores/walletStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { EMPTY_ARRAY } from '@/utils/zustandStable';
 import type { SubscriptionTier } from '@/types/subscription.types';
 
 /** Score range. */
@@ -172,8 +173,8 @@ function tierForScore(score: number): RezScoreTier {
 
 export function useRezScore(): UseRezScoreResult {
   // Granular subscriptions so we only re-render when each slice changes.
-  const achievements = useGamificationStore((s) => s.state.achievements);
-  const challenges = useGamificationStore((s) => s.state.challenges);
+  const achievements = useGamificationStore((s) => s.state.achievements ?? EMPTY_ARRAY);
+  const challenges = useGamificationStore((s) => s.state.challenges ?? EMPTY_ARRAY);
   const dailyStreak = useGamificationStore((s) => s.state.dailyStreak);
 
   // Wallet store: `savingsInsights.totalSaved` is the lifetime saved figure
@@ -192,8 +193,8 @@ export function useRezScore(): UseRezScoreResult {
     const breakdown: RezScoreBreakdown = {
       savings: savingsPillar(safeNonNegativeInt(lifetimeSavedRupees)),
       streak: streakPillar(safeNonNegativeInt(dailyStreak)),
-      achievements: achievementPillar(achievements ?? []),
-      engagement: engagementPillar(challenges ?? []),
+      achievements: achievementPillar(achievements),
+      engagement: engagementPillar(challenges),
       loyalty: loyaltyPillar(subscriptionTier),
     };
 

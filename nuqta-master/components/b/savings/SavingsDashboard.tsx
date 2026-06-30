@@ -393,7 +393,11 @@ function DashboardBody() {
   }
 
   if (!dashboard) {
-    return <SavingsSkeleton />;
+    // Defensive: ensure SavingsSkeleton is a valid component before rendering
+    if (SavingsSkeleton && typeof SavingsSkeleton === 'function') {
+      return <SavingsSkeleton />;
+    }
+    return null;
   }
 
   const recent: SavingsHistoryItem[] = (dashboard.recentActivity ?? []).slice(0, 5);

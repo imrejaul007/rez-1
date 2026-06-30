@@ -107,10 +107,10 @@ export function useWalletOperations() {
     } catch (err) {
       if (currentRequestId !== requestIdRef.current) return false;
 
-      // 5. Rollback on failure
+      // 5. Rollback on failure — reverse the optimistic delta
       const error = err instanceof Error ? err : new Error(String(err));
 
-      // Restore previous balance via refresh
+      adjustBalance(data.amount);
       refreshWallet();
 
       setWithdrawState({ isPending: false, error, data: null });
@@ -160,10 +160,10 @@ export function useWalletOperations() {
     } catch (err) {
       if (currentRequestId !== requestIdRef.current) return false;
 
-      // 5. Rollback on failure
+      // 5. Rollback on failure — reverse the optimistic delta
       const error = err instanceof Error ? err : new Error(String(err));
 
-      // Restore previous balance via refresh
+      adjustBalance(-amount);
       refreshWallet();
 
       setAddMoneyState({ isPending: false, error, data: null });
@@ -231,10 +231,10 @@ export function useWalletOperations() {
     } catch (err) {
       if (currentRequestId !== requestIdRef.current) return false;
 
-      // 5. Rollback on failure
+      // 5. Rollback on failure — reverse the optimistic delta
       const error = err instanceof Error ? err : new Error(String(err));
 
-      // Restore previous balance via refresh
+      adjustBalance(data.amount);
       refreshWallet();
 
       setTransferState({ isPending: false, error, data: null });

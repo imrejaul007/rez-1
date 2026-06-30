@@ -15,10 +15,11 @@
  * No internal fetch — the widget trusts the parent screen to have already
  * triggered the dashboard load (or lazily reads whatever the store has).
  */
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSavingsDashboard, useSavingsActions } from '@/stores/selectors';
+import { useSavingsDashboard } from '@/stores/selectors';
+import { useSavingsStore } from '@/stores/savingsStore';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import { formatPrice } from '@/utils/priceFormatter';
 import logger from '@/utils/logger';
@@ -41,23 +42,22 @@ function isStreakAlive(lastActivityAt: string | null | undefined): boolean {
 function SavingsWidgetBase() {
   const router = useRouter();
   const dashboard = useSavingsDashboard();
-  const actions = useSavingsActions();
+  const fetchDashboard = useSavingsStore((s) => s.actions.fetchDashboard);
+  const fetchAttemptedRef = useRef(false);
 
   // Lazy-fetch: if the parent screen didn't already load the dashboard,
-  // kick off a background load. Cheap and idempotent.
+  // kick off a background load once. Idempotent via module-level ref.
   useEffect(() => {
-    if (dashboard !== null) return;
-    const fetcher = (actions as { fetchDashboard?: () => Promise<void> })
-      .fetchDashboard;
-    if (typeof fetcher !== 'function') return;
-    fetcher.call(actions).catch((err: unknown) => {
+    if (dashboard !== null || fetchAttemptedRef.current) return;
+    fetchAttemptedRef.current = true;
+    fetchDashboard().catch((err: unknown) => {
       logger.warn(
         'savings_widget_fetch_failed',
         { error: String(err) },
         'B Features',
       );
     });
-  }, [dashboard, actions]);
+  }, [dashboard, fetchDashboard]);
 
   const totalSavedLabel = useMemo(() => {
     const rupees = (dashboard?.totalSavedPaise ?? 0) / 100;

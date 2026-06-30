@@ -67,6 +67,17 @@ export const useAuthStore = create<AuthStoreState>((set) => ({
 
   // FIX: Removed dead reference equality check
   _setFromProvider: (state: AuthState, actions: AuthActions) => {
-    set({ state, actions });
+    set(s => {
+      if (
+        s.state?.token === state?.token &&
+        s.state?.user?.id === state?.user?.id &&
+        s.state?.isLoading === state?.isLoading &&
+        s.state?.isAuthenticated === state?.isAuthenticated &&
+        s.state?.error === state?.error
+      ) {
+        return {};
+      }
+      return { state, actions };
+    });
   },
 }));

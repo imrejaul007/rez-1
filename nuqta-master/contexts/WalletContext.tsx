@@ -5,6 +5,9 @@ import { WalletData, CoinBalance } from '@/types/wallet';
 import walletApi from '@/services/walletApi';
 import { useAuthUser, useIsAuthenticated } from '@/stores/selectors';
 import { BRAND } from '@/constants/brand';
+import { EMPTY_ARRAY } from '@/utils/zustandStable';
+
+const DEFAULT_SAVINGS_INSIGHTS = { totalSaved: 0, thisMonth: 0, avgPerVisit: 0 };
 
 // ---------------------------------------------------------------------------
 // Transform backend wallet response into frontend WalletData
@@ -130,6 +133,7 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 // ── Module-level dedup: survives component remounts caused by DeferredProviders ──
 let _walletPending: Promise<void> | null = null;
 let _walletLastFetch = 0;
+let _walletRetryScheduled = false;
 const WALLET_DEDUP_MS = 10_000; // 10 seconds dedup window
 
 // ---------------------------------------------------------------------------
@@ -219,6 +223,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       setWalletData(null);
       setRawBackendData(null);
       _walletLastFetch = 0;
+      _walletRetryScheduled = false;
       if (abortRef.current) abortRef.current.abort();
     }
   }, [isAuthenticated, authUserId, authUserIsOnboarded]);
@@ -229,9 +234,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (!isAuthenticated || !authUserIsOnboarded) return;
     if (walletData) return; // Already loaded
     if (isLoading) return; // Still loading
+    if (_walletRetryScheduled) return; // Only one retry per session
 
+    _walletRetryScheduled = true;
     const retryTimer = setTimeout(() => {
-      fetchWallet(false);  // fetchWallet has its own dedup
+      if (!walletData && !isLoading) {
+        fetchWallet(false);
+      }
     }, 2000);
 
     return () => clearTimeout(retryTimer);
@@ -249,8 +258,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     const rezBalance = walletData?.coins?.find(c => c.type === 'rez')?.amount ?? 0;
     const totalBalance = walletData?.totalBalance ?? 0;
     const availableBalance = walletData?.availableBalance ?? 0;
-    const brandedCoins = walletData?.brandedCoins ?? [];
-    const savingsInsights = walletData?.savingsInsights ?? { totalSaved: 0, thisMonth: 0, avgPerVisit: 0 };
+    const brandedCoins = walletData?.brandedCoins ?? EMPTY_ARRAY;
+    const savingsInsights = walletData?.savingsInsights ?? DEFAULT_SAVINGS_INSIGHTS;
 
     return {
       walletData, rezBalance, totalBalance, availableBalance,
@@ -279,8 +288,22 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   // Sync to Zustand store for crash-safe fallback
   const _setFromProvider = useWalletStore((s) => s._setFromProvider);
+  const lastSyncedWalletRef = useRef<string | null>(null);
   useEffect(() => {
-    _setFromProvider(combinedValue);
+    const snapshot = JSON.stringify({
+      rezBalance: combinedValue.rezBalance,
+      totalBalance: combinedValue.totalBalance,
+      availableBalance: combinedValue.availableBalance,
+      isLoading: combinedValue.isLoading,
+      isRefreshing: combinedValue.isRefreshing,
+      walletUserId: combinedValue.walletData?.userId ?? null,
+      totalSaved: combinedValue.savingsInsights?.totalSaved ?? 0,
+      brandedCoinsLen: combinedValue.brandedCoins?.length ?? 0,
+    });
+    if (snapshot !== lastSyncedWalletRef.current) {
+      lastSyncedWalletRef.current = snapshot;
+      _setFromProvider(combinedValue);
+    }
   }, [combinedValue, _setFromProvider]);
 
   return (

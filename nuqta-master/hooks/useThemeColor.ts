@@ -3,78 +3,115 @@
  * https://docs.expo.dev/guides/color-schemes/
  */
 
-import { colors, darkColors } from '@/constants/theme';
+import { colors as lightThemeColors, darkColors as darkThemeColors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
+type FlatThemeColors = {
+  text: string;
+  background: string;
+  tint: string;
+  icon: string;
+  tabIconDefault: string;
+  tabIconSelected: string;
+  surface: string;
+  surfaceSecondary: string;
+  border: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  success: string;
+  warning: string;
+  error: string;
+  textSecondary: string;
+  textMuted: string;
+  gold: string;
+  nileBlue: string;
+  mustard: string;
+  linen: string;
+  peach: string;
+  lavender: string;
+};
+
 /**
- * Flat color map derived from theme tokens.
- * Keys match the legacy Colors.light / Colors.dark interface
- * so existing callers (ThemedText, ThemedView, etc.) keep working.
+ * Lazy-built flat maps — avoids SSR/module-init crashes when theme.ts is still
+ * loading (circular import during static route discovery).
  */
-const lightFlat = {
-  text: colors.text.primary,
-  background: colors.background.primary,
-  tint: colors.primary[500],
-  icon: colors.gray[400],
-  tabIconDefault: colors.gray[400],
-  tabIconSelected: colors.primary[500],
-  surface: colors.background.primary,
-  surfaceSecondary: colors.background.secondary,
-  border: colors.border.default,
-  primary: colors.primary[500],
-  secondary: colors.secondary[600],
-  accent: colors.nileBlue,
-  success: colors.success,
-  warning: colors.warning,
-  error: colors.error,
-  textSecondary: colors.text.secondary,
-  textMuted: colors.text.tertiary,
-  gold: colors.gold,
-  nileBlue: colors.nileBlue,
-  mustard: colors.lightMustard,
-  linen: colors.linen,
-  peach: colors.lightPeach,
-  lavender: colors.lavenderMist,
-} as const;
+let lightFlat: FlatThemeColors | null = null;
+let darkFlat: FlatThemeColors | null = null;
 
-const darkFlat = {
-  text: darkColors.text.primary,
-  background: darkColors.background.primary,
-  tint: darkColors.primary[500],
-  icon: darkColors.gray[500],
-  tabIconDefault: darkColors.gray[500],
-  tabIconSelected: darkColors.primary[500],
-  surface: darkColors.background.secondary,
-  surfaceSecondary: darkColors.background.tertiary,
-  border: darkColors.border.default,
-  primary: darkColors.primary[500],
-  secondary: darkColors.secondary[600],
-  accent: darkColors.nileBlue,
-  success: darkColors.success,
-  warning: darkColors.warning,
-  error: darkColors.error,
-  textSecondary: darkColors.text.secondary,
-  textMuted: darkColors.text.tertiary,
-  gold: darkColors.gold,
-  nileBlue: darkColors.nileBlue,
-  mustard: darkColors.lightMustard,
-  linen: darkColors.linen,
-  peach: darkColors.lightPeach,
-  lavender: darkColors.lavenderMist,
-} as const;
+function getLightFlat(): FlatThemeColors {
+  if (!lightFlat) {
+    const c = lightThemeColors;
+    lightFlat = {
+      text: c.text.primary,
+      background: c.background.primary,
+      tint: c.primary[500],
+      icon: c.gray[400],
+      tabIconDefault: c.gray[400],
+      tabIconSelected: c.primary[500],
+      surface: c.background.primary,
+      surfaceSecondary: c.background.secondary,
+      border: c.border.default,
+      primary: c.primary[500],
+      secondary: c.secondary[600],
+      accent: c.nileBlue,
+      success: c.success,
+      warning: c.warning,
+      error: c.error,
+      textSecondary: c.text.secondary,
+      textMuted: c.text.tertiary,
+      gold: c.gold,
+      nileBlue: c.nileBlue,
+      mustard: c.lightMustard,
+      linen: c.linen,
+      peach: c.lightPeach,
+      lavender: c.lavenderMist,
+    };
+  }
+  return lightFlat;
+}
 
-const themeColors = { light: lightFlat, dark: darkFlat } as const;
+function getDarkFlat(): FlatThemeColors {
+  if (!darkFlat) {
+    const c = darkThemeColors;
+    darkFlat = {
+      text: c.text.primary,
+      background: c.background.primary,
+      tint: c.primary[500],
+      icon: c.gray[500],
+      tabIconDefault: c.gray[500],
+      tabIconSelected: c.primary[500],
+      surface: c.background.secondary,
+      surfaceSecondary: c.background.tertiary,
+      border: c.border.default,
+      primary: c.primary[500],
+      secondary: c.secondary[600],
+      accent: c.nileBlue,
+      success: c.success,
+      warning: c.warning,
+      error: c.error,
+      textSecondary: c.text.secondary,
+      textMuted: c.text.tertiary,
+      gold: c.gold,
+      nileBlue: c.nileBlue,
+      mustard: c.lightMustard,
+      linen: c.linen,
+      peach: c.lightPeach,
+      lavender: c.lavenderMist,
+    };
+  }
+  return darkFlat;
+}
 
 export function useThemeColor(
   props: { light?: string; dark?: string },
-  colorName: keyof typeof lightFlat & keyof typeof darkFlat
+  colorName: keyof FlatThemeColors
 ) {
   const theme = useColorScheme() ?? 'light';
   const colorFromProps = props[theme];
 
   if (colorFromProps) {
     return colorFromProps;
-  } else {
-    return themeColors[theme][colorName];
   }
+  return theme === 'dark' ? getDarkFlat()[colorName] : getLightFlat()[colorName];
 }
