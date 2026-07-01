@@ -210,7 +210,7 @@ services:
       ADS_SERVICE_URL: http://backend:5001
       KARMA_SERVICE_URL: http://backend:5001
       # Session manager runs on Render; override SESSION_MANAGER_URL for a local instance.
-      SESSION_MANAGER_URL: ${SESSION_MANAGER_URL:-https://rez-session-manager.onrender.com}
+      SESSION_MANAGER_URL: ${SESSION_MANAGER_URL:-https://rabtul-technologies.onrender.com}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?Set INTERNAL_SERVICE_TOKEN in .env for gateway}
     depends_on:
       backend:

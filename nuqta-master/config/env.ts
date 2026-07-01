@@ -32,7 +32,7 @@ export const ENDPOINTS = {
   reviews: process.env.EXPO_PUBLIC_REVIEWS_ENDPOINT || '/reviews',
   wishlist: process.env.EXPO_PUBLIC_WISHLIST_ENDPOINT || '/wishlist',
   // Direct session-manager URL for health checks only; API calls use gateway /sessions via apiClient.
-  sessionManager: process.env.EXPO_PUBLIC_SESSION_MANAGER_URL || 'http://localhost:4312',
+  sessionManager: process.env.EXPO_PUBLIC_SESSION_MANAGER_URL || 'https://rabtul-technologies.onrender.com',
 } as const;
 
 // Authentication Settings

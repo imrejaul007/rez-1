@@ -24,7 +24,7 @@ export FINANCE_SERVICE_URL="${FINANCE_SERVICE_URL:-https://rez-1.onrender.com}"
 export NOTIFICATION_SERVICE_URL="${NOTIFICATION_SERVICE_URL:-https://rez-1.onrender.com}"
 export ADS_SERVICE_URL="${ADS_SERVICE_URL:-https://rez-1.onrender.com}"
 export KARMA_SERVICE_URL="${KARMA_SERVICE_URL:-https://rez-1.onrender.com}"
-export SESSION_MANAGER_URL="${SESSION_MANAGER_URL:-https://rez-session-manager.onrender.com}"
+export SESSION_MANAGER_URL="${SESSION_MANAGER_URL:-https://rabtul-technologies.onrender.com}"
 export INTERNAL_SERVICE_TOKEN="${INTERNAL_SERVICE_TOKEN:-}"
 
 # CORS allowlist for frontend (pipe-separated regex alternation, no scheme in pattern)
