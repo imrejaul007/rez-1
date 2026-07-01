@@ -3,8 +3,8 @@
  * Use these utilities to create layouts that work in both LTR and RTL languages
  */
 
-import { useMemo } from 'react';
-import { I18nManager, Platform, Text, View, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { I18nManager, Platform, Text, View } from 'react-native';
 
 // ============================================================================
 // Constants
