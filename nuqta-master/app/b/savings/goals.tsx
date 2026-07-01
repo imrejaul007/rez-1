@@ -157,7 +157,6 @@ function SavingsGoalsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View>
       <View style={styles.headerRow}>
         <Pressable
           accessibilityRole="button"
@@ -289,7 +288,7 @@ function SavingsGoalsScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
