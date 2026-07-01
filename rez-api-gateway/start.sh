@@ -24,6 +24,8 @@ export FINANCE_SERVICE_URL="${FINANCE_SERVICE_URL:-https://rez-1.onrender.com}"
 export NOTIFICATION_SERVICE_URL="${NOTIFICATION_SERVICE_URL:-https://rez-1.onrender.com}"
 export ADS_SERVICE_URL="${ADS_SERVICE_URL:-https://rez-1.onrender.com}"
 export KARMA_SERVICE_URL="${KARMA_SERVICE_URL:-https://rez-1.onrender.com}"
+export SESSION_MANAGER_URL="${SESSION_MANAGER_URL:-https://rez-session-manager.onrender.com}"
+export INTERNAL_SERVICE_TOKEN="${INTERNAL_SERVICE_TOKEN:-}"
 
 # CORS allowlist for frontend (pipe-separated regex alternation, no scheme in pattern)
 export CORS_ORIGINS="${CORS_ORIGINS:-localhost:8081|localhost:19006|localhost:3000|rez-1\.vercel\.app}"
@@ -45,7 +47,8 @@ echo "[gateway] MEDIA         → $MEDIA_SERVICE_URL"
 echo "[gateway] FINANCE       → $FINANCE_SERVICE_URL"
 echo "[gateway] NOTIFICATION  → $NOTIFICATION_SERVICE_URL"
 echo "[gateway] ADS           → $ADS_SERVICE_URL"
-echo "[gateway] KARMA        → $KARMA_SERVICE_URL (not deployed, routes to monolith)"
+echo "[gateway] KARMA           → $KARMA_SERVICE_URL (not deployed, routes to monolith)"
+echo "[gateway] SESSION_MANAGER → $SESSION_MANAGER_URL"
 
 # Fail fast if any required upstream URL is missing — silent empty values
 # turn into broken proxy_pass directives that 502 every request.
@@ -56,7 +59,8 @@ for var in CORS_ORIGINS MONOLITH_URL SEARCH_SERVICE_URL AUTH_SERVICE_URL PAYMENT
            WALLET_SERVICE_URL MERCHANT_SERVICE_URL CATALOG_SERVICE_URL \
            MARKETING_SERVICE_URL ORDER_SERVICE_URL ANALYTICS_SERVICE_URL \
            GAMIFICATION_SERVICE_URL MEDIA_SERVICE_URL FINANCE_SERVICE_URL \
-           NOTIFICATION_SERVICE_URL ADS_SERVICE_URL KARMA_SERVICE_URL; do
+           NOTIFICATION_SERVICE_URL ADS_SERVICE_URL KARMA_SERVICE_URL \
+           SESSION_MANAGER_URL INTERNAL_SERVICE_TOKEN; do
   # Use printenv for POSIX-compatible indirect variable expansion
   value=$(printenv "$var" 2>/dev/null || echo "")
   if [ -z "$value" ]; then
@@ -66,7 +70,7 @@ for var in CORS_ORIGINS MONOLITH_URL SEARCH_SERVICE_URL AUTH_SERVICE_URL PAYMENT
 done
 
 # envsubst replaces ${VAR} placeholders in nginx.conf
-envsubst '${PORT} ${CORS_ORIGINS} ${MONOLITH_URL} ${SEARCH_SERVICE_URL} ${AUTH_SERVICE_URL} ${PAYMENT_SERVICE_URL} ${WALLET_SERVICE_URL} ${MERCHANT_SERVICE_URL} ${CATALOG_SERVICE_URL} ${MARKETING_SERVICE_URL} ${ORDER_SERVICE_URL} ${ANALYTICS_SERVICE_URL} ${GAMIFICATION_SERVICE_URL} ${MEDIA_SERVICE_URL} ${FINANCE_SERVICE_URL} ${NOTIFICATION_SERVICE_URL} ${ADS_SERVICE_URL} ${KARMA_SERVICE_URL}' \
+envsubst '${PORT} ${CORS_ORIGINS} ${MONOLITH_URL} ${SEARCH_SERVICE_URL} ${AUTH_SERVICE_URL} ${PAYMENT_SERVICE_URL} ${WALLET_SERVICE_URL} ${MERCHANT_SERVICE_URL} ${CATALOG_SERVICE_URL} ${MARKETING_SERVICE_URL} ${ORDER_SERVICE_URL} ${ANALYTICS_SERVICE_URL} ${GAMIFICATION_SERVICE_URL} ${MEDIA_SERVICE_URL} ${FINANCE_SERVICE_URL} ${NOTIFICATION_SERVICE_URL} ${ADS_SERVICE_URL} ${KARMA_SERVICE_URL} ${SESSION_MANAGER_URL} ${INTERNAL_SERVICE_TOKEN}' \
   < /etc/nginx/nginx.conf.template \
   > /etc/nginx/nginx.conf
 

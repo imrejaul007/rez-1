@@ -9,9 +9,9 @@
  */
 import React, { useCallback } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
-import { useRTL } from '@/hooks/useRTL';
 import { colors } from '@/constants/theme';
 import SavingsDashboard from '@/components/b/savings/SavingsDashboard';
 import {
