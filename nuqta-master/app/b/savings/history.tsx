@@ -179,7 +179,7 @@ function SavingsHistoryScreen() {
         }
         ListFooterComponent={renderFooter}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
