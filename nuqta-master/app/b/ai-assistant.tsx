@@ -50,6 +50,7 @@ import { withErrorBoundary } from '@/utils/withErrorBoundary';
 import AIChatProvider, { useAIChat } from '@/contexts/AIChatContext';
 import AIChatBubble from '@/components/b/ai/AIChatBubble';
 import FeatureFlagGate from '@/components/b/_shared/FeatureFlagGate';
+import { useAuthUser } from '@/stores/selectors';
 import { borderRadius, colors, spacing, typography } from '@/constants/theme';
 import logger from '@/utils/logger';
 import type { ChatMessage } from '@/types/ai.types';
@@ -275,8 +276,11 @@ function AIAssistantPageBase(): React.ReactElement {
  * mount and shows the welcome bubble automatically.
  */
 function AIAssistantPageWithProvider(): React.ReactElement {
+  const user = useAuthUser();
+  const userId = user?.id ?? (user as { _id?: string } | null)?._id;
+
   return (
-    <AIChatProvider>
+    <AIChatProvider userId={userId}>
       <AIAssistantPageBase />
     </AIChatProvider>
   );

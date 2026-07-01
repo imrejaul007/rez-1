@@ -40,10 +40,6 @@ import {
   useSavingsError,
   useSavingsActions,
 } from '@/stores/selectors';
-
-// Re-export recommendations to avoid unused import warning - used in render
-const _recommendationsSelector = useSavingsRecommendations;
-void _recommendationsSelector;
 import logger from '@/utils/logger';
 import SavingsGoalCard from './SavingsGoalCard';
 import SavingsHistoryItemView from './SavingsHistoryItem';

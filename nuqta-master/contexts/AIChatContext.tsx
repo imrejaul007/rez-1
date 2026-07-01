@@ -1,19 +1,28 @@
 /**
- * AIChatContext — REZ AI Assistant (Phase 4.1)
+ * AIChatContext — REZ AI Assistant (Phase 4.1 + REZ Session Manager Integration)
  *
- * Provider that owns the in-memory chat session for the AI Assistant
- * screen. It wraps `services/b/aiSupportService` so the screen and any
- * future widget that needs to talk to the assistant share one
- * session id and one message list.
+ * Provider that owns the chat session for the AI Assistant screen.
+ * It wraps `services/b/aiSupportService` and integrates with the
+ * REZ Session Manager for persistent session storage.
  *
  * Responsibilities
  * ----------------
- *   - Mint a stable `sessionId` on mount (lives for the lifetime of
- *     the provider; we'll persist across reloads in Phase 4.2).
+ *   - Mint a stable `sessionId` on mount (persisted via REZ Session Manager)
  *   - Hold `messages`, `isTyping`, `isConnected`, `error`.
  *   - Expose actions: `sendMessage`, `sendQuickReply`, `clearMessages`,
  *     `startSession`, `endSession`, `detectIntent`.
+ *   - Persist sessions to REZ Session Manager for cross-session continuity
  *   - Log every meaningful transition via `logger.info('ai_chat_*', ...)`.
+ *
+ * Session Persistence (REZ Session Manager)
+ * ------------------------------------------
+ * Sessions are automatically saved to the REZ Session Manager at
+ * https://rabtul-technologies.onrender.com for the following events:
+ *   - Session creation (startSession)
+ *   - Message sent (sendMessage)
+ *   - Session end (endSession)
+ *
+ * On app restart, the provider attempts to restore the last active session.
  *
  * Failure mode
  * ------------
@@ -22,6 +31,9 @@
  * is dismissed. The provider never throws to its consumer; all errors
  * are captured in `state.error` and a single error message is appended
  * to the visible message list so the conversation stays continuous.
+ *
+ * If the REZ Session Manager is unavailable, the provider falls back
+ * to in-memory storage (existing behavior preserved).
  */
 import React, {
   createContext,
@@ -32,13 +44,28 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import logger from '@/utils/logger';
 import aiSupportService from '@/services/b/aiSupportService';
+import sessionService from '@/services/sessionService';
 import type {
   ChatIntent,
   ChatMessage,
   ChatMessageRole,
 } from '@/types/ai.types';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** AsyncStorage key for persisting the current session ID locally */
+const STORAGE_KEY_SESSION_ID = '@rez_ai_session_id';
+
+/** AsyncStorage key for persisting the current user ID */
+const STORAGE_KEY_USER_ID = '@rez_app_user_id';
+
+/** Default AI assistant agent ID */
+const AI_ASSISTANT_AGENT_ID = 'ai-assistant';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -148,6 +175,8 @@ export interface AIChatState {
   error: string | null;
   /** Most recently detected intent (from the local heuristic). */
   lastDetectedIntent: ChatIntent | null;
+  /** True while restoring a session from REZ Session Manager on mount. */
+  isRestoringSession: boolean;
 }
 
 /**
@@ -184,6 +213,11 @@ export interface AIChatProviderProps {
    * on mount via `startSession()`. Useful for tests / SSR.
    */
   initialSessionId?: string;
+  /**
+   * Optional user ID for session persistence. When provided, sessions
+   * will be persisted to the REZ Session Manager.
+   */
+  userId?: string;
 }
 
 /**
@@ -194,6 +228,7 @@ export interface AIChatProviderProps {
 export function AIChatProvider({
   children,
   initialSessionId,
+  userId,
 }: AIChatProviderProps): React.ReactElement {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState<boolean>(false);
@@ -202,6 +237,13 @@ export function AIChatProvider({
   const [error, setError] = useState<string | null>(null);
   const [lastDetectedIntent, setLastDetectedIntent] =
     useState<ChatIntent | null>(null);
+  const [isRestoringSession, setIsRestoringSession] = useState<boolean>(false);
+
+  // Store userId in a ref for use in callbacks
+  const userIdRef = useRef<string | undefined>(userId);
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
 
   // Ref to guard against unmounted-state updates when the network
   // round-trip resolves after the user has navigated away.
@@ -213,6 +255,87 @@ export function AIChatProvider({
     };
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Session persistence helpers (REZ Session Manager)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Persist session ID to local storage for cross-app-restart recovery.
+   */
+  const persistSessionId = useCallback(async (id: string, uid?: string): Promise<void> => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_SESSION_ID, id);
+      if (uid) {
+        await AsyncStorage.setItem(STORAGE_KEY_USER_ID, uid);
+      }
+    } catch {
+      /* non-critical - local storage may be unavailable */
+    }
+  }, []);
+
+  /**
+   * Clear persisted session ID (call on endSession).
+   */
+  const clearPersistedSession = useCallback(async (): Promise<void> => {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY_SESSION_ID);
+    } catch {
+      /* non-critical */
+    }
+  }, []);
+
+  /**
+   * Attempt to restore a session from the REZ Session Manager.
+   * Returns the session data if found, null otherwise.
+   */
+  const restoreSessionFromManager = useCallback(async (id: string): Promise<{
+    sessionId: string;
+    messages: ChatMessage[];
+  } | null> => {
+    if (!userIdRef.current) return null;
+
+    try {
+      const result = await sessionService.resumeAIChatSession(id);
+      if (!result) return null;
+
+      // Convert session messages to ChatMessage format
+      const chatMessages: ChatMessage[] = result.messages.map((msg, idx) => ({
+        id: msg.id || `msg_restored_${idx}`,
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content,
+        timestamp: msg.timestamp,
+        ...(msg.metadata?.quickReplies ? { quickReplies: msg.metadata.quickReplies } : {}),
+      }));
+
+      return {
+        sessionId: id,
+        messages: chatMessages.length > 0 ? chatMessages : [buildWelcomeMessage()],
+      };
+    } catch {
+      return null;
+    }
+  }, []);
+
+  /**
+   * Create a new session with the REZ Session Manager.
+   */
+  const createSessionWithManager = useCallback(async (): Promise<string> => {
+    const uid = userIdRef.current;
+    if (!uid) {
+      // Fall back to local session ID
+      return `sess_${Date.now().toString(36)}`;
+    }
+
+    try {
+      const session = await sessionService.createAIChatSession(uid, AI_ASSISTANT_AGENT_ID);
+      await persistSessionId(session.id, uid);
+      return session.id;
+    } catch {
+      // Fall back to local session ID
+      return `sess_${Date.now().toString(36)}`;
+    }
+  }, [persistSessionId]);
+
   // ---------------------------------------------------------------------
   // Session lifecycle
   // ---------------------------------------------------------------------
@@ -221,6 +344,8 @@ export function AIChatProvider({
    * Begin a fresh session. Idempotent — calling it twice just resets
    * the message list and mints a new id. We log every transition so
    * analytics can later attribute messages to a session window.
+   *
+   * When userId is provided, the session is created with the REZ Session Manager.
    */
   const startSession = useCallback((): void => {
     const newId =
@@ -237,17 +362,21 @@ export function AIChatProvider({
       { sessionId: newId },
       'B Features',
     );
-  }, [initialSessionId]);
+    // Persist session ID for cross-restart recovery
+    persistSessionId(newId, userIdRef.current);
+  }, [initialSessionId, persistSessionId]);
 
   /**
    * Tear down the current session. Clears messages and the id; the
    * next `sendMessage` will lazily start a new session.
+   * Also removes the session from the REZ Session Manager.
    */
   const endSession = useCallback((): void => {
+    const oldSessionId = sessionId;
     try {
       logger.info(
         'ai_chat_session_ended',
-        { sessionId },
+        { sessionId: oldSessionId },
         'B Features',
       );
     } catch {
@@ -258,14 +387,66 @@ export function AIChatProvider({
     setIsTyping(false);
     setError(null);
     setLastDetectedIntent(null);
-  }, [sessionId]);
-
-  // Auto-start a session on first mount so the welcome bubble shows.
-  useEffect(() => {
-    if (sessionId.length === 0) {
-      startSession();
+    // Clear persisted session
+    clearPersistedSession();
+    // Attempt to complete the session on the manager (fire and forget)
+    if (oldSessionId && userIdRef.current) {
+      sessionService.completeSession(oldSessionId).catch(() => {
+        /* non-critical */
+      });
     }
-    // startSession is stable; we only want this to run once.
+  }, [sessionId, clearPersistedSession]);
+
+  // Auto-start a session on first mount, attempting to restore from REZ Session Manager
+  useEffect(() => {
+    if (sessionId.length !== 0) return; // Already have a session
+
+    const initSession = async () => {
+      setIsRestoringSession(true);
+
+      // Try to restore from local storage first
+      let storedSessionId: string | null = null;
+      try {
+        storedSessionId = await AsyncStorage.getItem(STORAGE_KEY_SESSION_ID);
+      } catch {
+        /* ignore */
+      }
+
+      if (storedSessionId && userIdRef.current) {
+        // Try to restore from REZ Session Manager
+        const restored = await restoreSessionFromManager(storedSessionId);
+        if (restored && isMountedRef.current) {
+          setSessionId(restored.sessionId);
+          setMessages(restored.messages);
+          setError(null);
+          setIsConnected(true);
+          setIsRestoringSession(false);
+          logger.info(
+            'ai_chat_session_restored',
+            { sessionId: restored.sessionId, messageCount: restored.messages.length },
+            'B Features',
+          );
+          return;
+        }
+      }
+
+      // Fall back to starting a new session
+      if (isMountedRef.current) {
+        const newId = await createSessionWithManager();
+        setSessionId(newId);
+        setMessages([buildWelcomeMessage()]);
+        setError(null);
+        setIsConnected(true);
+        setIsRestoringSession(false);
+        logger.info(
+          'ai_chat_session_started',
+          { sessionId: newId },
+          'B Features',
+        );
+      }
+    };
+
+    initSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -324,6 +505,7 @@ export function AIChatProvider({
    *   2. Drop a typing-placeholder bubble for the assistant.
    *   3. Hit the backend; on success, swap the placeholder for the
    *      real reply; on failure, replace it with an error bubble.
+   *   4. Persist the message exchange to REZ Session Manager (if userId provided).
    */
   const sendMessage = useCallback(
     async (text: string): Promise<void> => {
@@ -334,7 +516,7 @@ export function AIChatProvider({
       // powers the "start chatting on first send" path.
       let activeSession = sessionId;
       if (activeSession.length === 0) {
-        activeSession = `sess_${Date.now().toString(36)}`;
+        activeSession = await createSessionWithManager();
         setSessionId(activeSession);
         setMessages([buildWelcomeMessage()]);
       }
@@ -358,12 +540,32 @@ export function AIChatProvider({
           },
           'B Features',
         );
+
         const response = await aiSupportService.sendMessage({
           sessionId: activeSession,
           message: trimmed,
           context: { surface: 'ai-assistant' },
         });
+
         if (!isMountedRef.current) return;
+
+        // Persist exchange to REZ Session Manager (fire and forget)
+        if (userIdRef.current) {
+          sessionService
+            .addMessage(activeSession, { role: 'user', content: trimmed })
+            .catch(() => {});
+          sessionService
+            .addMessage(activeSession, {
+              role: 'agent',
+              content: response.reply.content,
+              metadata: {
+                intent: response.intent?.intent,
+                quickReplies: response.reply.quickReplies,
+              },
+            })
+            .catch(() => {});
+        }
+
         replaceMessage(placeholder.id, {
           id: response.reply.id,
           content: response.reply.content,
@@ -412,7 +614,7 @@ export function AIChatProvider({
         }
       }
     },
-    [sessionId, appendMessage, replaceMessage, detectIntent],
+    [sessionId, appendMessage, replaceMessage, detectIntent, createSessionWithManager],
   );
 
   /**
@@ -460,6 +662,7 @@ export function AIChatProvider({
       sessionId,
       error,
       lastDetectedIntent,
+      isRestoringSession,
       sendMessage,
       sendQuickReply,
       clearMessages,
@@ -474,6 +677,7 @@ export function AIChatProvider({
       sessionId,
       error,
       lastDetectedIntent,
+      isRestoringSession,
       sendMessage,
       sendQuickReply,
       clearMessages,
@@ -504,5 +708,11 @@ export function useAIChat(): AIChatContextValue {
  * Default export — the provider component. Import as:
  *
  *   import AIChatProvider from '@/contexts/AIChatContext';
+ *
+ * For REZ Session Manager integration, pass the userId prop:
+ *
+ *   <AIChatProvider userId={user.id}>
+ *     <YourApp />
+ *   </AIChatProvider>
  */
 export default AIChatProvider;

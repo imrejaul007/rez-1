@@ -62,11 +62,21 @@ const serializeGoal = (doc: any) => ({
 
 /** Map SavingsStreak document to frontend SavingsStreak */
 const serializeStreak = (doc: any) => ({
-  currentStreakDays: doc.currentStreakDays,
-  longestStreakDays: doc.longestStreakDays,
+  id: doc._id?.toString() ?? doc.id,
+  currentStreakDays: doc.currentStreakDays ?? 0,
+  longestStreakDays: doc.longestStreakDays ?? 0,
   lastActivityDate:
-    doc.lastActivityDate instanceof Date ? doc.lastActivityDate.toISOString().split('T')[0] : doc.lastActivityDate,
-  lastActivityAt: doc.lastActivityDate instanceof Date ? doc.lastActivityDate.toISOString() : doc.lastActivityAt,
+    doc.lastActivityDate instanceof Date
+      ? doc.lastActivityDate.toISOString().split('T')[0]
+      : typeof doc.lastActivityDate === 'string'
+        ? doc.lastActivityDate
+        : new Date().toISOString().split('T')[0],
+  lastActivityAt:
+    doc.lastActivityDate instanceof Date
+      ? doc.lastActivityDate.toISOString()
+      : typeof doc.lastActivityAt === 'string'
+        ? doc.lastActivityAt
+        : new Date().toISOString(),
   isAtRisk: doc.isAtRisk ?? false,
   nextMilestoneDays: doc.nextMilestoneDays ?? 0,
 });

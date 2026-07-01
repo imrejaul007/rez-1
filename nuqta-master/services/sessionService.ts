@@ -3,8 +3,9 @@
  * Wraps REZ Session Manager API via the API gateway (/api/sessions).
  */
 
-import { apiClient, ApiResponse } from './apiClient';
+import apiClient, { ApiResponse } from './apiClient';
 import { ENDPOINTS } from '@/config/env';
+import logger from '@/utils/logger';
 
 export interface SessionContext {
   variables?: Record<string, any>;
@@ -302,6 +303,128 @@ class SessionService {
     }
 
     return response.data;
+  }
+
+  /**
+   * Create an AI chat session with the REZ Session Manager.
+   * This is a specialized session for the AI Assistant.
+   */
+  async createAIChatSession(userId: string, agentId: string = 'ai-assistant'): Promise<Session> {
+    const params: CreateSessionParams = {
+      userId,
+      agentId,
+      context: {
+        variables: {
+          surface: 'ai-assistant',
+          platform: 'mobile',
+        },
+      },
+      config: {
+        maxMessages: 50,
+        autoSave: true,
+        expirationMinutes: 1440, // 24 hours
+      },
+    };
+
+    const response = await apiClient.post<ApiResponse<Session>>(
+      SESSIONS_BASE,
+      params,
+    );
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Failed to create AI chat session');
+    }
+
+    return response.data;
+  }
+
+  /**
+   * Add a message to an AI chat session and sync with backend AI.
+   * This combines session persistence with AI response generation.
+   */
+  async addAIChatMessage(
+    sessionId: string,
+    userId: string,
+    content: string,
+    metadata?: Record<string, any>
+  ): Promise<{ sessionMessage: Message; aiReply?: Message }> {
+    // Add the user message to the session
+    const sessionMessage = await this.addMessage(sessionId, {
+      role: 'user',
+      content,
+      metadata,
+    });
+
+    // Get AI response from the backend
+    let aiReply: Message | undefined;
+    try {
+      // Import aiSupportService dynamically to avoid circular dependency
+      const { aiSupportService } = await import('./b/aiSupportService');
+      const response = await aiSupportService.sendMessage({
+        sessionId,
+        message: content,
+        context: { surface: 'ai-assistant' },
+      });
+
+      // Add the AI reply to the session
+      aiReply = await this.addMessage(sessionId, {
+        role: 'agent',
+        content: response.reply.content,
+        metadata: {
+          intent: response.intent?.intent,
+          quickReplies: response.reply.quickReplies,
+        },
+      });
+    } catch (error) {
+      // AI response failed - log but don't throw since user message was saved
+      logger.warn('session_ai_reply_failed', { error: String(error) }, 'B Features');
+    }
+
+    return { sessionMessage, aiReply };
+  }
+
+  /**
+   * Get AI chat session history for resuming conversations.
+   */
+  async getAIChatHistory(sessionId: string, limit: number = 50): Promise<{
+    session: Session;
+    messages: Message[];
+  }> {
+    const session = await this.getSession(sessionId);
+    const messages = await this.getMessages(sessionId, limit);
+
+    return { session, messages };
+  }
+
+  /**
+   * List all AI chat sessions for a user.
+   */
+  async listAIChatSessions(userId: string, page: number = 1, limit: number = 20): Promise<{
+    sessions: SessionSummary[];
+    total: number;
+  }> {
+    return this.listSessions({
+      userId,
+      agentId: 'ai-assistant',
+      page,
+      limit,
+    });
+  }
+
+  /**
+   * Resume an existing AI chat session by loading its messages.
+   * Returns the session and messages if found, null if session doesn't exist or is expired.
+   */
+  async resumeAIChatSession(sessionId: string): Promise<{
+    session: Session;
+    messages: Message[];
+  } | null> {
+    try {
+      return await this.getAIChatHistory(sessionId);
+    } catch (error) {
+      // Session not found or expired
+      return null;
+    }
   }
 
   /**

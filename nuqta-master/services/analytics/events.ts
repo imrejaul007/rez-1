@@ -123,6 +123,8 @@ export const ANALYTICS_EVENTS = {
 
   // Wallet Events
   WALLET_VIEWED: 'wallet_viewed',
+  WALLET_ACCESSED: 'wallet_accessed',
+  WALLET_BALANCE_CHECK: 'wallet_balance_check',
   WALLET_TOPPED_UP: 'wallet_topped_up',
   WALLET_MONEY_SENT: 'wallet_money_sent',
   TRANSACTION_VIEWED: 'transaction_viewed',

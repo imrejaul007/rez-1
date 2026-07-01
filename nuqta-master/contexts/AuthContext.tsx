@@ -329,6 +329,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (!response.data.user.isOnboarded) {
           analytics.trackEvent(ANALYTICS_EVENTS.USER_REGISTERED, { method: 'otp', user_id: userId });
         }
+        // Track session start on successful login
+        try {
+          analytics.trackEvent(ANALYTICS_EVENTS.SESSION_STARTED, { user_id: userId });
+        } catch {}
       } catch {}
 
       // Reset explicit logout flag since user is logging in again
@@ -371,6 +375,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const logout = async () => {
+    // Track session end before any cleanup (non-blocking)
+    const userId = state.user?.id || state.user?._id;
+    try {
+      analytics.trackEvent(ANALYTICS_EVENTS.SESSION_ENDED, { user_id: userId });
+    } catch {}
+
     try {
 
       // Call backend logout (invalidate token) - but don't fail if it errors
@@ -692,6 +702,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
           authService.setAuthToken(response.data.tokens.accessToken);
           apiClient.setAuthToken(response.data.tokens.accessToken);
 
+          // Track token refresh success (non-blocking)
+          try {
+            analytics.trackEvent('token_refresh', { success: true });
+          } catch {}
+
           // Get user data safely (use authStorage to check localStorage first on web)
           let storedUser = null;
           try {
@@ -744,6 +759,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
                               errorMessage.includes('expired');
 
         if (isInvalidToken) {
+          // Track token refresh failure (non-blocking)
+          try {
+            analytics.trackEvent('token_refresh', { success: false, reason: 'invalid_token' });
+          } catch {}
+
           // Clear all stored auth data.
           await authStorage.clearAuthData().catch(() => { /* silently handle */ });
 

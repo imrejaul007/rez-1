@@ -1,5 +1,5 @@
 /**
- * AI Support Service — REZ AI Assistant (Phase 4.1)
+ * AI Support Service — REZ AI Assistant (Phase 4.1 + REZ Session Manager Integration)
  *
  * Thin wrapper around `apiClient` for the `/api/b/ai/*` endpoints.
  *
@@ -9,6 +9,9 @@
  * All methods unwrap the standard `{ success, data }` envelope that
  * the backend's `bSuccess` helper emits and throw a descriptive
  * `Error` on failure (after logging via `utils/logger`).
+ *
+ * Sessions can be linked to the REZ Session Manager for persistence
+ * when `sessionId` is provided in the request context.
  *
  * Mirrors the conventions of `services/b/savingsApi.ts` so the AI
  * service slots into the same patterns the rest of the B migration

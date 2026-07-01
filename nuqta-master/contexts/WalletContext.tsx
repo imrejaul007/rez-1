@@ -6,6 +6,8 @@ import walletApi from '@/services/walletApi';
 import { useAuthUser, useIsAuthenticated } from '@/stores/selectors';
 import { BRAND } from '@/constants/brand';
 import { EMPTY_ARRAY } from '@/utils/zustandStable';
+import analytics from '@/services/analytics/AnalyticsService';
+import { ANALYTICS_EVENTS } from '@/services/analytics/events';
 
 const DEFAULT_SAVINGS_INSIGHTS = { totalSaved: 0, thisMonth: 0, avgPerVisit: 0 };
 
@@ -186,6 +188,17 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           setWalletData(transformed);
           setRawBackendData(response.data);
           _walletLastFetch = Date.now();
+
+          // Track wallet access and balance check (non-blocking)
+          const currentBalance = transformed.totalBalance;
+          try {
+            analytics.trackEvent(ANALYTICS_EVENTS.WALLET_ACCESSED, { userId });
+            analytics.trackEvent(ANALYTICS_EVENTS.WALLET_BALANCE_CHECK, {
+              balance: currentBalance,
+              rezBalance: transformed.coins.find(c => c.type === 'rez')?.amount ?? 0,
+              cashbackBalance: transformed.cashbackBalance,
+            });
+          } catch {}
         }
       } catch (error) {
         if (abortRef.current?.signal.aborted) return;

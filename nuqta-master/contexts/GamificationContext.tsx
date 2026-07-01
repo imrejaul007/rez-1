@@ -10,6 +10,23 @@ import { useWalletContext } from './WalletContext';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { useToastStore } from '@/stores/toastStore';
 
+// Non-blocking analytics tracking helper
+// Safe to call - errors are silently ignored
+const trackEvent = (eventName: string, params?: Record<string, any>) => {
+  // Fire-and-forget: never block the calling function
+  setTimeout(() => {
+    try {
+      // Placeholder for analytics integration (e.g., amplitude, firebase, etc.)
+      // Replace this body with actual analytics SDK call when available
+      if (__DEV__) {
+        console.log('[Analytics]', eventName, params);
+      }
+    } catch {
+      // Silently ignore tracking errors
+    }
+  }, 0);
+};
+
 // Feature flags for gradual rollout
 const GAMIFICATION_FLAGS = {
   ENABLE_ACHIEVEMENTS: true,
@@ -499,6 +516,8 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
         // Dispatch each newly unlocked achievement
         newlyUnlocked.forEach((achievement) => {
           dispatch({ type: 'ACHIEVEMENT_UNLOCKED', payload: achievement });
+          // Track achievement unlocked (non-blocking)
+          trackEvent('achievement_unlocked', { achievementId: achievement.id, achievementTitle: achievement.title });
         });
 
         // Refresh achievements list
@@ -574,6 +593,9 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
 
           // Refresh from wallet (single source of truth)
           await syncCoinsFromWallet();
+
+          // Track coins spent (non-blocking)
+          trackEvent('coins_spent', { amount, reason, remainingBalance: state.coinBalance.total - amount });
         } else {
           throw new Error(syncResult.error || 'Failed to sync coin spending to wallet');
         }
@@ -678,6 +700,9 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
 
         // Check for challenge completion achievements
         await triggerAchievementCheck('CHALLENGE_COMPLETED', { challengeId: progressId });
+
+        // Track reward claimed (non-blocking)
+        trackEvent('reward_claimed', { rewardId: progressId, coinsEarned: response.data.coinsEarned });
 
         return { success: true, reward: response.data, points: response.data.coinsEarned };
       } else {

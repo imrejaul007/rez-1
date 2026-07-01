@@ -381,6 +381,7 @@ interface CartContextType {
     removeCardOffer: () => void;
     setDineInContext: (ctx: DineInContext | undefined) => void;
     syncWithServer: () => Promise<void>;
+    startCheckout: () => void;
   };
 }
 
@@ -467,6 +468,18 @@ export function CartProvider({ children }: CartProviderProps) {
           }
 
           dispatch({ type: 'CART_LOADED', payload: cartItems });
+
+          // Track cart_viewed when cart loads with items (non-blocking)
+          if (cartItems.length > 0) {
+            try {
+              const { track } = await import('@/services/analytics/AnalyticsService');
+              track('cart_viewed', {
+                itemCount: cartItems.length,
+                totalValue: cartItems.reduce((sum, item) => sum + (item.discountedPrice || item.originalPrice || 0) * item.quantity, 0),
+              });
+            } catch {}
+          }
+
           return;
         }
       } catch (apiError) {
@@ -1042,6 +1055,21 @@ export function CartProvider({ children }: CartProviderProps) {
     }
   }, [state.isOnline, loadCart]);
 
+  // Track checkout_started when user begins checkout process (non-blocking)
+  const startCheckout = useCallback(() => {
+    const selectedItems = state.items.filter(item => item.selected);
+    if (selectedItems.length > 0) {
+      try {
+        const { track } = require('@/services/analytics/AnalyticsService');
+        track('checkout_started', {
+          itemCount: selectedItems.length,
+          totalValue: selectedItems.reduce((sum, item) => sum + (item.discountedPrice || item.originalPrice || 0) * item.quantity, 0),
+          hasDineIn: !!state.dineInContext,
+        });
+      } catch {}
+    }
+  }, [state.items, state.dineInContext]);
+
   // Effects - Run after function definitions
   // Load cart only when user is authenticated and onboarded
   // Skip during onboarding to prevent thundering herd of API calls on Android
@@ -1115,18 +1143,37 @@ export function CartProvider({ children }: CartProviderProps) {
     return () => clearInterval(interval);
   }, []);
 
+  // Track cart_abandoned when user leaves with items in cart (non-blocking)
+  // This fires when the CartProvider unmounts with items still in cart
+  const cartItemsRef = useRef(state.items);
+  cartItemsRef.current = state.items;
+  useEffect(() => {
+    const cartAtMount = cartItemsRef.current;
+    return () => {
+      if (cartAtMount.length > 0) {
+        try {
+          const { track } = require('@/services/analytics/AnalyticsService');
+          track('cart_abandoned', {
+            itemCount: cartAtMount.length,
+            totalValue: cartAtMount.reduce((sum, item) => sum + (item.discountedPrice || item.originalPrice || 0) * item.quantity, 0),
+          });
+        } catch {}
+      }
+    };
+  }, []);
+
   // Stable-ref pattern: prevent all consumers from re-rendering when action identities change
   const cartActionsRef = useRef({
     loadCart, addItem, removeItem, updateQuantity, toggleItemSelection,
     selectAllItems, clearCart, clearError, getSelectedItems, isItemInCart,
     getItemQuantity, applyCoupon, removeCoupon, setCardOffer, removeCardOffer,
-    setDineInContext, syncWithServer,
+    setDineInContext, syncWithServer, startCheckout,
   });
   cartActionsRef.current = {
     loadCart, addItem, removeItem, updateQuantity, toggleItemSelection,
     selectAllItems, clearCart, clearError, getSelectedItems, isItemInCart,
     getItemQuantity, applyCoupon, removeCoupon, setCardOffer, removeCardOffer,
-    setDineInContext, syncWithServer,
+    setDineInContext, syncWithServer, startCheckout,
   };
 
   const stableCartActions = useMemo(() => ({
@@ -1147,6 +1194,7 @@ export function CartProvider({ children }: CartProviderProps) {
     removeCardOffer: () => cartActionsRef.current.removeCardOffer(),
     setDineInContext: (...args: Parameters<typeof setDineInContext>) => cartActionsRef.current.setDineInContext(...args),
     syncWithServer: () => cartActionsRef.current.syncWithServer(),
+    startCheckout: () => cartActionsRef.current.startCheckout(),
   }), []);
 
   const stableRefreshCart = useMemo(() => (...args: Parameters<typeof loadCart>) => cartActionsRef.current.loadCart(...args), []);
@@ -1192,6 +1240,7 @@ const CART_DEFAULTS: CartContextType = {
     removeCardOffer: () => {},
     setDineInContext: () => {},
     syncWithServer: async () => {},
+    startCheckout: () => {},
   },
 };
 
