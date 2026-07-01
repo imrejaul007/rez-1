@@ -181,7 +181,7 @@ function SavingsGoalsScreen() {
 
       <FlatList
         data={goals}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id ?? (item as any)._id}
         renderItem={({ item }) => (
           <View style={styles.row}>
             <SavingsGoalCard goal={item} onPress={() => onItemPress(item)} />

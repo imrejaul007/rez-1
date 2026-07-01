@@ -145,7 +145,7 @@ function SavingsHistoryScreen() {
 
       <FlatList
         data={items}
-        keyExtractor={(it) => it.id}
+        keyExtractor={(it) => it.id ?? (it as any)._id}
         renderItem={({ item }) => (
           <SavingsHistoryItem item={item} onPress={() => onItemPress(item)} />
         )}

@@ -217,7 +217,7 @@ function SavingsGoalsRow({
       >
         {goals.map((goal) => (
           <SavingsGoalCard
-            key={goal.id}
+            key={goal.id ?? (goal as any)._id}
             goal={goal}
             onPress={() => onPressItem(goal)}
           />
@@ -252,7 +252,7 @@ function SavingsRecommendationsRow({
         const potential = formatPrice((rec.potentialSavingsPaise ?? 0) / 100, 'INR', false) ?? '₹0';
         return (
           <Pressable
-            key={rec.id}
+            key={rec.id ?? (rec as any)._id}
             accessibilityRole="button"
             accessibilityLabel={`${rec.title}. Potential savings ${potential}.`}
             onPress={() => onPressItem(rec)}
@@ -305,7 +305,7 @@ function RecentActivity({
       <View>
         {items.map((it) => (
           <SavingsHistoryItemView
-            key={it.id}
+            key={it.id ?? (it as any)._id}
             item={it}
             onPress={() => onPressItem(it)}
           />
