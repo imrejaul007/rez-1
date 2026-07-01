@@ -688,8 +688,7 @@ const NewOnNuqtaSection: React.FC = () => {
         )}
 
         {/* Small Cards Column (Right) - with waterfall animation */}
-        {/* {smallStores.length > 0 && ( */}
-        {false && smallStores.length > 0 && (
+        {smallStores.length > 0 && (
           <View style={styles.smallCardsColumn}>
             {/* Incoming New Card - slides in from right */}
             {incomingStore && isAnimating && (

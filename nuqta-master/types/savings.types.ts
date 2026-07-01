@@ -190,7 +190,8 @@ export interface SavingsDashboard {
   thisMonthTargetPaise: number;
   /** Number of active savings goals the user has created. */
   goalsCount: number;
-  streak: SavingsStreak;
+  /** Daily-activity streak snapshot. May be null if user has no streak yet. */
+  streak: SavingsStreak | null;
   /** ISO 8601 timestamp of when this aggregation was last computed. */
   lastCalculatedAt: string;
   /** Most recent activity rows (typically last 5–10). */

@@ -18,12 +18,58 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { bSuccess, bCreated, bError, bMocked } from '../utils/bResponse';
 import { ensureSeeded } from '../utils/seedRunner';
 import { logger } from '../config/logger';
-import {
-  SavingsProfile,
-  SavingsHistory,
-  SavingsGoal,
-  SavingsStreak,
-} from '../models/BSavings';
+import { SavingsProfile, SavingsHistory, SavingsGoal, SavingsStreak } from '../models/BSavings';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SERIALIZERS — Map MongoDB docs to frontend shapes (_id → id)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Map SavingsHistory document to frontend SavingsHistoryItem */
+const serializeHistoryItem = (doc: any) => ({
+  id: doc._id?.toString() ?? doc.id,
+  date: (doc.createdAt ?? doc.date)?.toISOString?.() ?? doc.date,
+  earnedAt: (doc.createdAt ?? doc.earnedAt)?.toISOString?.() ?? doc.earnedAt,
+  source: doc.source,
+  amountPaise: doc.amountPaise,
+  description: doc.description,
+  storeId: doc.store?.toString?.() ?? doc.storeId,
+  storeName: doc.storeName,
+  offerId: doc.offer?.toString?.() ?? doc.offerId,
+  offerTitle: doc.offerTitle,
+  receiptUrl: doc.receiptUrl,
+});
+
+/** Map SavingsGoal document to frontend SavingsGoal */
+const serializeGoal = (doc: any) => ({
+  id: doc._id?.toString() ?? doc.id,
+  userId: doc.user?.toString?.() ?? doc.userId,
+  name: doc.name,
+  targetAmountPaise: doc.targetAmountPaise,
+  targetPaise: doc.targetAmountPaise,
+  savedAmountPaise: doc.savedAmountPaise ?? 0,
+  savedPaise: doc.savedAmountPaise ?? 0,
+  deadline: doc.deadline instanceof Date ? doc.deadline.toISOString() : doc.deadline,
+  category: doc.category,
+  iconEmoji: doc.iconEmoji,
+  isCompleted: doc.isCompleted ?? false,
+  status: doc.isCompleted ? 'completed' : 'active',
+  progress: doc.targetAmountPaise > 0 ? Math.round(((doc.savedAmountPaise ?? 0) / doc.targetAmountPaise) * 100) : 0,
+  milestones: doc.milestones ?? [],
+  isOptimistic: false,
+  createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : doc.createdAt,
+  updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : doc.updatedAt,
+});
+
+/** Map SavingsStreak document to frontend SavingsStreak */
+const serializeStreak = (doc: any) => ({
+  currentStreakDays: doc.currentStreakDays,
+  longestStreakDays: doc.longestStreakDays,
+  lastActivityDate:
+    doc.lastActivityDate instanceof Date ? doc.lastActivityDate.toISOString().split('T')[0] : doc.lastActivityDate,
+  lastActivityAt: doc.lastActivityDate instanceof Date ? doc.lastActivityDate.toISOString() : doc.lastActivityAt,
+  isAtRisk: doc.isAtRisk ?? false,
+  nextMilestoneDays: doc.nextMilestoneDays ?? 0,
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Seed builders
@@ -45,9 +91,9 @@ const toObjectId = (userId: string): mongoose.Types.ObjectId => {
 
 const buildProfileSeed = (userId: string): Record<string, any> => ({
   user: toObjectId(userId),
-  totalSavedPaise: 12_45_000,        // ₹12,450
-  thisMonthSavedPaise: 2_80_000,    // ₹2,800
-  thisMonthTargetPaise: 5_00_000,   // ₹5,000
+  totalSavedPaise: 12_45_000, // ₹12,450
+  thisMonthSavedPaise: 2_80_000, // ₹2,800
+  thisMonthTargetPaise: 5_00_000, // ₹5,000
   lastCalculatedAt: new Date(),
   tier: 'silver',
   tierProgressPct: 42,
@@ -61,14 +107,62 @@ const HISTORY_SEED_ROWS: Array<{
   storeName: string;
   daysAgo: number;
 }> = [
-  { source: 'cashback',         amountPaise:   8_500, description: '2% cashback on BigBazaar grocery order',     storeName: 'BigBazaar',        daysAgo: 1 },
-  { source: 'offer',            amountPaise:  15_000, description: 'Flat ₹150 off on Lifestyle purchase',        storeName: 'Lifestyle',        daysAgo: 3 },
-  { source: 'cashback',         amountPaise:  22_500, description: '5% cashback on Croma electronics',           storeName: 'Croma',            daysAgo: 5 },
-  { source: 'loyalty',          amountPaise:   3_200, description: 'Loyalty points redeemed at Apollo Pharmacy', storeName: 'Apollo Pharmacy',  daysAgo: 8 },
-  { source: 'cashback',         amountPaise:   1_800, description: 'Cafe Coffee Day happy-hour cashback',        storeName: 'Cafe Coffee Day',  daysAgo: 11 },
-  { source: 'offer',            amountPaise:   6_000, description: "Domino's weekend offer redemption",          storeName: "Domino's",         daysAgo: 14 },
-  { source: 'referral',         amountPaise:  50_000, description: 'Referral bonus — friend signed up',          storeName: 'Amazon',           daysAgo: 18 },
-  { source: 'milestone_bonus',  amountPaise: 100_000, description: '30-day savings streak milestone bonus',      storeName: 'Flipkart',         daysAgo: 25 },
+  {
+    source: 'cashback',
+    amountPaise: 8_500,
+    description: '2% cashback on BigBazaar grocery order',
+    storeName: 'BigBazaar',
+    daysAgo: 1,
+  },
+  {
+    source: 'offer',
+    amountPaise: 15_000,
+    description: 'Flat ₹150 off on Lifestyle purchase',
+    storeName: 'Lifestyle',
+    daysAgo: 3,
+  },
+  {
+    source: 'cashback',
+    amountPaise: 22_500,
+    description: '5% cashback on Croma electronics',
+    storeName: 'Croma',
+    daysAgo: 5,
+  },
+  {
+    source: 'loyalty',
+    amountPaise: 3_200,
+    description: 'Loyalty points redeemed at Apollo Pharmacy',
+    storeName: 'Apollo Pharmacy',
+    daysAgo: 8,
+  },
+  {
+    source: 'cashback',
+    amountPaise: 1_800,
+    description: 'Cafe Coffee Day happy-hour cashback',
+    storeName: 'Cafe Coffee Day',
+    daysAgo: 11,
+  },
+  {
+    source: 'offer',
+    amountPaise: 6_000,
+    description: "Domino's weekend offer redemption",
+    storeName: "Domino's",
+    daysAgo: 14,
+  },
+  {
+    source: 'referral',
+    amountPaise: 50_000,
+    description: 'Referral bonus — friend signed up',
+    storeName: 'Amazon',
+    daysAgo: 18,
+  },
+  {
+    source: 'milestone_bonus',
+    amountPaise: 100_000,
+    description: '30-day savings streak milestone bonus',
+    storeName: 'Flipkart',
+    daysAgo: 25,
+  },
 ];
 
 const buildHistorySeed = (userId: string): Record<string, any>[] =>
@@ -89,7 +183,7 @@ const buildGoalsSeed = (userId: string): Record<string, any>[] => {
       user: userObjectId,
       name: 'New phone',
       targetAmountPaise: 15_00_000, // ₹15,000
-      savedAmountPaise: 6_20_000,   // ₹6,200
+      savedAmountPaise: 6_20_000, // ₹6,200
       deadline: new Date('2026-12-31'),
       category: 'shopping',
       iconEmoji: '📱',
@@ -99,7 +193,7 @@ const buildGoalsSeed = (userId: string): Record<string, any>[] => {
       user: userObjectId,
       name: 'Goa trip',
       targetAmountPaise: 25_00_000, // ₹25,000
-      savedAmountPaise: 9_50_000,   // ₹9,500
+      savedAmountPaise: 9_50_000, // ₹9,500
       deadline: new Date('2027-03-31'),
       category: 'travel',
       iconEmoji: '🏖️',
@@ -109,7 +203,7 @@ const buildGoalsSeed = (userId: string): Record<string, any>[] => {
       user: userObjectId,
       name: 'Emergency fund',
       targetAmountPaise: 50_00_000, // ₹50,000
-      savedAmountPaise: 32_40_000,  // ₹32,400
+      savedAmountPaise: 32_40_000, // ₹32,400
       deadline: new Date('2027-06-30'),
       category: 'other',
       iconEmoji: '🛟',
@@ -142,6 +236,9 @@ const GOAL_CATEGORIES = new Set([
   'other',
 ]);
 
+// Maximum target: ₹1 crore in paise
+const MAX_TARGET_PAISE = 100_000_000 * 100;
+
 interface GoalValidationResult {
   ok: boolean;
   errors: string[];
@@ -173,6 +270,8 @@ const validateGoalBody = (body: any, partial: boolean = false): GoalValidationRe
     const target = Number(body.targetAmountPaise);
     if (!Number.isFinite(target) || target < 100) {
       errors.push('targetAmountPaise must be a number >= 100 (₹1)');
+    } else if (target > MAX_TARGET_PAISE) {
+      errors.push('targetAmountPaise cannot exceed ₹1,00,00,000');
     } else {
       out.targetAmountPaise = target;
     }
@@ -191,6 +290,8 @@ const validateGoalBody = (body: any, partial: boolean = false): GoalValidationRe
     const deadline = new Date(body.deadline);
     if (Number.isNaN(deadline.getTime())) {
       errors.push('deadline must be a valid ISO date string');
+    } else if (!partial && deadline <= new Date()) {
+      errors.push('deadline must be a future date');
     } else {
       out.deadline = deadline;
     }
@@ -236,36 +337,42 @@ class SavingsController {
       return bError(res, 'Authentication required', 401);
     }
 
-    // Seed-on-first-call for profile
-    const profileDocs = await ensureSeeded(
-      SavingsProfile,
-      async () => [buildProfileSeed(userId)],
-      { collectionName: 'savingsprofiles' }
-    );
+    // Seed-on-first-call for profile, history, and goals
+    const profileDocs = await ensureSeeded(SavingsProfile, async () => [buildProfileSeed(userId)], {
+      collectionName: 'savingsprofiles',
+    });
 
-    // Seed-on-first-call for history
-    const historyDocs = await ensureSeeded(
-      SavingsHistory,
-      async () => buildHistorySeed(userId),
-      { collectionName: 'savingshistories' }
-    );
+    const historyDocs = await ensureSeeded(SavingsHistory, async () => buildHistorySeed(userId), {
+      collectionName: 'savingshistories',
+    });
+
+    const goalSeedDocs = await ensureSeeded(SavingsGoal, async () => buildGoalsSeed(userId), {
+      collectionName: 'savingsgoals',
+    });
 
     if (process.env.NODE_ENV !== 'production') {
       const profile = profileDocs[0];
       const recent = historyDocs
         .slice()
         .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 5);
+        .slice(0, 5)
+        .map(serializeHistoryItem);
       logger.info('savings_seeded', { userId, count: historyDocs.length }, 'B Features');
-      return bSuccess(res, bMocked({
-        totalSavedPaise: profile.totalSavedPaise,
-        thisMonthSavedPaise: profile.thisMonthSavedPaise,
-        thisMonthTargetPaise: profile.thisMonthTargetPaise,
-        goalsCount: 0,
-        streak: null,
-        lastCalculatedAt: profile.lastCalculatedAt,
-        recentActivity: recent,
-      }));
+      return bSuccess(
+        res,
+        bMocked({
+          totalSavedPaise: profile.totalSavedPaise,
+          thisMonthSavedPaise: profile.thisMonthSavedPaise,
+          thisMonthTargetPaise: profile.thisMonthTargetPaise,
+          goalsCount: goalSeedDocs.length, // FIX: Count seeded goals
+          streak: null,
+          lastCalculatedAt:
+            profile.lastCalculatedAt instanceof Date
+              ? profile.lastCalculatedAt.toISOString()
+              : profile.lastCalculatedAt,
+          recentActivity: recent,
+        }),
+      );
     }
 
     const profile = await SavingsProfile.findOne({ user: toObjectId(userId) }).lean();
@@ -281,15 +388,13 @@ class SavingsController {
       thisMonthSavedPaise: profile?.thisMonthSavedPaise ?? 0,
       thisMonthTargetPaise: profile?.thisMonthTargetPaise ?? 5_00_000,
       goalsCount,
-      streak: streak
-        ? {
-            currentStreakDays: streak.currentStreakDays,
-            longestStreakDays: streak.longestStreakDays,
-            isAtRisk: streak.isAtRisk,
-          }
-        : null,
-      lastCalculatedAt: profile?.lastCalculatedAt ?? new Date(),
-      recentActivity,
+      streak: streak ? serializeStreak(streak) : null, // FIX: Use serializer
+      lastCalculatedAt: profile?.lastCalculatedAt
+        ? profile.lastCalculatedAt instanceof Date
+          ? profile.lastCalculatedAt.toISOString()
+          : profile.lastCalculatedAt
+        : new Date().toISOString(),
+      recentActivity: recentActivity.map(serializeHistoryItem), // FIX: Use serializer
     });
   });
 
@@ -370,9 +475,12 @@ class SavingsController {
       storesVisited: 0,
     };
 
-    const comparedToPreviousPeriodPct = previous.totalSavedPaise === 0
-      ? (current.totalSavedPaise > 0 ? 100 : 0)
-      : Math.round(((current.totalSavedPaise - previous.totalSavedPaise) / previous.totalSavedPaise) * 100);
+    const comparedToPreviousPeriodPct =
+      previous.totalSavedPaise === 0
+        ? current.totalSavedPaise > 0
+          ? 100
+          : 0
+        : Math.round(((current.totalSavedPaise - previous.totalSavedPaise) / previous.totalSavedPaise) * 100);
 
     return bSuccess(res, {
       periodDays,
@@ -408,7 +516,7 @@ class SavingsController {
     ]);
 
     return bSuccess(res, {
-      items,
+      items: items.map(serializeHistoryItem), // FIX: Use serializer
       page,
       limit,
       total,
@@ -426,26 +534,24 @@ class SavingsController {
     }
 
     // Seed-on-first-call
-    const seedCount = await ensureSeeded(
-      SavingsGoal,
-      async () => buildGoalsSeed(userId),
-      { collectionName: 'savingsgoals' }
-    );
+    const seedCount = await ensureSeeded(SavingsGoal, async () => buildGoalsSeed(userId), {
+      collectionName: 'savingsgoals',
+    });
 
     if (
-      process.env.NODE_ENV !== 'production'
-      && seedCount.length > 0
-      && seedCount[0].user?.toString() === toObjectId(userId).toString()
+      process.env.NODE_ENV !== 'production' &&
+      seedCount.length > 0 &&
+      seedCount[0].user?.toString() === toObjectId(userId).toString()
     ) {
       logger.info('savings_seeded', { userId, count: seedCount.length }, 'B Features');
-      return bSuccess(res, bMocked(seedCount));
+      return bSuccess(res, bMocked(seedCount.map(serializeGoal)));
     }
 
     const goals = await SavingsGoal.find({ user: toObjectId(userId) })
       .sort({ isCompleted: 1, deadline: 1 })
       .lean();
 
-    return bSuccess(res, goals);
+    return bSuccess(res, goals.map(serializeGoal));
   });
 
   /**
@@ -468,7 +574,7 @@ class SavingsController {
       savedAmountPaise: result.value?.savedAmountPaise ?? 0,
     });
 
-    return bCreated(res, goal.toObject());
+    return bCreated(res, serializeGoal(goal.toObject()));
   });
 
   /**
@@ -491,8 +597,12 @@ class SavingsController {
     }
 
     const update: Record<string, any> = { ...(result.value as object) };
-    if (update.savedAmountPaise !== undefined && update.targetAmountPaise !== undefined
-        && update.savedAmountPaise >= update.targetAmountPaise && !update.isCompleted) {
+    if (
+      update.savedAmountPaise !== undefined &&
+      update.targetAmountPaise !== undefined &&
+      update.savedAmountPaise >= update.targetAmountPaise &&
+      !update.isCompleted
+    ) {
       update.isCompleted = true;
       update.completedAt = new Date();
     }
@@ -500,14 +610,14 @@ class SavingsController {
     const goal = await SavingsGoal.findOneAndUpdate(
       { _id: id, user: toObjectId(userId) },
       { $set: update },
-      { new: true }
+      { new: true },
     ).lean();
 
     if (!goal) {
       return bError(res, 'Goal not found', 404);
     }
 
-    return bSuccess(res, goal, 'Goal updated');
+    return bSuccess(res, serializeGoal(goal), 'Goal updated');
   });
 
   /**
@@ -541,19 +651,17 @@ class SavingsController {
       return bError(res, 'Authentication required', 401);
     }
 
-    const docs = await ensureSeeded(
-      SavingsStreak,
-      async () => [buildStreakSeed(userId)],
-      { collectionName: 'savingsstreaks' }
-    );
+    const docs = await ensureSeeded(SavingsStreak, async () => [buildStreakSeed(userId)], {
+      collectionName: 'savingsstreaks',
+    });
 
     const streak = docs[0];
     if (process.env.NODE_ENV !== 'production') {
       logger.info('savings_seeded', { userId, count: docs.length }, 'B Features');
-      return bSuccess(res, bMocked(streak));
+      return bSuccess(res, bMocked(serializeStreak(streak)));
     }
 
-    return bSuccess(res, streak);
+    return bSuccess(res, serializeStreak(streak));
   });
 
   /**
@@ -578,13 +686,15 @@ class SavingsController {
     const total = result[0]?.total ?? 0;
     const dailyAverage = total / lookbackDays;
 
+    const profile = await SavingsProfile.findOne({ user: toObjectId(userId) }).lean();
+    const monthlyTarget = profile?.thisMonthTargetPaise ?? 500000;
+    const paceVsTarget = total >= monthlyTarget ? 'ahead' : total >= monthlyTarget * 0.7 ? 'on_track' : 'behind';
+
     return bSuccess(res, {
-      basedOnDays: lookbackDays,
-      observedSavedPaise: total,
-      observedTransactions: result[0]?.count ?? 0,
-      dailyAveragePaise: Math.round(dailyAverage),
-      projection30DayPaise: Math.round(dailyAverage * 30),
-      projection90DayPaise: Math.round(dailyAverage * 90),
+      next30DaysPaise: Math.round(dailyAverage * 30), // FIX: Correct field name
+      next90DaysPaise: Math.round(dailyAverage * 90), // FIX: Correct field name
+      paceVsTarget, // FIX: Added field
+      confidence: total > 0 ? 0.7 : 0.3, // FIX: Added field
     });
   });
 
@@ -598,38 +708,53 @@ class SavingsController {
     const recommendations = [
       {
         id: 'rec-1',
+        type: 'cashback_boost',
         title: 'Stack cashback on groceries at BigBazaar',
-        description: 'You spent ₹4,200 at BigBazaar last month. Activate the 5% cashback offer to save ₹210 this month.',
-        estimatedSavingsPaise: 21_000,
-        category: 'grocery',
+        description:
+          'You spent ₹4,200 at BigBazaar last month. Activate the 5% cashback offer to save ₹210 this month.',
+        potentialSavingsPaise: 21_000,
+        storeId: 'st_bigbazaar',
+        offerId: 'off_bigbazaar_5',
+        ctaRoute: '/offers/cashback-boost?offerId=off_bigbazaar_5',
+        expiresAt: '2026-07-15T23:59:59.000Z',
       },
       {
         id: 'rec-2',
+        type: 'new_offer',
         title: 'Redeem Swiggy ₹100 off coupon',
         description: 'You have an unused food-delivery coupon expiring in 3 days.',
-        estimatedSavingsPaise: 10_000,
-        category: 'dining',
+        potentialSavingsPaise: 10_000,
+        storeId: 'st_swiggy',
+        offerId: 'off_swiggy_100',
+        ctaRoute: '/offers/swiggy-100-off',
+        expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: 'rec-3',
+        type: 'cashback_boost',
         title: 'Switch to UPI for 2% extra cashback at Croma',
         description: 'Pay with UPI at Croma this week to unlock the 2% bonus (max ₹300).',
-        estimatedSavingsPaise: 30_000,
-        category: 'electronics',
+        potentialSavingsPaise: 30_000,
+        storeId: 'st_croma',
+        offerId: 'off_croma_upi',
+        ctaRoute: '/offers/croma-upi-bonus',
+        expiresAt: '2026-07-10T23:59:59.000Z',
       },
       {
         id: 'rec-4',
+        type: 'referral',
         title: 'Refer a friend for ₹500 each',
         description: 'Share your referral code — you earn ₹500 per signup, friend earns ₹200.',
-        estimatedSavingsPaise: 50_000,
-        category: 'other',
+        potentialSavingsPaise: 50_000,
+        ctaRoute: '/referral/share',
       },
       {
         id: 'rec-5',
+        type: 'goal_nudge',
         title: 'Hit your 7-day savings streak',
         description: 'You are 4 days away from a ₹100 milestone bonus.',
-        estimatedSavingsPaise: 10_000,
-        category: 'milestone_bonus',
+        potentialSavingsPaise: 10_000,
+        ctaRoute: '/b/savings',
       },
     ];
 

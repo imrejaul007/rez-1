@@ -6,7 +6,7 @@
  * deal categories based on the selected tab. Modern design with glassy effects.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -139,6 +139,20 @@ const mapIconToIonicon = (icon: string): keyof typeof Ionicons.glyphMap => {
   return mapping[icon] || 'apps-outline';
 };
 
+// Extended user type for verification-related properties not in unified User type
+interface ExtendedUser {
+  verifications?: {
+    student?: boolean;
+    corporate?: boolean;
+    defence?: boolean;
+    healthcare?: boolean;
+    teachers?: boolean;
+    government?: boolean;
+    'differently-abled'?: boolean;
+  };
+  isFirstOrder?: boolean;
+}
+
 // Generate gradient colors from background and icon color
 const generateGradientColors = (bgColor: string, iconColor: string): readonly [string, string, string] => {
   // Use predefined gradients based on icon color
@@ -149,9 +163,8 @@ const generateGradientColors = (bgColor: string, iconColor: string): readonly [s
     [colors.warningScale[400]]: ['#FCD34D', colors.warningScale[400], colors.warningScale[400]], // Amber - Birthday
     [colors.lightMustard]: ['#ffe5a3', '#ffd97a', colors.lightMustard], // Mustard gradient - Senior
     [colors.nileBlue]: ['#C4B5FD', colors.brand.purpleSoft, colors.nileBlue], // Violet - First time
-    [colors.nileBlue]: ['#2d5c7e', colors.brand.nileBlueLight, colors.nileBlue], // Nile Blue gradient - Defence
+    '#243f55': ['#2d5c7e', colors.brand.nileBlueLight, colors.nileBlue], // Nile Blue gradient - Defence
     [colors.error]: ['#FCA5A5', colors.errorScale[400], colors.error], // Red - Healthcare
-    '#243f55': ['#C4B5FD', colors.brand.purpleSoft, '#243f55'], // Purple - Senior
     '#2d4a5f': ['#93C5FD', colors.infoScale[400], '#2d4a5f'], // Blue - Teachers
     [colors.cyanDark]: ['#67E8F9', '#22D3EE', colors.cyanDark], // Cyan - Government
     [colors.brand.sand]: ['#FDBA74', '#FB923C', colors.brand.sand], // Orange - Disabled
@@ -430,11 +443,14 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
   const checkUserVerification = useCallback((eligibilityType: string): boolean => {
     if (!user) return false;
 
+    // Cast to ExtendedUser for verification-related properties not in unified User type
+    const extendedUser = user as unknown as ExtendedUser;
+
     switch (eligibilityType) {
       case 'student':
-        return user?.verifications?.student === true;
+        return extendedUser?.verifications?.student === true;
       case 'corporate_email':
-        return user?.verifications?.corporate === true;
+        return extendedUser?.verifications?.corporate === true;
       case 'gender':
         return user?.profile?.gender === 'female';
       case 'birthday_month':
@@ -447,7 +463,7 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
         const age = Math.floor((Date.now() - new Date(user.profile.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
         return age >= 60;
       case 'verification':
-        return user?.isFirstOrder !== false;
+        return extendedUser?.isFirstOrder !== false;
       default:
         return false;
     }
@@ -583,12 +599,18 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
 
       if (response.success && response.data) {
         if (!isMounted()) return;
-        setOffers(response.data);
+
+        // Normalize response data - handle both PaginatedResponse and Offer[] types
+        const offersData: Offer[] = Array.isArray((response.data as any).items)
+          ? (response.data as any).items
+          : response.data as Offer[];
+
+        setOffers(offersData);
 
         // Group offers by category and create category cards
         const categoryMap = new Map<string, { count: number; type: string }>();
 
-        response.data.forEach((offer: Offer) => {
+        offersData.forEach((offer: Offer) => {
           const category = offer.category || 'general';
           const existing = categoryMap.get(category) || { count: 0, type: offer.type || 'discount' };
           categoryMap.set(category, {
@@ -601,7 +623,7 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
         const categories: CategoryCard[] = [];
 
         // Nearby Offers (offers with location)
-        const nearbyCount = response.data.filter((o: Offer) => o.distance && o.distance < 5).length;
+        const nearbyCount = offersData.filter((o: Offer) => o.distance && o.distance < 5).length;
         if (nearbyCount > 0) {
           categories.push({
             id: 'nearby',
@@ -615,7 +637,7 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
         }
 
         // Today's Deals (offers expiring today or flash sales)
-        const todayCount = response.data.filter((o: Offer) => {
+        const todayCount = offersData.filter((o: Offer) => {
           if (o.metadata?.flashSale?.isActive) return true;
           const endDate = new Date(o.validity.endDate);
           const today = new Date();
@@ -634,7 +656,7 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
         }
 
         // BOGO deals
-        const bogoCount = response.data.filter((o: Offer) => o.type === 'combo' || o.title?.toLowerCase().includes('bogo')).length;
+        const bogoCount = offersData.filter((o: Offer) => o.type === 'combo' || o.title?.toLowerCase().includes('bogo')).length;
         if (bogoCount > 0) {
           categories.push({
             id: 'bogo',
@@ -649,7 +671,7 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
         }
 
         // Flash Sale
-        const flashCount = response.data.filter((o: Offer) => o.metadata?.flashSale?.isActive).length;
+        const flashCount = offersData.filter((o: Offer) => o.metadata?.flashSale?.isActive).length;
         if (flashCount > 0) {
           categories.push({
             id: 'flash',
@@ -663,7 +685,7 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
         }
 
         // Cashback offers
-        const cashbackCount = response.data.filter((o: Offer) => o.type === 'cashback' || o.cashbackPercentage > 0).length;
+        const cashbackCount = offersData.filter((o: Offer) => o.type === 'cashback' || o.cashbackPercentage > 0).length;
         if (cashbackCount > 0) {
           categories.push({
             id: 'cashback',
@@ -677,7 +699,7 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
         }
 
         // Freebies
-        const freebieCount = response.data.filter((o: Offer) => 
+        const freebieCount = offersData.filter((o: Offer) => 
           o.title?.toLowerCase().includes('free') || o.discountedPrice === 0
         ).length;
         if (freebieCount > 0) {
@@ -698,11 +720,11 @@ const DealsThatSaveMoney: React.FC<DealsThatSaveMoneyProps> = ({ style }) => {
             {
               id: 'all',
               title: 'All Offers',
-              subtitle: `${response.data.length} offers`,
+              subtitle: `${offersData.length} offers`,
               icon: 'grid-outline',
               iconColor: colors.nileBlue,
               bgColor: '#4C1D95',
-              count: response.data.length,
+              count: offersData.length,
             }
           );
         }

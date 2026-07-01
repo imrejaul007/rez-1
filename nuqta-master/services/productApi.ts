@@ -3,26 +3,28 @@ import { withRetry, createErrorResponse } from '@/utils/apiUtils';
 
 // Product interface for homepage sections
 export interface HomepageProduct {
-  id: string;
-  _id: string;
+  // Support both MongoDB _id and frontend id - use getProductId() for normalization
+  id?: string;
+  _id?: string;
   name: string;
   image: string;
   price: number;
-  originalPrice: number;
-  discount: number;
-  rating: number;
-  reviewCount: number;
+  originalPrice?: number;
+  discount?: number;
+  rating?: number;
+  reviewCount?: number;
   purchases?: number;
   cashbackPercentage?: number;
   category: string;
   categorySlug?: string;
   store: {
-    _id: string;
+    _id?: string;
+    id?: string;
     name: string;
-    logo: string;
+    logo?: string;
     deliveryTime?: string;
     deliveryFee?: number;
-    city: string;
+    city?: string;
     distance?: number | null;
   };
 }

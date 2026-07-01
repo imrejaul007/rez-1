@@ -18,6 +18,8 @@
  */
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTheme } from '@/hooks/useTheme';
+import { useRTL } from '@/hooks/useRTL';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import { formatPrice } from '@/utils/priceFormatter';
 import type { SavingsHistoryItem } from '@/types/savings.types';
@@ -59,6 +61,7 @@ function formatRelativeDate(iso: string): string {
 }
 
 function SavingsHistoryItemBase({ item, onPress }: SavingsHistoryItemRowProps) {
+  const { colors: themeColors, shadows, isDark } = useTheme();
   const emoji = useMemo(
     () => SOURCE_EMOJI[item.source] ?? '🪙',
     [item.source],
@@ -98,9 +101,14 @@ function SavingsHistoryItemBase({ item, onPress }: SavingsHistoryItemRowProps) {
 
   if (!onPress) {
     return (
-      <View accessibilityLabel={accessibilityLabel} style={styles.pressable}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        disabled
+        style={({ pressed }) => [styles.pressable, pressed && styles.pressablePressed]}
+      >
         {inner}
-      </View>
+      </Pressable>
     );
   }
 

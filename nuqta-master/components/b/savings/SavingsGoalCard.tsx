@@ -15,6 +15,8 @@
  */
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTheme } from '@/hooks/useTheme';
+import { useRTL } from '@/hooks/useRTL';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import { formatPrice } from '@/utils/priceFormatter';
 import type { SavingsGoal } from '@/types/savings.types';
@@ -66,6 +68,7 @@ function buildDeadlineCaption(goal: SavingsGoal): string {
 }
 
 function SavingsGoalCardBase({ goal, onPress }: SavingsGoalCardProps) {
+  const { colors: themeColors, shadows, isDark } = useTheme();
   const target = Math.max(goal.targetAmountPaise ?? 0, 0);
   const saved = Math.max(goal.savedAmountPaise ?? 0, 0);
   const progressPct = useMemo(() => {

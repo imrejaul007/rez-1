@@ -20,6 +20,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSavingsDashboard } from '@/stores/selectors';
 import { useSavingsStore } from '@/stores/savingsStore';
+import { useRTL } from '@/hooks/useRTL';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import { formatPrice } from '@/utils/priceFormatter';
 import logger from '@/utils/logger';
@@ -40,6 +41,8 @@ function isStreakAlive(lastActivityAt: string | null | undefined): boolean {
 }
 
 function SavingsWidgetBase() {
+  const { colors: themeColors, shadows, isDark } = useTheme();
+  const { isRTL, direction, backArrow } = useRTL();
   const router = useRouter();
   const dashboard = useSavingsDashboard();
   const fetchDashboard = useSavingsStore((s) => s.actions.fetchDashboard);

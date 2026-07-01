@@ -5,19 +5,25 @@ export interface Offer {
   image: string;
   originalPrice?: number;
   discountedPrice?: number;
-  cashBackPercentage: number;
-  distance: string;
-  category: string;
+  cashBackPercentage?: number;
+  distance?: string;
+  category?: string;
   isNew?: boolean;
   isTrending?: boolean;
   isBestSeller?: boolean;
   isSpecial?: boolean;
   description?: string;
   store: {
+    id?: string;
     name: string;
+    logo?: string;
     rating?: number;
     verified?: boolean;
+    deliveryFee?: number;
+    deliveryTime?: string;
   };
+  expiresAt?: string;
+  validUntil?: string;
 }
 
 export interface OfferSection {
@@ -78,13 +84,9 @@ export interface OfferState {
 // NEW TYPES FOR REDESIGNED OFFERS PAGE
 // ============================================================================
 
-export interface StoreInfo {
-  id: string;
-  name: string;
-  logo: string;
-  rating?: number;
-  verified?: boolean;
-}
+// StoreInfo is now imported from product-unified.types.ts for consistency
+// Re-exported here for backwards compatibility
+export type { StoreInfo } from './product-unified.types';
 
 // Lightning Deal / Flash Sale
 export interface LightningDeal {

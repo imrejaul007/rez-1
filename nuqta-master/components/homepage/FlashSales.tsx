@@ -236,14 +236,6 @@ const FlashSales: React.FC<FlashSalesProps> = ({
     };
   }, [fetchFlashSales, isMounted]);
 
-  // Always register cleanup
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-      if (refetchTimeoutRef.current) { clearTimeout(refetchTimeoutRef.current); refetchTimeoutRef.current = null; }
-    };
-  }, []);
-
   const handleProductPress = (offerId: string) => {
     // Track click
     flashSaleApi.trackClick(offerId);

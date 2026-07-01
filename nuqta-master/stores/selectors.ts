@@ -17,6 +17,8 @@ import { useGamificationStore } from './gamificationStore';
 import { useSubscriptionStore } from './subscriptionStore';
 import { useWishlistStore } from './wishlistStore';
 import { useProfileStore } from './profileStore';
+import { useSavingsStore } from './savingsStore';
+import { useShallow } from 'zustand/react/shallow';
 
 // ============================================================================
 // AUTH SELECTORS — 150 imports, most critical
@@ -227,17 +229,16 @@ export const useUserProfile = () => useProfileStore((s) => s.user);
 // ============================================================================
 // SAVINGS SELECTORS — B-feature migration (Phase 1.1)
 // ============================================================================
-import { useSavingsStore } from './savingsStore';
 export const useSavingsDashboard = () => useSavingsStore((s) => s.state.dashboard);
 export const useSavingsSummary = () => useSavingsStore((s) => s.state.summary);
-export const useSavingsHistory = () => useSavingsStore((s) => s.state.history);
+export const useSavingsHistory = () => useSavingsStore(useShallow((s) => s.state.history));
 export const useSavingsHistoryPage = () => useSavingsStore((s) => s.state.historyPage);
 export const useSavingsHistoryHasMore = () => useSavingsStore((s) => s.state.historyHasMore);
 export const useSavingsHistoryTotal = () => useSavingsStore((s) => s.state.historyTotal);
-export const useSavingsGoals = () => useSavingsStore((s) => s.state.goals);
+export const useSavingsGoals = () => useSavingsStore(useShallow((s) => s.state.goals));
 export const useSavingsStreak = () => useSavingsStore((s) => s.state.streak);
 export const useSavingsProjection = () => useSavingsStore((s) => s.state.projection);
-export const useSavingsRecommendations = () => useSavingsStore((s) => s.state.recommendations);
+export const useSavingsRecommendations = () => useSavingsStore(useShallow((s) => s.state.recommendations));
 export const useSavingsLoading = () => useSavingsStore((s) => s.state.isLoading);
 export const useSavingsHistoryLoading = () => useSavingsStore((s) => s.state.isLoadingHistory);
 export const useSavingsMutating = () => useSavingsStore((s) => s.state.isMutating);

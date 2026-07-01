@@ -244,7 +244,7 @@ class GamificationApiService {
     }
 
     try {
-      const response = await apiClient.get<any>('/gamification/checkin-config');
+      const response = await apiClient.get<CheckInConfig>('/gamification/checkin-config');
       if (response.success && response.data) {
         this._configCache = response.data;
         this._configCachedAt = Date.now();
@@ -281,7 +281,7 @@ class GamificationApiService {
    */
   async getStreakStatus(): Promise<ApiResponse<StreakData>> {
     try {
-      const response = await apiClient.get<any>('/gamification/streaks');
+      const response = await apiClient.get<StreakData>('/gamification/streaks');
 
       if (response.success && response.data) {
         const data = response.data;
@@ -417,7 +417,7 @@ class GamificationApiService {
    */
   async getSpinWheelData(): Promise<ApiResponse<SpinWheelData>> {
     try {
-      const response = await apiClient.get<any>('/gamification/spin-wheel/data');
+      const response = await apiClient.get<SpinWheelData>('/gamification/spin-wheel/data');
 
       if (response.success && response.data) {
         const data = response.data;
@@ -454,7 +454,7 @@ class GamificationApiService {
    */
   async getSpinEligibility(): Promise<ApiResponse<SpinEligibility>> {
     try {
-      const response = await apiClient.get<any>('/gamification/spin-wheel/eligibility');
+      const response = await apiClient.get<SpinEligibility>('/gamification/spin-wheel/eligibility');
 
       if (response.success && response.data) {
         const data = response.data;
@@ -674,7 +674,7 @@ class GamificationApiService {
    */
   async getCoinBalance(): Promise<ApiResponse<{ balance: number; lifetimeEarned: number }>> {
     try {
-      const response = await apiClient.get<any>('/gamification/coins/balance');
+      const response = await apiClient.get<{ balance: number; lifetimeEarned: number }>('/gamification/coins/balance');
 
       if (response.success && response.data) {
         return {
@@ -702,7 +702,7 @@ class GamificationApiService {
    */
   async getAffiliateStats(): Promise<ApiResponse<AffiliateStats>> {
     try {
-      const response = await apiClient.get<any>('/gamification/affiliate/stats');
+      const response = await apiClient.get<AffiliateStats>('/gamification/affiliate/stats');
 
       if (response.success && response.data) {
         return {
@@ -732,7 +732,7 @@ class GamificationApiService {
    */
   async getPromotionalPosters(): Promise<ApiResponse<PromotionalPoster[]>> {
     try {
-      const response = await apiClient.get<any>('/gamification/promotional-posters');
+      const response = await apiClient.get<PromotionalPoster[]>('/gamification/promotional-posters');
 
       if (response.success && response.data) {
         // Backend returns { posters: [...] }
@@ -840,7 +840,7 @@ class GamificationApiService {
    */
   async getStreakBonuses(): Promise<ApiResponse<StreakBonus[]>> {
     try {
-      const response = await apiClient.get<any>('/gamification/streak/bonuses');
+      const response = await apiClient.get<StreakBonus[]>('/gamification/streak/bonuses');
 
       if (response.success && response.data) {
         // Backend returns { bonuses: [...] }
@@ -874,7 +874,7 @@ class GamificationApiService {
     potentialEarnings: number;
   }>> {
     try {
-      const response = await apiClient.get<any>('/gamification/reviewable-items');
+      const response = await apiClient.get<{ items: ReviewableItem[]; totalPending: number; potentialEarnings: number }>('/gamification/reviewable-items');
 
       if (response.success && response.data) {
         return {
@@ -906,7 +906,7 @@ class GamificationApiService {
     total: number;
   }>> {
     try {
-      const response = await apiClient.get<any>('/gamification/bonus-opportunities');
+      const response = await apiClient.get<{ opportunities: BonusOpportunity[]; total: number }>('/gamification/bonus-opportunities');
 
       if (response.success && response.data) {
         const data = response.data;
@@ -1193,7 +1193,7 @@ class GamificationApiService {
    */
   async createScratchCard(): Promise<ApiResponse<any>> {
     try {
-      const response = await apiClient.post<any>('/gamification/scratch-card/create');
+      const response = await apiClient.post<{ id: string; prize: { type: string; value: number }; coins: number }>('/gamification/scratch-card/create');
       if (response.success && response.data) {
         return { success: true, data: response.data };
       }
@@ -1252,7 +1252,21 @@ class GamificationApiService {
    */
   async getCurrentQuiz(): Promise<ApiResponse<any>> {
     try {
-      const response = await apiClient.get<any>('/gamification/quiz/current');
+      const response = await apiClient.get<{
+        id: string;
+        questions: Array<{
+          id: string;
+          question: string;
+          options: string[];
+          correctAnswer: number;
+          timeLimit: number;
+          coins: number;
+        }>;
+        currentQuestionIndex: number;
+        totalQuestions: number;
+        totalCoins: number;
+        completed: boolean;
+      } | null>('/gamification/quiz/current');
       if (response.success && response.data) {
         return { success: true, data: response.data };
       }
@@ -1269,9 +1283,37 @@ class GamificationApiService {
   /**
    * Get the coin transaction history (paginated).
    */
-  async getCoinTransactions(params?: { page?: number; limit?: number }): Promise<ApiResponse<{ transactions: any[]; pagination: any }>> {
+  async getCoinTransactions(params?: { page?: number; limit?: number }): Promise<ApiResponse<{
+    transactions: Array<{
+      id: string;
+      type: 'earned' | 'spent' | 'bonus';
+      amount: number;
+      description: string;
+      createdAt: string;
+    }>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }>> {
     try {
-      const response = await apiClient.get<{ transactions: any[]; pagination: any }>(
+      const response = await apiClient.get<{
+        transactions: Array<{
+          id: string;
+          type: 'earned' | 'spent' | 'bonus';
+          amount: number;
+          description: string;
+          createdAt: string;
+        }>;
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      }>(
         '/gamification/coin-transactions',
         params || {}
       );

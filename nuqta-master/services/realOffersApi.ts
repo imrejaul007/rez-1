@@ -174,6 +174,192 @@ export interface PaginatedResponse<T> {
   hasPrevious: boolean;
 }
 
+// Additional types for API responses
+export interface Redemption {
+  _id: string;
+  offer: {
+    _id: string;
+    title: string;
+    image?: string;
+    cashbackPercentage: number;
+    type: string;
+    restrictions: {
+      minOrderValue: number;
+      maxDiscountAmount: number | null;
+    };
+  };
+  redemptionCode: string;
+  status: 'pending' | 'used' | 'expired' | 'cancelled';
+  redemptionType: 'online' | 'instore';
+  verificationCode?: string;
+  cashbackAmount?: number;
+  orderAmount?: number;
+  orderId?: string;
+  usedDate?: string;
+  createdAt: string;
+  expiryDate: string;
+}
+
+export interface Hotspot {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image?: string;
+  location: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  offerCount: number;
+  category?: string;
+}
+
+export interface BankOffer {
+  _id: string;
+  title: string;
+  description?: string;
+  bankName: string;
+  cardType: 'credit' | 'debit' | 'wallet' | 'upi' | 'bnpl';
+  discountType: 'percentage' | 'fixed' | 'cashback';
+  discountValue: number;
+  maxDiscount?: number;
+  minOrderValue?: number;
+  promoCode?: string;
+  validUntil: string;
+  isActive: boolean;
+  terms?: string[];
+}
+
+export interface FlashSale {
+  _id: string;
+  title: string;
+  description?: string;
+  image: string;
+  originalPrice: number;
+  flashSalePrice: number;
+  discountPercentage: number;
+  stock: number;
+  sold: number;
+  startTime: string;
+  endTime: string;
+  isActive: boolean;
+  store?: {
+    id: string;
+    name: string;
+    logo?: string;
+  };
+}
+
+export interface DiscountBucket {
+  id: string;
+  label: string;
+  icon: string;
+  count: number;
+  filterValue: string;
+  backgroundColor?: string;
+  textColor?: string;
+  iconColor?: string;
+}
+
+export interface StoreDealsResponse {
+  deals: Offer[];
+  totalCount: number;
+  storeInfo: {
+    id: string;
+    name?: string;
+    logo?: string;
+    rating?: number;
+  };
+  pagination?: {
+    page: number;
+    pageSize: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
+}
+
+export interface CoinDrop {
+  _id: string;
+  title: string;
+  description?: string;
+  coins: number;
+  minOrderValue?: number;
+  expiresAt: string;
+  isActive: boolean;
+}
+
+export interface UploadBillStore {
+  _id: string;
+  name: string;
+  logo?: string;
+  category: string;
+  cashbackPercentage: number;
+  minBillAmount?: number;
+  maxCashback?: number;
+}
+
+export interface SuperCashbackStore {
+  _id: string;
+  name: string;
+  logo?: string;
+  cashbackPercentage: number;
+  category: string;
+  isVerified?: boolean;
+}
+
+export interface LoyaltyMilestone {
+  _id: string;
+  level: string;
+  title: string;
+  description: string;
+  minPoints: number;
+  maxPoints?: number;
+  benefits: string[];
+  icon?: string;
+  isActive: boolean;
+}
+
+export interface LoyaltyProgress {
+  _id: string;
+  currentLevel: string;
+  nextLevel?: string;
+  points: number;
+  pointsToNextLevel: number;
+  milestones: {
+    milestoneId: string;
+    isCompleted: boolean;
+    completedAt?: string;
+  }[];
+}
+
+export interface FlashSalePurchase {
+  _id: string;
+  flashSale: {
+    _id: string;
+    title: string;
+    image: string;
+    discountPercentage: number;
+  };
+  amount: number;
+  voucherCode: string;
+  promoCode?: string;
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  isRedeemed: boolean;
+  voucherExpiresAt: string;
+  purchasedAt: string;
+}
+
+export interface ZoneVerification {
+  _id: string;
+  zoneSlug: string;
+  status: 'pending' | 'approved' | 'rejected';
+  documentType?: string;
+  submittedAt: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+  expiresAt?: string;
+}
+
 class RealOffersApi {
   /**
    * Get complete offers page data
@@ -554,13 +740,24 @@ class RealOffersApi {
     status?: string;
     page?: number;
     limit?: number;
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<PaginatedResponse<Redemption>>> {
     try {
-      const response = await apiClient.get<any>('/offers/user/redemptions', params);
+      const response = await apiClient.get<PaginatedResponse<Redemption>>('/offers/user/redemptions', params);
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching user redemptions:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch user redemptions',
+        data: {
+          items: [],
+          totalCount: 0,
+          page: params?.page || 1,
+          pageSize: params?.limit || 20,
+          hasNext: false,
+          hasPrevious: false
+        }
+      };
     }
   }
 
@@ -591,11 +788,36 @@ class RealOffersApi {
     };
   }>> {
     try {
-      const response = await apiClient.post<any>('/offers/redemptions/validate', { code });
+      const response = await apiClient.post<{
+        valid: boolean;
+        redemption?: {
+          _id: string;
+          redemptionCode: string;
+          status: string;
+          expiryDate: string;
+          redemptionType: string;
+          verificationCode?: string;
+        };
+        offer?: {
+          _id: string;
+          title: string;
+          image?: string;
+          cashbackPercentage: number;
+          type: string;
+          restrictions: {
+            minOrderValue: number;
+            maxDiscountAmount: number | null;
+          };
+        };
+      }>('/offers/redemptions/validate', { code });
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error validating redemption code:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to validate redemption code',
+        data: { valid: false }
+      };
     }
   }
 
@@ -625,24 +847,79 @@ class RealOffersApi {
     };
   }>> {
     try {
-      const response = await apiClient.post<any>(`/offers/redemptions/${redemptionId}/use`, params);
+      const response = await apiClient.post<{
+        success: boolean;
+        redemption: {
+          _id: string;
+          status: string;
+          usedDate: string;
+          usedAmount: number;
+        };
+        cashback: {
+          amount: number;
+          percentage: number;
+          orderAmount: number;
+        };
+        wallet?: {
+          balance: number;
+          available: number;
+        };
+      }>(`/offers/redemptions/${redemptionId}/use`, params);
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error marking redemption as used:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to mark redemption as used',
+        data: {
+          success: false,
+          redemption: {
+            _id: redemptionId,
+            status: 'error',
+            usedDate: '',
+            usedAmount: 0
+          },
+          cashback: {
+            amount: 0,
+            percentage: 0,
+            orderAmount: params.orderAmount
+          }
+        }
+      };
     }
   }
 
   /**
    * Get single redemption details
    */
-  async getRedemptionById(redemptionId: string): Promise<ApiResponse<any>> {
+  async getRedemptionById(redemptionId: string): Promise<ApiResponse<Redemption>> {
     try {
-      const response = await apiClient.get<any>(`/offers/redemptions/${redemptionId}`);
+      const response = await apiClient.get<Redemption>(`/offers/redemptions/${redemptionId}`);
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching redemption:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch redemption',
+        data: {
+          _id: redemptionId,
+          offer: {
+            _id: '',
+            title: '',
+            cashbackPercentage: 0,
+            type: '',
+            restrictions: {
+              minOrderValue: 0,
+              maxDiscountAmount: null
+            }
+          },
+          redemptionCode: '',
+          status: 'pending',
+          redemptionType: 'online',
+          createdAt: '',
+          expiryDate: ''
+        }
+      };
     }
   }
 
@@ -658,37 +935,30 @@ class RealOffersApi {
     sortBy?: 'priority' | 'discount' | 'expiry' | 'newest';
     page?: number;
     limit?: number;
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<StoreDealsResponse>> {
     try {
-      // Use /offers/store/:storeId endpoint which accepts active parameter
-      const queryParams: any = {
+      const queryParams: Record<string, unknown> = {
         page: params?.page || 1,
         limit: params?.limit || 20,
       };
-      
+
       // Map active filter (only if explicitly set, default to true for active offers)
       if (params?.active !== undefined) {
         queryParams.active = params.active;
       } else {
         queryParams.active = true; // Default to active offers
       }
-      
-      // Note: /offers/store/:storeId endpoint doesn't support sortBy/order
-      // It returns offers sorted by default (likely by creation date)
-      
+
       // Use the store-specific endpoint which accepts active parameter
       const response = await apiClient.get<PaginatedResponse<Offer>>(`/offers/store/${storeId}`, queryParams);
-      
+
       if (response.success && response.data) {
         // Backend returns: { success: true, data: [offers array], meta: { pagination: {...} } }
-        // apiClient extracts responseData.data, so response.data is the array of offers
-        // But apiClient doesn't preserve meta, so we need to get it from the raw response
-        // For now, we'll use the array length as fallback for totalCount
         const offers = Array.isArray(response.data) ? response.data : [];
-        
-        // Try to get pagination from response if available (apiClient might not preserve it)
-        const pagination = (response as Record<string, any>).meta?.pagination || (response as Record<string, any>).pagination || {};
-        
+
+        // Try to get pagination from response if available
+        const pagination = (response as Record<string, unknown>).meta?.pagination || (response as Record<string, unknown>).pagination || {};
+
         return {
           ...response,
           data: {
@@ -696,521 +966,43 @@ class RealOffersApi {
             totalCount: pagination.total || offers.length,
             storeInfo: {
               id: storeId,
+            },
+            pagination: {
+              page: params?.page || 1,
+              pageSize: params?.limit || 20,
+              hasNext: Boolean((pagination as Record<string, boolean>).hasNext),
+              hasPrevious: Boolean((pagination as Record<string, boolean>).hasPrevious)
             }
           }
         };
       }
-      
-      // Fallback to mock data if API fails
-      const mockDeals = this.generateMockStoreDeals(storeId, params);
+
+      // Return error response if API did not succeed
       return {
-        success: true,
+        success: false,
+        error: response.error || 'Failed to fetch store offers',
         data: {
-          deals: mockDeals,
-          totalCount: mockDeals.length,
+          deals: [],
+          totalCount: 0,
           storeInfo: {
             id: storeId,
-            name: 'Store Name',
           }
-        },
-        message: 'Store deals retrieved successfully (fallback)',
-        timestamp: new Date().toISOString()
+        }
       };
     } catch (error) {
       devLog.error(`[OFFERS API] Error fetching store offers for ${storeId}:`, error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch store offers',
+        data: {
+          deals: [],
+          totalCount: 0,
+          storeInfo: {
+            id: storeId,
+          }
+        }
+      };
     }
-  }
-
-  /**
-   * Generate comprehensive mock store deals
-   */
-  private generateMockStoreDeals(storeId: string, params?: any): any[] {
-    const allMockDeals = [
-      {
-        id: 'deal-001',
-        storeId,
-        title: 'Mega Weekend Sale',
-        description: 'Get flat 30% off on all products this weekend',
-        type: 'walk_in',
-        discountType: 'percentage',
-        discountValue: 30,
-        minPurchase: 2000,
-        maxDiscount: 1500,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Valid on weekends only', 'Not applicable on sale items', 'Cannot be combined with other offers'],
-        applicableProducts: ['Fashion', 'Electronics', 'Home'],
-        isActive: true,
-        isFeatured: true,
-        category: 'instant-discount',
-        priority: 1,
-        usageLimit: 100,
-        usedCount: 23,
-        badge: { text: 'Save 30%', backgroundColor: '#E5E7EB', textColor: '#374151' }
-      },
-      {
-        id: 'deal-002',
-        storeId,
-        title: 'Flash Sale - Limited Time',
-        description: 'Grab amazing deals before they expire',
-        type: 'flash_sale',
-        discountType: 'percentage',
-        discountValue: 50,
-        minPurchase: 1500,
-        maxDiscount: 2000,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Valid for 48 hours only', 'While stocks last', 'Limited to 5 items per customer'],
-        applicableProducts: ['Fashion', 'Accessories'],
-        isActive: true,
-        isFeatured: true,
-        category: 'seasonal',
-        priority: 2,
-        usageLimit: 50,
-        usedCount: 31,
-        badge: { text: '50% OFF', backgroundColor: colors.errorScale[100], textColor: '#991B1B' }
-      },
-      {
-        id: 'deal-003',
-        storeId,
-        title: 'Buy 2 Get 1 Free',
-        description: 'Purchase any 2 items and get the lowest priced item absolutely free',
-        type: 'combo',
-        discountType: 'bogo',
-        discountValue: 0,
-        minPurchase: 3000,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Lowest priced item will be free', 'Valid on marked products only', 'Maximum 3 free items per transaction'],
-        applicableProducts: ['Fashion', 'Personal Care'],
-        isActive: true,
-        isFeatured: false,
-        category: 'buy-one-get-one',
-        priority: 3,
-        usageLimit: 75,
-        usedCount: 12,
-        badge: { text: 'BOGO', backgroundColor: '#FEF3C7', textColor: '#92400E' }
-      },
-      {
-        id: 'deal-004',
-        storeId,
-        title: 'Cashback Bonanza',
-        description: 'Earn 15% cashback on all purchases',
-        type: 'cashback',
-        discountType: 'percentage',
-        discountValue: 15,
-        minPurchase: 1000,
-        maxDiscount: 500,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Cashback credited within 24 hours', 'Valid on all payment methods', 'Maximum 2 transactions per day'],
-        applicableProducts: ['All Categories'],
-        isActive: true,
-        isFeatured: true,
-        category: 'cashback',
-        priority: 4,
-        usageLimit: 200,
-        usedCount: 87,
-        badge: { text: '15% Cashback', backgroundColor: '#D1FAE5', textColor: '#065F46' }
-      },
-      {
-        id: 'deal-005',
-        storeId,
-        title: 'First Time Customer Special',
-        description: 'Exclusive 25% discount for new customers',
-        type: 'walk_in',
-        discountType: 'percentage',
-        discountValue: 25,
-        minPurchase: 1500,
-        maxDiscount: 1000,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Valid for first-time customers only', 'ID verification required', 'One-time use only'],
-        applicableProducts: ['Fashion', 'Electronics', 'Home'],
-        isActive: true,
-        isFeatured: true,
-        category: 'first-time',
-        priority: 5,
-        usageLimit: 150,
-        usedCount: 45,
-        badge: { text: 'New Customer', backgroundColor: '#DBEAFE', textColor: '#1E40AF' }
-      },
-      {
-        id: 'deal-006',
-        storeId,
-        title: 'VIP Member Exclusive',
-        description: 'Special discount for our loyal VIP members',
-        type: 'walk_in',
-        discountType: 'percentage',
-        discountValue: 20,
-        minPurchase: 5000,
-        maxDiscount: 2500,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Valid for VIP members only', 'Show membership card', 'Earn double loyalty points'],
-        applicableProducts: ['All Categories'],
-        isActive: true,
-        isFeatured: false,
-        category: 'loyalty',
-        priority: 6,
-        usageLimit: 300,
-        usedCount: 156,
-        badge: { text: 'VIP 20%', backgroundColor: '#F3E8FF', textColor: colors.brand.purple }
-      },
-      {
-        id: 'deal-007',
-        storeId,
-        title: 'Clearance Mega Sale',
-        description: 'Massive discounts on clearance items',
-        type: 'walk_in',
-        discountType: 'percentage',
-        discountValue: 60,
-        minPurchase: 500,
-        maxDiscount: 3000,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Clearance items only', 'No returns or exchanges', 'While stocks last'],
-        applicableProducts: ['Fashion', 'Home'],
-        isActive: true,
-        isFeatured: true,
-        category: 'clearance',
-        priority: 7,
-        usageLimit: 100,
-        usedCount: 67,
-        badge: { text: '60% OFF', backgroundColor: colors.errorScale[100], textColor: '#991B1B' }
-      },
-      {
-        id: 'deal-008',
-        storeId,
-        title: 'Student Discount',
-        description: 'Special offer for students with valid ID',
-        type: 'walk_in',
-        discountType: 'percentage',
-        discountValue: 18,
-        minPurchase: 1200,
-        maxDiscount: 800,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Valid student ID required', 'Available all days', 'Not valid on sale items'],
-        applicableProducts: ['Fashion', 'Electronics', 'Books'],
-        isActive: true,
-        isFeatured: false,
-        category: 'instant-discount',
-        priority: 8,
-        usageLimit: 250,
-        usedCount: 98,
-        badge: { text: 'Student 18%', backgroundColor: '#E0E7FF', textColor: '#3730A3' }
-      },
-      {
-        id: 'deal-009',
-        storeId,
-        title: 'Online Exclusive Deal',
-        description: 'Order online and get extra 10% off',
-        type: 'online',
-        discountType: 'percentage',
-        discountValue: 10,
-        minPurchase: 800,
-        maxDiscount: 400,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Online orders only', 'Free home delivery', 'Prepaid orders only'],
-        applicableProducts: ['All Categories'],
-        isActive: true,
-        isFeatured: false,
-        category: 'instant-discount',
-        priority: 9,
-        usageLimit: 500,
-        usedCount: 234,
-        badge: { text: 'Online 10%', backgroundColor: '#E0F2FE', textColor: '#075985' }
-      },
-      {
-        id: 'deal-010',
-        storeId,
-        title: 'Festive Season Offer',
-        description: 'Celebrate with amazing festive discounts',
-        type: 'walk_in',
-        discountType: 'percentage',
-        discountValue: 35,
-        minPurchase: 3500,
-        maxDiscount: 2000,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Valid during festive season', 'Special gift with purchase', 'Limited period offer'],
-        applicableProducts: ['Fashion', 'Jewelry', 'Home Decor'],
-        isActive: true,
-        isFeatured: true,
-        category: 'seasonal',
-        priority: 10,
-        usageLimit: 120,
-        usedCount: 54,
-        badge: { text: 'Festive 35%', backgroundColor: '#FED7AA', textColor: '#9A3412' }
-      },
-      {
-        id: 'deal-011',
-        storeId,
-        title: 'Combo Deal Special',
-        description: 'Save more when you buy in combo',
-        type: 'combo',
-        discountType: 'percentage',
-        discountValue: 25,
-        minPurchase: 2500,
-        maxDiscount: 1200,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Buy any 3 products', 'Get 25% off on total', 'Selected products only'],
-        applicableProducts: ['Fashion', 'Accessories', 'Personal Care'],
-        isActive: true,
-        isFeatured: false,
-        category: 'buy-one-get-one',
-        priority: 11,
-        usageLimit: 80,
-        usedCount: 34,
-        badge: { text: 'Combo 25%', backgroundColor: '#FEF3C7', textColor: '#78350F' }
-      },
-      {
-        id: 'deal-012',
-        storeId,
-        title: 'Early Bird Discount',
-        description: 'Shop before 12 PM and get extra discount',
-        type: 'walk_in',
-        discountType: 'percentage',
-        discountValue: 12,
-        minPurchase: 1000,
-        maxDiscount: 600,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Valid before 12 PM only', 'All days of the week', 'Show this offer at billing'],
-        applicableProducts: ['All Categories'],
-        isActive: true,
-        isFeatured: false,
-        category: 'instant-discount',
-        priority: 12,
-        usageLimit: 180,
-        usedCount: 89,
-        badge: { text: 'Early Bird', backgroundColor: '#FEF9C3', textColor: '#713F12' }
-      },
-      {
-        id: 'deal-013',
-        storeId,
-        title: 'Birthday Month Special',
-        description: 'Celebrate your birthday month with extra savings',
-        type: 'walk_in',
-        discountType: 'percentage',
-        discountValue: 22,
-        minPurchase: 2000,
-        maxDiscount: 1100,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Valid ID required', 'Valid throughout birthday month', 'One-time use per year'],
-        applicableProducts: ['All Categories'],
-        isActive: true,
-        isFeatured: true,
-        category: 'loyalty',
-        priority: 13,
-        usageLimit: 400,
-        usedCount: 167,
-        badge: { text: 'Birthday 22%', backgroundColor: '#FCE7F3', textColor: '#9F1239' }
-      },
-      {
-        id: 'deal-014',
-        storeId,
-        title: 'Senior Citizen Discount',
-        description: 'Special discount for senior citizens',
-        type: 'walk_in',
-        discountType: 'percentage',
-        discountValue: 15,
-        minPurchase: 800,
-        maxDiscount: 700,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Age 60+ required', 'Valid ID proof needed', 'Available all days'],
-        applicableProducts: ['All Categories'],
-        isActive: true,
-        isFeatured: false,
-        category: 'instant-discount',
-        priority: 14,
-        usageLimit: 300,
-        usedCount: 134,
-        badge: { text: 'Senior 15%', backgroundColor: '#E0E7FF', textColor: '#4338CA' }
-      },
-      {
-        id: 'deal-015',
-        storeId,
-        title: 'Referral Bonus',
-        description: 'Refer a friend and both get discount',
-        type: 'cashback',
-        discountType: 'fixed',
-        discountValue: 500,
-        minPurchase: 2500,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Both referrer and referee get bonus', 'Valid on first purchase of referee', 'No maximum limit'],
-        applicableProducts: ['All Categories'],
-        isActive: true,
-        isFeatured: true,
-        category: 'cashback',
-        priority: 15,
-        usageLimit: 1000,
-        usedCount: 312,
-        badge: { text: 'Refer & Earn', backgroundColor: '#D1FAE5', textColor: '#064E3B' }
-      },
-      {
-        id: 'deal-016',
-        storeId,
-        title: 'Midnight Sale',
-        description: 'Exclusive deals available only at midnight',
-        type: 'flash_sale',
-        discountType: 'percentage',
-        discountValue: 40,
-        minPurchase: 2000,
-        maxDiscount: 1800,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Valid between 12 AM to 2 AM only', 'Limited quantity', 'First come first serve'],
-        applicableProducts: ['Electronics', 'Fashion'],
-        isActive: true,
-        isFeatured: true,
-        category: 'seasonal',
-        priority: 16,
-        usageLimit: 60,
-        usedCount: 41,
-        badge: { text: 'Midnight 40%', backgroundColor: '#1F2937', textColor: '#F9FAFB' }
-      },
-      {
-        id: 'deal-017',
-        storeId,
-        title: 'Bulk Purchase Discount',
-        description: 'Buy more, save more with bulk discounts',
-        type: 'walk_in',
-        discountType: 'percentage',
-        discountValue: 28,
-        minPurchase: 10000,
-        maxDiscount: 5000,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Minimum 10 items required', 'Bulk orders only', 'Prior intimation preferred'],
-        applicableProducts: ['All Categories'],
-        isActive: true,
-        isFeatured: false,
-        category: 'instant-discount',
-        priority: 17,
-        usageLimit: 40,
-        usedCount: 18,
-        badge: { text: 'Bulk 28%', backgroundColor: '#E0E7FF', textColor: '#3730A3' }
-      },
-      {
-        id: 'deal-018',
-        storeId,
-        title: 'App Exclusive Deal',
-        description: 'Download our app and get instant discount',
-        type: 'online',
-        discountType: 'percentage',
-        discountValue: 20,
-        minPurchase: 1500,
-        maxDiscount: 1000,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Valid for app users only', 'One-time offer', 'Prepaid orders preferred'],
-        applicableProducts: ['All Categories'],
-        isActive: true,
-        isFeatured: true,
-        category: 'instant-discount',
-        priority: 18,
-        usageLimit: 200,
-        usedCount: 127,
-        badge: { text: 'App 20%', backgroundColor: '#DBEAFE', textColor: '#1E40AF' }
-      },
-      {
-        id: 'deal-019',
-        storeId,
-        title: 'Weekend Flash Deal',
-        description: 'Super saver weekend deals',
-        type: 'flash_sale',
-        discountType: 'percentage',
-        discountValue: 45,
-        minPurchase: 3000,
-        maxDiscount: 2200,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Weekend only', 'Saturday and Sunday', 'Limited stock available'],
-        applicableProducts: ['Fashion', 'Home', 'Electronics'],
-        isActive: true,
-        isFeatured: true,
-        category: 'seasonal',
-        priority: 19,
-        usageLimit: 90,
-        usedCount: 62,
-        badge: { text: 'Weekend 45%', backgroundColor: colors.errorScale[100], textColor: '#7F1D1D' }
-      },
-      {
-        id: 'deal-020',
-        storeId,
-        title: 'Loyalty Points 2X',
-        description: 'Earn double loyalty points on all purchases',
-        type: 'cashback',
-        discountType: 'percentage',
-        discountValue: 10,
-        minPurchase: 1000,
-        maxDiscount: 500,
-        validFrom: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-        terms: ['Loyalty members only', 'Points credited instantly', 'Valid on all purchases'],
-        applicableProducts: ['All Categories'],
-        isActive: true,
-        isFeatured: false,
-        category: 'loyalty',
-        priority: 20,
-        usageLimit: 400,
-        usedCount: 245,
-        badge: { text: '2X Points', backgroundColor: '#F3E8FF', textColor: '#6B21A8' }
-      }
-    ];
-
-    // Apply filters if provided
-    let filteredDeals = allMockDeals;
-
-    if (params?.type && params.type !== 'all') {
-      filteredDeals = filteredDeals.filter(deal => deal.type === params.type);
-    }
-
-    if (params?.category) {
-      filteredDeals = filteredDeals.filter(deal => deal.category === params.category);
-    }
-
-    if (params?.active !== undefined) {
-      filteredDeals = filteredDeals.filter(deal => deal.isActive === params.active);
-    }
-
-    if (params?.featured !== undefined) {
-      filteredDeals = filteredDeals.filter(deal => deal.isFeatured === params.featured);
-    }
-
-    // Apply sorting
-    if (params?.sortBy) {
-      switch (params.sortBy) {
-        case 'priority':
-          filteredDeals.sort((a, b) => a.priority - b.priority);
-          break;
-        case 'discount':
-          filteredDeals.sort((a, b) => b.discountValue - a.discountValue);
-          break;
-        case 'expiry':
-          filteredDeals.sort((a, b) => new Date(a.validUntil).getTime() - new Date(b.validUntil).getTime());
-          break;
-        case 'newest':
-          filteredDeals.sort((a, b) => new Date(b.validFrom).getTime() - new Date(a.validFrom).getTime());
-          break;
-      }
-    }
-
-    // Apply pagination
-    const limit = params?.limit || 20;
-    const page = params?.page || 1;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-
-    return filteredDeals.slice(startIndex, endIndex);
   }
 
   // =====================
@@ -1224,13 +1016,17 @@ class RealOffersApi {
     lat?: number;
     lng?: number;
     limit?: number;
-  }): Promise<ApiResponse<any[]>> {
+  }): Promise<ApiResponse<Hotspot[]>> {
     try {
-      const response = await apiClient.get<any[]>('/offers/hotspots', params);
+      const response = await apiClient.get<Hotspot[]>('/offers/hotspots', params);
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching hotspots:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch hotspots',
+        data: []
+      };
     }
   }
 
@@ -1298,13 +1094,17 @@ class RealOffersApi {
   async getBankOffers(params?: {
     cardType?: 'credit' | 'debit' | 'wallet' | 'upi' | 'bnpl';
     limit?: number;
-  }): Promise<ApiResponse<any[]>> {
+  }): Promise<ApiResponse<BankOffer[]>> {
     try {
-      const response = await apiClient.get<any[]>('/offers/bank-offers', params);
+      const response = await apiClient.get<BankOffer[]>('/offers/bank-offers', params);
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching bank offers:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch bank offers',
+        data: []
+      };
     }
   }
 
@@ -1342,7 +1142,11 @@ class RealOffersApi {
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching exclusive zones:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch exclusive zones',
+        data: []
+      };
     }
   }
 
@@ -1368,7 +1172,11 @@ class RealOffersApi {
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching special profiles:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch special profiles',
+        data: []
+      };
     }
   }
 
@@ -1394,7 +1202,11 @@ class RealOffersApi {
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching friends redeemed:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch friends redeemed',
+        data: []
+      };
     }
   }
 
@@ -1407,7 +1219,11 @@ class RealOffersApi {
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching double cashback campaigns:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch double cashback campaigns',
+        data: []
+      };
     }
   }
 
@@ -1417,13 +1233,17 @@ class RealOffersApi {
   async getCoinDrops(params?: {
     category?: string;
     limit?: number;
-  }): Promise<ApiResponse<any[]>> {
+  }): Promise<ApiResponse<CoinDrop[]>> {
     try {
-      const response = await apiClient.get<any[]>('/cashback/coin-drops', params);
+      const response = await apiClient.get<CoinDrop[]>('/cashback/coin-drops', params);
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching coin drops:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch coin drops',
+        data: []
+      };
     }
   }
 
@@ -1433,13 +1253,17 @@ class RealOffersApi {
   async getUploadBillStores(params?: {
     category?: string;
     limit?: number;
-  }): Promise<ApiResponse<any[]>> {
+  }): Promise<ApiResponse<UploadBillStore[]>> {
     try {
-      const response = await apiClient.get<any[]>('/cashback/upload-bill-stores', params);
+      const response = await apiClient.get<UploadBillStore[]>('/cashback/upload-bill-stores', params);
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching upload bill stores:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch upload bill stores',
+        data: []
+      };
     }
   }
 
@@ -1449,39 +1273,51 @@ class RealOffersApi {
   async getSuperCashbackStores(params?: {
     minCashback?: number;
     limit?: number;
-  }): Promise<ApiResponse<any[]>> {
+  }): Promise<ApiResponse<SuperCashbackStore[]>> {
     try {
-      const response = await apiClient.get<any[]>('/cashback/super-cashback-stores', params);
+      const response = await apiClient.get<SuperCashbackStore[]>('/cashback/super-cashback-stores', params);
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching super cashback stores:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch super cashback stores',
+        data: []
+      };
     }
   }
 
   /**
    * Get loyalty milestones
    */
-  async getLoyaltyMilestones(): Promise<ApiResponse<any[]>> {
+  async getLoyaltyMilestones(): Promise<ApiResponse<LoyaltyMilestone[]>> {
     try {
-      const response = await apiClient.get<any[]>('/loyalty/milestones');
+      const response = await apiClient.get<LoyaltyMilestone[]>('/loyalty/milestones');
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching loyalty milestones:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch loyalty milestones',
+        data: []
+      };
     }
   }
 
   /**
    * Get user's loyalty progress
    */
-  async getLoyaltyProgress(): Promise<ApiResponse<any[]>> {
+  async getLoyaltyProgress(): Promise<ApiResponse<LoyaltyProgress[]>> {
     try {
-      const response = await apiClient.get<any[]>('/loyalty/progress');
+      const response = await apiClient.get<LoyaltyProgress[]>('/loyalty/progress');
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching loyalty progress:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch loyalty progress',
+        data: []
+      };
     }
   }
 
@@ -1489,20 +1325,14 @@ class RealOffersApi {
    * Get discount buckets (real-time aggregation counts)
    * Returns counts for 25% OFF, 50% OFF, 80% OFF, and Free Delivery
    */
-  async getDiscountBuckets(): Promise<ApiResponse<{
-    id: string;
-    label: string;
-    icon: string;
-    count: number;
-    filterValue: string;
-  }[]>> {
+  async getDiscountBuckets(): Promise<ApiResponse<DiscountBucket[]>> {
     try {
       devLog.log('📊 [OFFERS API] Fetching discount buckets');
-      const response = await apiClient.get<any[]>('/offers/discount-buckets');
+      const response = await apiClient.get<DiscountBucket[]>('/offers/discount-buckets');
 
       if (response.success && response.data) {
         // Add default colors if not provided by backend
-        const bucketsWithColors = (Array.isArray(response.data) ? response.data : []).map((bucket: any) => ({
+        const bucketsWithColors = (Array.isArray(response.data) ? response.data : []).map((bucket) => ({
           ...bucket,
           backgroundColor: bucket.backgroundColor || this.getDefaultBucketColor(bucket.filterValue).bg,
           textColor: bucket.textColor || this.getDefaultBucketColor(bucket.filterValue).text,
@@ -1516,10 +1346,18 @@ class RealOffersApi {
         };
       }
 
-      return response;
+      return {
+        success: false,
+        error: response.error || 'Failed to fetch discount buckets',
+        data: []
+      };
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching discount buckets:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch discount buckets',
+        data: []
+      };
     }
   }
 
@@ -1543,10 +1381,10 @@ class RealOffersApi {
    * Get active flash sales (Lightning Deals)
    * Uses the FlashSale model directly (not offers with flash sale metadata)
    */
-  async getFlashSales(limit?: number): Promise<ApiResponse<any[]>> {
+  async getFlashSales(limit?: number): Promise<ApiResponse<FlashSale[]>> {
     try {
       devLog.log('⚡ [OFFERS API] Fetching flash sales (lightning deals)');
-      const response = await apiClient.get<any[]>('/flash-sales/active', { limit });
+      const response = await apiClient.get<FlashSale[]>('/flash-sales/active', { limit });
 
       if (response.success && response.data) {
         const flashSales = Array.isArray(response.data) ? response.data : [];
@@ -1558,10 +1396,18 @@ class RealOffersApi {
         };
       }
 
-      return response;
+      return {
+        success: false,
+        error: response.error || 'Failed to fetch flash sales',
+        data: []
+      };
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching flash sales:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch flash sales',
+        data: []
+      };
     }
   }
 
@@ -1569,20 +1415,28 @@ class RealOffersApi {
    * Get flash sale by ID
    * Fetches a single flash sale with full details
    */
-  async getFlashSaleById(flashSaleId: string): Promise<ApiResponse<any>> {
+  async getFlashSaleById(flashSaleId: string): Promise<ApiResponse<FlashSale>> {
     try {
       devLog.log('⚡ [OFFERS API] Fetching flash sale by ID:', flashSaleId);
-      const response = await apiClient.get<any>(`/flash-sales/${flashSaleId}`);
+      const response = await apiClient.get<FlashSale>(`/flash-sales/${flashSaleId}`);
 
       if (response.success && response.data) {
         devLog.log('✅ [OFFERS API] Got flash sale:', response.data.title);
         return response;
       }
 
-      return response;
+      return {
+        success: false,
+        error: response.error || 'Failed to fetch flash sale',
+        data: {} as FlashSale
+      };
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching flash sale by ID:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch flash sale',
+        data: {} as FlashSale
+      };
     }
   }
 
@@ -1590,10 +1444,10 @@ class RealOffersApi {
    * Get new arrival offers (New Today)
    * Offers marked as new and recently added
    */
-  async getNewArrivals(limit: number = 10): Promise<ApiResponse<any[]>> {
+  async getNewArrivals(limit: number = 10): Promise<ApiResponse<Offer[]>> {
     try {
       devLog.log('🆕 [OFFERS API] Fetching new arrivals');
-      const response = await apiClient.get<any[]>('/offers/new-arrivals', { limit });
+      const response = await apiClient.get<Offer[]>('/offers/new-arrivals', { limit });
 
       if (response.success && response.data) {
         const offers = Array.isArray(response.data) ? response.data : [];
@@ -1605,10 +1459,18 @@ class RealOffersApi {
         };
       }
 
-      return response;
+      return {
+        success: false,
+        error: response.error || 'Failed to fetch new arrivals',
+        data: []
+      };
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching new arrivals:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch new arrivals',
+        data: []
+      };
     }
   }
 
@@ -1616,10 +1478,10 @@ class RealOffersApi {
    * Get AI recommended offers for user
    * Personalized recommendations based on user behavior
    */
-  async getRecommendedOffers(limit: number = 10): Promise<ApiResponse<any[]>> {
+  async getRecommendedOffers(limit: number = 10): Promise<ApiResponse<Offer[]>> {
     try {
       devLog.log('🤖 [OFFERS API] Fetching AI recommended offers');
-      const response = await apiClient.get<any[]>('/offers/user/recommendations', { limit });
+      const response = await apiClient.get<Offer[]>('/offers/user/recommendations', { limit });
 
       if (response.success && response.data) {
         const offers = Array.isArray(response.data) ? response.data : [];
@@ -1631,10 +1493,18 @@ class RealOffersApi {
         };
       }
 
-      return response;
+      return {
+        success: false,
+        error: response.error || 'Failed to fetch recommended offers',
+        data: []
+      };
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching recommended offers:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch recommended offers',
+        data: []
+      };
     }
   }
 
@@ -1642,10 +1512,10 @@ class RealOffersApi {
    * Get expiring soon offers (Last Chance)
    * Offers that are about to expire within 24 hours
    */
-  async getExpiringSoonOffers(limit: number = 10): Promise<ApiResponse<any[]>> {
+  async getExpiringSoonOffers(limit: number = 10): Promise<ApiResponse<FlashSale[]>> {
     try {
       devLog.log('⏰ [OFFERS API] Fetching expiring soon offers');
-      const response = await apiClient.get<any[]>('/flash-sales/expiring-soon', { limit, minutes: 1440 });
+      const response = await apiClient.get<FlashSale[]>('/flash-sales/expiring-soon', { limit, minutes: 1440 });
 
       if (response.success && response.data) {
         const offers = Array.isArray(response.data) ? response.data : [];
@@ -1657,10 +1527,18 @@ class RealOffersApi {
         };
       }
 
-      return response;
+      return {
+        success: false,
+        error: response.error || 'Failed to fetch expiring offers',
+        data: []
+      };
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching expiring offers:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch expiring offers',
+        data: []
+      };
     }
   }
 
@@ -1668,10 +1546,10 @@ class RealOffersApi {
    * Get today's offers
    * Active flash sale offers for today
    */
-  async getTodaysOffers(limit: number = 10): Promise<ApiResponse<any[]>> {
+  async getTodaysOffers(limit: number = 10): Promise<ApiResponse<FlashSale[]>> {
     try {
       devLog.log('📅 [OFFERS API] Fetching today\'s offers');
-      const response = await apiClient.get<any[]>('/offers/flash-sales', { limit });
+      const response = await apiClient.get<FlashSale[]>('/offers/flash-sales', { limit });
 
       if (response.success && response.data) {
         const offers = Array.isArray(response.data) ? response.data : [];
@@ -1683,10 +1561,18 @@ class RealOffersApi {
         };
       }
 
-      return response;
+      return {
+        success: false,
+        error: response.error || 'Failed to fetch today\'s offers',
+        data: []
+      };
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching today\'s offers:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch today\'s offers',
+        data: []
+      };
     }
   }
 
@@ -1830,14 +1716,18 @@ class RealOffersApi {
   /**
    * Get flash sale purchase by ID
    */
-  async getFlashSalePurchaseById(purchaseId: string): Promise<ApiResponse<any>> {
+  async getFlashSalePurchaseById(purchaseId: string): Promise<ApiResponse<FlashSalePurchase>> {
     try {
       devLog.log('🔍 [OFFERS API] Fetching flash sale purchase:', purchaseId);
-      const response = await apiClient.get<any>(`/flash-sales/purchases/${purchaseId}`);
+      const response = await apiClient.get<FlashSalePurchase>(`/flash-sales/purchases/${purchaseId}`);
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching flash sale purchase:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch flash sale purchase',
+        data: {} as FlashSalePurchase
+      };
     }
   }
 
@@ -1908,24 +1798,42 @@ class RealOffersApi {
     expiresAt?: string;
   }>> {
     try {
-      const response = await apiClient.get<any>(`/zones/${slug}/status`);
+      const response = await apiClient.get<{
+        hasVerification: boolean;
+        status: 'pending' | 'approved' | 'rejected' | null;
+        submittedAt?: string;
+        reviewedAt?: string;
+        rejectionReason?: string;
+        expiresAt?: string;
+      }>(`/zones/${slug}/status`);
       return response;
     } catch (error) {
       devLog.error(`[OFFERS API] Error getting zone verification status for ${slug}:`, error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get zone verification status',
+        data: {
+          hasVerification: false,
+          status: null
+        }
+      };
     }
   }
 
   /**
    * Get all user's verifications
    */
-  async getMyVerifications(): Promise<ApiResponse<any[]>> {
+  async getMyVerifications(): Promise<ApiResponse<ZoneVerification[]>> {
     try {
-      const response = await apiClient.get<any[]>('/zones/my-verifications');
+      const response = await apiClient.get<ZoneVerification[]>('/zones/my-verifications');
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error getting user verifications:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch verifications',
+        data: []
+      };
     }
   }
   /**
@@ -1935,14 +1843,18 @@ class RealOffersApi {
     lat?: number;
     lng?: number;
     tab?: 'offers' | 'cashback' | 'exclusive' | 'all';
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<OffersPageData>> {
     try {
       devLog.log('[OFFERS API] Fetching aggregated page data');
-      const response = await apiClient.get<any>('/offers/page-data-v2', params);
+      const response = await apiClient.get<OffersPageData>('/offers/page-data-v2', params);
       return response;
     } catch (error) {
       devLog.error('[OFFERS API] Error fetching aggregated page data:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch aggregated page data',
+        data: {} as OffersPageData
+      };
     }
   }
 }

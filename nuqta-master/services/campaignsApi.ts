@@ -73,8 +73,7 @@ export interface DealCategory {
 // Updated to match backend response format
 export interface DealRedemption {
   id: string;
-  code: string; // Backend returns 'code' instead of 'redemptionCode'
-  redemptionCode?: string; // Keep for backward compatibility
+  code: string;
   campaignId?: string;
   dealIndex?: number;
   // Deal snapshot from backend
@@ -305,7 +304,7 @@ class CampaignsService {
       const response = await apiClient.get<DealRedemption>(`/campaigns/redemptions/${code}`);
 
       if (response.success && response.data) {
-        devLog.log(`✅ [CAMPAIGNS API] Got redemption: ${response.data.redemptionCode}`);
+        devLog.log(`✅ [CAMPAIGNS API] Got redemption: ${response.data.code}`);
       }
 
       return response;
@@ -362,7 +361,7 @@ class CampaignsService {
 
   /**
    * Cancel a redemption
-   * Updated to match backend endpoint: DELETE /campaigns/redemptions/:id
+   * Updated to match backend endpoint: POST /campaigns/redemptions/:id/cancel
    */
   async cancelRedemption(redemptionId: string): Promise<ApiResponse<{
     message: string;
@@ -370,9 +369,9 @@ class CampaignsService {
     try {
       devLog.log(`📢 [CAMPAIGNS API] Cancelling redemption: ${redemptionId}...`);
 
-      const response = await apiClient.delete<{
+      const response = await apiClient.post<{
         message: string;
-      }>(`/campaigns/redemptions/${redemptionId}`);
+      }>(`/campaigns/redemptions/${redemptionId}/cancel`);
 
       if (response.success) {
         devLog.log(`✅ [CAMPAIGNS API] Redemption cancelled`);

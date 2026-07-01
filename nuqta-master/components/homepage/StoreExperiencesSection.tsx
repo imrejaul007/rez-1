@@ -202,3 +202,4 @@ const styles = StyleSheet.create({
 });
 
 export { StoreExperiencesSection };
+export default StoreExperiencesSection;

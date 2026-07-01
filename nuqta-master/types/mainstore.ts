@@ -1,5 +1,7 @@
 // MainStore type definitions for data consistency across components
 
+import { Offer as OfferInterface } from './offers.types';
+
 export interface MainStoreProduct {
   id: string;
   title: string;
@@ -57,7 +59,7 @@ export interface MainStoreTabContent {
     specifications?: Record<string, string>;
   };
   deals?: {
-    offers: Offer[];
+    offers: OfferInterface[];
     walkInDeals: WalkInDeal[];
   };
   reviews?: {
@@ -67,14 +69,8 @@ export interface MainStoreTabContent {
   };
 }
 
-export interface Offer {
-  id: string;
-  title: string;
-  description: string;
-  discountPercentage: number;
-  validUntil: Date;
-  termsAndConditions: string[];
-}
+// Re-export Offer for backwards compatibility
+export type Offer = OfferInterface;
 
 export interface WalkInDeal {
   id: string;

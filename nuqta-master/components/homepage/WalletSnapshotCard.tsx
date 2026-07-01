@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -65,10 +65,12 @@ const WalletSnapshotCard: React.FC = () => {
   const refreshWallet = useRefreshWallet();
   const brandedCoinsFromCtx = useBrandedCoins();
 
-  // Track when we have initial data (without triggering re-renders)
-  if (walletData && !hasInitialData.current) {
-    hasInitialData.current = true;
-  }
+  // Set initial data flag after mount using useEffect (avoids state mutation during render)
+  useEffect(() => {
+    if (walletData && !hasInitialData.current) {
+      hasInitialData.current = true;
+    }
+  }, [walletData]);
 
   // Refresh wallet data when the screen comes into focus (e.g., after placing an order)
   useFocusEffect(

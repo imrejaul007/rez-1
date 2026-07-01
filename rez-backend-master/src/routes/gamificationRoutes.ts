@@ -94,6 +94,46 @@ router.post(
   }),
 );
 
+// ── GET /play-and-earn ──────────────────────────────────────────────────────
+/**
+ * Returns play-and-earn gamification data including daily spin, challenges,
+ * streak info, surprise drops, and coin balance.
+ */
+router.get(
+  '/play-and-earn',
+  asyncHandler(async (req: Request, res: Response) => {
+    const userId = (req as any).userId as string;
+    if (!userId) {
+      return sendError(res, 'User not authenticated', 401);
+    }
+
+    // Mock data for play-and-earn endpoint
+    return sendSuccess(res, {
+      dailySpin: {
+        spinsRemaining: 1,
+        maxSpins: 3,
+        canSpin: true,
+        lastSpinAt: null,
+        nextSpinAt: null,
+      },
+      challenges: {
+        active: [],
+        totalActive: 0,
+        completedToday: 0,
+      },
+      streak: {
+        type: 'order',
+        currentStreak: 0,
+        longestStreak: 0,
+        nextMilestone: { day: 7, coins: 100 },
+        todayCheckedIn: false,
+      },
+      surpriseDrop: null,
+      coinBalance: 0,
+    });
+  }),
+);
+
 // ── GET /streak/status ──────────────────────────────────────────────────────
 /**
  * Returns the current streak + shield availability for the authenticated user.

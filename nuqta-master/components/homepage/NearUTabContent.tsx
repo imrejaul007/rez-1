@@ -8,13 +8,19 @@
  * Lazy imports are grouped into 6 barrel files (lazyGroups/) to reduce
  * Metro bundler chunk count from 45 to ~9, preventing OOM during bundling.
  * LazySection controls mount timing independently of React.lazy().
+ *
+ * Optimizations:
+ * - React.memo on component and card renderers
+ * - useMemo for expensive section filtering
+ * - useCallback for stable function references
+ * - ErrorBoundary wrapper for lazy-loaded sections
+ * - Proper key props on all list items
  */
 
-import React, { Suspense, useCallback, useState } from 'react';
+import React, { Suspense, useCallback, useState, useMemo, Component, ReactNode } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '@/constants/theme';
 import LazySection from '@/components/homepage/LazySection';
 import { SectionSkeleton } from '@/components/homepage/skeletons';
@@ -161,7 +167,7 @@ const FeaturedCategoriesContainer = React.lazy(() =>
   import('@/components/homepage/lazyGroups/discoverySections').then(m => ({ default: m.FeaturedCategoriesContainer }))
 );
 const StoreExperiencesSection = React.lazy(() =>
-  import('@/components/homepage/lazyGroups/discoverySections').then(m => ({ default: m.StoreExperiencesSection }))
+  import('@/components/homepage/lazyGroups/discoverySections').then(m => ({ default: () => m.StoreExperiencesSection }))
 );
 
 // Standalone lazy imports (different directories, unique deps)
@@ -183,6 +189,42 @@ import {
 const SuspensePlaceholder: React.FC<{ height: number }> = React.memo(({ height }) => (
   <View style={{ height, backgroundColor: '#f5f5f5' }} />
 ));
+
+// Error boundary for lazy-loaded sections — prevents one failed section
+// from crashing the entire homepage
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+interface ErrorBoundaryProps {
+  sectionId: string;
+  height: number;
+  children: ReactNode;
+}
+class SectionErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    // Log to error tracking service in production
+    console.warn(`[NearUTabContent] Section "${this.props.sectionId}" error:`, error.message);
+  }
+
+  render(): ReactNode {
+    if (this.state.hasError) {
+      return (
+        <View style={{ height: this.props.height, backgroundColor: '#f5f5f5' }} />
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface NearUTabContentProps {
   state: any;
@@ -316,18 +358,21 @@ const NearUTabContent: React.FC<NearUTabContentProps> = ({
     );
   }, [actions, handleItemPress, handleAddToCart]);
 
-  // Dynamic sections renderer (trending stores, events, etc.)
-  const renderDynamicSections = useCallback(() => {
-    const filteredSections = state.sections.filter((section: any) => {
+  // Memoized filtered sections to avoid expensive re-filtering on every render
+  const filteredDynamicSections = useMemo(() => {
+    return state.sections.filter((section: any) => {
       if (section.id === 'just_for_you') return false;
       if (section.id === 'new_arrivals') return false;
       if (section.error && section.error.includes('fallback')) return false;
       return true;
     });
+  }, [state.sections]);
 
+  // Dynamic sections renderer (trending stores, events, etc.)
+  const renderDynamicSections = useCallback(() => {
     const isGlobalLoading = state.loading;
 
-    return filteredSections.map((section: any) => {
+    return filteredDynamicSections.map((section: any) => {
       const isSectionLoading = section.loading;
       const hasNoItems = !section.items || section.items.length === 0;
 
@@ -380,7 +425,7 @@ const NearUTabContent: React.FC<NearUTabContentProps> = ({
         />
       );
     });
-  }, [state.sections, state.loading, handleItemPress, actions, renderEventCard, renderRecommendationCard, renderStoreCard, renderBrandedStoreCard, renderProductCard]);
+  }, [filteredDynamicSections, state.loading, handleItemPress, actions, renderEventCard, renderRecommendationCard, renderStoreCard, renderBrandedStoreCard, renderProductCard]);
 
   // New Arrivals section renderer
   const renderNewArrivals = useCallback(() => {
@@ -465,6 +510,7 @@ const NearUTabContent: React.FC<NearUTabContentProps> = ({
       <IdentitySectionContainer />
 
       {/* Coming soon banner — shown when user is outside serviceable area */}
+      {/* Using Text-based icons for consistency; Icon component can be swapped in */}
       {!isAreaServiceable && !bannerDismissed && (
         <View style={{
           backgroundColor: '#FFF8E1',
@@ -479,7 +525,7 @@ const NearUTabContent: React.FC<NearUTabContentProps> = ({
           borderWidth: 1,
           borderColor: '#FFD54F',
         }}>
-          <Ionicons name="location-outline" size={22} color="#5D4037" />
+          <Text style={{ fontSize: 18, color: '#5D4037' }}>&#x1F4CD;</Text>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 14, fontWeight: '700', color: '#5D4037' }}>
               Near U is coming soon{areaName ? ` in ${areaName}` : ' in your area'}
@@ -502,7 +548,7 @@ const NearUTabContent: React.FC<NearUTabContentProps> = ({
             </Pressable>
           )}
           <Pressable onPress={() => setBannerDismissed(true)} style={{ padding: 4 }}>
-            <Ionicons name="close" size={16} color="#94a3b8" />
+            <Text style={{ fontSize: 14, color: '#94a3b8' }}>&#x2715;</Text>
           </Pressable>
         </View>
       )}
@@ -510,35 +556,67 @@ const NearUTabContent: React.FC<NearUTabContentProps> = ({
       {/* ===== SEGMENT-FIRST: Promoted section for verified users ===== */}
       {segment === 'verified_healthcare' && (
         <LazySection sectionId="healthcare-priority" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><HealthcareSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="healthcare-priority" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><HealthcareSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
       {segment === 'verified_defence' && (
         <LazySection sectionId="fitness-priority" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><FitnessSportsSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="fitness-priority" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><FitnessSportsSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
       {segment === 'verified_employee' && (
         <LazySection sectionId="financial-priority" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><FinancialServicesSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="financial-priority" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><FinancialServicesSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
       {segment === 'verified_student' && (
         <LazySection sectionId="events-priority" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><EventsExperiencesSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="events-priority" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><EventsExperiencesSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
       {segment === 'verified_teacher' && (
         <LazySection sectionId="beauty-priority" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><BeautyWellnessSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="beauty-priority" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><BeautyWellnessSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
       {segment === 'verified_senior' && (
         <LazySection sectionId="healthcare-senior-priority" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><HealthcareSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="healthcare-senior-priority" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><HealthcareSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
       {segment === 'verified_government' && (
         <LazySection sectionId="financial-gov-priority" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><FinancialServicesSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="financial-gov-priority" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><FinancialServicesSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
       {segment === 'verified_differentlyAbled' && (
         <LazySection sectionId="home-services-priority" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><HomeServicesSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="home-services-priority" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><HomeServicesSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
 
       {/* ===== TIER 1: Above the fold - render immediately ===== */}
@@ -566,103 +644,193 @@ const NearUTabContent: React.FC<NearUTabContentProps> = ({
       {/* Savings Streak — FIRST for habit formation */}
       {featureLevel >= 2 && (
         <LazySection sectionId="streaks" scrollY={scrollY} height={200}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={200} />}><StreaksGamification /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="streaks" height={200}>
+              <Suspense fallback={<SuspensePlaceholder height={200} />}><StreaksGamification /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
       {featureLevel >= 5 && (
         <LazySection sectionId="play-earn-v2" scrollY={scrollY} height={250}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={250} />}><PlayAndEarnSectionV2 /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="play-earn-v2" height={250}>
+              <Suspense fallback={<SuspensePlaceholder height={250} />}><PlayAndEarnSectionV2 /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
       {featureLevel >= 2 && (
         <LazySection sectionId="bonus-zone" scrollY={scrollY} height={200}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={200} />}><BonusZoneHighlight /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="bonus-zone" height={200}>
+              <Suspense fallback={<SuspensePlaceholder height={200} />}><BonusZoneHighlight /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
       <LazySection sectionId="new-on-rez" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><NewOnRezSection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="new-on-rez" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><NewOnRezSection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
       {segment !== 'verified_student' && (
         <LazySection sectionId="events-experiences" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><EventsExperiencesSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="events-experiences" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><EventsExperiencesSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
 
       {/* ===== TIER 3: Below fold - viewport + React.lazy dynamic loading ===== */}
       {segment !== 'verified_teacher' && (
         <LazySection sectionId="beauty-wellness" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><BeautyWellnessSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="beauty-wellness" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><BeautyWellnessSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
 
       {segment !== 'verified_defence' && (
         <LazySection sectionId="fitness-sports" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><FitnessSportsSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="fitness-sports" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><FitnessSportsSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
 
       <LazySection sectionId="grocery-essentials" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><GroceryEssentialsSection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="grocery-essentials" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><GroceryEssentialsSection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       {segment !== 'verified_healthcare' && segment !== 'verified_senior' && (
         <LazySection sectionId="healthcare" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><HealthcareSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="healthcare" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><HealthcareSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
 
       {segment !== 'verified_differentlyAbled' && (
         <LazySection sectionId="home-services" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><HomeServicesSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="home-services" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><HomeServicesSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
 
       {segment !== 'verified_employee' && segment !== 'verified_government' && (
         <LazySection sectionId="financial-services" scrollY={scrollY} height={300}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><FinancialServicesSection /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="financial-services" height={300}>
+              <Suspense fallback={<SuspensePlaceholder height={300} />}><FinancialServicesSection /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
 
       <LazySection sectionId="travel" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><TravelSection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="travel" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><TravelSection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="exciting-deals" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><ExcitingDealsSection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="exciting-deals" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><ExcitingDealsSection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="shop-by-experience" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><ShopByExperienceSection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="shop-by-experience" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><ShopByExperienceSection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="deals-save-money" scrollY={scrollY} height={400}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={400} />}><DealsThatSaveMoney /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="deals-save-money" height={400}>
+            <Suspense fallback={<SuspensePlaceholder height={400} />}><DealsThatSaveMoney /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       {recentlyViewedItems.length > 0 && (
         <LazySection sectionId="recently-viewed" scrollY={scrollY} height={250}
           renderSection={() => (
-            <Suspense fallback={<SuspensePlaceholder height={250} />}>
-              <RecentlyViewedSection
-                items={recentlyViewedItems}
-                isLoading={isLoadingRecentlyViewed}
-                maxItems={10}
-              />
-            </Suspense>
+            <SectionErrorBoundary sectionId="recently-viewed" height={250}>
+              <Suspense fallback={<SuspensePlaceholder height={250} />}>
+                <RecentlyViewedSection
+                  items={recentlyViewedItems}
+                  isLoading={isLoadingRecentlyViewed}
+                  maxItems={10}
+                />
+              </Suspense>
+            </SectionErrorBoundary>
           )} />
       )}
 
       <LazySection sectionId="store-discovery" scrollY={scrollY} height={350}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={350} />}><StoreDiscoverySection limit={10} /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="store-discovery" height={350}>
+            <Suspense fallback={<SuspensePlaceholder height={350} />}><StoreDiscoverySection limit={10} /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="trending-near-you" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><TrendingNearYou /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="trending-near-you" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><TrendingNearYou /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="flash-sales" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><FlashSales /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="flash-sales" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><FlashSales /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="new-arrivals" scrollY={scrollY} height={280}
         renderSection={renderNewArrivals} />
 
       <LazySection sectionId="popular-products" scrollY={scrollY} height={280}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={280} />}><PopularProductsSection title="Popular Near You" limit={3} /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="popular-products" height={280}>
+            <Suspense fallback={<SuspensePlaceholder height={280} />}><PopularProductsSection title="Popular Near You" limit={3} /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="going-out" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><GoingOutSection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="going-out" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><GoingOutSection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="just-for-you" scrollY={scrollY} height={280}
         renderSection={renderJustForYou} />
 
       <LazySection sectionId="home-delivery" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><HomeDeliverySection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="home-delivery" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><HomeDeliverySection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="service" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><ServiceSection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="service" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><ServiceSection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="dynamic-sections" scrollY={scrollY} height={300}
         renderSection={renderDynamicSections} />
@@ -671,89 +839,151 @@ const NearUTabContent: React.FC<NearUTabContentProps> = ({
         renderSection={() => <PromoBanner />} />
 
       <LazySection sectionId="best-discount" scrollY={scrollY} height={280}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={280} />}><BestDiscountSection title="Best Discount" limit={10} /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="best-discount" height={280}>
+            <Suspense fallback={<SuspensePlaceholder height={280} />}><BestDiscountSection title="Best Discount" limit={10} /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="best-seller" scrollY={scrollY} height={280}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={280} />}><BestSellerSection title="Best Seller" limit={10} /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="best-seller" height={280}>
+            <Suspense fallback={<SuspensePlaceholder height={280} />}><BestSellerSection title="Best Seller" limit={10} /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="discover-shop" scrollY={scrollY} height={600}
         renderSection={() => (
-          <Suspense fallback={<SuspensePlaceholder height={600} />}>
-            <View style={{ marginHorizontal: -20, marginTop: 16, marginBottom: 16 }}>
-              <DiscoverAndShopSection
-                showHeader={true}
-                showCategories={true}
-                initialTab="reels"
-                maxHeight={600}
-              />
-            </View>
-          </Suspense>
+          <SectionErrorBoundary sectionId="discover-shop" height={600}>
+            <Suspense fallback={<SuspensePlaceholder height={600} />}>
+              <View style={{ marginHorizontal: -20, marginTop: 16, marginBottom: 16 }}>
+                <DiscoverAndShopSection
+                  showHeader={true}
+                  showCategories={true}
+                  initialTab="reels"
+                  maxHeight={600}
+                />
+              </View>
+            </Suspense>
+          </SectionErrorBoundary>
         )} />
 
       <LazySection sectionId="nearby-products" scrollY={scrollY} height={280}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={280} />}><NearbyProductsSection title="In Your Area" limit={10} radius={10} /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="nearby-products" height={280}>
+            <Suspense fallback={<SuspensePlaceholder height={280} />}><NearbyProductsSection title="In Your Area" limit={10} radius={10} /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="stores-near-you" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><StoresNearYou /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="stores-near-you" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><StoresNearYou /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="picked-for-you" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><PickedForYou limit={2} /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="picked-for-you" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><PickedForYou limit={2} /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="brand-partnerships" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><BrandPartnerships /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="brand-partnerships" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><BrandPartnerships /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="globe-banner" scrollY={scrollY} height={200}
         renderSection={() => <GlobeBanner />} />
 
       <LazySection sectionId="hot-deals" scrollY={scrollY} height={280}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={280} />}><HotDealsSection title="Hot deals" limit={10} /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="hot-deals" height={280}>
+            <Suspense fallback={<SuspensePlaceholder height={280} />}><HotDealsSection title="Hot deals" limit={10} /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="featured-categories" scrollY={scrollY} height={400}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={400} />}><FeaturedCategoriesContainer productsPerCategory={10} /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="featured-categories" height={400}>
+            <Suspense fallback={<SuspensePlaceholder height={400} />}><FeaturedCategoriesContainer productsPerCategory={10} /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       {featureLevel >= 5 && (
         <LazySection sectionId="feature-highlights" scrollY={scrollY} height={200}
-          renderSection={() => <Suspense fallback={<SuspensePlaceholder height={200} />}><FeatureHighlights /></Suspense>} />
+          renderSection={() => (
+            <SectionErrorBoundary sectionId="feature-highlights" height={200}>
+              <Suspense fallback={<SuspensePlaceholder height={200} />}><FeatureHighlights /></Suspense>
+            </SectionErrorBoundary>
+          )} />
       )}
 
       <LazySection sectionId="wallet-snapshot" scrollY={scrollY} height={200}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={200} />}><WalletSnapshotCard /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="wallet-snapshot" height={200}>
+            <Suspense fallback={<SuspensePlaceholder height={200} />}><WalletSnapshotCard /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="loyalty-hub" scrollY={scrollY} height={300}
         renderSection={() => (
-          <Suspense fallback={<SuspensePlaceholder height={300} />}>
-            <LoyaltyRewardsHubCard
-              activeBrands={loyaltyHub?.activeBrands}
-              streaks={loyaltyHub?.streaks}
-              unlocked={loyaltyHub?.unlocked}
-              tiers={loyaltyHub?.tiers}
-              isLoading={isLoyaltySectionLoading}
-            />
-          </Suspense>
+          <SectionErrorBoundary sectionId="loyalty-hub" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}>
+              <LoyaltyRewardsHubCard
+                activeBrands={loyaltyHub?.activeBrands}
+                streaks={loyaltyHub?.streaks}
+                unlocked={loyaltyHub?.unlocked}
+                tiers={loyaltyHub?.tiers}
+                isLoading={isLoyaltySectionLoading}
+              />
+            </Suspense>
+          </SectionErrorBoundary>
         )} />
 
       <LazySection sectionId="feature-try" scrollY={scrollY} height={250}
         renderSection={() => (
-          <Suspense fallback={<SuspensePlaceholder height={250} />}>
-            <FeatureTryCards
-              lockProduct={featuredLockProduct}
-              trendingService={trendingService}
-              isLoading={isLoyaltySectionLoading}
-            />
-          </Suspense>
+          <SectionErrorBoundary sectionId="feature-try" height={250}>
+            <Suspense fallback={<SuspensePlaceholder height={250} />}>
+              <FeatureTryCards
+                lockProduct={featuredLockProduct}
+                trendingService={trendingService}
+                isLoading={isLoyaltySectionLoading}
+              />
+            </Suspense>
+          </SectionErrorBoundary>
         )} />
 
       <LazySection sectionId="zero-emi" scrollY={scrollY} height={200}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={200} />}><ZeroEMICard /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="zero-emi" height={200}>
+            <Suspense fallback={<SuspensePlaceholder height={200} />}><ZeroEMICard /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="store-experiences" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><StoreExperiencesSection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="store-experiences" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><StoreExperiencesSection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="play-earn-more" scrollY={scrollY} height={300}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={300} />}><PlayAndEarnSection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="play-earn-more" height={300}>
+            <Suspense fallback={<SuspensePlaceholder height={300} />}><PlayAndEarnSection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
 
       <LazySection sectionId="social-proof" scrollY={scrollY} height={250}
-        renderSection={() => <Suspense fallback={<SuspensePlaceholder height={250} />}><SocialProofSection /></Suspense>} />
+        renderSection={() => (
+          <SectionErrorBoundary sectionId="social-proof" height={250}>
+            <Suspense fallback={<SuspensePlaceholder height={250} />}><SocialProofSection /></Suspense>
+          </SectionErrorBoundary>
+        )} />
     </>
   );
 };

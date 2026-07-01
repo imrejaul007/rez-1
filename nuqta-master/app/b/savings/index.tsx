@@ -11,6 +11,7 @@ import React, { useCallback } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
+import { useRTL } from '@/hooks/useRTL';
 import { colors } from '@/constants/theme';
 import SavingsDashboard from '@/components/b/savings/SavingsDashboard';
 import {
@@ -57,7 +58,7 @@ function SavingsIndexScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -73,7 +74,7 @@ function SavingsIndexScreen() {
       >
         <SavingsDashboard />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

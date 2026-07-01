@@ -35,6 +35,7 @@ import {
   useSavingsHistoryTotal,
   useSavingsHistoryLoading,
   useSavingsActions,
+  useSavingsStore,
 } from '@/stores/selectors';
 import logger from '@/utils/logger';
 import type { SavingsHistoryItem } from '@/types/savings.types';
@@ -101,8 +102,9 @@ export function useSavingsHistory(): UseSavingsHistoryResult {
   }, [actions]);
 
   const loadMore = useCallback(async () => {
-    if (!hasMore) return;
-    if (isLoading) return;
+    // FIX: Read fresh state to avoid stale closure
+    const { state } = useSavingsStore.getState();
+    if (!state.historyHasMore || state.isLoadingHistory) return;
 
     const fetcher = (actions as {
       fetchHistory?: (opts?: { reset?: boolean }) => Promise<void>;
@@ -120,7 +122,7 @@ export function useSavingsHistory(): UseSavingsHistoryResult {
         'B Features',
       );
     }
-  }, [actions, hasMore, isLoading]);
+  }, [actions]);
 
   return { items, page, hasMore, total, isLoading, loadMore, refresh };
 }

@@ -18,6 +18,8 @@ import {
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRTL } from '@/hooks/useRTL';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
@@ -96,7 +98,7 @@ function SavingsHistoryScreen() {
   }, [hasMore, isLoading, items.length, total]);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.headerRow}>
         <Pressable
           accessibilityRole="button"
@@ -113,14 +115,18 @@ function SavingsHistoryScreen() {
         <View style={styles.headerRightSpacer} />
       </View>
 
-      <View style={styles.filterRow} accessibilityLabel="Period filter">
+      <View
+        style={styles.filterRow}
+        accessibilityRole="radiogroup"
+        accessibilityLabel="Filter by time period"
+      >
         {PERIODS.map((p) => {
           const selected = p === period;
           return (
             <Pressable
               key={p}
-              accessibilityRole="button"
-              accessibilityLabel={`Filter ${p} days`}
+              accessibilityRole="radio"
+              accessibilityLabel={`${p} days${selected ? ', selected' : ''}`}
               accessibilityState={{ selected }}
               onPress={() => changePeriod(p)}
               style={({ pressed }) => [
@@ -152,13 +158,20 @@ function SavingsHistoryScreen() {
             colors={[colors.gold]}
           />
         }
-        onEndReachedThreshold={0.5}
+        onEndReachedThreshold={0.8}
         onEndReached={onEndReached}
+        keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           isLoading ? null : (
-            <View style={styles.emptyWrap} accessibilityLabel="No savings yet">
-              <Text style={styles.emptyTitle}>No savings yet</Text>
-              <Text style={styles.emptySub}>
+            <View
+              style={styles.emptyWrap}
+              accessibilityRole="alert"
+              accessibilityLabel="No savings yet. Start shopping to earn cashback — entries appear here."
+            >
+              <Text style={styles.emptyTitle} accessibilityElementsHidden>
+                No savings yet
+              </Text>
+              <Text style={styles.emptySub} accessibilityElementsHidden>
                 Start shopping to earn cashback — entries appear here.
               </Text>
             </View>

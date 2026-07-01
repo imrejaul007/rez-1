@@ -20,6 +20,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRTL } from '@/hooks/useRTL';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { withErrorBoundary } from '@/utils/withErrorBoundary';
@@ -154,7 +156,8 @@ function SavingsGoalsScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View>
       <View style={styles.headerRow}>
         <Pressable
           accessibilityRole="button"
@@ -187,6 +190,12 @@ function SavingsGoalsScreen() {
         )}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={emptyState}
+        keyboardShouldPersistTaps="handled"
+        getItemLayout={(_, index) => ({
+          length: 120,
+          offset: 120 * index,
+          index,
+        })}
       />
 
       {headerRight}
@@ -196,10 +205,11 @@ function SavingsGoalsScreen() {
         transparent
         visible={modalVisible}
         onRequestClose={closeModal}
+        accessibilityViewIsModal
       >
         <KeyboardAvoidingView
           style={styles.modalBackdrop}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Add a goal</Text>

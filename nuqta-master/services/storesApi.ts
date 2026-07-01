@@ -173,6 +173,113 @@ export interface StoreAnalytics {
   }>;
 }
 
+// Response interfaces for methods that previously used `any`
+export interface SubcategoryStoresResponse {
+  stores: Store[];
+  pagination: {
+    current: number;
+    pages: number;
+    total: number;
+    limit: number;
+  };
+}
+
+// Response from getStoreById - may include nested store object and products
+export interface StoreByIdResponse {
+  store: UnifiedStore;
+  products?: Array<Record<string, unknown>>;
+  productsCount?: number;
+}
+
+export interface CuisineCountsResponse {
+  cuisines: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    count: number;
+  }>;
+  total: number;
+}
+
+export interface TopCashbackStore {
+  id: string;
+  name: string;
+  slug: string;
+  logo?: string;
+  banner?: string;
+  cashback: string;
+  cashbackValue: number;
+  category: string;
+  rating: number;
+  isVerified: boolean;
+}
+
+export interface BNPLStore {
+  id: string;
+  name: string;
+  slug: string;
+  logo?: string;
+  banner?: string;
+  bnplOptions: string[];
+  category: string;
+  rating: number;
+}
+
+export interface TrendingStoresResponse {
+  stores: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    category: string;
+    image: string;
+    people: number;
+    cashback: string;
+    rating: number;
+    distance?: number;
+    isTrending: boolean;
+  }>;
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+}
+
+export interface NewStoresResponse {
+  stores: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    category: string;
+    image: string;
+    people: number;
+    cashback: string;
+    rating: number;
+    distance?: number;
+    isNew: boolean;
+  }>;
+  total: number;
+  featuredStore: {
+    id: string;
+    name: string;
+    slug: string;
+    image: string;
+  } | null;
+  smallStores: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    image: string;
+  }>;
+  horizontalStore: {
+    id: string;
+    name: string;
+    slug: string;
+    image: string;
+  } | null;
+}
+
 export interface StoreFollow {
   storeId: string;
   store: {
@@ -216,14 +323,14 @@ class StoresService {
   }
 
   // Get single store by ID
-  async getStoreById(storeId: string): Promise<ApiResponse<Store>> {
+  async getStoreById(storeId: string): Promise<ApiResponse<UnifiedStore>> {
     try {
-      const response = await apiClient.get<any>(`/stores/${storeId}`);
+      const response = await apiClient.get<StoreByIdResponse>(`/stores/${storeId}`);
 
       // Validate and normalize store data using unified types
       if (response.success && response.data) {
         // Extract store from nested structure (API returns { store: {...}, products: [...], productsCount: ... })
-        const storeData = (response.data as any).store || response.data;
+        const storeData = (response.data as StoreByIdResponse).store || (response.data as unknown as UnifiedStore);
 
         if (!storeData) {
           return {
@@ -251,9 +358,9 @@ class StoresService {
               // Preserve the raw location object with all fields (state, pincode, etc.)
               location: storeData.location || unifiedStore.location,
               // Preserve banner and logo fields explicitly
-              banner: storeData.banner || (unifiedStore as any).banner || '',
-              logo: storeData.logo || (unifiedStore as any).logo || '',
-              image: storeData.image || storeData.banner || (unifiedStore as any).image || (unifiedStore as any).banner || '',
+              banner: storeData.banner || (unifiedStore as unknown as Record<string, unknown>).banner || '',
+              logo: storeData.logo || (unifiedStore as unknown as Record<string, unknown>).logo || '',
+              image: storeData.image || storeData.banner || (unifiedStore as unknown as Record<string, unknown>).image || (unifiedStore as unknown as Record<string, unknown>).banner || '',
               // Also preserve any other fields that might be useful
               tags: storeData.tags || unifiedStore.tags || [],
               deliveryCategories: storeData.deliveryCategories,
@@ -264,7 +371,7 @@ class StoresService {
 
             return {
               ...response,
-              data: finalStoreData as any, // Cast to Store for backwards compatibility
+              data: finalStoreData as unknown as UnifiedStore,
             };
           } else {
             // Return raw data with preserved fields if validation fails but data exists
@@ -277,7 +384,7 @@ class StoresService {
             };
             return {
               ...response,
-              data: fallbackData as any,
+              data: fallbackData as unknown as UnifiedStore,
             };
           }
         } catch (conversionError: any) {
@@ -292,7 +399,7 @@ class StoresService {
             // Return raw data as fallback
             return {
               ...response,
-              data: storeData as any,
+              data: storeData as unknown as UnifiedStore,
             };
           }
         }
@@ -345,14 +452,14 @@ class StoresService {
   }
 
   // Get stores by subcategory slug
-  async getStoresBySubcategorySlug(subcategorySlug: string, limit: number = 10, page: number = 1): Promise<ApiResponse<any>> {
+  async getStoresBySubcategorySlug(subcategorySlug: string, limit: number = 10, page: number = 1): Promise<ApiResponse<SubcategoryStoresResponse>> {
     try {
-      const response = await apiClient.get<any>(`/stores/by-category-slug/${subcategorySlug}`, { limit, page });
+      const response = await apiClient.get<SubcategoryStoresResponse>(`/stores/by-category-slug/${subcategorySlug}`, { limit, page });
 
       if (response.success && response.data) {
         return {
           ...response,
-          data: response.data.stores || [],
+          data: response.data,
         };
       }
 
@@ -469,17 +576,41 @@ class StoresService {
   }
 
   // Get cuisine counts for Browse by Cuisine section
-  async getCuisineCounts(): Promise<ApiResponse<{ cuisines: any[]; total: number }>> {
+  async getCuisineCounts(): Promise<ApiResponse<CuisineCountsResponse>> {
     return apiClient.get('/stores/cuisine-counts');
   }
 
   // Get top cashback stores
-  async getTopCashbackStores(params?: any): Promise<ApiResponse<any>> {
+  async getTopCashbackStores(params?: {
+    limit?: number;
+    category?: string;
+    page?: number;
+  }): Promise<ApiResponse<{
+    stores: TopCashbackStore[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    };
+  }>> {
     return apiClient.get('/stores/top-cashback', params);
   }
 
   // Get BNPL stores
-  async getBNPLStores(params?: any): Promise<ApiResponse<any>> {
+  async getBNPLStores(params?: {
+    limit?: number;
+    category?: string;
+    page?: number;
+  }): Promise<ApiResponse<{
+    stores: BNPLStore[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    };
+  }>> {
     return apiClient.get('/stores/bnpl', params);
   }
 
@@ -619,7 +750,9 @@ class StoresService {
       to: string;
     }
   ): Promise<ApiResponse<StoreAnalytics>> {
-    return apiClient.get(`/stores/${storeId}/analytics`, dateRange);
+    // dateRange should be query parameters, not body
+    const queryParams = dateRange ? { from: dateRange.from, to: dateRange.to } : undefined;
+    return apiClient.get(`/stores/${storeId}/analytics`, queryParams);
   }
 
   // Update store information (store owner only)

@@ -181,7 +181,7 @@ const StreaksGamification: React.FC<StreaksGamificationProps> = ({
               {streak.current}-day saving streak!
             </Text>
             <Text style={styles.streakSubtitle}>
-              {daysRemaining} more days to unlock +{streak.nextReward} bonus coins
+              {(streak.nextMilestone?.day ?? 7) - streak.current} more days to unlock +{streak.nextReward} bonus coins
             </Text>
             <View style={styles.progressBarContainer}>
               <View style={styles.progressBarBackground}>

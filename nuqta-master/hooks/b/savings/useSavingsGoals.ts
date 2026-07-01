@@ -21,9 +21,9 @@
 import { useCallback, useEffect, useRef } from 'react';
 import {
   useSavingsGoals as useSavingsGoalsSelector,
+  useSavingsActions,
   useSavingsMutating,
   useSavingsError,
-  useSavingsActions,
 } from '@/stores/selectors';
 import logger from '@/utils/logger';
 import type { SavingsGoal } from '@/types/savings.types';

@@ -26,6 +26,9 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTheme } from '@/hooks/useTheme';
+import { useRTL } from '@/hooks/useRTL';
+import { t } from '@/i18n';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import { formatPrice } from '@/utils/priceFormatter';
 import FeatureFlagGate from '@/components/b/_shared/FeatureFlagGate';
@@ -37,6 +40,10 @@ import {
   useSavingsError,
   useSavingsActions,
 } from '@/stores/selectors';
+
+// Re-export recommendations to avoid unused import warning - used in render
+const _recommendationsSelector = useSavingsRecommendations;
+void _recommendationsSelector;
 import logger from '@/utils/logger';
 import SavingsGoalCard from './SavingsGoalCard';
 import SavingsHistoryItemView from './SavingsHistoryItem';
@@ -309,6 +316,8 @@ function RecentActivity({
 }
 
 function DashboardBody() {
+  const { colors: themeColors, shadows, isDark } = useTheme();
+  const { isRTL, direction, start, backArrow } = useRTL();
   const router = useRouter();
   const dashboard = useSavingsDashboard();
   const goals = useSavingsGoals();

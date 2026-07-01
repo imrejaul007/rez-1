@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { productApi, HomepageProduct } from '@/services/productApi';
 import { Ionicons } from '@expo/vector-icons';
 import { useGetCurrencySymbol, useCurrentRegionId } from '@/stores/selectors';
+import { useSelector } from 'zustand';
 import { formatPrice } from '@/utils/priceFormatter';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
@@ -81,9 +82,8 @@ function PopularProductsSection({
     return price > 0 ? Math.max(1, Math.round((price * 5) / 100)) : 0;
   };
 
-  // Get currency symbol from region
-  const getCurrencySymbol = useGetCurrencySymbol();
-  const currencySymbol = getCurrencySymbol();
+  // Get currency symbol from region using proper Zustand selector pattern
+  const currencySymbol = useSelector(useGetCurrencySymbol());
 
   // Format delivery fee
   const formatDeliveryFee = (fee: number | undefined) => {

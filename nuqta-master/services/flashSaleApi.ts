@@ -54,7 +54,7 @@ class FlashSaleApiService {
   async getActiveFlashSales(): Promise<ApiResponse<FlashSaleItem[]>> {
     try {
 
-      const response = await apiClient.get<FlashSalesResponse>('/offers/flash-sales');
+      const response = await apiClient.get<FlashSalesResponse>('/flash-sales/active');
 
       if (response.success && response.data) {
         return {
