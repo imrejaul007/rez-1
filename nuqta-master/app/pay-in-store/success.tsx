@@ -365,7 +365,7 @@ function PaymentSuccessScreen() {
         {paymentId && (
           <Pressable
             style={styles.voucherButton}
-            onPress={() => router.push(`/voucher/${paymentId}` as any)}
+            onPress={() => router.push(`/voucher/redeem/${paymentId}` as any)}
           >
             <Ionicons name="qr-code-outline" size={20} color={colors.warningScale[700]} />
             <Text style={styles.voucherButtonText}>View Voucher</Text>
