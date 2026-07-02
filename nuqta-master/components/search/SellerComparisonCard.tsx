@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import { useGetCurrencySymbol, useGetLocale } from '@/stores/selectors';
 import { BRAND } from '@/constants/brand';
 import { colors } from '@/constants/theme';
+import { formatDistance } from '@/utils/geoUtils';
 
 interface SellerComparisonCardProps {
   seller: SellerOption;
@@ -38,14 +39,6 @@ function SellerComparisonCard({
 
   const formatPrice = (price: number) => {
     return `${currencySymbol}${price.toLocaleString(locale)}`;
-  };
-
-  const formatDistance = (distance?: number) => {
-    if (!distance) return '';
-    if (distance < 1) {
-      return `${Math.round(distance * 1000)}m`;
-    }
-    return `${distance.toFixed(1)}km`;
   };
 
   const formatReviewCount = (count: number) => {
@@ -140,7 +133,7 @@ function SellerComparisonCard({
         <View style={styles.locationRow}>
           <Ionicons name="location-outline" size={12} color={colors.neutral[500]} />
           <Text style={styles.locationText} numberOfLines={1}>
-            {seller.distance 
+            {seller.distance
               ? `${seller.location} • ${formatDistance(seller.distance)}`
               : seller.location
             }

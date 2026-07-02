@@ -20,6 +20,7 @@ import {
   SHADOWS
 } from '@/constants/search-constants';
 import { colors } from '@/constants/theme';
+import { formatDistance } from '@/utils/geoUtils';
 
 // Generate a consistent color from store name for letter avatar
 const getAvatarColor = (name: string): string => {
@@ -69,6 +70,9 @@ const StoreCard: React.FC<StoreCardProps & {
   // Rating display
   const ratingDisplay = store.rating > 0 ? store.rating.toFixed(1) : null;
 
+  // Compute distance text for accessibility (using canonical formatDistance)
+  const distanceText = store.distance != null ? formatDistance(store.distance) : '';
+
   const styles = createStyles(screenWidth);
 
   return (
@@ -76,7 +80,9 @@ const StoreCard: React.FC<StoreCardProps & {
       {/* Compact Header: Logo/Avatar + Store Info */}
       <Pressable
         onPress={handleStorePress}
-       
+        accessibilityRole="button"
+        accessibilityLabel={`${storeName}, ${ratingDisplay ? `${ratingDisplay} stars` : 'unrated'}, ${distanceText}, ${store.isOpen ? 'Open' : 'Closed'}`}
+        accessibilityHint="Double tap to view store details"
         style={styles.cardHeader}
       >
         {/* Logo or Letter Avatar */}
@@ -139,9 +145,7 @@ const StoreCard: React.FC<StoreCardProps & {
               <View style={styles.distanceBadge}>
                 <Ionicons name="navigate" size={10} color={colors.neutral[500]} />
                 <ThemedText style={styles.distanceText}>
-                  {store.distance < 1
-                    ? `${Math.round(store.distance * 1000)}m`
-                    : `${store.distance.toFixed(1)}km`}
+                  {formatDistance(store.distance)}
                 </ThemedText>
               </View>
             )}

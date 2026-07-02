@@ -6,6 +6,15 @@
  * - Payment settings and methods
  * - Offers and rewards
  * - Payment processing
+ *
+ * ID CONVENTIONS:
+ * - StorePaymentInfo uses '_id' to match MongoDB backend response
+ * - Use getStoreId() utility to normalize to canonical 'id' field
+ * - Other types in this file use 'id' for consistency
+ *
+ * COORDINATE CONVENTIONS:
+ * - Location coordinates use [number, number] tuple (GeoJSON: [lng, lat])
+ * - Use normalizeCoordinates() to convert to { latitude, longitude }
  */
 
 // ==================== QR CODE TYPES ====================

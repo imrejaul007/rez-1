@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import * as searchApiModule from '@/services/searchApi';
+import { useLocationStore } from '@/stores/locationStore';
+import { LocationCoordinates } from '@/types/location.types';
 
 /**
  * Debounce delay (in ms) used to coalesce rapid `search` calls into a single
@@ -21,6 +23,12 @@ export interface UseStoreSearchOptions {
    * Whether the hook should run the initial search automatically.
    */
   autoFetch?: boolean;
+  /**
+   * Optional location coordinates to pass to the API for distance-based
+   * sorting and filtering. If not provided, will use the current location
+   * from useLocationStore.
+   */
+  location?: LocationCoordinates;
 }
 
 export interface UseStoreSearchReturn {
@@ -48,7 +56,24 @@ export const useStoreSearch = (
     initialQuery = '',
     debounceMs = DEFAULT_DEBOUNCE_MS,
     autoFetch = true,
+    location: optionsLocation,
   } = options;
+
+  // Get current location from location store
+  const currentLocation = useLocationStore((s) => s.state.currentLocation);
+
+  // Determine which location to use: options location takes precedence,
+  // otherwise fall back to the location store's current location
+  const activeLocation: LocationCoordinates | null =
+    optionsLocation ||
+    (currentLocation?.coordinates
+      ? { latitude: currentLocation.coordinates.latitude, longitude: currentLocation.coordinates.longitude }
+      : null);
+
+  // Format location for API: "lng,lat" format
+  const locationParam = activeLocation
+    ? `${activeLocation.longitude},${activeLocation.latitude}`
+    : undefined;
 
   const [query, setQuery] = useState<string>(initialQuery);
   const [results, setResults] = useState<UseStoreSearchReturn['results']>(null);
@@ -61,6 +86,8 @@ export const useStoreSearch = (
   // overwrite the current results.
   const requestIdRef = useRef<number>(0);
   const isMountedRef = useRef<boolean>(true);
+  // Abort controller for cancelling pending requests
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -70,12 +97,19 @@ export const useStoreSearch = (
         clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = null;
       }
+      // Cancel any pending request
+      abortControllerRef.current?.abort();
     };
   }, []);
 
   const performSearch = useCallback(
     async (searchQuery: string) => {
       const currentRequestId = ++requestIdRef.current;
+
+      // Cancel previous request
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+
       try {
         setLoading(true);
         setError(null);
@@ -89,7 +123,13 @@ export const useStoreSearch = (
           || (searchApiModule as any).searchService
           || (searchApiModule as any).default
           || searchApiModule;
-        const response = await api.searchStores({ q: searchQuery });
+        const response = await api.searchStores(
+          {
+            q: searchQuery,
+            ...(locationParam && { location: locationParam }),
+          },
+          { signal: abortControllerRef.current.signal }
+        );
 
         // Drop stale responses
         if (currentRequestId !== requestIdRef.current || !isMountedRef.current) {
@@ -103,6 +143,10 @@ export const useStoreSearch = (
         };
         setResults(nextResults);
       } catch (err: any) {
+        // Ignore abort errors - request was cancelled intentionally
+        if (err.name === 'AbortError' || err.name === 'CanceledError') {
+          return;
+        }
         if (currentRequestId !== requestIdRef.current || !isMountedRef.current) {
           return;
         }
@@ -118,7 +162,7 @@ export const useStoreSearch = (
         }
       }
     },
-    []
+    [locationParam]
   );
 
   const search = useCallback(
@@ -148,6 +192,8 @@ export const useStoreSearch = (
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
     }
+    // Cancel any pending request
+    abortControllerRef.current?.abort();
     setQuery('');
     setResults(null);
     setError(null);

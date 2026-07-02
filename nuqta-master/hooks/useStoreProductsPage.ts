@@ -138,6 +138,9 @@ export function useStoreProductsPage(
   // Performance tracking
   const pageLoadStartTime = useRef<number>(Date.now());
 
+  // Abort controller for cancelling pending requests
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   // Fetch store data
   const { data: storeData, loading: storeLoading } = useStoreData(storeId || '');
 
@@ -277,6 +280,12 @@ export function useStoreProductsPage(
       return;
     }
 
+    // Cancel previous request (only for non-append requests)
+    if (!append) {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+    }
+
     try {
       if (!append) {
         setLoading(true);
@@ -291,7 +300,11 @@ export function useStoreProductsPage(
       if (selectedCategory) queryParams.category = selectedCategory;
       if (sortBy) queryParams.sortBy = sortBy;
 
-      const response = await storesApi.getStoreProducts(storeId, queryParams);
+      const response = await storesApi.getStoreProducts(
+        storeId,
+        queryParams,
+        !append ? { signal: abortControllerRef.current?.signal } : undefined
+      );
 
       if (response.success && response.data) {
         if (!response.data.products || !Array.isArray(response.data.products)) {
@@ -371,6 +384,14 @@ export function useStoreProductsPage(
         throw new Error(response.message || 'Failed to fetch products');
       }
     } catch (err: any) {
+      // Ignore abort errors - request was cancelled intentionally
+      if (err.name === 'AbortError' || err.name === 'CanceledError') {
+        setLoading(false);
+        setRefreshing(false);
+        setLoadingMore(false);
+        return;
+      }
+
       const networkError = handleNetworkError(err);
       const errorMessage = networkError.userMessage;
       const isRetryable = networkError.isRetryable && retryAttempt < maxRetries;
@@ -595,6 +616,14 @@ export function useStoreProductsPage(
       }
     }
   }, [loading, products.length, storeId, selectedCategory, searchQuery, sortBy, isOnline, connectionQuality]);
+
+  // ─── Cleanup - abort pending requests on unmount ─────────────────────────
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   // ─── Initial load ─────────────────────────────────────────────────────────
 

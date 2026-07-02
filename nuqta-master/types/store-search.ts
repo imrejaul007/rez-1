@@ -1,4 +1,22 @@
-// Store search related types
+/**
+ * Store Search Types
+ *
+ * Type definitions for store search functionality.
+ *
+ * ID CONVENTIONS:
+ * - This module uses 'storeId' as the canonical identifier for search results
+ * - Backend API may return '_id' (MongoDB) which should be mapped to 'storeId'
+ * - For normalized unified types, prefer importing from './unified/Store' which uses 'id'
+ *
+ * COORDINATE CONVENTIONS:
+ * - Use { latitude: number, longitude: number } format
+ * - Backend may return [longitude, latitude] (GeoJSON) - use normalizeCoordinates()
+ *
+ * PRICE CONVENTIONS:
+ * - Always use number type for prices
+ * - Use parsePrice() utility for string to number conversion
+ */
+
 export interface SearchQuery {
   query: string;
   filters: SearchFilters;

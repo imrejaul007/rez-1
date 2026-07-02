@@ -11,6 +11,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { useRouter } from 'expo-router';
 import { HomepageProduct } from '@/services/productApi';
 import { colors } from '@/constants/theme';
+import { formatDistance } from '@/utils/geoUtils';
 
 interface HomepageProductCardProps {
   product: HomepageProduct;
@@ -35,13 +36,6 @@ function HomepageProductCard({
     return `$${fee.toFixed(2)} delivery fee`;
   };
 
-  // Format distance
-  const formatDistance = (distance: number | null | undefined) => {
-    if (distance === null || distance === undefined) return '';
-    if (distance < 1) return `${Math.round(distance * 1000)}m away`;
-    return `${distance.toFixed(1)} km away`;
-  };
-
   return (
     <Pressable
       style={[styles.container, { width }]}
@@ -57,10 +51,10 @@ function HomepageProductCard({
             contentFit="cover"
           />
           {/* Distance Badge (for In Your Area section) */}
-          {showDistance && product.store?.distance !== null && product.store?.distance !== undefined && (
+          {showDistance && product.store?.distance != null && (
             <View style={styles.distanceBadge}>
               <ThemedText style={styles.distanceBadgeText}>
-                {formatDistance(product.store.distance)}
+                {formatDistance(product.store!.distance!)} away
               </ThemedText>
             </View>
           )}

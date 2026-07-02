@@ -45,26 +45,12 @@ import {
   spacing,
   typography,
 } from '@/constants/theme';
+import { formatDistance } from '@/utils/geoUtils';
 import type { NearUStore } from '@/hooks/b/nearU/useNearUStores';
 
 export interface NearUStoreCardProps {
   store: NearUStore;
   onPress?: () => void;
-}
-
-/**
- * Format a `distanceKm` number for display.
- *
- * Sub-1km values are rendered as `<n> m away`. Everything else is
- * rendered as `<n.n> km away` with one decimal of precision.
- */
-function formatDistance(km: number): string {
-  if (!Number.isFinite(km)) return '';
-  if (km < 1) {
-    const metres = Math.max(1, Math.round(km * 1000));
-    return `${metres} m`;
-  }
-  return `${km.toFixed(1)} km`;
 }
 
 /**

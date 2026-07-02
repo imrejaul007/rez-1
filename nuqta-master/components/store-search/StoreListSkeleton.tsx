@@ -11,6 +11,8 @@ import Animated, {
   withRepeat,
   withSequence,
   interpolate,
+  cancelAnimation,
+  Easing,
 } from 'react-native-reanimated';
 import {
   COLORS,
@@ -30,13 +32,21 @@ const StoreListSkeleton: React.FC<StoreListSkeletonProps> = ({
   const screenWidth = Dimensions.get('window').width;
 
   useEffect(() => {
+    // Start the repeating shimmer loop.
     shimmerAnim.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: 1000 }),
-        withTiming(0, { duration: 1000 })
+        withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 800, easing: Easing.inOut(Easing.ease) })
       ),
-      -1
+      -1,
+      false
     );
+
+    // Cleanup: cancel the animation when the component unmounts.
+    return () => {
+      cancelAnimation(shimmerAnim);
+      shimmerAnim.value = 0;
+    };
   }, []);
 
   const shimmerStyle = useAnimatedStyle(() => ({

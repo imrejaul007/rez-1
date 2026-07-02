@@ -33,6 +33,7 @@ import {
   View,
 } from 'react-native';
 import { borderRadius, colors, shadows, spacing, typography } from '@/constants/theme';
+import { formatDistance } from '@/utils/geoUtils';
 import type { NearbyStore } from '@/hooks/b/map/useNearbyStores';
 
 export interface StoreMapInfoCardProps {
@@ -45,15 +46,6 @@ export interface StoreMapInfoCardProps {
 }
 
 const SLIDE_DURATION_MS = 240;
-
-function formatDistance(km: number): string {
-  if (!Number.isFinite(km)) return '';
-  if (km < 1) {
-    const metres = Math.max(1, Math.round(km * 1000));
-    return `${metres} m away`;
-  }
-  return `${km.toFixed(1)} km away`;
-}
 
 function StoreMapInfoCardBase({
   store,
@@ -100,7 +92,7 @@ function StoreMapInfoCardBase({
         { backgroundColor: surface, transform: [{ translateY }] },
       ]}
       accessibilityRole={'dialog' as AccessibilityRole}
-      accessibilityLabel={`Store details for ${store.name}. ${formatDistance(store.distanceKm)}${
+      accessibilityLabel={`Store details for ${store.name}. ${formatDistance(store.distanceKm)} away${
         store.category ? `, ${store.category}` : ''
       }. ${offersLabel}${cashbackLabel ? `. ${cashbackLabel}` : ''}.`}
       accessibilityLiveRegion="polite"
@@ -130,7 +122,7 @@ function StoreMapInfoCardBase({
       <View style={styles.metaRow}>
         <View style={styles.metaItem}>
           <Text style={styles.metaLabel}>Distance</Text>
-          <Text style={styles.metaValue}>{formatDistance(store.distanceKm)}</Text>
+          <Text style={styles.metaValue}>{formatDistance(store.distanceKm)} away</Text>
         </View>
         <View style={styles.metaDivider} />
         <View style={styles.metaItem}>

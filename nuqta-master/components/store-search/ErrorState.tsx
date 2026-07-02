@@ -37,6 +37,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
       case 'NETWORK_ERROR':
         return {
           icon: 'wifi-outline',
+          illustration: '(signal_wifi_off)',
           title: 'Connection Problem',
           subtitle: 'Please check your internet connection and try again.',
           showRetry: true,
@@ -44,6 +45,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
       case 'SERVER_ERROR':
         return {
           icon: 'server-outline',
+          illustration: '(server_down)',
           title: 'Server Error',
           subtitle: 'Something went wrong on our end. Please try again later.',
           showRetry: true,
@@ -51,6 +53,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
       case 'NO_RESULTS':
         return {
           icon: 'search-outline',
+          illustration: '(empty_box)',
           title: 'No Results Found',
           subtitle: 'Try adjusting your search terms or filters.',
           showRetry: false,
@@ -58,6 +61,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
       case 'INVALID_QUERY':
         return {
           icon: 'alert-circle-outline',
+          illustration: '(warning)',
           title: 'Invalid Search',
           subtitle: error.details || 'Please enter a valid search term.',
           showRetry: false,
@@ -65,6 +69,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
       case 'TIMEOUT':
         return {
           icon: 'time-outline',
+          illustration: '(hourglass)',
           title: 'Request Timeout',
           subtitle: 'The request took too long. Please try again.',
           showRetry: true,
@@ -72,6 +77,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
       default:
         return {
           icon: 'alert-circle-outline',
+          illustration: '(error)',
           title: 'Something went wrong',
           subtitle: error.message || DEFAULTS.ERROR_MESSAGE,
           showRetry: error.recoverable,
@@ -79,19 +85,23 @@ const ErrorState: React.FC<ErrorStateProps> = ({
     }
   };
 
-  const { icon, title, subtitle, showRetry } = getErrorInfo();
+  const { icon, illustration, title, subtitle, showRetry } = getErrorInfo();
   const styles = createStyles(screenWidth);
 
   return (
     <View style={styles.container}>
-      {/* Error Icon */}
+      {/* Error Icon with Illustration */}
       <View style={styles.iconContainer}>
         <View style={styles.iconBackground}>
           <Ionicons
             name={icon as any}
-            size={48}
+            size={40}
             color={COLORS.ERROR}
           />
+        </View>
+        {/* Illustration Label */}
+        <View style={styles.illustrationBadge}>
+          <ThemedText style={styles.illustrationText}>{illustration}</ThemedText>
         </View>
       </View>
 
@@ -182,6 +192,7 @@ const createStyles = (screenWidth: number) => {
     },
     iconContainer: {
       marginBottom: SPACING.XL,
+      alignItems: 'center',
     },
     iconBackground: {
       width: 96,
@@ -190,6 +201,18 @@ const createStyles = (screenWidth: number) => {
       backgroundColor: `${COLORS.ERROR}15`,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    illustrationBadge: {
+      marginTop: SPACING.SM,
+      paddingHorizontal: SPACING.MD,
+      paddingVertical: SPACING.XS,
+      backgroundColor: COLORS.GRAY_100,
+      borderRadius: BORDER_RADIUS.MD,
+    },
+    illustrationText: {
+      fontSize: TYPOGRAPHY.FONT_SIZE_SM,
+      color: COLORS.TEXT_SECONDARY,
+      fontWeight: TYPOGRAPHY.FONT_WEIGHT_MEDIUM,
     },
     contentContainer: {
       alignItems: 'center',

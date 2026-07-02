@@ -10,6 +10,7 @@ import {
   isStoreOpen,
   isStoreVerified
 } from '@/types/unified';
+import { haversineDistance, formatDistance } from '@/utils/geoUtils';
 
 // Keep the old Store interface for backwards compatibility during migration
 export interface Store {
@@ -1164,19 +1165,8 @@ class StoresService {
     storeLng?: number
   ): string {
     if (!storeLat || !storeLng || !userLat || !userLng) return '';
-    const R = 6371; // Earth's radius in km
-    const dLat = ((storeLat - userLat) * Math.PI) / 180;
-    const dLng = ((storeLng - userLng) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((userLat * Math.PI) / 180) *
-        Math.cos((storeLat * Math.PI) / 180) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-    if (distance < 1) return `${Math.round(distance * 1000)} m`;
-    return `${distance.toFixed(1)} km`;
+    const distance = haversineDistance(userLat, userLng, storeLat, storeLng);
+    return formatDistance(distance);
   }
 }
 

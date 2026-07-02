@@ -110,7 +110,16 @@ export interface NearbyStore {
 export interface LocationError {
   code: string;
   message: string;
-  details?: any;
+  details?: LocationErrorDetails;
+}
+
+export interface LocationErrorDetails {
+  /** Error code from the location service */
+  serviceCode?: string;
+  /** Whether the error is recoverable */
+  recoverable?: boolean;
+  /** Additional error information */
+  [key: string]: unknown;
 }
 
 // Location permission types

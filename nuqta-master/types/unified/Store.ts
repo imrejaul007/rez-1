@@ -4,11 +4,19 @@
  * This is the CANONICAL store interface used throughout the application.
  * All store data should be normalized to this structure.
  *
- * KEY DECISIONS:
- * - Standard ID field: 'id' (string)
+ * KEY CONVENTIONS:
+ * - Standard ID field: 'id' (string) - ALWAYS use 'id', never '_id'
  * - Location structure: Nested object with address, coordinates, city, state
  * - Hours structure: Nested object by day with open/close times
  * - Rating structure: Nested object with value, count
+ * - Coordinates: { latitude: number, longitude: number }
+ * - Prices: Always number type
+ *
+ * BACKEND MAPPING:
+ * - Backend may return '_id' (MongoDB) or 'storeId' - use getStoreId() utility
+ * - Use normalizeStoreId() to ensure 'id' field is always present
+ *
+ * @see {@link utils/typeUtils} for ID normalization utilities
  */
 
 // ============================================================================

@@ -42,6 +42,7 @@ import { useLocationStore } from '@/stores/locationStore';
 import type { LocationCoordinates, UserLocation } from '@/types/location.types';
 import nearbyEarnApi, { NearbyStore as EarnNearbyStore } from '@/services/nearbyEarnApi';
 import logger from '@/utils/logger';
+import { haversineDistance } from '@/utils/geoUtils';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -108,35 +109,8 @@ const FALLBACK_COORDS: LocationCoordinates = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Haversine distance in kilometres between two lat/lng points.
- * Returns `NaN` when either input is non-finite — callers must filter.
- */
-function distanceKm(
-  aLat: number,
-  aLng: number,
-  bLat: number,
-  bLng: number,
-): number {
-  if (
-    !Number.isFinite(aLat) ||
-    !Number.isFinite(aLng) ||
-    !Number.isFinite(bLat) ||
-    !Number.isFinite(bLng)
-  ) {
-    return Number.NaN;
-  }
-  const R = 6371; // Earth's radius in km.
-  const toRad = (deg: number): number => (deg * Math.PI) / 180;
-  const dLat = toRad(bLat - aLat);
-  const dLng = toRad(bLng - aLng);
-  const lat1 = toRad(aLat);
-  const lat2 = toRad(bLat);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
+/** Alias for haversineDistance for semantic clarity in this context */
+const distanceKm = haversineDistance;
 
 /**
  * Pull `coordinates` out of a `UserLocation`, falling back to the bundled
