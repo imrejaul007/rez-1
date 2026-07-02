@@ -384,7 +384,7 @@ function OfferCard({ offer, billAmount, isSelected, onPress, currencySymbol }: O
             color={getSourceColor(offer.source)}
           />
           <Text style={[styles.sourceBadgeText, { color: getSourceColor(offer.source) }]}>
-            {offer.source}
+            {offer.source === 'STORE' ? 'Store' : offer.source === 'BANK' ? 'Bank' : offer.source === 'REZ' ? 'ReZ' : offer.source}
           </Text>
         </View>
 

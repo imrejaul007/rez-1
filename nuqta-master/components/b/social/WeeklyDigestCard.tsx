@@ -26,10 +26,16 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { FeatureFlagGate } from '@/components/b/_shared/FeatureFlagGate';
 import { borderRadius, colors, shadows, spacing, typography } from '@/constants/theme';
 import type { WeeklyDigestSummary } from '@/types/social.types';
+import AnimatedCounter from './AnimatedCounter';
+import StreakBadge from './StreakBadge';
+import TrendChip from './TrendChip';
+import StatTileEnhanced from './StatTileEnhanced';
+import WeeklyProgressBar from './WeeklyProgressBar';
 
 export interface WeeklyDigestCardProps {
   /** Computed digest to render. */
@@ -38,6 +44,8 @@ export interface WeeklyDigestCardProps {
   onShare?: (digest: WeeklyDigestSummary) => void;
   /** Invoked when the user expands / collapses the achievements panel. */
   onToggleAchievements?: (expanded: boolean) => void;
+  /** Optional weekly savings target in paise for progress bar. */
+  weeklyTargetPaise?: number;
 }
 
 const RUPEE_FORMATTER = new Intl.NumberFormat('en-IN', {
@@ -68,8 +76,11 @@ function WeeklyDigestCardBase({
   digest,
   onShare,
   onToggleAchievements,
+  weeklyTargetPaise,
 }: WeeklyDigestCardProps): React.ReactElement {
   const [achievementsExpanded, setAchievementsExpanded] = useState<boolean>(false);
+  const { width } = useWindowDimensions();
+  const isNarrow = width < 360;
 
   const handleShare = useCallback(() => {
     if (onShare) onShare(digest);
@@ -83,16 +94,10 @@ function WeeklyDigestCardBase({
     });
   }, [onToggleAchievements]);
 
-  const trendColor = useMemo(() => {
-    if (digest.weekOverWeekTrend === 'up') return colors.success;
-    if (digest.weekOverWeekTrend === 'down') return colors.error;
-    return colors.text.tertiary;
-  }, [digest.weekOverWeekTrend]);
-
-  const trendArrow = useMemo(() => {
-    if (digest.weekOverWeekTrend === 'up') return '↑';
-    if (digest.weekOverWeekTrend === 'down') return '↓';
-    return '→';
+  const trendDirection = useMemo(() => {
+    if (digest.weekOverWeekTrend === 'up') return 'up';
+    if (digest.weekOverWeekTrend === 'down') return 'down';
+    return 'flat';
   }, [digest.weekOverWeekTrend]);
 
   const dateRange = useMemo(
@@ -105,6 +110,11 @@ function WeeklyDigestCardBase({
     [digest.totalSavingsPaise],
   );
 
+  const progressPct = useMemo(() => {
+    if (!weeklyTargetPaise || weeklyTargetPaise <= 0) return null;
+    return digest.totalSavingsPaise / weeklyTargetPaise;
+  }, [digest.totalSavingsPaise, weeklyTargetPaise]);
+
   const a11yLabel = useMemo(() => {
     return (
       `Weekly digest for ${digest.userName}. ` +
@@ -113,9 +123,9 @@ function WeeklyDigestCardBase({
       `${digest.storesVisited} stores visited, ` +
       `${digest.streakDays} day streak. ` +
       (digest.topStoreName ? `Top store: ${digest.topStoreName}. ` : '') +
-      `${trendArrow} ${Math.abs(digest.weekOverWeekChangePct)} percent vs last week.`
+      `${digest.weekOverWeekChangePct} percent vs last week.`
     );
-  }, [digest, rupees, trendArrow]);
+  }, [digest, rupees]);
 
   const hasAchievements = digest.achievementsUnlocked.length > 0;
 
@@ -143,32 +153,64 @@ function WeeklyDigestCardBase({
         </Pressable>
       </View>
 
-      {/* Big number headline */}
+      {/* Big number headline with AnimatedCounter */}
       <View style={styles.headlineBlock}>
-        <Text style={styles.bigNumber} accessibilityElementsHidden importantForAccessibility="no">
-          {rupees}
-        </Text>
-        <Text style={styles.headlineLabel}>saved this week</Text>
+        <View style={styles.headlineNumberRow}>
+          <AnimatedCounter
+            value={digest.totalSavingsPaise / 100}
+            prefix="₹"
+            duration={1200}
+            enabled={!isNarrow}
+            style={styles.bigNumber}
+          />
+          <Text style={styles.headlineLabel}>saved this week</Text>
+        </View>
+
+        {/* Progress bar towards weekly target */}
+        {progressPct !== null ? (
+          <View style={styles.progressContainer}>
+            <WeeklyProgressBar
+              progress={progressPct}
+              label={`Target: ${formatRupeesFromPaise(weeklyTargetPaise ?? 0)}`}
+              showPercentage={true}
+            />
+          </View>
+        ) : null}
       </View>
 
       {/* Trend chip */}
-      <View
-        style={[styles.trendChip, { borderColor: trendColor }]}
-        accessible
-        accessibilityLabel={`${Math.abs(digest.weekOverWeekChangePct)} percent ${
-          digest.weekOverWeekTrend === 'flat' ? 'change' : `${digest.weekOverWeekTrend} trend`
-        } versus last week`}
-      >
-        <Text style={[styles.trendText, { color: trendColor }]}>
-          {trendArrow} {Math.abs(digest.weekOverWeekChangePct)}% vs last week
-        </Text>
+      <View style={styles.trendChipRow}>
+        <TrendChip
+          changePct={Math.abs(digest.weekOverWeekChangePct)}
+          trend={trendDirection}
+        />
+        <Text style={styles.trendLabel}>vs last week</Text>
       </View>
 
       {/* 3 stat tiles */}
-      <View style={styles.statRow}>
-        <StatTile label="Offers used" value={digest.offersUsed.toString()} tileIndex={0} />
-        <StatTile label="Stores visited" value={digest.storesVisited.toString()} tileIndex={1} />
-        <StatTile label="Streak" value={`${digest.streakDays}d`} tileIndex={2} />
+      <View style={[styles.statRow, isNarrow && styles.statRowNarrow]}>
+        <View style={styles.statTileWrapper}>
+          <StatTileEnhanced
+            label="Offers used"
+            value={digest.offersUsed}
+            icon="🎁"
+            testID="weekly-digest-stat-offers"
+          />
+        </View>
+        <View style={styles.statTileWrapper}>
+          <StatTileEnhanced
+            label="Stores visited"
+            value={digest.storesVisited}
+            icon="🏪"
+            testID="weekly-digest-stat-stores"
+          />
+        </View>
+        <View style={styles.statTileWrapper}>
+          <StreakBadge
+            days={digest.streakDays}
+            style={styles.streakBadge}
+          />
+        </View>
       </View>
 
       {/* Top store row */}
@@ -232,26 +274,6 @@ function WeeklyDigestCardBase({
   );
 }
 
-interface StatTileProps {
-  label: string;
-  value: string;
-  tileIndex: number;
-}
-
-function StatTile({ label, value, tileIndex }: StatTileProps): React.ReactElement {
-  return (
-    <View
-      style={styles.statTile}
-      accessible
-      accessibilityLabel={`${label}: ${value}`}
-      testID={`weekly-digest-stat-${tileIndex}`}
-    >
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.background.secondary,
@@ -272,12 +294,15 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     ...typography.overline,
-    color: colors.gold,
+    color: colors.primary.dark, // WCAG AA accessible on light backgrounds
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
   dateRange: {
     ...typography.caption,
-    color: colors.text.tertiary,
-    marginTop: 2,
+    color: colors.text.secondary,
+    marginTop: spacing.xs,
   },
   shareButton: {
     paddingHorizontal: spacing.md,
@@ -299,52 +324,48 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.xs,
   },
+  headlineNumberRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
+  },
   bigNumber: {
     ...typography.priceLarge,
     color: colors.nileBlue,
+    fontWeight: '800',
   },
   headlineLabel: {
     ...typography.body,
     color: colors.text.secondary,
-    marginTop: -spacing.xs,
+    marginLeft: spacing.sm,
   },
-  trendChip: {
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+  progressContainer: {
+    marginTop: spacing.md,
+  },
+  trendChipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: spacing.base,
+    gap: spacing.sm,
   },
-  trendText: {
-    ...typography.labelSmall,
-    fontWeight: '700',
+  trendLabel: {
+    ...typography.caption,
+    color: colors.text.tertiary,
   },
   statRow: {
     flexDirection: 'row',
     gap: spacing.sm,
     marginBottom: spacing.base,
   },
-  statTile: {
+  statRowNarrow: {
+    gap: spacing.xs,
+  },
+  statTileWrapper: {
     flex: 1,
-    backgroundColor: colors.background.primary,
-    borderRadius: borderRadius.md,
+  },
+  streakBadge: {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border.default,
-    alignItems: 'center',
-  },
-  statValue: {
-    ...typography.h3,
-    color: colors.nileBlue,
-    fontWeight: '800',
-  },
-  statLabel: {
-    ...typography.caption,
-    color: colors.text.secondary,
-    marginTop: 2,
-    textAlign: 'center',
   },
   topStoreRow: {
     flexDirection: 'row',
@@ -382,7 +403,7 @@ const styles = StyleSheet.create({
   },
   achievementsChevron: {
     ...typography.label,
-    color: colors.gold,
+    color: colors.goldDark,
   },
   achievementList: {
     paddingTop: spacing.xs,

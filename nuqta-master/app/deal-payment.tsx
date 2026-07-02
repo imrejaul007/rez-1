@@ -22,13 +22,16 @@ import { WebView } from 'react-native-webview';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useAuthUser, useIsAuthenticated } from '@/stores/selectors';
+import { useAuthUser, useIsAuthenticated, useGetCurrencySymbol } from '@/stores/selectors';
 import apiClient from '@/services/apiClient';
+import walletApi from '@/services/walletApi';
 import { getCurrencySymbol } from '@/config/payment';
+import { showToast } from '@/components/common/ToastManager';
 
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { colors } from '@/constants/theme';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { BRAND } from '@/constants/brand';
 const DealPaymentPage: React.FC = () => {
   const isMounted = useIsMounted();
   const router = useRouter();
@@ -52,11 +55,30 @@ const DealPaymentPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showWebView, setShowWebView] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'success' | 'failed'>('pending');
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [isLoadingWallet, setIsLoadingWallet] = useState(false);
+  const [inlineError, setInlineError] = useState<string | null>(null);
+  const getCurrencySymbol = useGetCurrencySymbol();
+  const currencySymbol = getCurrencySymbol();
+
+  // Load wallet balance
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    setIsLoadingWallet(true);
+    walletApi.getBalance().then(res => {
+      if (res.success && res.data) {
+        const balance = res.data.balance?.total ?? res.data.balance ?? 0;
+        setWalletBalance(typeof balance === 'number' ? balance : 0);
+      }
+    }).catch(() => {}).finally(() => setIsLoadingWallet(false));
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!checkoutUrl || !sessionId) {
-      platformAlertSimple('Error', 'Invalid payment details');
-      router.canGoBack() ? router.back() : router.replace('/(tabs)');
+      setInlineError('Invalid payment details. Please try again.');
+      setTimeout(() => {
+        router.canGoBack() ? router.back() : router.replace('/(tabs)');
+      }, 2000);
     }
   }, []);
 
@@ -100,7 +122,8 @@ const DealPaymentPage: React.FC = () => {
       setShowWebView(false);
       if (!isMounted()) return;
       setPaymentStatus('failed');
-      platformAlertConfirm('Payment Cancelled', 'You cancelled the payment.', () => setPaymentStatus('pending'), 'Try Again');
+      showToast({ message: 'Payment cancelled', type: 'info', duration: 3000 });
+      setTimeout(() => setPaymentStatus('pending'), 500);
     }
   };
 
@@ -136,12 +159,8 @@ const DealPaymentPage: React.FC = () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         const redemptionCode = verifyResponse.data.redemption.code;
 
-        platformAlertConfirm(
-          'Purchase Successful!',
-          `Your deal has been purchased!\n\nRedemption Code:\n${redemptionCode}\n\nYou can find this in "My Deals"`,
-          () => router.replace('/my-deals' as any),
-          'View My Deals'
-        );
+        showToast({ message: `Deal purchased! Code: ${redemptionCode}`, type: 'success', duration: 4000 });
+        setTimeout(() => router.replace('/my-deals' as any), 1500);
       } else if (retryCount < maxRetries) {
         // Payment might still be processing, retry with exponential backoff
         await new Promise(resolve => setTimeout(resolve, baseDelay * Math.pow(2, retryCount)));
@@ -150,12 +169,7 @@ const DealPaymentPage: React.FC = () => {
         // Max retries reached, show pending message
         if (!isMounted()) return;
         setPaymentStatus('pending');
-        platformAlertConfirm(
-          'Payment Processing',
-          'Your payment is being processed. Please check "My Deals" in a moment.',
-          () => router.replace('/my-deals' as any),
-          'View My Deals'
-        );
+        showToast({ message: 'Payment is being processed. Check "My Deals" shortly.', type: 'warning', duration: 5000 });
       }
     } catch (error: any) {
 
@@ -167,13 +181,14 @@ const DealPaymentPage: React.FC = () => {
 
       if (!isMounted()) return;
       setPaymentStatus('failed');
-      platformAlertConfirm(
-        'Verification Issue',
-        'We could not verify your payment. If you were charged, please check "My Deals" or contact support.',
-        () => router.replace('/my-deals' as any),
-        'View My Deals'
-      );
+      showToast({ message: 'Could not verify payment. Check "My Deals" or contact support.', type: 'error', duration: 5000 });
     }
+  };
+
+  // Retry payment verification
+  const handleRetryVerification = () => {
+    setPaymentStatus('pending');
+    verifyPayment();
   };
 
   // Render WebView for Stripe Checkout
@@ -251,19 +266,60 @@ const DealPaymentPage: React.FC = () => {
         </View>
       </View>
 
+      {/* Inline Error Display */}
+      {inlineError && (
+        <View style={styles.errorCard}>
+          <Ionicons name="alert-circle" size={20} color={Colors.error} />
+          <Text style={styles.errorText}>{inlineError}</Text>
+        </View>
+      )}
+
       {/* Payment Summary */}
       <View style={styles.summaryCard}>
         <Text style={styles.summaryTitle}>Payment Summary</Text>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Deal Price</Text>
-          <Text style={styles.summaryValue}>{getCurrencySymbol(currency)}{amount}</Text>
+          <Text style={styles.summaryValue}>{currencySymbol}{amount.toLocaleString()}</Text>
+        </View>
+        {/* Rewards Preview - HIGH: Add cashback preview */}
+        <View style={styles.rewardsPreview}>
+          <View style={styles.rewardsIconContainer}>
+            <Ionicons name="gift" size={16} color={colors.warningScale[700]} />
+          </View>
+          <View style={styles.rewardsInfo}>
+            <Text style={styles.rewardsLabel}>Earn Cashback</Text>
+            <Text style={styles.rewardsSubtext}>5-15% back in wallet</Text>
+          </View>
+          <View style={styles.rewardsBadge}>
+            <Text style={styles.rewardsAmount}>+{currencySymbol}{Math.floor(amount * 0.1)}</Text>
+          </View>
         </View>
         <View style={styles.divider} />
         <View style={styles.summaryRow}>
           <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>{getCurrencySymbol(currency)}{amount}</Text>
+          <Text style={styles.totalValue}>{currencySymbol}{amount.toLocaleString()}</Text>
         </View>
       </View>
+
+      {/* Wallet Balance - MEDIUM: Add wallet balance */}
+      {walletBalance !== null && (
+        <Pressable style={styles.walletCard} onPress={() => router.push('/wallet-screen' as any)}>
+          <View style={styles.walletRow}>
+            <View style={styles.walletIconContainer}>
+              <Ionicons name="wallet" size={18} color={Colors.nileBlue} />
+            </View>
+            <View style={styles.walletInfo}>
+              <Text style={styles.walletLabel}>{BRAND.COIN_NAME} Balance</Text>
+              {isLoadingWallet ? (
+                <ActivityIndicator size="small" color={Colors.nileBlue} />
+              ) : (
+                <Text style={styles.walletBalance}>{currencySymbol}{walletBalance.toLocaleString()}</Text>
+              )}
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.text.tertiary} />
+          </View>
+        </Pressable>
+      )}
 
       {/* Payment Methods Info */}
       <View style={styles.paymentMethods}>
@@ -289,12 +345,21 @@ const DealPaymentPage: React.FC = () => {
             <ActivityIndicator size="large" color={Colors.warning} />
             <Text style={styles.processingText}>Processing payment...</Text>
           </View>
+        ) : paymentStatus === 'failed' ? (
+          <>
+            <Pressable style={styles.retryButton} onPress={handleRetryVerification}>
+              <Ionicons name="refresh" size={20} color={Colors.background.primary} />
+              <Text style={styles.retryButtonText}>Retry Verification</Text>
+            </Pressable>
+            <Pressable style={styles.cancelButton} onPress={() => router.replace('/(tabs)' as any)}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Pressable>
+          </>
         ) : (
           <>
             <Pressable
               style={styles.payButton}
               onPress={handleStartPayment}
-             
             >
               <LinearGradient
                 colors={[Colors.warning, colors.warningScale[700]]}
@@ -304,7 +369,7 @@ const DealPaymentPage: React.FC = () => {
               >
                 <Ionicons name="lock-closed" size={20} color={Colors.background.primary} />
                 <Text style={styles.payButtonText}>
-                  Pay {getCurrencySymbol(currency)}{amount}
+                  Pay {currencySymbol}{amount.toLocaleString()}
                 </Text>
               </LinearGradient>
             </Pressable>
@@ -497,6 +562,122 @@ const styles = StyleSheet.create({
   },
   processingText: {
     marginTop: Spacing.md,
+    fontSize: 14,
+    color: Colors.neutral[500],
+  },
+  // Error card
+  errorCard: {
+    marginHorizontal: Spacing.base,
+    marginBottom: Spacing.base,
+    backgroundColor: Colors.errorScale[50],
+    borderRadius: BorderRadius.md,
+    padding: Spacing.base,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.errorScale[200],
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.error,
+  },
+  // Rewards preview
+  rewardsPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    marginVertical: Spacing.xs,
+  },
+  rewardsIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.warningScale[100],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  rewardsInfo: {
+    flex: 1,
+  },
+  rewardsLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.text.primary,
+  },
+  rewardsSubtext: {
+    fontSize: 11,
+    color: Colors.neutral[500],
+  },
+  rewardsBadge: {
+    backgroundColor: colors.successScale[100],
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+  },
+  rewardsAmount: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.warningScale[700],
+  },
+  // Wallet card
+  walletCard: {
+    marginHorizontal: Spacing.base,
+    marginBottom: Spacing.base,
+    backgroundColor: colors.nileBlue + '10',
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.base,
+    borderWidth: 1,
+    borderColor: colors.nileBlue + '30',
+  },
+  walletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  walletIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.background.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+  walletInfo: {
+    flex: 1,
+  },
+  walletLabel: {
+    fontSize: 12,
+    color: Colors.neutral[500],
+  },
+  walletBalance: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.nileBlue,
+  },
+  // Retry button
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.warning,
+    borderRadius: 14,
+    paddingVertical: Spacing.base,
+    marginBottom: Spacing.sm,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.background.primary,
+  },
+  cancelButton: {
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  cancelButtonText: {
     fontSize: 14,
     color: Colors.neutral[500],
   },

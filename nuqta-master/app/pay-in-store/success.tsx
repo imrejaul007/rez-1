@@ -209,9 +209,12 @@ function PaymentSuccessScreen() {
               <Text style={styles.coinsUsedText}>
                 Used {coinsRedeemed} {BRAND.COIN_NAME}
               </Text>
-              <Animated.Text style={[{ fontSize: 16, fontWeight: '800', color: '#ef4444', marginTop: 2 }, contentStyle]}>
-                -{coinsRedeemed} 🔥
-              </Animated.Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                <Animated.Text style={[{ fontSize: 16, fontWeight: '800', color: '#ef4444' }, contentStyle]}>
+                  -{coinsRedeemed}
+                </Animated.Text>
+                <Ionicons name="flame" size={16} color="#ef4444" style={{ marginLeft: 4 }} />
+              </View>
             </View>
           )}
           <Text style={styles.transactionId}>Transaction ID: {paymentId?.slice(-8).toUpperCase()}</Text>
@@ -354,11 +357,20 @@ function PaymentSuccessScreen() {
           </Animated.View>
         )}
 
-        <View style={{ height: 140 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Bottom Actions */}
       <View style={styles.bottomActions}>
+        {paymentId && (
+          <Pressable
+            style={styles.voucherButton}
+            onPress={() => router.push(`/voucher/${paymentId}` as any)}
+          >
+            <Ionicons name="qr-code-outline" size={20} color={colors.warningScale[700]} />
+            <Text style={styles.voucherButtonText}>View Voucher</Text>
+          </Pressable>
+        )}
         <Pressable style={styles.receiptButton} onPress={handleViewReceipt}>
           <Ionicons name="receipt-outline" size={20} color={colors.primary[500]} />
           <Text style={styles.receiptButtonText}>View Receipt</Text>
@@ -564,6 +576,20 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md },
   homeButtonText: {
     ...typography.button,
-    color: colors.background.primary } });
+    color: colors.background.primary },
+  voucherButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.warningScale[100],
+    borderWidth: 1,
+    borderColor: colors.warningScale[400],
+    gap: spacing.sm },
+  voucherButtonText: {
+    ...typography.button,
+    color: colors.warningScale[700] },
+});
 
 export default withErrorBoundary(PaymentSuccessScreen, 'PayInStoreSuccess');

@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Dimensions,
+  Share,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -19,7 +20,8 @@ import * as Haptics from 'expo-haptics';
 import { ThemedText } from '@/components/ThemedText';
 import { DetailPageSkeleton } from '@/components/skeletons';
 import ordersApi from '@/services/ordersApi';
-import { useGetCurrencySymbol, useIsAuthenticated, useAuthLoading } from '@/stores/selectors';
+import { useGetCurrencySymbol, useIsAuthenticated, useAuthLoading, useAuthUser } from '@/stores/selectors';
+import walletApi from '@/services/walletApi';
 import { Colors, Spacing, BorderRadius, Shadows, Typography } from '@/constants/DesignSystem';
 import { BRAND } from '@/constants/brand';
 import analytics from '@/services/analytics/AnalyticsService';
@@ -92,6 +94,8 @@ function PaymentSuccessPage() {
   const [orders, setOrders] = useState<OrderDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [isLoadingWallet, setIsLoadingWallet] = useState(false);
   const analyticsTrackedRef = useRef(false);
   const isMounted = useIsMounted();
 
@@ -219,6 +223,34 @@ function PaymentSuccessPage() {
 
     fetchOrders();
   }, [orderId, paymentMethod, isAuthenticated, authLoading]);
+
+  // Load wallet balance for cashback display
+  const loadWalletBalance = async () => {
+    if (!isAuthenticated || authLoading) return;
+
+    setIsLoadingWallet(true);
+    try {
+      const response = await walletApi.getBalance();
+      if (response.success && response.data) {
+        if (!isMounted()) return;
+        // response.data.balance is an object with { total, available }
+        const balance = response.data.balance?.total ?? response.data.balance ?? 0;
+        setWalletBalance(typeof balance === 'number' ? balance : 0);
+      }
+    } catch (err) {
+      // silently handle - wallet balance is optional
+    } finally {
+      if (!isMounted()) return;
+      setIsLoadingWallet(false);
+    }
+  };
+
+  useEffect(() => {
+    // Load wallet balance after orders are loaded
+    if (!loading && orders.length > 0) {
+      loadWalletBalance();
+    }
+  }, [loading, orders]);
 
   // For backward compatibility, get first order
   const order = orders[0] || null;
@@ -605,6 +637,102 @@ function PaymentSuccessPage() {
                   Confirmation sent to your registered email
                 </ThemedText>
               </View>
+
+              {/* Cashback & Wallet Card */}
+              {(() => {
+                const cashbackTotal = isMultiStoreOrder
+                  ? orders.reduce((sum, o) => sum + (o.totals?.cashback || 0), 0)
+                  : (order?.totals?.cashback || 0);
+
+                if (cashbackTotal > 0 || walletBalance !== null) {
+                  return (
+                    <View style={styles.walletCard}>
+                      <View style={styles.walletCardHeader}>
+                        <Ionicons name="wallet-outline" size={22} color={Colors.nileBlue} />
+                        <ThemedText style={styles.walletCardTitle}>Your Wallet</ThemedText>
+                      </View>
+
+                      {cashbackTotal > 0 && (
+                        <View style={styles.cashbackRow}>
+                          <View style={styles.cashbackInfo}>
+                            <View style={[styles.cashbackBadge, { backgroundColor: colors.successScale[100] }]}>
+                              <Ionicons name="gift" size={14} color={Colors.gold} />
+                            </View>
+                            <View>
+                              <ThemedText style={styles.cashbackLabel}>Cashback Earned</ThemedText>
+                              <ThemedText style={styles.cashbackSubtext}>Credited to your wallet</ThemedText>
+                            </View>
+                          </View>
+                          <View style={styles.cashbackAmountContainer}>
+                            <ThemedText style={styles.cashbackAmount}>+{currencySymbol}{cashbackTotal.toLocaleString()}</ThemedText>
+                          </View>
+                        </View>
+                      )}
+
+                      {walletBalance !== null && (
+                        <View style={styles.walletBalanceRow}>
+                          <View style={styles.walletBalanceInfo}>
+                            <View style={[styles.walletBalanceIcon, { backgroundColor: colors.nileBlue + '20' }]}>
+                              <Ionicons name="card" size={14} color={Colors.nileBlue} />
+                            </View>
+                            <ThemedText style={styles.walletBalanceLabel}>Current Balance</ThemedText>
+                          </View>
+                          {isLoadingWallet ? (
+                            <ActivityIndicator size="small" color={Colors.nileBlue} />
+                          ) : (
+                            <ThemedText style={styles.walletBalanceAmount}>
+                              {currencySymbol}{walletBalance.toLocaleString()}
+                            </ThemedText>
+                          )}
+                        </View>
+                      )}
+
+                      <Pressable
+                        style={styles.viewWalletButton}
+                        onPress={() => router.push('/wallet-screen' as any)}
+                        accessibilityLabel="View wallet details"
+                        accessibilityRole="button"
+                      >
+                        <ThemedText style={styles.viewWalletButtonText}>View in Wallet</ThemedText>
+                        <Ionicons name="chevron-forward" size={16} color={Colors.nileBlue} />
+                      </Pressable>
+                    </View>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Share Achievement Card */}
+              {payableAmount > 1000 && (
+                <View style={styles.shareCard}>
+                  <View style={styles.shareIconContainer}>
+                    <Ionicons name="trophy" size={24} color={Colors.gold} />
+                  </View>
+                  <View style={styles.shareContent}>
+                    <ThemedText style={styles.shareTitle}>Great Purchase!</ThemedText>
+                    <ThemedText style={styles.shareText}>
+                      Share your savings with friends
+                    </ThemedText>
+                  </View>
+                  <Pressable
+                    style={styles.shareButton}
+                    onPress={async () => {
+                      try {
+                        const savings = totalBeforeCoins - payableAmount;
+                        await Share.share({
+                          message: `I just saved ${currencySymbol}${savings.toLocaleString()} on my purchase! Check out ${BRAND.APP_NAME} app for amazing deals.`,
+                          title: 'My Savings',
+                        });
+                      } catch (err) {
+                        // silently handle share cancel
+                      }
+                    }}
+                  >
+                    <Ionicons name="share-social" size={18} color={Colors.nileBlue} />
+                    <ThemedText style={styles.shareButtonText}>Share</ThemedText>
+                  </Pressable>
+                </View>
+              )}
             </>
           )}
 
@@ -951,6 +1079,164 @@ const styles = StyleSheet.create({
     color: NUQTA_COLORS.nileBlue,
     fontSize: 15,
     fontWeight: '700',
+  },
+
+  // --- Wallet Card ---
+  walletCard: {
+    backgroundColor: Colors.background.primary,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.nileBlue + '30',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8 },
+      android: { elevation: 3 },
+      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
+    }),
+  },
+  walletCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 14,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral[100],
+  },
+  walletCardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  cashbackRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  cashbackInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  cashbackBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cashbackLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.text.primary,
+  },
+  cashbackSubtext: {
+    fontSize: 11,
+    color: colors.neutral[500],
+    marginTop: 1,
+  },
+  cashbackAmountContainer: {
+    backgroundColor: colors.successScale[100],
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  cashbackAmount: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.gold,
+  },
+  walletBalanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  walletBalanceInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  walletBalanceIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  walletBalanceLabel: {
+    fontSize: 13,
+    color: colors.neutral[500],
+  },
+  walletBalanceAmount: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.nileBlue,
+  },
+  viewWalletButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.neutral[100],
+    marginTop: 4,
+  },
+  viewWalletButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.nileBlue,
+  },
+
+  // --- Share Card ---
+  shareCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.lightPeach,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+    gap: 12,
+  },
+  shareIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.background.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shareContent: {
+    flex: 1,
+  },
+  shareTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  shareText: {
+    fontSize: 12,
+    color: colors.neutral[600],
+    marginTop: 2,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.background.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.nileBlue,
+  },
+  shareButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.nileBlue,
   },
 });
 

@@ -18,14 +18,12 @@
  */
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
-import { useRTL } from '@/hooks/useRTL';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import { formatPrice } from '@/utils/priceFormatter';
-import type { SavingsHistoryItem } from '@/types/savings.types';
+import type { SavingsHistoryItem as SavingsHistoryItemData } from '@/types/savings.types';
 
 export interface SavingsHistoryItemRowProps {
-  item: SavingsHistoryItem;
+  item: SavingsHistoryItemData;
   onPress?: () => void;
 }
 
@@ -61,7 +59,6 @@ function formatRelativeDate(iso: string): string {
 }
 
 function SavingsHistoryItemBase({ item, onPress }: SavingsHistoryItemRowProps) {
-  const { colors: themeColors, shadows, isDark } = useTheme();
   const emoji = useMemo(
     () => SOURCE_EMOJI[item.source] ?? '🪙',
     [item.source],
@@ -179,5 +176,4 @@ const styles = StyleSheet.create({
   },
 });
 
-const SavingsHistoryItem = React.memo(SavingsHistoryItemBase);
-export default SavingsHistoryItem;
+export default React.memo(SavingsHistoryItemBase);

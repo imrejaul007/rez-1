@@ -26,9 +26,6 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useTheme } from '@/hooks/useTheme';
-import { useRTL } from '@/hooks/useRTL';
-import { t } from '@/i18n';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import { formatPrice } from '@/utils/priceFormatter';
 import FeatureFlagGate from '@/components/b/_shared/FeatureFlagGate';
@@ -42,11 +39,11 @@ import {
 } from '@/stores/selectors';
 import logger from '@/utils/logger';
 import SavingsGoalCard from './SavingsGoalCard';
-import SavingsHistoryItemView from './SavingsHistoryItem';
+import SavingsHistoryItem from './SavingsHistoryItem';
 import SavingsSkeleton from './SavingsSkeleton';
 import type {
   SavingsGoal,
-  SavingsHistoryItem,
+  SavingsHistoryItem as SavingsHistoryItemType,
   SavingsRecommendation,
   SavingsStreak,
 } from '@/types/savings.types';
@@ -276,8 +273,8 @@ function RecentActivity({
   onPressItem,
   onViewAll,
 }: {
-  items: SavingsHistoryItem[];
-  onPressItem: (i: SavingsHistoryItem) => void;
+  items: SavingsHistoryItemType[];
+  onPressItem: (i: SavingsHistoryItemType) => void;
   onViewAll: () => void;
 }) {
   if (items.length === 0) {
@@ -300,7 +297,7 @@ function RecentActivity({
       />
       <View>
         {items.map((it) => (
-          <SavingsHistoryItemView
+          <SavingsHistoryItem
             key={it.id ?? (it as any)._id}
             item={it}
             onPress={() => onPressItem(it)}
@@ -312,8 +309,6 @@ function RecentActivity({
 }
 
 function DashboardBody() {
-  const { colors: themeColors, shadows, isDark } = useTheme();
-  const { isRTL, direction, start, backArrow } = useRTL();
   const router = useRouter();
   const dashboard = useSavingsDashboard();
   const goals = useSavingsGoals();
@@ -332,11 +327,22 @@ function DashboardBody() {
 
   const onRefresh = useCallback(async () => {
     try {
-      const fetcher = (actions as { fetchDashboard?: () => Promise<void> })
-        .fetchDashboard;
-      if (typeof fetcher === 'function') {
-        await fetcher.call(actions);
-      }
+      const {
+        fetchDashboard,
+        fetchGoals,
+        fetchRecommendations,
+      } = actions as {
+        fetchDashboard?: () => Promise<void>;
+        fetchGoals?: () => Promise<void>;
+        fetchRecommendations?: () => Promise<void>;
+      };
+      await Promise.all([
+        typeof fetchDashboard === 'function' ? fetchDashboard.call(actions) : undefined,
+        typeof fetchGoals === 'function' ? fetchGoals.call(actions) : undefined,
+        typeof fetchRecommendations === 'function'
+          ? fetchRecommendations.call(actions)
+          : undefined,
+      ]);
     } catch (err) {
       logger.error(
         'savings_dashboard_refresh_failed',
@@ -369,7 +375,7 @@ function DashboardBody() {
   );
 
   const onActivityPress = useCallback(
-    (i: SavingsHistoryItem) => {
+    (i: SavingsHistoryItemType) => {
       logger.info('savings_activity_pressed', { id: i.id }, 'B Features');
       router.push('/b/savings/history' as const);
     },
@@ -401,7 +407,7 @@ function DashboardBody() {
     return <SavingsSkeleton />;
   }
 
-  const recent: SavingsHistoryItem[] = (dashboard.recentActivity ?? []).slice(0, 5);
+  const recent: SavingsHistoryItemType[] = (dashboard.recentActivity ?? []).slice(0, 5);
 
   return (
     <ScrollView

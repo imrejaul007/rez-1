@@ -384,26 +384,30 @@ function PaymentScreen() {
               />
             ))}
 
-            {/* External Wallets */}
+            {/* External Wallets - Coming Soon */}
             {paymentFlow.externalWallets.length > 0 && (
               <>
-                <Text style={styles.subsectionTitle}>Third-Party Wallets</Text>
+                <View style={styles.comingSoonHeader}>
+                  <Text style={styles.subsectionTitle}>Third-Party Wallets</Text>
+                  <View style={styles.comingSoonBadge}>
+                    <Text style={styles.comingSoonText}>Coming Soon</Text>
+                  </View>
+                </View>
                 {paymentFlow.externalWallets.map((wallet) => (
-                  <WalletPaymentOption
-                    key={wallet.id}
-                    wallet={wallet}
-                    isSelected={false}
-                    onSelect={() => {
-                      showToast({
-                        message: wallet.isLinked
-                          ? `${wallet.name} payments coming soon!`
-                          : `Please link your ${wallet.name} account first`,
-                        type: 'info',
-                        duration: 3000,
-                      });
-                    }}
-                    disabled={!wallet.isLinked}
-                  />
+                  <View key={wallet.id} style={styles.walletComingSoon}>
+                    <WalletPaymentOption
+                      wallet={wallet}
+                      isSelected={false}
+                      onSelect={() => {
+                        showToast({
+                          message: `${wallet.name} payments coming soon!`,
+                          type: 'info',
+                          duration: 3000,
+                        });
+                      }}
+                      disabled={true}
+                    />
+                  </View>
                 ))}
               </>
             )}
@@ -781,6 +785,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: colors.background.primary,
+  },
+  // Coming soon styles
+  comingSoonHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  comingSoonBadge: {
+    backgroundColor: colors.neutral[200],
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  comingSoonText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.neutral[500],
+  },
+  walletComingSoon: {
+    opacity: 0.6,
   },
 });
 
