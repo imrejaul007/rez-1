@@ -6,7 +6,7 @@ import { Express } from 'express';
 import { logger } from './logger';
 import { globalErrorHandler, notFoundHandler } from '../middleware/errorHandler';
 import { sentryErrorHandler } from './sentry';
-import { generalLimiter } from '../middleware/rateLimiter';
+import { generalLimiter, webhookLimiter } from '../middleware/rateLimiter';
 import { adminAuditMiddleware } from '../middleware/adminAuditMiddleware';
 import { authenticate as authTokenMiddleware, requireAdmin as requireAdminMiddleware } from '../middleware/auth';
 import { getAllConfigs, updateConfig, setCampaign } from '../controllers/engagementConfigController';
@@ -371,7 +371,7 @@ export function registerRoutes(app: Express): void {
   app.use(`${API_PREFIX}/scratch-cards`, scratchCardRoutes);
   app.use(`${API_PREFIX}/coupons`, couponRoutes);
   app.use(`${API_PREFIX}/razorpay`, razorpayRoutes);
-  app.use(`${API_PREFIX}/webhooks`, webhookRoutes);
+  app.use(`${API_PREFIX}/webhooks`, webhookLimiter, webhookRoutes);
   app.use(`${API_PREFIX}/support`, supportRoutes);
   app.use(`${API_PREFIX}/messages`, messageRoutes);
   app.use(`${API_PREFIX}/cashback`, cashbackRoutes);
@@ -618,8 +618,8 @@ export function registerRoutes(app: Express): void {
       timestamp: new Date().toISOString(),
       endpoints: {
         health: '/health',
-        apiInfo: '/api-info'
-      }
+        apiInfo: '/api-info',
+      },
     });
   });
 

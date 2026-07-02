@@ -30,7 +30,10 @@ import {
   getHeroBanners,
   validateRedemptionCode,
   markRedemptionAsUsed,
-  getRedemptionById
+  getRedemptionById,
+  linkPaymentToOffer,
+  validateVoucher,
+  merchantUseVoucher,
 } from '../controllers/offerController';
 import {
   getHotspots,
@@ -53,305 +56,388 @@ import {
 import { authenticate, optionalAuth } from '../middleware/auth';
 import { validateQuery, validateParams, validate, commonSchemas } from '../middleware/validation';
 import { Joi } from '../middleware/validation';
+import { redemptionLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
 // Public Routes (no authentication required, but can use optionalAuth for personalization)
 
 // Get all offers with filters
-router.get('/',
+router.get(
+  '/',
   optionalAuth,
-  validateQuery(Joi.object({
-    category: commonSchemas.objectId(),
-    store: commonSchemas.objectId(),
-    type: Joi.string().valid('cashback', 'discount', 'voucher', 'combo', 'special', 'walk_in'),
-    tags: Joi.string(),
-    featured: Joi.boolean(),
-    trending: Joi.boolean(),
-    bestSeller: Joi.boolean(),
-    special: Joi.boolean(),
-    isNew: Joi.boolean(),
-    minCashback: Joi.number().min(0).max(100),
-    maxCashback: Joi.number().min(0).max(100),
-    sortBy: Joi.string().valid('cashback', 'createdAt', 'redemptionCount', 'endDate'),
-    order: Joi.string().valid('asc', 'desc').default('desc'),
-    page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getOffers
+  validateQuery(
+    Joi.object({
+      category: commonSchemas.objectId(),
+      store: commonSchemas.objectId(),
+      type: Joi.string().valid('cashback', 'discount', 'voucher', 'combo', 'special', 'walk_in'),
+      tags: Joi.string(),
+      featured: Joi.boolean(),
+      trending: Joi.boolean(),
+      bestSeller: Joi.boolean(),
+      special: Joi.boolean(),
+      isNew: Joi.boolean(),
+      minCashback: Joi.number().min(0).max(100),
+      maxCashback: Joi.number().min(0).max(100),
+      sortBy: Joi.string().valid('cashback', 'createdAt', 'redemptionCount', 'endDate'),
+      order: Joi.string().valid('asc', 'desc').default('desc'),
+      page: Joi.number().integer().min(1).default(1),
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getOffers,
 );
 
 // Get featured offers
-router.get('/featured',
+router.get(
+  '/featured',
   optionalAuth,
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(10)
-  })),
-  getFeaturedOffers
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(10),
+    }),
+  ),
+  getFeaturedOffers,
 );
 
 // Get trending offers
-router.get('/trending',
+router.get(
+  '/trending',
   optionalAuth,
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(10)
-  })),
-  getTrendingOffers
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(10),
+    }),
+  ),
+  getTrendingOffers,
 );
 
 // Search offers
-router.get('/search',
+router.get(
+  '/search',
   optionalAuth,
-  validateQuery(Joi.object({
-    q: Joi.string().required().trim().min(1).max(100),
-    category: commonSchemas.objectId(),
-    store: commonSchemas.objectId(),
-    minCashback: Joi.number().min(0).max(100),
-    page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  searchOffers
+  validateQuery(
+    Joi.object({
+      q: Joi.string().required().trim().min(1).max(100),
+      category: commonSchemas.objectId(),
+      store: commonSchemas.objectId(),
+      minCashback: Joi.number().min(0).max(100),
+      page: Joi.number().integer().min(1).default(1),
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  searchOffers,
 );
 
 // Get offers by category
-router.get('/category/:categoryId',
+router.get(
+  '/category/:categoryId',
   optionalAuth,
-  validateParams(Joi.object({
-    categoryId: commonSchemas.objectId().required()
-  })),
-  validateQuery(Joi.object({
-    featured: Joi.boolean(),
-    trending: Joi.boolean(),
-    sortBy: Joi.string().valid('cashback', 'createdAt', 'redemptionCount'),
-    order: Joi.string().valid('asc', 'desc').default('desc'),
-    page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getOffersByCategory
+  validateParams(
+    Joi.object({
+      categoryId: commonSchemas.objectId().required(),
+    }),
+  ),
+  validateQuery(
+    Joi.object({
+      featured: Joi.boolean(),
+      trending: Joi.boolean(),
+      sortBy: Joi.string().valid('cashback', 'createdAt', 'redemptionCount'),
+      order: Joi.string().valid('asc', 'desc').default('desc'),
+      page: Joi.number().integer().min(1).default(1),
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getOffersByCategory,
 );
 
 // Get offers by store
-router.get('/store/:storeId',
+router.get(
+  '/store/:storeId',
   optionalAuth,
-  validateParams(Joi.object({
-    storeId: commonSchemas.objectId().required()
-  })),
-  validateQuery(Joi.object({
-    category: commonSchemas.objectId(),
-    active: Joi.boolean().default(true),
-    page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getOffersByStore
+  validateParams(
+    Joi.object({
+      storeId: commonSchemas.objectId().required(),
+    }),
+  ),
+  validateQuery(
+    Joi.object({
+      category: commonSchemas.objectId(),
+      active: Joi.boolean().default(true),
+      page: Joi.number().integer().min(1).default(1),
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getOffersByStore,
 );
 
-
 // Get recommended offers based on user preferences
-router.get('/user/recommendations',
+router.get(
+  '/user/recommendations',
   authenticate,
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(10)
-  })),
-  getRecommendedOffers
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(10),
+    }),
+  ),
+  getRecommendedOffers,
 );
 
 // Authenticated Routes (require user login)
 
 // Redeem an offer
-router.post('/:id/redeem',
+router.post(
+  '/:id/redeem',
   authenticate,
-  validateParams(Joi.object({
-    id: commonSchemas.objectId().required()
-  })),
-  validate(Joi.object({
-    redemptionType: Joi.string().valid('online', 'instore').required(),
-    location: Joi.object({
-      type: Joi.string().valid('Point').default('Point'),
-      coordinates: Joi.array().items(Joi.number()).length(2)
-    })
-  })),
-  redeemOffer
+  redemptionLimiter,
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  validate(
+    Joi.object({
+      redemptionType: Joi.string().valid('online', 'instore').required(),
+      location: Joi.object({
+        type: Joi.string().valid('Point').default('Point'),
+        coordinates: Joi.array().items(Joi.number()).length(2),
+      }),
+    }),
+  ),
+  redeemOffer,
 );
 
 // Get user's redemptions
-router.get('/user/redemptions',
+router.get(
+  '/user/redemptions',
   authenticate,
-  validateQuery(Joi.object({
-    status: Joi.string().valid('pending', 'active', 'used', 'expired', 'cancelled'),
-    page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getUserRedemptions
+  validateQuery(
+    Joi.object({
+      status: Joi.string().valid('pending', 'active', 'used', 'expired', 'cancelled'),
+      page: Joi.number().integer().min(1).default(1),
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getUserRedemptions,
 );
 
 // Validate a redemption/voucher code
-router.post('/redemptions/validate',
+router.post(
+  '/redemptions/validate',
   authenticate,
-  validate(Joi.object({
-    code: Joi.string().required().trim().uppercase()
-  })),
-  validateRedemptionCode
+  validate(
+    Joi.object({
+      code: Joi.string().required().trim().uppercase(),
+    }),
+  ),
+  validateRedemptionCode,
 );
 
 // Get single redemption details
-router.get('/redemptions/:id',
+router.get(
+  '/redemptions/:id',
   authenticate,
-  validateParams(Joi.object({
-    id: commonSchemas.objectId().required()
-  })),
-  getRedemptionById
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  getRedemptionById,
 );
 
 // Mark redemption as used (credit cashback)
-router.post('/redemptions/:id/use',
+router.post(
+  '/redemptions/:id/use',
   authenticate,
-  validateParams(Joi.object({
-    id: commonSchemas.objectId().required()
-  })),
-  validate(Joi.object({
-    orderAmount: Joi.number().positive().required(),
-    orderId: commonSchemas.objectId(),
-    storeId: commonSchemas.objectId()
-  })),
-  markRedemptionAsUsed
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  validate(
+    Joi.object({
+      orderAmount: Joi.number().positive().required(),
+      orderId: commonSchemas.objectId(),
+      storeId: commonSchemas.objectId(),
+    }),
+  ),
+  markRedemptionAsUsed,
 );
 
 // Get user's favorite offers
-router.get('/user/favorites',
+router.get(
+  '/user/favorites',
   authenticate,
-  validateQuery(Joi.object({
-    page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getUserFavoriteOffers
+  validateQuery(
+    Joi.object({
+      page: Joi.number().integer().min(1).default(1),
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getUserFavoriteOffers,
 );
 
 // Add offer to favorites
-router.post('/:id/favorite',
+router.post(
+  '/:id/favorite',
   authenticate,
-  validateParams(Joi.object({
-    id: commonSchemas.objectId().required()
-  })),
-  addOfferToFavorites
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  addOfferToFavorites,
 );
 
 // Remove offer from favorites
-router.delete('/:id/favorite',
+router.delete(
+  '/:id/favorite',
   authenticate,
-  validateParams(Joi.object({
-    id: commonSchemas.objectId().required()
-  })),
-  removeOfferFromFavorites
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  removeOfferFromFavorites,
 );
 
 // Analytics Routes (can be anonymous)
 
 // Track offer view (analytics)
-router.post('/:id/view',
+router.post(
+  '/:id/view',
   optionalAuth,
-  validateParams(Joi.object({
-    id: commonSchemas.objectId().required()
-  })),
-  trackOfferView
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  trackOfferView,
 );
 
 // Track offer click (analytics)
-router.post('/:id/click',
+router.post(
+  '/:id/click',
   optionalAuth,
-  validateParams(Joi.object({
-    id: commonSchemas.objectId().required()
-  })),
-  trackOfferClick
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  trackOfferClick,
 );
 
 // New offers page specific routes
 
 // Get complete offers page data
-router.get('/page-data',
+router.get(
+  '/page-data',
   optionalAuth,
-  validateQuery(Joi.object({
-    lat: Joi.number().min(-90).max(90),
-    lng: Joi.number().min(-180).max(180)
-  })),
-  getOffersPageData
+  validateQuery(
+    Joi.object({
+      lat: Joi.number().min(-90).max(90),
+      lng: Joi.number().min(-180).max(180),
+    }),
+  ),
+  getOffersPageData,
 );
 
 // Get mega offers
-router.get('/mega',
+router.get(
+  '/mega',
   optionalAuth,
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(10)
-  })),
-  getMegaOffers
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(10),
+    }),
+  ),
+  getMegaOffers,
 );
 
 // Get student offers
-router.get('/students',
+router.get(
+  '/students',
   optionalAuth,
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(10)
-  })),
-  getStudentOffers
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(10),
+    }),
+  ),
+  getStudentOffers,
 );
 
 // Get new arrival offers
-router.get('/new-arrivals',
+router.get(
+  '/new-arrivals',
   optionalAuth,
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(10)
-  })),
-  getNewArrivalOffers
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(10),
+    }),
+  ),
+  getNewArrivalOffers,
 );
 
 // Get nearby offers
-router.get('/nearby',
+router.get(
+  '/nearby',
   optionalAuth,
-  validateQuery(Joi.object({
-    lat: Joi.number().min(-90).max(90).required(),
-    lng: Joi.number().min(-180).max(180).required(),
-    maxDistance: Joi.number().min(1).max(100).default(10),
-    page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getNearbyOffers
+  validateQuery(
+    Joi.object({
+      lat: Joi.number().min(-90).max(90).required(),
+      lng: Joi.number().min(-180).max(180).required(),
+      maxDistance: Joi.number().min(1).max(100).default(10),
+      page: Joi.number().integer().min(1).default(1),
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getNearbyOffers,
 );
 
 // Like/unlike an offer
-router.post('/:id/like',
+router.post(
+  '/:id/like',
   authenticate,
-  validateParams(Joi.object({
-    id: commonSchemas.objectId().required()
-  })),
-  toggleOfferLike
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  toggleOfferLike,
 );
 
 // Share an offer
-router.post('/:id/share',
+router.post(
+  '/:id/share',
   optionalAuth,
-  validateParams(Joi.object({
-    id: commonSchemas.objectId().required()
-  })),
-  validate(Joi.object({
-    platform: Joi.string().valid('facebook', 'twitter', 'instagram', 'whatsapp', 'telegram', 'copy_link').optional(),
-    message: Joi.string().max(500).optional()
-  })),
-  shareOffer
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  validate(
+    Joi.object({
+      platform: Joi.string().valid('facebook', 'twitter', 'instagram', 'whatsapp', 'telegram', 'copy_link').optional(),
+      message: Joi.string().max(500).optional(),
+    }),
+  ),
+  shareOffer,
 );
 
 // Get offer categories
-router.get('/categories',
-  optionalAuth,
-  getOfferCategories
-);
+router.get('/categories', optionalAuth, getOfferCategories);
 
 // Get hero banners
-router.get('/hero-banners',
+router.get(
+  '/hero-banners',
   optionalAuth,
-  validateQuery(Joi.object({
-    page: Joi.string().valid('offers', 'home', 'category', 'product', 'all').default('offers'),
-    position: Joi.string().valid('top', 'middle', 'bottom').default('top')
-  })),
-  getHeroBanners
+  validateQuery(
+    Joi.object({
+      page: Joi.string().valid('offers', 'home', 'category', 'product', 'all').default('offers'),
+      position: Joi.string().valid('top', 'middle', 'bottom').default('top'),
+    }),
+  ),
+  getHeroBanners,
 );
 
 // =====================
@@ -359,84 +445,104 @@ router.get('/hero-banners',
 // =====================
 
 // Get discount buckets (real-time aggregation counts)
-router.get('/discount-buckets',
-  optionalAuth,
-  getDiscountBuckets
-);
+router.get('/discount-buckets', optionalAuth, getDiscountBuckets);
 
 // Get hotspot areas
-router.get('/hotspots',
+router.get(
+  '/hotspots',
   optionalAuth,
-  validateQuery(Joi.object({
-    lat: Joi.number().min(-90).max(90),
-    lng: Joi.number().min(-180).max(180),
-    limit: Joi.number().integer().min(1).max(50).default(10)
-  })),
-  getHotspots
+  validateQuery(
+    Joi.object({
+      lat: Joi.number().min(-90).max(90),
+      lng: Joi.number().min(-180).max(180),
+      limit: Joi.number().integer().min(1).max(50).default(10),
+    }),
+  ),
+  getHotspots,
 );
 
 // Get offers for a specific hotspot
-router.get('/hotspots/:slug/offers',
+router.get(
+  '/hotspots/:slug/offers',
   optionalAuth,
-  validateParams(Joi.object({
-    slug: Joi.string().required()
-  })),
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getHotspotOffers
+  validateParams(
+    Joi.object({
+      slug: Joi.string().required(),
+    }),
+  ),
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getHotspotOffers,
 );
 
 // Get BOGO offers
-router.get('/bogo',
+router.get(
+  '/bogo',
   optionalAuth,
-  validateQuery(Joi.object({
-    bogoType: Joi.string().valid('buy1get1', 'buy2get1', 'buy1get50', 'buy2get50'),
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getBOGOOffers
+  validateQuery(
+    Joi.object({
+      bogoType: Joi.string().valid('buy1get1', 'buy2get1', 'buy1get50', 'buy2get50'),
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getBOGOOffers,
 );
 
 // Get sale/clearance offers
-router.get('/sales-clearance',
+router.get(
+  '/sales-clearance',
   optionalAuth,
-  validateQuery(Joi.object({
-    saleTag: Joi.string().valid('clearance', 'sale', 'last_pieces', 'mega_sale'),
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getSaleOffers
+  validateQuery(
+    Joi.object({
+      saleTag: Joi.string().valid('clearance', 'sale', 'last_pieces', 'mega_sale'),
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getSaleOffers,
 );
 
 // Get flash sale offers (from offers with metadata.flashSale.isActive)
-router.get('/flash-sales',
+router.get(
+  '/flash-sales',
   optionalAuth,
-  validateQuery(Joi.object({
-    category: Joi.string().trim().max(100),
-    limit: Joi.number().integer().min(1).max(50).default(10)
-  })),
-  getFlashSaleOffers
+  validateQuery(
+    Joi.object({
+      category: Joi.string().trim().max(100),
+      limit: Joi.number().integer().min(1).max(50).default(10),
+    }),
+  ),
+  getFlashSaleOffers,
 );
 
 // Get free delivery offers
-router.get('/free-delivery',
+router.get(
+  '/free-delivery',
   optionalAuth,
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getFreeDeliveryOffers
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getFreeDeliveryOffers,
 );
 
 // Get bank offers
-router.get('/bank-offers',
+router.get(
+  '/bank-offers',
   optionalAuth,
-  validateQuery(Joi.object({
-    category: Joi.string().trim().max(100),
-    cardType: Joi.string().valid('credit', 'debit', 'wallet', 'upi', 'bnpl'),
-    sort: Joi.string().valid('all', 'highest', 'expiring'),
-    page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(50).default(10)
-  })),
-  getBankOffers
+  validateQuery(
+    Joi.object({
+      category: Joi.string().trim().max(100),
+      cardType: Joi.string().valid('credit', 'debit', 'wallet', 'upi', 'bnpl'),
+      sort: Joi.string().valid('all', 'highest', 'expiring'),
+      page: Joi.number().integer().min(1).default(1),
+      limit: Joi.number().integer().min(1).max(50).default(10),
+    }),
+  ),
+  getBankOffers,
 );
 
 // ============================================
@@ -448,7 +554,10 @@ router.get('/bank-offers',
  * @desc    Get the "Deals that save you money" section config and items for frontend
  * @access  Public
  */
-router.get('/homepage-deals-section', optionalAuth, asyncHandler(async (req: Request, res: Response) => {
+router.get(
+  '/homepage-deals-section',
+  optionalAuth,
+  asyncHandler(async (req: Request, res: Response) => {
     const region = (req.headers['x-rez-region'] as string) || 'all';
 
     // Get section config
@@ -479,10 +588,7 @@ router.get('/homepage-deals-section', optionalAuth, asyncHandler(async (req: Req
 
     // Build region filter for items
     const regionFilter = {
-      $or: [
-        { regions: { $in: [region, 'all'] } },
-        { regions: { $size: 0 } },
-      ],
+      $or: [{ regions: { $in: [region, 'all'] } }, { regions: { $size: 0 } }],
     };
 
     // Fetch items for each tab in parallel
@@ -559,14 +665,17 @@ router.get('/homepage-deals-section', optionalAuth, asyncHandler(async (req: Req
         },
       },
     });
-}));
+  }),
+);
 
 /**
  * @route   POST /api/offers/homepage-deals-section/track-impression
  * @desc    Track item impressions (batch)
  * @access  Public
  */
-router.post('/homepage-deals-section/track-impression', asyncHandler(async (req: Request, res: Response) => {
+router.post(
+  '/homepage-deals-section/track-impression',
+  asyncHandler(async (req: Request, res: Response) => {
     const { itemIds, tabType } = req.body;
 
     if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
@@ -577,29 +686,29 @@ router.post('/homepage-deals-section/track-impression', asyncHandler(async (req:
     }
 
     // Batch update impressions
-    await HomepageDealsItem.updateMany(
-      { _id: { $in: itemIds } },
-      { $inc: { impressions: 1 } }
-    );
+    await HomepageDealsItem.updateMany({ _id: { $in: itemIds } }, { $inc: { impressions: 1 } });
 
     // Also update section total
     await HomepageDealsSection.updateOne(
       { sectionId: 'deals-that-save-money' },
-      { $inc: { totalImpressions: itemIds.length } }
+      { $inc: { totalImpressions: itemIds.length } },
     );
 
     return res.json({
       success: true,
       message: 'Impressions tracked',
     });
-}));
+  }),
+);
 
 /**
  * @route   POST /api/offers/homepage-deals-section/track-click
  * @desc    Track item click
  * @access  Public
  */
-router.post('/homepage-deals-section/track-click', asyncHandler(async (req: Request, res: Response) => {
+router.post(
+  '/homepage-deals-section/track-click',
+  asyncHandler(async (req: Request, res: Response) => {
     const { itemId, tabType } = req.body;
 
     if (!itemId) {
@@ -610,99 +719,170 @@ router.post('/homepage-deals-section/track-click', asyncHandler(async (req: Requ
     }
 
     // Update item click count
-    await HomepageDealsItem.updateOne(
-      { _id: itemId },
-      { $inc: { clicks: 1 } }
-    );
+    await HomepageDealsItem.updateOne({ _id: itemId }, { $inc: { clicks: 1 } });
 
     // Also update section total
-    await HomepageDealsSection.updateOne(
-      { sectionId: 'deals-that-save-money' },
-      { $inc: { totalClicks: 1 } }
-    );
+    await HomepageDealsSection.updateOne({ sectionId: 'deals-that-save-money' }, { $inc: { totalClicks: 1 } });
 
     return res.json({
       success: true,
       message: 'Click tracked',
     });
-}));
-
-// Get exclusive zones
-router.get('/exclusive-zones',
-  optionalAuth,
-  getExclusiveZones
+  }),
 );
 
+// Get exclusive zones
+router.get('/exclusive-zones', optionalAuth, getExclusiveZones);
+
 // Get offers for a specific exclusive zone
-router.get('/exclusive-zones/:slug/offers',
+router.get(
+  '/exclusive-zones/:slug/offers',
   optionalAuth,
-  validateParams(Joi.object({
-    slug: Joi.string().required()
-  })),
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getExclusiveZoneOffers
+  validateParams(
+    Joi.object({
+      slug: Joi.string().required(),
+    }),
+  ),
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getExclusiveZoneOffers,
 );
 
 // Get special profiles (Defence, Healthcare, etc.)
-router.get('/special-profiles',
-  optionalAuth,
-  getSpecialProfiles
-);
+router.get('/special-profiles', optionalAuth, getSpecialProfiles);
 
 // Get offers for a specific special profile
-router.get('/special-profiles/:slug/offers',
+router.get(
+  '/special-profiles/:slug/offers',
   optionalAuth,
-  validateParams(Joi.object({
-    slug: Joi.string().required()
-  })),
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(20)
-  })),
-  getSpecialProfileOffers
+  validateParams(
+    Joi.object({
+      slug: Joi.string().required(),
+    }),
+  ),
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(20),
+    }),
+  ),
+  getSpecialProfileOffers,
 );
 
 // Get friends' redeemed offers (social proof)
-router.get('/friends-redeemed',
+router.get(
+  '/friends-redeemed',
   optionalAuth,
-  validateQuery(Joi.object({
-    limit: Joi.number().integer().min(1).max(50).default(10),
-    page: Joi.number().integer().min(1).default(1),
-  })),
-  getFriendsRedeemed
+  validateQuery(
+    Joi.object({
+      limit: Joi.number().integer().min(1).max(50).default(10),
+      page: Joi.number().integer().min(1).default(1),
+    }),
+  ),
+  getFriendsRedeemed,
 );
 
 // Get loyalty milestones
-router.get('/loyalty/milestones',
-  optionalAuth,
-  getLoyaltyMilestones
-);
+router.get('/loyalty/milestones', optionalAuth, getLoyaltyMilestones);
 
 // Get user's loyalty progress
-router.get('/loyalty/progress',
-  optionalAuth,
-  getLoyaltyProgress
-);
+router.get('/loyalty/progress', optionalAuth, getLoyaltyProgress);
 
 // Aggregated offers page data (replaces 21 parallel API calls)
-router.get('/page-data-v2',
+router.get(
+  '/page-data-v2',
   optionalAuth,
-  validateQuery(Joi.object({
-    lat: Joi.number().min(-90).max(90),
-    lng: Joi.number().min(-180).max(180),
-    tab: Joi.string().valid('offers', 'cashback', 'exclusive', 'all').default('all'),
-  })),
-  getAggregatedOffersPageData
+  validateQuery(
+    Joi.object({
+      lat: Joi.number().min(-90).max(90),
+      lng: Joi.number().min(-180).max(180),
+      tab: Joi.string().valid('offers', 'cashback', 'exclusive', 'all').default('all'),
+    }),
+  ),
+  getAggregatedOffersPageData,
 );
 
 // Get single offer by ID (must be last to avoid conflicts with specific routes)
-router.get('/:id',
+router.get(
+  '/:id',
   optionalAuth,
-  validateParams(Joi.object({
-    id: commonSchemas.objectId().required()
-  })),
-  getOfferById
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  getOfferById,
+);
+
+// ============================================
+// NEW: Payment-to-Offer Linking
+// ============================================
+
+/**
+ * POST /api/offers/link-payment
+ * Link a payment to an offer and credit cashback
+ * @desc Idempotent: returns existing linkage if already linked
+ */
+router.post(
+  '/link-payment',
+  authenticate,
+  validate(
+    Joi.object({
+      paymentId: commonSchemas.objectId().required(),
+      offerId: commonSchemas.objectId().required(),
+      orderAmount: Joi.number().positive().required(),
+      userId: commonSchemas.objectId(), // Optional: for merchant-admin linking
+    }),
+  ),
+  linkPaymentToOffer,
+);
+
+// ============================================
+// NEW: Voucher Validation API (Merchant POS)
+// ============================================
+
+/**
+ * POST /api/offers/vouchers/validate
+ * Validate a voucher for use at a store
+ * @desc Used by merchant POS to validate voucher eligibility
+ */
+router.post(
+  '/vouchers/validate',
+  optionalAuth,
+  validate(
+    Joi.object({
+      voucherCode: Joi.string().required().trim().uppercase(),
+      storeId: commonSchemas.objectId(),
+      orderAmount: Joi.number().min(0),
+    }),
+  ),
+  validateVoucher,
+);
+
+/**
+ * POST /api/offers/vouchers/:id/use
+ * Mark a voucher as used by merchant POS
+ * @desc Calculates and credits cashback to user wallet
+ */
+router.post(
+  '/vouchers/:id/use',
+  authenticate,
+  validateParams(
+    Joi.object({
+      id: commonSchemas.objectId().required(),
+    }),
+  ),
+  validate(
+    Joi.object({
+      orderAmount: Joi.number().positive().required(),
+      orderId: commonSchemas.objectId(),
+      storeId: commonSchemas.objectId(),
+      merchantId: commonSchemas.objectId(),
+    }),
+  ),
+  merchantUseVoucher,
 );
 
 export default router;

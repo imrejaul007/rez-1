@@ -11,6 +11,7 @@ import { User } from '../models/User';
 import { Wallet } from '../models/Wallet';
 import { CoinTransaction } from '../models/CoinTransaction';
 import { Store } from '../models/Store';
+import { Order } from '../models/Order';
 import { sendSuccess, sendError, sendPaginated } from '../utils/response';
 import { filterExclusiveOffers, getUserFollowedStores } from '../middleware/exclusiveOfferMiddleware';
 import { validateSortField } from '../utils/sanitize';
@@ -25,180 +26,181 @@ import { privilegeResolutionService } from '../services/entitlement/privilegeRes
  * Get offers with filters, sorting, and pagination
  */
 export const getOffers = asyncHandler(async (req: Request, res: Response) => {
-    const {
-      page = 1,
-      limit = 20,
-      category,
-      store,
-      type,
-      tags,
-      featured,
-      trending,
-      new: isNew,
-      minCashback,
-      maxCashback,
-      sortBy = 'createdAt',
-      order = 'desc',
-    } = req.query;
+  const {
+    page = 1,
+    limit = 20,
+    category,
+    store,
+    type,
+    tags,
+    featured,
+    trending,
+    new: isNew,
+    minCashback,
+    maxCashback,
+    sortBy = 'createdAt',
+    order = 'desc',
+  } = req.query;
 
-    // Get region from header for filtering
-    const regionHeader = req.headers['x-rez-region'] as string;
-    const region: RegionId | undefined = regionHeader && isValidRegion(regionHeader)
-      ? regionHeader as RegionId
-      : undefined;
+  // Get region from header for filtering
+  const regionHeader = req.headers['x-rez-region'] as string;
+  const region: RegionId | undefined =
+    regionHeader && isValidRegion(regionHeader) ? (regionHeader as RegionId) : undefined;
 
-    // Build filter query
-    const filter: any = {
-      'validity.isActive': true,
-      'validity.startDate': { $lte: new Date() },
-      'validity.endDate': { $gte: new Date() },
-    };
+  // Build filter query
+  const filter: any = {
+    'validity.isActive': true,
+    'validity.startDate': { $lte: new Date() },
+    'validity.endDate': { $gte: new Date() },
+  };
 
-    // Add region filter by finding stores in region first
-    if (region) {
-      const regionFilter = regionService.getStoreFilter(region);
-      const storesInRegion = await Store.find({ isActive: true, ...regionFilter }).select('_id').lean();
-      const storeIds = storesInRegion.map((s: any) => s._id);
-      // Filter offers: either from stores in region OR global offers (no store)
-      filter.$or = [
-        { 'store.id': { $in: storeIds } },
-        { 'store.id': { $exists: false } },
-        { 'store.id': null }
-      ];
+  // Add region filter by finding stores in region first
+  if (region) {
+    const regionFilter = regionService.getStoreFilter(region);
+    const storesInRegion = await Store.find({ isActive: true, ...regionFilter })
+      .select('_id')
+      .lean();
+    const storeIds = storesInRegion.map((s: any) => s._id);
+    // Filter offers: either from stores in region OR global offers (no store)
+    filter.$or = [{ 'store.id': { $in: storeIds } }, { 'store.id': { $exists: false } }, { 'store.id': null }];
+  }
+
+  if (category) {
+    filter.category = category;
+  }
+
+  if (store) {
+    filter['store.id'] = store;
+  }
+
+  if (type) {
+    filter.type = type;
+  }
+
+  if (tags) {
+    filter['metadata.tags'] = { $in: [tags] };
+  }
+
+  if (featured === 'true') {
+    filter['metadata.featured'] = true;
+  }
+
+  if (trending === 'true') {
+    filter['metadata.isTrending'] = true;
+  }
+
+  if (isNew === 'true') {
+    filter['metadata.isNew'] = true;
+  }
+
+  if (minCashback || maxCashback) {
+    filter.cashbackPercentage = {};
+    if (minCashback) {
+      filter.cashbackPercentage.$gte = Number(minCashback);
     }
-
-    if (category) {
-      filter.category = category;
+    if (maxCashback) {
+      filter.cashbackPercentage.$lte = Number(maxCashback);
     }
+  } else if (minCashback) {
+    filter.cashbackPercentage = { $gte: Number(minCashback) };
+  }
 
-    if (store) {
-      filter['store.id'] = store;
-    }
+  // Sort options (whitelist to prevent injection)
+  const ALLOWED_SORT_FIELDS = [
+    'createdAt',
+    'title',
+    'cashbackPercentage',
+    'metadata.priority',
+    'discountedPrice',
+    'engagement.viewCount',
+  ] as const;
+  const safeSortBy = validateSortField(sortBy as string, ALLOWED_SORT_FIELDS, 'createdAt');
+  const sortOptions: any = {};
+  sortOptions[safeSortBy] = order === 'asc' ? 1 : -1;
 
-    if (type) {
-      filter.type = type;
-    }
+  // Pagination
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(50, Math.max(1, Number(limit)));
+  const skip = (pageNum - 1) * limitNum;
 
-    if (tags) {
-      filter['metadata.tags'] = { $in: [tags] };
-    }
-
-    if (featured === 'true') {
-      filter['metadata.featured'] = true;
-    }
-
-    if (trending === 'true') {
-      filter['metadata.isTrending'] = true;
-    }
-
-    if (isNew === 'true') {
-      filter['metadata.isNew'] = true;
-    }
-
-    if (minCashback || maxCashback) {
-      filter.cashbackPercentage = {};
-      if (minCashback) {
-        filter.cashbackPercentage.$gte = Number(minCashback);
-      }
-      if (maxCashback) {
-        filter.cashbackPercentage.$lte = Number(maxCashback);
-      }
-    } else if (minCashback) {
-      filter.cashbackPercentage = { $gte: Number(minCashback) };
-    }
-
-    // Sort options (whitelist to prevent injection)
-    const ALLOWED_SORT_FIELDS = ['createdAt', 'title', 'cashbackPercentage', 'metadata.priority', 'discountedPrice', 'engagement.viewCount'] as const;
-    const safeSortBy = validateSortField(sortBy as string, ALLOWED_SORT_FIELDS, 'createdAt');
-    const sortOptions: any = {};
-    sortOptions[safeSortBy] = order === 'asc' ? 1 : -1;
-
-    // Pagination
-    const pageNum = Math.max(1, Number(page));
-    const limitNum = Math.min(50, Math.max(1, Number(limit)));
-    const skip = (pageNum - 1) * limitNum;
-
-    // Zone-based filtering: hide exclusive offers from users who haven't unlocked the zone
-    const userId = req.user?.id;
-    if (userId) {
-      const priv = await privilegeResolutionService.resolve(userId);
-      const zoneCondition = priv.activeZones && priv.activeZones.length > 0
+  // Zone-based filtering: hide exclusive offers from users who haven't unlocked the zone
+  const userId = req.user?.id;
+  if (userId) {
+    const priv = await privilegeResolutionService.resolve(userId);
+    const zoneCondition =
+      priv.activeZones && priv.activeZones.length > 0
         ? {
             $or: [
               { exclusiveZone: null },
               { exclusiveZone: { $exists: false } },
               { exclusiveZone: '' },
               { exclusiveZone: { $in: priv.activeZones } },
-            ]
+            ],
           }
         : {
-            $or: [
-              { exclusiveZone: null },
-              { exclusiveZone: { $exists: false } },
-              { exclusiveZone: '' },
-            ]
+            $or: [{ exclusiveZone: null }, { exclusiveZone: { $exists: false } }, { exclusiveZone: '' }],
           };
 
-      // Combine with existing $or (region filter) using $and
-      if (filter.$or) {
-        const existingOr = filter.$or;
-        delete filter.$or;
-        filter.$and = [{ $or: existingOr }, zoneCondition];
-      } else {
-        Object.assign(filter, zoneCondition);
-      }
+    // Combine with existing $or (region filter) using $and
+    if (filter.$or) {
+      const existingOr = filter.$or;
+      delete filter.$or;
+      filter.$and = [{ $or: existingOr }, zoneCondition];
     } else {
-      // Anonymous users: only show non-exclusive offers
-      if (filter.$or) {
-        const existingOr = filter.$or;
-        delete filter.$or;
-        filter.$and = [
-          { $or: existingOr },
-          { $or: [{ exclusiveZone: null }, { exclusiveZone: { $exists: false } }, { exclusiveZone: '' }] },
-        ];
-      } else {
-        filter.$or = [
-          { exclusiveZone: null },
-          { exclusiveZone: { $exists: false } },
-          { exclusiveZone: '' },
-        ];
-      }
+      Object.assign(filter, zoneCondition);
     }
-
-    // Cache key for public (non-user-specific) offer queries
-    const cacheKey = !userId
-      ? `offers:${region || 'all'}:${category || ''}:${type || ''}:${safeSortBy}:${order}:${pageNum}:${limitNum}`
-      : null;
-
-    // Try cache for anonymous/public requests
-    if (cacheKey) {
-      const cached = await redisService.get<{ offers: any[]; total: number }>(cacheKey);
-      if (cached) {
-        return sendPaginated(res, cached.offers, pageNum, limitNum, cached.total, 'Offers fetched successfully');
-      }
+  } else {
+    // Anonymous users: only show non-exclusive offers
+    if (filter.$or) {
+      const existingOr = filter.$or;
+      delete filter.$or;
+      filter.$and = [
+        { $or: existingOr },
+        { $or: [{ exclusiveZone: null }, { exclusiveZone: { $exists: false } }, { exclusiveZone: '' }] },
+      ];
+    } else {
+      filter.$or = [{ exclusiveZone: null }, { exclusiveZone: { $exists: false } }, { exclusiveZone: '' }];
     }
+  }
 
-    // Execute query
-    const [offers, total] = await Promise.all([
-      Offer.find(filter)
-        .sort(sortOptions)
-        .skip(skip)
-        .limit(limitNum)
-        .select('title subtitle image category type cashbackPercentage originalPrice discountedPrice store validity engagement metadata isFollowerExclusive exclusiveZone saleTag bogoType isFreeDelivery deliveryTime location createdAt')
-        .lean(),
-      Offer.countDocuments(filter),
-    ]);
+  // Cache key for public (non-user-specific) offer queries
+  const cacheKey = !userId
+    ? `offers:${region || 'all'}:${category || ''}:${type || ''}:${safeSortBy}:${order}:${pageNum}:${limitNum}`
+    : null;
 
-    // Filter exclusive offers based on user follow status
-    const followedStores = userId ? await getUserFollowedStores(userId) : [];
-    const filteredOffers = await filterExclusiveOffers(offers, userId, followedStores);
-
-    // Cache public results (60s TTL)
-    if (cacheKey) {
-      redisService.set(cacheKey, { offers: filteredOffers, total }, 60).catch((err) => logger.warn('[OfferCtrl] Redis cache set failed for offers list', { error: err.message }));
+  // Try cache for anonymous/public requests
+  if (cacheKey) {
+    const cached = await redisService.get<{ offers: any[]; total: number }>(cacheKey);
+    if (cached) {
+      return sendPaginated(res, cached.offers, pageNum, limitNum, cached.total, 'Offers fetched successfully');
     }
+  }
 
-    sendPaginated(res, filteredOffers, pageNum, limitNum, total, 'Offers fetched successfully');
+  // Execute query
+  const [offers, total] = await Promise.all([
+    Offer.find(filter)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limitNum)
+      .select(
+        'title subtitle image category type cashbackPercentage originalPrice discountedPrice store validity engagement metadata isFollowerExclusive exclusiveZone saleTag bogoType isFreeDelivery deliveryTime location createdAt',
+      )
+      .lean(),
+    Offer.countDocuments(filter),
+  ]);
+
+  // Filter exclusive offers based on user follow status
+  const followedStores = userId ? await getUserFollowedStores(userId) : [];
+  const filteredOffers = await filterExclusiveOffers(offers, userId, followedStores);
+
+  // Cache public results (60s TTL)
+  if (cacheKey) {
+    redisService
+      .set(cacheKey, { offers: filteredOffers, total }, 60)
+      .catch((err) => logger.warn('[OfferCtrl] Redis cache set failed for offers list', { error: err.message }));
+  }
+
+  sendPaginated(res, filteredOffers, pageNum, limitNum, total, 'Offers fetched successfully');
 });
 
 /**
@@ -206,54 +208,55 @@ export const getOffers = asyncHandler(async (req: Request, res: Response) => {
  * Get featured offers
  */
 export const getFeaturedOffers = asyncHandler(async (req: Request, res: Response) => {
-    const { limit: rawLimit = 10 } = req.query;
-    const limit = Math.min(50, Math.max(1, Number(rawLimit) || 10));
+  const { limit: rawLimit = 10 } = req.query;
+  const limit = Math.min(50, Math.max(1, Number(rawLimit) || 10));
 
-    // Get region from header for filtering
-    const regionHeader = req.headers['x-rez-region'] as string;
-    const region: RegionId | undefined = regionHeader && isValidRegion(regionHeader)
-      ? regionHeader as RegionId
-      : undefined;
+  // Get region from header for filtering
+  const regionHeader = req.headers['x-rez-region'] as string;
+  const region: RegionId | undefined =
+    regionHeader && isValidRegion(regionHeader) ? (regionHeader as RegionId) : undefined;
 
-    // Build filter
-    const filter: any = {
-      'metadata.featured': true,
-      'validity.isActive': true,
-      'validity.startDate': { $lte: new Date() },
-      'validity.endDate': { $gte: new Date() }
-    };
+  // Build filter
+  const filter: any = {
+    'metadata.featured': true,
+    'validity.isActive': true,
+    'validity.startDate': { $lte: new Date() },
+    'validity.endDate': { $gte: new Date() },
+  };
 
-    // Add region filter
-    if (region) {
-      const regionFilter = regionService.getStoreFilter(region);
-      const storesInRegion = await Store.find({ isActive: true, ...regionFilter }).select('_id').lean();
-      const storeIds = storesInRegion.map((s: any) => s._id);
-      filter.$or = [
-        { 'store.id': { $in: storeIds } },
-        { 'store.id': { $exists: false } },
-        { 'store.id': null }
-      ];
-    }
+  // Add region filter
+  if (region) {
+    const regionFilter = regionService.getStoreFilter(region);
+    const storesInRegion = await Store.find({ isActive: true, ...regionFilter })
+      .select('_id')
+      .lean();
+    const storeIds = storesInRegion.map((s: any) => s._id);
+    filter.$or = [{ 'store.id': { $in: storeIds } }, { 'store.id': { $exists: false } }, { 'store.id': null }];
+  }
 
-    const cacheKey = `offers:featured:${region || 'all'}:${limit}`;
-    const cached = await redisService.get<any>(cacheKey);
-    if (cached) {
-      return sendSuccess(res, cached);
-    }
+  const cacheKey = `offers:featured:${region || 'all'}:${limit}`;
+  const cached = await redisService.get<any>(cacheKey);
+  if (cached) {
+    return sendSuccess(res, cached);
+  }
 
-    const offers = await Offer.find(filter)
+  const offers = await Offer.find(filter)
     .sort({ 'metadata.priority': -1, createdAt: -1 })
     .limit(limit)
-    .select('title subtitle image category type cashbackPercentage originalPrice discountedPrice store validity engagement metadata isFollowerExclusive exclusiveZone saleTag bogoType isFreeDelivery deliveryTime location createdAt')
+    .select(
+      'title subtitle image category type cashbackPercentage originalPrice discountedPrice store validity engagement metadata isFollowerExclusive exclusiveZone saleTag bogoType isFreeDelivery deliveryTime location createdAt',
+    )
     .populate('store.id', 'name logo rating')
     .lean();
 
-    redisService.set(cacheKey, offers, 300).catch((err) => logger.warn('[OfferCtrl] Redis cache set failed for featured offers', { error: err.message })); // 5min cache
+  redisService
+    .set(cacheKey, offers, 300)
+    .catch((err) => logger.warn('[OfferCtrl] Redis cache set failed for featured offers', { error: err.message })); // 5min cache
 
-    if (process.env.NODE_ENV === 'production') {
-      res.setHeader('Cache-Control', 'public, max-age=300');
-    }
-    sendSuccess(res, offers, 'Featured offers fetched successfully');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+  }
+  sendSuccess(res, offers, 'Featured offers fetched successfully');
 });
 
 /**
@@ -261,23 +264,25 @@ export const getFeaturedOffers = asyncHandler(async (req: Request, res: Response
  * Get trending offers
  */
 export const getTrendingOffers = asyncHandler(async (req: Request, res: Response) => {
-    const { limit: rawLimit = 10 } = req.query;
-    const limit = Math.min(50, Math.max(1, Number(rawLimit) || 10));
+  const { limit: rawLimit = 10 } = req.query;
+  const limit = Math.min(50, Math.max(1, Number(rawLimit) || 10));
 
-    const cacheKey = `offers:trending:${limit}`;
-    const cached = await redisService.get<any>(cacheKey);
-    if (cached) {
-      return sendSuccess(res, cached);
-    }
+  const cacheKey = `offers:trending:${limit}`;
+  const cached = await redisService.get<any>(cacheKey);
+  if (cached) {
+    return sendSuccess(res, cached);
+  }
 
-    const offers = await Offer.findTrendingOffers(limit);
+  const offers = await Offer.findTrendingOffers(limit);
 
-    redisService.set(cacheKey, offers, 300).catch((err) => logger.warn('[OfferCtrl] Redis cache set failed for trending offers', { error: err.message })); // 5min cache
+  redisService
+    .set(cacheKey, offers, 300)
+    .catch((err) => logger.warn('[OfferCtrl] Redis cache set failed for trending offers', { error: err.message })); // 5min cache
 
-    if (process.env.NODE_ENV === 'production') {
-      res.setHeader('Cache-Control', 'public, max-age=300');
-    }
-    sendSuccess(res, offers, 'Trending offers fetched successfully');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+  }
+  sendSuccess(res, offers, 'Trending offers fetched successfully');
 });
 
 /**
@@ -285,35 +290,35 @@ export const getTrendingOffers = asyncHandler(async (req: Request, res: Response
  * Search offers by query
  */
 export const searchOffers = asyncHandler(async (req: Request, res: Response) => {
-    const { q, page = 1, limit = 20 } = req.query;
+  const { q, page = 1, limit = 20 } = req.query;
 
-    if (!q || typeof q !== 'string') {
-      return sendError(res, 'Search query is required', 400);
-    }
+  if (!q || typeof q !== 'string') {
+    return sendError(res, 'Search query is required', 400);
+  }
 
-    // Text search
-    const filter: any = {
-      $text: { $search: q },
-      isActive: true,
-      startDate: { $lte: new Date() },
-      endDate: { $gte: new Date() },
-    };
+  // Text search
+  const filter: any = {
+    $text: { $search: q },
+    isActive: true,
+    startDate: { $lte: new Date() },
+    endDate: { $gte: new Date() },
+  };
 
-    // Pagination
-    const pageNum = Math.max(1, Number(page));
-    const limitNum = Math.min(50, Math.max(1, Number(limit)));
-    const skip = (pageNum - 1) * limitNum;
+  // Pagination
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(50, Math.max(1, Number(limit)));
+  const skip = (pageNum - 1) * limitNum;
 
-    const [offers, total] = await Promise.all([
-      Offer.find(filter, { score: { $meta: 'textScore' } })
-        .sort({ score: { $meta: 'textScore' } })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      Offer.countDocuments(filter),
-    ]);
+  const [offers, total] = await Promise.all([
+    Offer.find(filter, { score: { $meta: 'textScore' } })
+      .sort({ score: { $meta: 'textScore' } })
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    Offer.countDocuments(filter),
+  ]);
 
-    sendPaginated(res, offers, pageNum, limitNum, total, 'Offers fetched successfully');
+  sendPaginated(res, offers, pageNum, limitNum, total, 'Offers fetched successfully');
 });
 
 /**
@@ -321,37 +326,33 @@ export const searchOffers = asyncHandler(async (req: Request, res: Response) => 
  * Get offers by category
  */
 export const getOffersByCategory = asyncHandler(async (req: Request, res: Response) => {
-    const { categoryId } = req.params;
-    const { page = 1, limit = 20, sortBy = 'createdAt', order = 'desc' } = req.query;
+  const { categoryId } = req.params;
+  const { page = 1, limit = 20, sortBy = 'createdAt', order = 'desc' } = req.query;
 
-    const filter: any = {
-      category: categoryId,
-      isActive: true,
-      startDate: { $lte: new Date() },
-      endDate: { $gte: new Date() },
-    };
+  const filter: any = {
+    category: categoryId,
+    isActive: true,
+    startDate: { $lte: new Date() },
+    endDate: { $gte: new Date() },
+  };
 
-    // Sort options (whitelist to prevent sort field injection)
-    const ALLOWED_OFFER_SORT_FIELDS = ['createdAt', 'title', 'cashbackPercentage', 'metadata.priority'] as const;
-    const safeSortBy = validateSortField(sortBy as string, ALLOWED_OFFER_SORT_FIELDS, 'createdAt');
-    const sortOptions: any = {};
-    sortOptions[safeSortBy] = order === 'asc' ? 1 : -1;
+  // Sort options (whitelist to prevent sort field injection)
+  const ALLOWED_OFFER_SORT_FIELDS = ['createdAt', 'title', 'cashbackPercentage', 'metadata.priority'] as const;
+  const safeSortBy = validateSortField(sortBy as string, ALLOWED_OFFER_SORT_FIELDS, 'createdAt');
+  const sortOptions: any = {};
+  sortOptions[safeSortBy] = order === 'asc' ? 1 : -1;
 
-    // Pagination
-    const pageNum = Math.max(1, Number(page));
-    const limitNum = Math.min(50, Math.max(1, Number(limit)));
-    const skip = (pageNum - 1) * limitNum;
+  // Pagination
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(50, Math.max(1, Number(limit)));
+  const skip = (pageNum - 1) * limitNum;
 
-    const [offers, total] = await Promise.all([
-      Offer.find(filter)
-        .sort(sortOptions)
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      Offer.countDocuments(filter),
-    ]);
+  const [offers, total] = await Promise.all([
+    Offer.find(filter).sort(sortOptions).skip(skip).limit(limitNum).lean(),
+    Offer.countDocuments(filter),
+  ]);
 
-    sendPaginated(res, offers, pageNum, limitNum, total, 'Offers fetched successfully');
+  sendPaginated(res, offers, pageNum, limitNum, total, 'Offers fetched successfully');
 });
 
 /**
@@ -359,44 +360,40 @@ export const getOffersByCategory = asyncHandler(async (req: Request, res: Respon
  * Get offers for a specific store
  */
 export const getOffersByStore = asyncHandler(async (req: Request, res: Response) => {
-    const { storeId } = req.params;
-    const { page = 1, limit = 20, active } = req.query;
+  const { storeId } = req.params;
+  const { page = 1, limit = 20, active } = req.query;
 
-    const filter: any = {
-      'store.id': new mongoose.Types.ObjectId(storeId),
-    };
+  const filter: any = {
+    'store.id': new mongoose.Types.ObjectId(storeId),
+  };
 
-    // Filter by active status if provided
-    if (active !== undefined) {
-      // Convert query param to boolean (handle string 'true'/'false')
-      const activeStr = String(active).toLowerCase();
-      const isActive = activeStr === 'true' || activeStr === '1';
-      filter['validity.isActive'] = isActive;
-    } else {
-      // Default to active offers
-      filter['validity.isActive'] = true;
-    }
+  // Filter by active status if provided
+  if (active !== undefined) {
+    // Convert query param to boolean (handle string 'true'/'false')
+    const activeStr = String(active).toLowerCase();
+    const isActive = activeStr === 'true' || activeStr === '1';
+    filter['validity.isActive'] = isActive;
+  } else {
+    // Default to active offers
+    filter['validity.isActive'] = true;
+  }
 
-    // Filter by validity dates (only show offers that are currently valid)
-    const now = new Date();
-    filter['validity.startDate'] = { $lte: now };
-    filter['validity.endDate'] = { $gte: now };
+  // Filter by validity dates (only show offers that are currently valid)
+  const now = new Date();
+  filter['validity.startDate'] = { $lte: now };
+  filter['validity.endDate'] = { $gte: now };
 
-    // Pagination
-    const pageNum = Math.max(1, Number(page));
-    const limitNum = Math.min(50, Math.max(1, Number(limit)));
-    const skip = (pageNum - 1) * limitNum;
+  // Pagination
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(50, Math.max(1, Number(limit)));
+  const skip = (pageNum - 1) * limitNum;
 
-    const [offers, total] = await Promise.all([
-      Offer.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      Offer.countDocuments(filter),
-    ]);
+  const [offers, total] = await Promise.all([
+    Offer.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+    Offer.countDocuments(filter),
+  ]);
 
-    sendPaginated(res, offers, pageNum, limitNum, total, 'Offers fetched successfully');
+  sendPaginated(res, offers, pageNum, limitNum, total, 'Offers fetched successfully');
 });
 
 /**
@@ -404,72 +401,75 @@ export const getOffersByStore = asyncHandler(async (req: Request, res: Response)
  * Get single offer by ID
  */
 export const getOfferById = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    const cacheKey = `offer:detail:${id}`;
-    let offer = await redisService.get<any>(cacheKey);
+  const cacheKey = `offer:detail:${id}`;
+  let offer = await redisService.get<any>(cacheKey);
 
+  if (!offer) {
+    offer = await Offer.findById(id).lean();
     if (!offer) {
-      offer = await Offer.findById(id).lean();
-      if (!offer) {
-        return sendError(res, 'Offer not found', 404);
-      }
-      redisService.set(cacheKey, offer, 300).catch((err) => logger.warn('[OfferCtrl] Redis cache set failed for offer detail', { offerId: id, error: err.message }));
+      return sendError(res, 'Offer not found', 404);
+    }
+    redisService
+      .set(cacheKey, offer, 300)
+      .catch((err) =>
+        logger.warn('[OfferCtrl] Redis cache set failed for offer detail', { offerId: id, error: err.message }),
+      );
+  }
+
+  // Check zone-exclusive access
+  const userId = req.user?.id;
+
+  if (offer.exclusiveZone && offer.exclusiveZone !== '') {
+    if (!userId) {
+      return sendError(res, 'Sign in to access exclusive offers', 401);
+    }
+    const priv = await privilegeResolutionService.resolve(userId);
+    const hasAccess = priv.activeZones.includes(offer.exclusiveZone);
+    if (!hasAccess) {
+      return sendError(res, "You don't have access to this exclusive offer", 403, {
+        requiresVerification: true,
+        zone: offer.exclusiveZone,
+      });
+    }
+  }
+
+  // Check if offer is follower-exclusive and user has access
+  const offerStoreId =
+    (offer.store as any)?._id?.toString() || (offer.store as any)?.id?.toString() || offer.store?.toString();
+
+  if (offer.isFollowerExclusive && userId) {
+    const followedStores = await getUserFollowedStores(userId);
+    const filteredOffers = await filterExclusiveOffers([offer], userId, followedStores);
+
+    if (filteredOffers.length === 0) {
+      return sendError(res, 'This is a follower-exclusive offer. Please follow the store to access it.', 403, {
+        requiresFollow: true,
+        storeId: offerStoreId,
+      });
     }
 
-    // Check zone-exclusive access
-    const userId = req.user?.id;
-
-    if (offer.exclusiveZone && offer.exclusiveZone !== '') {
-      if (!userId) {
-        return sendError(res, 'Sign in to access exclusive offers', 401);
-      }
-      const priv = await privilegeResolutionService.resolve(userId);
-      const hasAccess = priv.activeZones.includes(offer.exclusiveZone);
-      if (!hasAccess) {
-        return sendError(res, 'You don\'t have access to this exclusive offer', 403, {
-          requiresVerification: true,
-          zone: offer.exclusiveZone,
-        });
-      }
+    // Record analytics for exclusive offer view
+    if (offer.isFollowerExclusive && offerStoreId) {
+      recordExclusiveOfferView(offerStoreId).catch((err) =>
+        logger.error('Failed to record exclusive offer view:', err),
+      );
     }
+  }
 
-    // Check if offer is follower-exclusive and user has access
-    const offerStoreId = (offer.store as any)?._id?.toString() || (offer.store as any)?.id?.toString() || offer.store?.toString();
+  // Check if user has favorited (if authenticated)
+  let isFavorite = false;
+  if (req.user) {
+    const favorite = await Favorite.findOne({
+      user: req.user.id,
+      itemType: 'offer',
+      item: id,
+    }).lean();
+    isFavorite = !!favorite;
+  }
 
-    if (offer.isFollowerExclusive && userId) {
-      const followedStores = await getUserFollowedStores(userId);
-      const filteredOffers = await filterExclusiveOffers([offer], userId, followedStores);
-
-      if (filteredOffers.length === 0) {
-        return sendError(
-          res,
-          'This is a follower-exclusive offer. Please follow the store to access it.',
-          403,
-          { requiresFollow: true, storeId: offerStoreId }
-        );
-      }
-
-      // Record analytics for exclusive offer view
-      if (offer.isFollowerExclusive && offerStoreId) {
-        recordExclusiveOfferView(offerStoreId).catch(err =>
-          logger.error('Failed to record exclusive offer view:', err)
-        );
-      }
-    }
-
-    // Check if user has favorited (if authenticated)
-    let isFavorite = false;
-    if (req.user) {
-      const favorite = await Favorite.findOne({
-        user: req.user.id,
-        itemType: 'offer',
-        item: id,
-      }).lean();
-      isFavorite = !!favorite;
-    }
-
-    sendSuccess(res, { ...offer, isFavorite }, 'Offer fetched successfully');
+  sendSuccess(res, { ...offer, isFavorite }, 'Offer fetched successfully');
 });
 
 /**
@@ -477,207 +477,233 @@ export const getOfferById = asyncHandler(async (req: Request, res: Response) => 
  * Redeem an offer (authenticated users only)
  */
 export const redeemOffer = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const userId = req.user!.id;
-    const { redemptionType = 'online' } = req.body;
+  const { id } = req.params;
+  const userId = req.user!.id;
+  const { redemptionType = 'online' } = req.body;
 
-    // Find offer
-    const offer = await Offer.findById(id).lean();
+  // Find offer
+  const offer = await Offer.findById(id).lean();
 
-    if (!offer) {
-      return sendError(res, 'Offer not found', 404);
+  if (!offer) {
+    return sendError(res, 'Offer not found', 404);
+  }
+
+  // Check if offer is valid
+  const now = new Date();
+  if (now > offer.validity.endDate || now < offer.validity.startDate || !offer.validity.isActive) {
+    return sendError(res, 'Offer is no longer valid', 400);
+  }
+
+  // Check exclusive zone eligibility
+  if (offer.exclusiveZone) {
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      return sendError(res, 'User not found', 404);
     }
 
-    // Check if offer is valid
-    const now = new Date();
-    if (now > offer.validity.endDate || now < offer.validity.startDate || !offer.validity.isActive) {
-      return sendError(res, 'Offer is no longer valid', 400);
+    const zone = offer.exclusiveZone;
+    let isEligible = false;
+    let eligibilityMessage = '';
+
+    switch (zone) {
+      case 'student':
+        isEligible = user.verifications?.student?.verified === true;
+        eligibilityMessage =
+          'This offer is exclusive to verified students. Please verify your student status to redeem.';
+        break;
+      case 'corporate':
+        isEligible = user.verifications?.corporate?.verified === true;
+        eligibilityMessage =
+          'This offer is exclusive to verified corporate employees. Please verify your corporate email to redeem.';
+        break;
+      case 'defence':
+        isEligible = user.verifications?.defence?.verified === true;
+        eligibilityMessage =
+          'This offer is exclusive to verified defence personnel. Please verify your service ID to redeem.';
+        break;
+      case 'healthcare':
+        isEligible = user.verifications?.healthcare?.verified === true;
+        eligibilityMessage =
+          'This offer is exclusive to verified healthcare workers. Please verify your medical ID to redeem.';
+        break;
+      case 'senior':
+        // Check if user is 60+ based on dateOfBirth
+        if (user.profile?.dateOfBirth) {
+          const age = Math.floor(
+            (Date.now() - new Date(user.profile.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
+          );
+          // SECURITY: Prevent bypass with future dates or unrealistic ages
+          isEligible = age >= 60 && age <= 150;
+        }
+        eligibilityMessage =
+          'This offer is exclusive to senior citizens (60+). Please update your date of birth in profile.';
+        break;
+      case 'women':
+        isEligible = user.profile?.gender === 'female';
+        eligibilityMessage = 'This offer is exclusive to women. Please update your gender in profile.';
+        break;
+      case 'birthday':
+        if (user.profile?.dateOfBirth) {
+          const birthMonth = new Date(user.profile.dateOfBirth).getMonth();
+          const currentMonth = new Date().getMonth();
+          isEligible = birthMonth === currentMonth;
+        }
+        eligibilityMessage =
+          'This offer is only valid during your birthday month. Please update your date of birth in profile.';
+        break;
+      default:
+        isEligible = true; // Unknown zone, allow by default
     }
 
-    // Check exclusive zone eligibility
-    if (offer.exclusiveZone) {
-      const user = await User.findById(userId).lean();
-      if (!user) {
-        return sendError(res, 'User not found', 404);
-      }
-
-      const zone = offer.exclusiveZone;
-      let isEligible = false;
-      let eligibilityMessage = '';
-
-      switch (zone) {
-        case 'student':
-          isEligible = user.verifications?.student?.verified === true;
-          eligibilityMessage = 'This offer is exclusive to verified students. Please verify your student status to redeem.';
-          break;
-        case 'corporate':
-          isEligible = user.verifications?.corporate?.verified === true;
-          eligibilityMessage = 'This offer is exclusive to verified corporate employees. Please verify your corporate email to redeem.';
-          break;
-        case 'defence':
-          isEligible = user.verifications?.defence?.verified === true;
-          eligibilityMessage = 'This offer is exclusive to verified defence personnel. Please verify your service ID to redeem.';
-          break;
-        case 'healthcare':
-          isEligible = user.verifications?.healthcare?.verified === true;
-          eligibilityMessage = 'This offer is exclusive to verified healthcare workers. Please verify your medical ID to redeem.';
-          break;
-        case 'senior':
-          // Check if user is 60+ based on dateOfBirth
-          if (user.profile?.dateOfBirth) {
-            const age = Math.floor((Date.now() - new Date(user.profile.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-            isEligible = age >= 60;
-          }
-          eligibilityMessage = 'This offer is exclusive to senior citizens (60+). Please update your date of birth in profile.';
-          break;
-        case 'women':
-          isEligible = user.profile?.gender === 'female';
-          eligibilityMessage = 'This offer is exclusive to women. Please update your gender in profile.';
-          break;
-        case 'birthday':
-          if (user.profile?.dateOfBirth) {
-            const birthMonth = new Date(user.profile.dateOfBirth).getMonth();
-            const currentMonth = new Date().getMonth();
-            isEligible = birthMonth === currentMonth;
-          }
-          eligibilityMessage = 'This offer is only valid during your birthday month. Please update your date of birth in profile.';
-          break;
-        default:
-          isEligible = true; // Unknown zone, allow by default
-      }
-
-      if (!isEligible) {
-        return sendError(res, eligibilityMessage, 403);
-      }
+    if (!isEligible) {
+      return sendError(res, eligibilityMessage, 403);
     }
+  }
 
-    // Check if user already has an active redemption for this offer
-    const existingActiveRedemption = await OfferRedemption.findOne({
+  // Check if user already has an active redemption for this offer
+  const existingActiveRedemption = await OfferRedemption.findOne({
+    user: userId,
+    offer: id,
+    status: { $in: ['active', 'pending'] },
+  }).lean();
+
+  if (existingActiveRedemption) {
+    return sendError(
+      res,
+      'You have already redeemed this offer. Please check "My Vouchers" to view your voucher.',
+      400,
+    );
+  }
+
+  // Check user redemption limit (count only active/pending redemptions)
+  const userRedemptionCount = await OfferRedemption.countDocuments({
+    user: userId,
+    offer: id,
+    status: { $in: ['active', 'pending'] },
+  });
+
+  if (offer.restrictions.usageLimitPerUser && userRedemptionCount >= offer.restrictions.usageLimitPerUser) {
+    return sendError(res, 'You have already reached the redemption limit for this offer', 400);
+  }
+
+  // Check global redemption limit atomically (prevents race condition on limited offers)
+  if (offer.restrictions.usageLimit) {
+    const totalRedemptions = await OfferRedemption.countDocuments({
+      offer: id,
+      status: { $in: ['active', 'pending'] },
+    });
+    if (totalRedemptions >= offer.restrictions.usageLimit) {
+      return sendError(res, 'Offer redemption limit reached', 400);
+    }
+  }
+
+  // Create redemption with cashback details
+  // Use try-catch to handle concurrent limit breach (if two requests pass the count check simultaneously)
+  let redemption;
+  try {
+    redemption = new OfferRedemption({
       user: userId,
       offer: id,
-      status: { $in: ['active', 'pending'] }
-    }).lean();
-
-    if (existingActiveRedemption) {
-      return sendError(res, 'You have already redeemed this offer. Please check "My Vouchers" to view your voucher.', 400);
-    }
-
-    // Check user redemption limit (count all redemptions including used ones)
-    const userRedemptionCount = await OfferRedemption.countDocuments({
-      user: userId,
-      offer: id
+      redemptionType,
+      redemptionDate: new Date(),
+      validityDays: 30,
+      status: 'active',
+      ipAddress: req.ip, // Uses Express trust proxy config for safe IP
+      userAgent: req.headers['user-agent'],
     });
+    await redemption.save();
 
-    if (offer.restrictions.usageLimitPerUser && userRedemptionCount >= offer.restrictions.usageLimitPerUser) {
-      return sendError(res, 'You have already reached the redemption limit for this offer', 400);
-    }
-
-    // Check global redemption limit atomically (prevents race condition on limited offers)
+    // Post-save: verify limit wasn't exceeded by concurrent requests
     if (offer.restrictions.usageLimit) {
-      const totalRedemptions = await OfferRedemption.countDocuments({ offer: id });
-      if (totalRedemptions >= offer.restrictions.usageLimit) {
+      const postCount = await OfferRedemption.countDocuments({
+        offer: id,
+        status: { $in: ['active', 'pending'] },
+      });
+      if (postCount > offer.restrictions.usageLimit) {
+        // Race condition: rollback this redemption
+        await OfferRedemption.deleteOne({ _id: redemption._id });
         return sendError(res, 'Offer redemption limit reached', 400);
       }
     }
-
-    // Create redemption with cashback details
-    // Use try-catch to handle concurrent limit breach (if two requests pass the count check simultaneously)
-    let redemption;
-    try {
-      redemption = new OfferRedemption({
-        user: userId,
-        offer: id,
-        redemptionType,
-        redemptionDate: new Date(),
-        validityDays: 30,
-        status: 'active',
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-      });
-      await redemption.save();
-
-      // Post-save: verify limit wasn't exceeded by concurrent requests
-      if (offer.restrictions.usageLimit) {
-        const postCount = await OfferRedemption.countDocuments({ offer: id });
-        if (postCount > offer.restrictions.usageLimit) {
-          // Race condition: rollback this redemption
-          await OfferRedemption.deleteOne({ _id: redemption._id });
-          return sendError(res, 'Offer redemption limit reached', 400);
-        }
-      }
-    } catch (saveError: any) {
-      if (saveError.code === 11000) {
-        return sendError(res, 'Duplicate redemption detected', 409);
-      }
-      throw saveError;
+  } catch (saveError: any) {
+    if (saveError.code === 11000) {
+      return sendError(res, 'Duplicate redemption detected', 409);
     }
+    throw saveError;
+  }
 
-    // Update offer redemption count
-    await Offer.findByIdAndUpdate(id, {
-      $inc: { 'redemptionCount': 1 }
-    });
+  // Update offer redemption count
+  await Offer.findByIdAndUpdate(id, {
+    $inc: { redemptionCount: 1 },
+  });
 
-    // Invalidate cached offer detail after redemption count change
-    redisService.del(`offer:detail:${id}`).catch((err) => logger.warn('[OfferCtrl] Redis cache invalidation failed after redeem', { offerId: id, error: err.message }));
+  // Invalidate cached offer detail after redemption count change
+  redisService
+    .del(`offer:detail:${id}`)
+    .catch((err) =>
+      logger.warn('[OfferCtrl] Redis cache invalidation failed after redeem', { offerId: id, error: err.message }),
+    );
 
-    // Create FriendRedemption records for user's followers (social proof feed, non-blocking)
-    setImmediate(async () => {
-      try {
-        const Follow = (await import('../models/Follow')).default;
-        const FriendRedemption = (await import('../models/FriendRedemption')).default;
-        const user = await User.findById(userId).select('fullName profile.avatar').lean();
-        const followers = await Follow.find({ following: userId }).select('follower').lean();
-        if (followers.length > 0 && user) {
-          const storeName = (offer.store as any)?.name || '';
-          const storeLogo = (offer.store as any)?.logo || '';
-          const docs = followers.map((f: any) => ({
-            userId: f.follower,
-            friendId: userId,
-            friendName: (user as any).fullName || 'A friend',
-            friendAvatar: (user as any).profile?.avatar || '',
-            offerId: id,
-            offerTitle: offer.title,
-            offerImage: offer.image || '',
-            storeName,
-            storeLogo,
-            savings: offer.cashbackPercentage || 0,
-            cashbackPercentage: offer.cashbackPercentage || 0,
-            redeemedAt: new Date(),
-            isVisible: true,
-          }));
-          await FriendRedemption.insertMany(docs, { ordered: false }).catch((err) => logger.error('[OfferCtrl] FriendRedemption bulk insert failed', { error: err.message }));
-        }
-      } catch (err) {
-        logger.error('[OFFER] FriendRedemption creation failed (non-blocking):', err);
-      }
-    });
-
-    // Record analytics for exclusive offer redemption
-    if (offer.isFollowerExclusive) {
-      const storeId = offer.store?.id?.toString() || offer.store?.toString();
-      if (storeId) {
-        recordExclusiveOfferRedemption(storeId).catch(err =>
-          logger.error('Failed to record exclusive offer redemption:', err)
+  // Create FriendRedemption records for user's followers (social proof feed, non-blocking)
+  setImmediate(async () => {
+    try {
+      const Follow = (await import('../models/Follow')).default;
+      const FriendRedemption = (await import('../models/FriendRedemption')).default;
+      const user = await User.findById(userId).select('fullName profile.avatar').lean();
+      const followers = await Follow.find({ following: userId }).select('follower').lean();
+      if (followers.length > 0 && user) {
+        const storeName = (offer.store as any)?.name || '';
+        const storeLogo = (offer.store as any)?.logo || '';
+        const docs = followers.map((f: any) => ({
+          userId: f.follower,
+          friendId: userId,
+          friendName: (user as any).fullName || 'A friend',
+          friendAvatar: (user as any).profile?.avatar || '',
+          offerId: id,
+          offerTitle: offer.title,
+          offerImage: offer.image || '',
+          storeName,
+          storeLogo,
+          savings: offer.cashbackPercentage || 0,
+          cashbackPercentage: offer.cashbackPercentage || 0,
+          redeemedAt: new Date(),
+          isVisible: true,
+        }));
+        await FriendRedemption.insertMany(docs, { ordered: false }).catch((err) =>
+          logger.error('[OfferCtrl] FriendRedemption bulk insert failed', { error: err.message }),
         );
       }
+    } catch (err) {
+      logger.error('[OFFER] FriendRedemption creation failed (non-blocking):', err);
     }
+  });
 
-    // Populate for response with cashback info and restrictions
-    await redemption.populate('offer', 'title image cashbackPercentage validUntil type category restrictions');
+  // Record analytics for exclusive offer redemption
+  if (offer.isFollowerExclusive) {
+    const storeId = offer.store?.id?.toString() || offer.store?.toString();
+    if (storeId) {
+      recordExclusiveOfferRedemption(storeId).catch((err) =>
+        logger.error('Failed to record exclusive offer redemption:', err),
+      );
+    }
+  }
 
-    // Return response with cashback details and terms
-    const responseData = {
-      ...redemption.toObject(),
-      cashbackPercentage: offer.cashbackPercentage,
-      offerType: offer.type,
-      restrictions: {
-        minOrderValue: offer.restrictions.minOrderValue,
-        maxDiscountAmount: offer.restrictions.maxDiscountAmount,
-        usageLimitPerUser: offer.restrictions.usageLimitPerUser,
-      },
-    };
+  // Populate for response with cashback info and restrictions
+  await redemption.populate('offer', 'title image cashbackPercentage validUntil type category restrictions');
 
-    sendSuccess(res, responseData, 'Offer redeemed successfully', 201);
+  // Return response with cashback details and terms
+  const responseData = {
+    ...redemption.toObject(),
+    cashbackPercentage: offer.cashbackPercentage,
+    offerType: offer.type,
+    restrictions: {
+      minOrderValue: offer.restrictions.minOrderValue,
+      maxDiscountAmount: offer.restrictions.maxDiscountAmount,
+      usageLimitPerUser: offer.restrictions.usageLimitPerUser,
+    },
+  };
+
+  sendSuccess(res, responseData, 'Offer redeemed successfully', 201);
 });
 
 /**
@@ -685,43 +711,43 @@ export const redeemOffer = asyncHandler(async (req: Request, res: Response) => {
  * Get user's offer redemptions
  */
 export const getUserRedemptions = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.id;
-    const { status, page = 1, limit = 20 } = req.query;
+  const userId = req.user!.id;
+  const { status, page = 1, limit = 20 } = req.query;
 
-    const filter: any = { user: userId };
+  const filter: any = { user: userId };
 
-    if (status) {
-      filter.status = status;
-    }
+  if (status) {
+    filter.status = status;
+  }
 
-    // Pagination
-    const pageNum = Math.max(1, Number(page));
-    const limitNum = Math.min(50, Math.max(1, Number(limit)));
-    const skip = (pageNum - 1) * limitNum;
+  // Pagination
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(50, Math.max(1, Number(limit)));
+  const skip = (pageNum - 1) * limitNum;
 
-    const [redemptions, total] = await Promise.all([
-      OfferRedemption.find(filter)
-        .populate('offer', 'title image cashbackPercentage category validUntil type restrictions')
-        .populate('order', 'orderNumber totalAmount status')
-        .sort({ redemptionDate: -1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      OfferRedemption.countDocuments(filter),
-    ]);
+  const [redemptions, total] = await Promise.all([
+    OfferRedemption.find(filter)
+      .populate('offer', 'title image cashbackPercentage category validUntil type restrictions')
+      .populate('order', 'orderNumber totalAmount status')
+      .sort({ redemptionDate: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    OfferRedemption.countDocuments(filter),
+  ]);
 
-    // Enhance redemptions with cashback info and restrictions
-    const enhancedRedemptions = redemptions.map((redemption: any) => ({
-      ...redemption,
-      cashbackPercentage: redemption.offer?.cashbackPercentage || 0,
-      restrictions: {
-        minOrderValue: redemption.offer?.restrictions?.minOrderValue,
-        maxDiscountAmount: redemption.offer?.restrictions?.maxDiscountAmount,
-        usageLimitPerUser: redemption.offer?.restrictions?.usageLimitPerUser,
-      },
-    }));
+  // Enhance redemptions with cashback info and restrictions
+  const enhancedRedemptions = redemptions.map((redemption: any) => ({
+    ...redemption,
+    cashbackPercentage: redemption.offer?.cashbackPercentage || 0,
+    restrictions: {
+      minOrderValue: redemption.offer?.restrictions?.minOrderValue,
+      maxDiscountAmount: redemption.offer?.restrictions?.maxDiscountAmount,
+      usageLimitPerUser: redemption.offer?.restrictions?.usageLimitPerUser,
+    },
+  }));
 
-    sendPaginated(res, enhancedRedemptions, pageNum, limitNum, total, 'Redemptions fetched successfully');
+  sendPaginated(res, enhancedRedemptions, pageNum, limitNum, total, 'Redemptions fetched successfully');
 });
 
 /**
@@ -729,42 +755,42 @@ export const getUserRedemptions = asyncHandler(async (req: Request, res: Respons
  * Add offer to favorites
  */
 export const addOfferToFavorites = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const userId = req.user!.id;
+  const { id } = req.params;
+  const userId = req.user!.id;
 
-    // Check if offer exists
-    const offer = await Offer.findById(id).lean();
+  // Check if offer exists
+  const offer = await Offer.findById(id).lean();
 
-    if (!offer) {
-      return sendError(res, 'Offer not found', 404);
-    }
+  if (!offer) {
+    return sendError(res, 'Offer not found', 404);
+  }
 
-    // Check if already favorited
-    const existing = await Favorite.findOne({
-      user: userId,
-      itemType: 'offer',
-      item: id,
-    }).lean();
+  // Check if already favorited
+  const existing = await Favorite.findOne({
+    user: userId,
+    itemType: 'offer',
+    item: id,
+  }).lean();
 
-    if (existing) {
-      return sendError(res, 'Offer already in favorites', 400);
-    }
+  if (existing) {
+    return sendError(res, 'Offer already in favorites', 400);
+  }
 
-    // Create favorite
-    const favorite = new Favorite({
-      user: userId,
-      itemType: 'offer',
-      item: id,
-    });
+  // Create favorite
+  const favorite = new Favorite({
+    user: userId,
+    itemType: 'offer',
+    item: id,
+  });
 
-    await favorite.save();
+  await favorite.save();
 
-    // Update offer engagement
-    await Offer.findByIdAndUpdate(id, {
-      $inc: { 'engagement.favoriteCount': 1 }
-    });
+  // Update offer engagement
+  await Offer.findByIdAndUpdate(id, {
+    $inc: { 'engagement.favoriteCount': 1 },
+  });
 
-    sendSuccess(res, { success: true }, 'Offer added to favorites', 201);
+  sendSuccess(res, { success: true }, 'Offer added to favorites', 201);
 });
 
 /**
@@ -772,26 +798,26 @@ export const addOfferToFavorites = asyncHandler(async (req: Request, res: Respon
  * Remove offer from favorites
  */
 export const removeOfferFromFavorites = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const userId = req.user!.id;
+  const { id } = req.params;
+  const userId = req.user!.id;
 
-    // Remove favorite
-    const result = await Favorite.findOneAndDelete({
-      user: userId,
-      itemType: 'offer',
-      item: id,
-    });
+  // Remove favorite
+  const result = await Favorite.findOneAndDelete({
+    user: userId,
+    itemType: 'offer',
+    item: id,
+  });
 
-    if (!result) {
-      return sendError(res, 'Favorite not found', 404);
-    }
+  if (!result) {
+    return sendError(res, 'Favorite not found', 404);
+  }
 
-    // Update offer engagement
-    await Offer.findByIdAndUpdate(id, {
-      $inc: { 'engagement.favoriteCount': -1 }
-    });
+  // Update offer engagement
+  await Offer.findByIdAndUpdate(id, {
+    $inc: { 'engagement.favoriteCount': -1 },
+  });
 
-    sendSuccess(res, { success: true }, 'Offer removed from favorites');
+  sendSuccess(res, { success: true }, 'Offer removed from favorites');
 });
 
 /**
@@ -799,45 +825,45 @@ export const removeOfferFromFavorites = asyncHandler(async (req: Request, res: R
  * Get user's favorite offers
  */
 export const getUserFavoriteOffers = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.id;
-    const { page = 1, limit = 20 } = req.query;
+  const userId = req.user!.id;
+  const { page = 1, limit = 20 } = req.query;
 
-    // Pagination
-    const pageNum = Math.max(1, Number(page));
-    const limitNum = Math.min(50, Math.max(1, Number(limit)));
-    const skip = (pageNum - 1) * limitNum;
+  // Pagination
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(50, Math.max(1, Number(limit)));
+  const skip = (pageNum - 1) * limitNum;
 
-    // Get favorites
-    const [favorites, total] = await Promise.all([
-      Favorite.find({
-        user: userId,
-        itemType: 'offer',
+  // Get favorites
+  const [favorites, total] = await Promise.all([
+    Favorite.find({
+      user: userId,
+      itemType: 'offer',
+    })
+      .populate({
+        path: 'item',
+        model: 'Offer',
+        populate: [
+          { path: 'category', select: 'name slug' },
+          { path: 'store', select: 'name logo location ratings' },
+        ],
       })
-        .populate({
-          path: 'item',
-          model: 'Offer',
-          populate: [
-            { path: 'category', select: 'name slug' },
-            { path: 'store', select: 'name logo location ratings' },
-          ],
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      Favorite.countDocuments({
-        user: userId,
-        itemType: 'offer',
-      }),
-    ]);
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    Favorite.countDocuments({
+      user: userId,
+      itemType: 'offer',
+    }),
+  ]);
 
-    // Extract offers
-    const offers = favorites.map((fav: any) => ({
-      ...fav.item,
-      isFavorite: true,
-    }));
+  // Extract offers
+  const offers = favorites.map((fav: any) => ({
+    ...fav.item,
+    isFavorite: true,
+  }));
 
-    sendPaginated(res, offers, pageNum, limitNum, total, 'Offers fetched successfully');
+  sendPaginated(res, offers, pageNum, limitNum, total, 'Offers fetched successfully');
 });
 
 /**
@@ -861,7 +887,7 @@ export const trackOfferView = async (req: Request, res: Response) => {
       // Anonymous: cap at 3 views per IP per offer per 24h
       const ip = req.ip || 'unknown';
       const ipKey = `offer-view-ip:${ip}:${id}`;
-      const ipViews = parseInt(await redisService.get(ipKey) || '0', 10);
+      const ipViews = parseInt((await redisService.get(ipKey)) || '0', 10);
       if (ipViews < 3) {
         await Offer.findByIdAndUpdate(id, { $inc: { viewCount: 1 } });
         await redisService.set(ipKey, String(ipViews + 1), 86400);
@@ -900,60 +926,57 @@ export const trackOfferClick = async (req: Request, res: Response) => {
  * Get personalized offer recommendations (optional auth)
  */
 export const getRecommendedOffers = asyncHandler(async (req: Request, res: Response) => {
-    const { limit = 10 } = req.query;
-    const userId = req.user?.id;
+  const { limit = 10 } = req.query;
+  const userId = req.user?.id;
 
-    const now = new Date();
-    const baseFilter: any = {
-      'validity.isActive': true,
-      'validity.startDate': { $lte: now },
-      'validity.endDate': { $gte: now },
-    };
+  const now = new Date();
+  const baseFilter: any = {
+    'validity.isActive': true,
+    'validity.startDate': { $lte: now },
+    'validity.endDate': { $gte: now },
+  };
 
-    // If authenticated, try to personalize based on transaction history
-    if (userId) {
-      try {
-        const { CoinTransaction } = await import('../models/CoinTransaction');
-        const recentTxns = await CoinTransaction.find({
-          userId,
-          type: 'credit',
-          createdAt: { $gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) },
+  // If authenticated, try to personalize based on transaction history
+  if (userId) {
+    try {
+      const { CoinTransaction } = await import('../models/CoinTransaction');
+      const recentTxns = await CoinTransaction.find({
+        userId,
+        type: 'credit',
+        createdAt: { $gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) },
+      })
+        .select('metadata.storeId')
+        .limit(50)
+        .lean();
+
+      const storeIds = [...new Set(recentTxns.map((t: any) => t.metadata?.storeId?.toString()).filter(Boolean))];
+
+      if (storeIds.length > 0) {
+        const personalizedOffers = await Offer.find({
+          ...baseFilter,
+          'store.id': { $in: storeIds },
         })
-          .select('metadata.storeId')
-          .limit(50)
+          .sort({ 'engagement.viewsCount': -1 })
+          .limit(Number(limit))
           .lean();
 
-        const storeIds = [...new Set(recentTxns
-          .map((t: any) => t.metadata?.storeId?.toString())
-          .filter(Boolean)
-        )];
-
-        if (storeIds.length > 0) {
-          const personalizedOffers = await Offer.find({
-            ...baseFilter,
-            'store.id': { $in: storeIds },
-          })
-            .sort({ 'engagement.viewsCount': -1 })
-            .limit(Number(limit))
-            .lean();
-
-          if (personalizedOffers.length >= 3) {
-            return sendSuccess(res, personalizedOffers, 'Personalized offers fetched successfully');
-          }
+        if (personalizedOffers.length >= 3) {
+          return sendSuccess(res, personalizedOffers, 'Personalized offers fetched successfully');
         }
-      } catch {
-        // Fall through to trending offers
       }
+    } catch {
+      // Fall through to trending offers
     }
+  }
 
-    // Fallback: trending offers
-    const offers = await Offer.find(baseFilter)
-      .sort({ 'engagement.viewsCount': -1, 'engagement.likesCount': -1 })
-      .limit(Number(limit))
-      .populate('store.id', 'name logo rating')
-      .lean();
+  // Fallback: trending offers
+  const offers = await Offer.find(baseFilter)
+    .sort({ 'engagement.viewsCount': -1, 'engagement.likesCount': -1 })
+    .limit(Number(limit))
+    .populate('store.id', 'name logo rating')
+    .lean();
 
-    sendSuccess(res, offers, 'Recommended offers fetched successfully');
+  sendSuccess(res, offers, 'Recommended offers fetched successfully');
 });
 
 /**
@@ -961,15 +984,15 @@ export const getRecommendedOffers = asyncHandler(async (req: Request, res: Respo
  * Get mega offers
  */
 export const getMegaOffers = asyncHandler(async (req: Request, res: Response) => {
-    const { limit = 10 } = req.query;
+  const { limit = 10 } = req.query;
 
-    const offers = await Offer.findMegaOffers();
-    const limitedOffers = offers.slice(0, Number(limit));
+  const offers = await Offer.findMegaOffers();
+  const limitedOffers = offers.slice(0, Number(limit));
 
-    if (process.env.NODE_ENV === 'production') {
-      res.setHeader('Cache-Control', 'public, max-age=300');
-    }
-    sendSuccess(res, limitedOffers, 'Mega offers fetched successfully');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+  }
+  sendSuccess(res, limitedOffers, 'Mega offers fetched successfully');
 });
 
 /**
@@ -977,15 +1000,15 @@ export const getMegaOffers = asyncHandler(async (req: Request, res: Response) =>
  * Get student offers
  */
 export const getStudentOffers = asyncHandler(async (req: Request, res: Response) => {
-    const { limit = 10 } = req.query;
+  const { limit = 10 } = req.query;
 
-    const offers = await Offer.findStudentOffers();
-    const limitedOffers = offers.slice(0, Number(limit));
+  const offers = await Offer.findStudentOffers();
+  const limitedOffers = offers.slice(0, Number(limit));
 
-    if (process.env.NODE_ENV === 'production') {
-      res.setHeader('Cache-Control', 'public, max-age=300');
-    }
-    sendSuccess(res, limitedOffers, 'Student offers fetched successfully');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+  }
+  sendSuccess(res, limitedOffers, 'Student offers fetched successfully');
 });
 
 /**
@@ -993,14 +1016,14 @@ export const getStudentOffers = asyncHandler(async (req: Request, res: Response)
  * Get new arrival offers
  */
 export const getNewArrivalOffers = asyncHandler(async (req: Request, res: Response) => {
-    const { limit = 10 } = req.query;
+  const { limit = 10 } = req.query;
 
-    const offers = await Offer.findNewArrivals(Number(limit));
+  const offers = await Offer.findNewArrivals(Number(limit));
 
-    if (process.env.NODE_ENV === 'production') {
-      res.setHeader('Cache-Control', 'public, max-age=300');
-    }
-    sendSuccess(res, offers, 'New arrival offers fetched successfully');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+  }
+  sendSuccess(res, offers, 'New arrival offers fetched successfully');
 });
 
 /**
@@ -1008,39 +1031,43 @@ export const getNewArrivalOffers = asyncHandler(async (req: Request, res: Respon
  * Get nearby offers based on user location with pagination
  */
 export const getNearbyOffers = asyncHandler(async (req: Request, res: Response) => {
-    const { lat, lng, maxDistance = 10, page = 1, limit = 20 } = req.query;
+  const { lat, lng, maxDistance = 10, page = 1, limit = 20 } = req.query;
 
-    if (!lat || !lng) {
-      return sendError(res, 'Latitude and longitude are required', 400);
-    }
+  if (!lat || !lng) {
+    return sendError(res, 'Latitude and longitude are required', 400);
+  }
 
-    const pageNum = parseInt(page as string) || 1;
-    const limitNum = parseInt(limit as string) || 20;
-    const skip = (pageNum - 1) * limitNum;
+  const pageNum = parseInt(page as string) || 1;
+  const limitNum = parseInt(limit as string) || 20;
+  const skip = (pageNum - 1) * limitNum;
 
-    const userLocation: [number, number] = [Number(lng), Number(lat)];
-    const offers = await Offer.findNearbyOffers(userLocation, Number(maxDistance));
+  const userLocation: [number, number] = [Number(lng), Number(lat)];
+  const offers = await Offer.findNearbyOffers(userLocation, Number(maxDistance));
 
-    // Calculate distances for each offer
-    const offersWithDistance = offers.map(offer => ({
-      ...offer.toObject(),
-      distance: offer.calculateDistance(userLocation)
-    }));
+  // Calculate distances for each offer
+  const offersWithDistance = offers.map((offer) => ({
+    ...offer.toObject(),
+    distance: offer.calculateDistance(userLocation),
+  }));
 
-    // Sort by distance and apply pagination
-    offersWithDistance.sort((a, b) => a.distance - b.distance);
-    const total = offersWithDistance.length;
-    const paginatedOffers = offersWithDistance.slice(skip, skip + limitNum);
+  // Sort by distance and apply pagination
+  offersWithDistance.sort((a, b) => a.distance - b.distance);
+  const total = offersWithDistance.length;
+  const paginatedOffers = offersWithDistance.slice(skip, skip + limitNum);
 
-    sendSuccess(res, {
+  sendSuccess(
+    res,
+    {
       offers: paginatedOffers,
       pagination: {
         page: pageNum,
         limit: limitNum,
         total,
-        totalPages: Math.ceil(total / limitNum)
-      }
-    }, 'Nearby offers fetched successfully');
+        totalPages: Math.ceil(total / limitNum),
+      },
+    },
+    'Nearby offers fetched successfully',
+  );
 });
 
 /**
@@ -1048,156 +1075,161 @@ export const getNearbyOffers = asyncHandler(async (req: Request, res: Response) 
  * Get complete offers page data (hero banner, sections, etc.)
  */
 export const getOffersPageData = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user?.id;
-    const { lat, lng } = req.query;
+  const userId = req.user?.id;
+  const { lat, lng } = req.query;
 
-    // Get hero banner
-    const heroBanner = await HeroBanner.findActiveBanners('offers', 'top');
-    const activeHeroBanner = heroBanner.length > 0 ? heroBanner[0] : null;
+  // Get hero banner
+  const heroBanner = await HeroBanner.findActiveBanners('offers', 'top');
+  const activeHeroBanner = heroBanner.length > 0 ? heroBanner[0] : null;
 
-    // Get mega offers
-    const megaOffers = await Offer.findMegaOffers();
-    const limitedMegaOffers = megaOffers.slice(0, 5);
+  // Get mega offers
+  const megaOffers = await Offer.findMegaOffers();
+  const limitedMegaOffers = megaOffers.slice(0, 5);
 
-    // Get student offers
-    const studentOffers = await Offer.findStudentOffers();
-    const limitedStudentOffers = studentOffers.slice(0, 4);
+  // Get student offers
+  const studentOffers = await Offer.findStudentOffers();
+  const limitedStudentOffers = studentOffers.slice(0, 4);
 
-    // Get new arrival offers
-    const newArrivalOffers = await Offer.findNewArrivals(4);
+  // Get new arrival offers
+  const newArrivalOffers = await Offer.findNewArrivals(4);
 
-    // Get trending offers
-    const trendingOffers = await Offer.findTrendingOffers(5);
+  // Get trending offers
+  const trendingOffers = await Offer.findTrendingOffers(5);
 
-    // Get user's liked offers if authenticated
-    let userLikedOffers: string[] = [];
-    if (userId) {
-      const likedInteractions = await UserOfferInteraction.find({
-        user: userId,
-        action: 'like'
-      }).select('offer').lean();
-      userLikedOffers = likedInteractions.map(interaction => interaction.offer.toString());
-    }
+  // Get user's liked offers if authenticated
+  let userLikedOffers: string[] = [];
+  if (userId) {
+    const likedInteractions = await UserOfferInteraction.find({
+      user: userId,
+      action: 'like',
+    })
+      .select('offer')
+      .lean();
+    userLikedOffers = likedInteractions.map((interaction) => interaction.offer.toString());
+  }
 
-    // Calculate distances if location provided
-    let offersWithDistance: any = {
-      mega: limitedMegaOffers,
-      students: limitedStudentOffers,
-      newArrivals: newArrivalOffers,
-      trending: trendingOffers
+  // Calculate distances if location provided
+  let offersWithDistance: any = {
+    mega: limitedMegaOffers,
+    students: limitedStudentOffers,
+    newArrivals: newArrivalOffers,
+    trending: trendingOffers,
+  };
+
+  if (lat && lng) {
+    const userLocation: [number, number] = [Number(lng), Number(lat)];
+
+    // Helper function to calculate distance
+    const calculateDistance = (offer: any): number => {
+      if (!offer.location?.coordinates) return 0;
+      const [lng, lat] = offer.location.coordinates;
+      const R = 6371; // Earth's radius in kilometers
+      const dLat = ((lat - userLocation[1]) * Math.PI) / 180;
+      const dLng = ((lng - userLocation[0]) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((userLocation[1] * Math.PI) / 180) *
+          Math.cos((lat * Math.PI) / 180) *
+          Math.sin(dLng / 2) *
+          Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return Math.round(R * c * 10) / 10; // Round to 1 decimal place
     };
 
-    if (lat && lng) {
-      const userLocation: [number, number] = [Number(lng), Number(lat)];
-      
-      // Helper function to calculate distance
-      const calculateDistance = (offer: any): number => {
-        if (!offer.location?.coordinates) return 0;
-        const [lng, lat] = offer.location.coordinates;
-        const R = 6371; // Earth's radius in kilometers
-        const dLat = (lat - userLocation[1]) * Math.PI / 180;
-        const dLng = (lng - userLocation[0]) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(userLocation[1] * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
-                  Math.sin(dLng/2) * Math.sin(dLng/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return Math.round(R * c * 10) / 10; // Round to 1 decimal place
-      };
-      
-      offersWithDistance = {
-        mega: limitedMegaOffers.map(offer => ({
-          ...offer,
-          distance: calculateDistance(offer)
-        })),
-        students: limitedStudentOffers.map(offer => ({
-          ...offer,
-          distance: calculateDistance(offer)
-        })),
-        newArrivals: newArrivalOffers.map(offer => ({
-          ...offer,
-          distance: calculateDistance(offer)
-        })),
-        trending: trendingOffers.map(offer => ({
-          ...offer,
-          distance: calculateDistance(offer)
-        }))
-      };
-    }
-
-    // Add user engagement data
-    const offersWithEngagement: any = {
-      mega: offersWithDistance.mega.map((offer: any) => ({
+    offersWithDistance = {
+      mega: limitedMegaOffers.map((offer) => ({
         ...offer,
-        engagement: {
-          ...offer.engagement,
-          isLikedByUser: userLikedOffers.includes(offer._id.toString())
-        }
+        distance: calculateDistance(offer),
       })),
-      students: offersWithDistance.students.map((offer: any) => ({
+      students: limitedStudentOffers.map((offer) => ({
         ...offer,
-        engagement: {
-          ...offer.engagement,
-          isLikedByUser: userLikedOffers.includes(offer._id.toString())
-        }
+        distance: calculateDistance(offer),
       })),
-      newArrivals: offersWithDistance.newArrivals.map((offer: any) => ({
+      newArrivals: newArrivalOffers.map((offer) => ({
         ...offer,
-        engagement: {
-          ...offer.engagement,
-          isLikedByUser: userLikedOffers.includes(offer._id.toString())
-        }
+        distance: calculateDistance(offer),
       })),
-      trending: offersWithDistance.trending.map((offer: any) => ({
+      trending: trendingOffers.map((offer) => ({
         ...offer,
-        engagement: {
-          ...offer.engagement,
-          isLikedByUser: userLikedOffers.includes(offer._id.toString())
-        }
-      }))
+        distance: calculateDistance(offer),
+      })),
     };
+  }
 
-    // Get user's wallet balance - check Wallet model first, then User.wallet
-    let userWalletBalance = 0;
-    if (userId) {
-      // Check Wallet model first (more accurate)
-      const wallet = await Wallet.findOne({ user: userId }).lean();
-      
-      if (wallet) {
-        userWalletBalance = wallet.balance.available || wallet.balance.total || 0;
-      } else {
-        // Fallback to User.wallet
-        const user = await User.findById(userId).select('wallet walletBalance phoneNumber').lean();
-        userWalletBalance = user?.wallet?.balance || user?.walletBalance || req.user?.wallet?.balance || 0;
-      }
-    }
-
-    const pageData: any = {
-      heroBanner: activeHeroBanner,
-      sections: {
-        mega: {
-          title: 'MEGA OFFERS',
-          offers: offersWithEngagement.mega
-        },
-        students: {
-          title: 'Offer for the students',
-          offers: offersWithEngagement.students
-        },
-        newArrivals: {
-          title: 'New arrival',
-          offers: offersWithEngagement.newArrivals
-        },
-        trending: {
-          title: 'Trending Now',
-          offers: offersWithEngagement.trending
-        }
+  // Add user engagement data
+  const offersWithEngagement: any = {
+    mega: offersWithDistance.mega.map((offer: any) => ({
+      ...offer,
+      engagement: {
+        ...offer.engagement,
+        isLikedByUser: userLikedOffers.includes(offer._id.toString()),
       },
-      userEngagement: {
-        likedOffers: userLikedOffers,
-        userPoints: userWalletBalance
-      }
-    };
+    })),
+    students: offersWithDistance.students.map((offer: any) => ({
+      ...offer,
+      engagement: {
+        ...offer.engagement,
+        isLikedByUser: userLikedOffers.includes(offer._id.toString()),
+      },
+    })),
+    newArrivals: offersWithDistance.newArrivals.map((offer: any) => ({
+      ...offer,
+      engagement: {
+        ...offer.engagement,
+        isLikedByUser: userLikedOffers.includes(offer._id.toString()),
+      },
+    })),
+    trending: offersWithDistance.trending.map((offer: any) => ({
+      ...offer,
+      engagement: {
+        ...offer.engagement,
+        isLikedByUser: userLikedOffers.includes(offer._id.toString()),
+      },
+    })),
+  };
 
-    sendSuccess(res, pageData, 'Offers page data fetched successfully');
+  // Get user's wallet balance - check Wallet model first, then User.wallet
+  let userWalletBalance = 0;
+  if (userId) {
+    // Check Wallet model first (more accurate)
+    const wallet = await Wallet.findOne({ user: userId }).lean();
+
+    if (wallet) {
+      userWalletBalance = wallet.balance.available || wallet.balance.total || 0;
+    } else {
+      // Fallback to User.wallet
+      const user = await User.findById(userId).select('wallet walletBalance phoneNumber').lean();
+      userWalletBalance = user?.wallet?.balance || user?.walletBalance || req.user?.wallet?.balance || 0;
+    }
+  }
+
+  const pageData: any = {
+    heroBanner: activeHeroBanner,
+    sections: {
+      mega: {
+        title: 'MEGA OFFERS',
+        offers: offersWithEngagement.mega,
+      },
+      students: {
+        title: 'Offer for the students',
+        offers: offersWithEngagement.students,
+      },
+      newArrivals: {
+        title: 'New arrival',
+        offers: offersWithEngagement.newArrivals,
+      },
+      trending: {
+        title: 'Trending Now',
+        offers: offersWithEngagement.trending,
+      },
+    },
+    userEngagement: {
+      likedOffers: userLikedOffers,
+      userPoints: userWalletBalance,
+    },
+  };
+
+  sendSuccess(res, pageData, 'Offers page data fetched successfully');
 });
 
 /**
@@ -1205,61 +1237,60 @@ export const getOffersPageData = asyncHandler(async (req: Request, res: Response
  * Like/unlike an offer
  */
 export const toggleOfferLike = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const userId = req.user?.id;
+  const { id } = req.params;
+  const userId = req.user?.id;
 
-    if (!userId) {
-      return sendError(res, 'Authentication required', 401);
-    }
+  if (!userId) {
+    return sendError(res, 'Authentication required', 401);
+  }
 
-    const offer = await Offer.findById(id).lean();
-    if (!offer) {
-      return sendError(res, 'Offer not found', 404);
-    }
+  const offer = await Offer.findById(id).lean();
+  if (!offer) {
+    return sendError(res, 'Offer not found', 404);
+  }
 
-    // Check if user already liked this offer
-    const existingInteraction = await UserOfferInteraction.findOne({
-      user: userId,
-      offer: id,
-      action: 'like'
-    }).lean();
+  // Check if user already liked this offer
+  const existingInteraction = await UserOfferInteraction.findOne({
+    user: userId,
+    offer: id,
+    action: 'like',
+  }).lean();
 
-    let isLiked = false;
+  let isLiked = false;
 
-    if (existingInteraction) {
-      // Unlike the offer
-      await UserOfferInteraction.findByIdAndDelete(existingInteraction._id);
-      // Atomic decrement (floor at 0 handled by Math.max on read)
-      await Offer.findByIdAndUpdate(id, {
-        $inc: { 'engagement.likesCount': -1 }
-      });
-    } else {
-      // Like the offer
-      await UserOfferInteraction.trackInteraction(
-        userId,
-        new mongoose.Types.ObjectId(id),
-        'like',
-        {
-          source: 'offers_page',
-          device: req.headers['user-agent']?.includes('Mobile') ? 'mobile' : 'desktop',
-          ipAddress: req.ip
-        }
-      );
-      // Atomic increment
-      await Offer.findByIdAndUpdate(id, {
-        $inc: { 'engagement.likesCount': 1 }
-      });
-      isLiked = true;
-    }
+  if (existingInteraction) {
+    // Unlike the offer
+    await UserOfferInteraction.findByIdAndDelete(existingInteraction._id);
+    // Atomic decrement (floor at 0 handled by Math.max on read)
+    await Offer.findByIdAndUpdate(id, {
+      $inc: { 'engagement.likesCount': -1 },
+    });
+  } else {
+    // Like the offer
+    await UserOfferInteraction.trackInteraction(userId, new mongoose.Types.ObjectId(id), 'like', {
+      source: 'offers_page',
+      device: req.headers['user-agent']?.includes('Mobile') ? 'mobile' : 'desktop',
+      ipAddress: req.ip,
+    });
+    // Atomic increment
+    await Offer.findByIdAndUpdate(id, {
+      $inc: { 'engagement.likesCount': 1 },
+    });
+    isLiked = true;
+  }
 
-    // Re-read the updated count
-    const updatedOffer = await Offer.findById(id).select('engagement.likesCount').lean();
-    const likesCount = Math.max(0, updatedOffer?.engagement?.likesCount || 0);
+  // Re-read the updated count
+  const updatedOffer = await Offer.findById(id).select('engagement.likesCount').lean();
+  const likesCount = Math.max(0, updatedOffer?.engagement?.likesCount || 0);
 
-    sendSuccess(res, {
+  sendSuccess(
+    res,
+    {
       isLiked,
-      likesCount
-    }, isLiked ? 'Offer liked successfully' : 'Offer unliked successfully');
+      likesCount,
+    },
+    isLiked ? 'Offer liked successfully' : 'Offer unliked successfully',
+  );
 });
 
 /**
@@ -1267,37 +1298,32 @@ export const toggleOfferLike = asyncHandler(async (req: Request, res: Response) 
  * Share an offer
  */
 export const shareOffer = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const userId = req.user?.id;
-    const { platform, message } = req.body;
+  const { id } = req.params;
+  const userId = req.user?.id;
+  const { platform, message } = req.body;
 
-    const offer = await Offer.findById(id).lean();
-    if (!offer) {
-      return sendError(res, 'Offer not found', 404);
-    }
+  const offer = await Offer.findById(id).lean();
+  if (!offer) {
+    return sendError(res, 'Offer not found', 404);
+  }
 
-    // Track share interaction
-    if (userId) {
-      await UserOfferInteraction.trackInteraction(
-        userId,
-        new mongoose.Types.ObjectId(id),
-        'share',
-        {
-          source: 'offers_page',
-          platform,
-          message,
-          device: req.headers['user-agent']?.includes('Mobile') ? 'mobile' : 'desktop',
-          ipAddress: req.ip
-        }
-      );
-    }
-
-    // Update offer share count
-    await Offer.findByIdAndUpdate(id, {
-      $inc: { 'engagement.sharesCount': 1 }
+  // Track share interaction
+  if (userId) {
+    await UserOfferInteraction.trackInteraction(userId, new mongoose.Types.ObjectId(id), 'share', {
+      source: 'offers_page',
+      platform,
+      message,
+      device: req.headers['user-agent']?.includes('Mobile') ? 'mobile' : 'desktop',
+      ipAddress: req.ip,
     });
+  }
 
-    sendSuccess(res, { success: true }, 'Offer shared successfully');
+  // Update offer share count
+  await Offer.findByIdAndUpdate(id, {
+    $inc: { 'engagement.sharesCount': 1 },
+  });
+
+  sendSuccess(res, { success: true }, 'Offer shared successfully');
 });
 
 /**
@@ -1305,9 +1331,9 @@ export const shareOffer = asyncHandler(async (req: Request, res: Response) => {
  * Get all offer categories
  */
 export const getOfferCategories = asyncHandler(async (req: Request, res: Response) => {
-    const categories = await OfferCategory.findActiveCategories();
+  const categories = await OfferCategory.findActiveCategories();
 
-    sendSuccess(res, categories, 'Offer categories fetched successfully');
+  sendSuccess(res, categories, 'Offer categories fetched successfully');
 });
 
 /**
@@ -1315,17 +1341,19 @@ export const getOfferCategories = asyncHandler(async (req: Request, res: Respons
  * Get active hero banners
  */
 export const getHeroBanners = asyncHandler(async (req: Request, res: Response) => {
-    const { page = 'offers', position = 'top' } = req.query;
-    const userData = req.user ? {
-      userType: req.user.userType,
-      age: req.user.age,
-      location: req.user.location,
-      interests: req.user.interests
-    } : undefined;
+  const { page = 'offers', position = 'top' } = req.query;
+  const userData = req.user
+    ? {
+        userType: req.user.userType,
+        age: req.user.age,
+        location: req.user.location,
+        interests: req.user.interests,
+      }
+    : undefined;
 
-    const banners = await HeroBanner.findBannersForUser(userData, page as string);
+  const banners = await HeroBanner.findBannersForUser(userData, page as string);
 
-    sendSuccess(res, banners, 'Hero banners fetched successfully');
+  sendSuccess(res, banners, 'Hero banners fetched successfully');
 });
 
 /**
@@ -1333,50 +1361,52 @@ export const getHeroBanners = asyncHandler(async (req: Request, res: Response) =
  * Validate a redemption code before use
  */
 export const validateRedemptionCode = asyncHandler(async (req: Request, res: Response) => {
-    const { code } = req.body;
-    const userId = req.user?.id;
+  const { code } = req.body;
+  const userId = req.user?.id;
 
-    // Require authentication
-    if (!userId) {
-      return sendError(res, 'Authentication required', 401);
+  // Require authentication
+  if (!userId) {
+    return sendError(res, 'Authentication required', 401);
+  }
+
+  if (!code) {
+    return sendError(res, 'Redemption code is required', 400);
+  }
+
+  // Find redemption by code
+  const redemption = await OfferRedemption.findOne({
+    redemptionCode: code.toUpperCase(),
+  }).populate('offer', 'title image cashbackPercentage category type restrictions store');
+
+  if (!redemption) {
+    return sendError(res, 'Invalid redemption code', 404);
+  }
+
+  // Check ownership - user can only validate their own vouchers
+  if (redemption.user.toString() !== userId) {
+    return sendError(res, 'This voucher belongs to another user', 403);
+  }
+
+  // Check if valid
+  if (!redemption.isValid()) {
+    if (redemption.status === 'used') {
+      return sendError(res, 'This voucher has already been used', 400);
     }
-
-    if (!code) {
-      return sendError(res, 'Redemption code is required', 400);
+    if (redemption.status === 'expired') {
+      return sendError(res, 'This voucher has expired', 400);
     }
-
-    // Find redemption by code
-    const redemption = await OfferRedemption.findOne({
-      redemptionCode: code.toUpperCase()
-    }).populate('offer', 'title image cashbackPercentage category type restrictions store');
-
-    if (!redemption) {
-      return sendError(res, 'Invalid redemption code', 404);
+    if (redemption.status === 'cancelled') {
+      return sendError(res, 'This voucher has been cancelled', 400);
     }
+    return sendError(res, 'This voucher is no longer valid', 400);
+  }
 
-    // Check ownership - user can only validate their own vouchers
-    if (redemption.user.toString() !== userId) {
-      return sendError(res, 'This voucher belongs to another user', 403);
-    }
+  // Get offer details for discount calculation
+  const offer = redemption.offer as any;
 
-    // Check if valid
-    if (!redemption.isValid()) {
-      if (redemption.status === 'used') {
-        return sendError(res, 'This voucher has already been used', 400);
-      }
-      if (redemption.status === 'expired') {
-        return sendError(res, 'This voucher has expired', 400);
-      }
-      if (redemption.status === 'cancelled') {
-        return sendError(res, 'This voucher has been cancelled', 400);
-      }
-      return sendError(res, 'This voucher is no longer valid', 400);
-    }
-
-    // Get offer details for discount calculation
-    const offer = redemption.offer as any;
-
-    sendSuccess(res, {
+  sendSuccess(
+    res,
+    {
       valid: true,
       redemption: {
         _id: redemption._id,
@@ -1395,9 +1425,11 @@ export const validateRedemptionCode = asyncHandler(async (req: Request, res: Res
         restrictions: {
           minOrderValue: offer.restrictions?.minOrderValue || 0,
           maxDiscountAmount: offer.restrictions?.maxDiscountAmount || null,
-        }
-      }
-    }, 'Voucher is valid');
+        },
+      },
+    },
+    'Voucher is valid',
+  );
 });
 
 /**
@@ -1413,9 +1445,18 @@ export const markRedemptionAsUsed = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
-    const { orderAmount, orderId, storeId } = req.body;
+    const { orderAmount: clientOrderAmount, orderId, storeId } = req.body;
 
-    if (!orderAmount || orderAmount <= 0) {
+    // SECURITY: If orderId provided, fetch actual amount from Order to prevent spoofing
+    let validatedOrderAmount = clientOrderAmount;
+    if (orderId) {
+      const order = await Order.findById(orderId).select('totals.total totals.subtotal').lean();
+      if (order && order.totals) {
+        validatedOrderAmount = (order.totals as any).total ?? (order.totals as any).subtotal ?? clientOrderAmount;
+      }
+    }
+
+    if (!validatedOrderAmount || validatedOrderAmount <= 0) {
       await session.abortTransaction();
       session.endSession();
       return sendError(res, 'Valid order amount is required', 400);
@@ -1428,20 +1469,20 @@ export const markRedemptionAsUsed = async (req: Request, res: Response) => {
         _id: id,
         user: userId,
         status: 'active', // Only match active redemptions
-        expiryDate: { $gt: new Date() } // Not expired
+        expiryDate: { $gt: new Date() }, // Not expired
       },
       {
         $set: {
           status: 'used',
           usedDate: new Date(),
           ...(orderId && { order: orderId }),
-          ...(storeId && { usedAtStore: storeId })
-        }
+          ...(storeId && { usedAtStore: storeId }),
+        },
       },
       {
         new: false, // Return the document BEFORE update to get offer details
-        session
-      }
+        session,
+      },
     ).populate('offer', 'title cashbackPercentage type restrictions');
 
     if (!redemption) {
@@ -1460,7 +1501,7 @@ export const markRedemptionAsUsed = async (req: Request, res: Response) => {
     }
 
     // Check minimum order value
-    if (offer.restrictions?.minOrderValue && orderAmount < offer.restrictions.minOrderValue) {
+    if (offer.restrictions?.minOrderValue && validatedOrderAmount < offer.restrictions.minOrderValue) {
       // Rollback - set status back to active
       await OfferRedemption.findByIdAndUpdate(id, { status: 'active', usedDate: null }, { session });
       await session.abortTransaction();
@@ -1468,8 +1509,8 @@ export const markRedemptionAsUsed = async (req: Request, res: Response) => {
       return sendError(res, `Minimum order value of ₹${offer.restrictions.minOrderValue} required`, 400);
     }
 
-    // Calculate cashback
-    let cashbackAmount = (orderAmount * offer.cashbackPercentage) / 100;
+    // Calculate cashback using server-validated amount
+    let cashbackAmount = (validatedOrderAmount * offer.cashbackPercentage) / 100;
 
     // Apply max discount cap if set
     if (offer.restrictions?.maxDiscountAmount && cashbackAmount > offer.restrictions.maxDiscountAmount) {
@@ -1495,7 +1536,7 @@ export const markRedemptionAsUsed = async (req: Request, res: Response) => {
       metadata: {
         offerId: offer._id,
         offerTitle: offer.title,
-        orderAmount,
+        orderAmount: validatedOrderAmount,
         cashbackPercentage: offer.cashbackPercentage,
         redemptionId: redemption._id,
       },
@@ -1521,27 +1562,31 @@ export const markRedemptionAsUsed = async (req: Request, res: Response) => {
           type: 'cashback_credited',
           amount: cashbackAmount,
           redemptionId: (redemption as any)._id?.toString() || id,
-        }
+        },
       }).catch((err: any) => logger.error('Failed to send cashback notification:', err));
     } catch (notifError) {
       logger.error('Failed to send cashback notification:', notifError);
     }
 
-    sendSuccess(res, {
-      success: true,
-      redemption: {
-        _id: (redemption as any)._id || id,
-        status: 'used',
-        usedDate: new Date(),
-        usedAmount: cashbackAmount,
+    sendSuccess(
+      res,
+      {
+        success: true,
+        redemption: {
+          _id: (redemption as any)._id || id,
+          status: 'used',
+          usedDate: new Date(),
+          usedAmount: cashbackAmount,
+        },
+        cashback: {
+          amount: cashbackAmount,
+          percentage: offer.cashbackPercentage,
+          orderAmount: validatedOrderAmount,
+        },
+        wallet: walletBalance.total > 0 ? walletBalance : null,
       },
-      cashback: {
-        amount: cashbackAmount,
-        percentage: offer.cashbackPercentage,
-        orderAmount,
-      },
-      wallet: walletBalance.total > 0 ? walletBalance : null,
-    }, `₹${cashbackAmount} cashback credited to your wallet!`);
+      `₹${cashbackAmount} cashback credited to your wallet!`,
+    );
   } catch (error) {
     // Rollback transaction on error
     await session.abortTransaction();
@@ -1556,26 +1601,459 @@ export const markRedemptionAsUsed = async (req: Request, res: Response) => {
  * Get single redemption details with QR code
  */
 export const getRedemptionById = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const userId = req.user!.id;
+  const { id } = req.params;
+  const userId = req.user!.id;
 
-    const redemption = await OfferRedemption.findOne({
-      _id: id,
-      user: userId
-    }).populate('offer', 'title image cashbackPercentage category type restrictions store').lean();
+  const redemption = await OfferRedemption.findOne({
+    _id: id,
+    user: userId,
+  })
+    .populate('offer', 'title image cashbackPercentage category type restrictions store')
+    .lean();
 
-    if (!redemption) {
-      return sendError(res, 'Redemption not found', 404);
-    }
+  if (!redemption) {
+    return sendError(res, 'Redemption not found', 404);
+  }
 
-    const offer = redemption.offer as any;
+  const offer = redemption.offer as any;
 
-    sendSuccess(res, {
+  sendSuccess(
+    res,
+    {
       ...redemption,
       cashbackPercentage: offer?.cashbackPercentage || 0,
       restrictions: {
         minOrderValue: offer?.restrictions?.minOrderValue || 0,
         maxDiscountAmount: offer?.restrictions?.maxDiscountAmount || null,
-      }
-    }, 'Redemption fetched successfully');
+      },
+    },
+    'Redemption fetched successfully',
+  );
 });
+
+/**
+ * POST /api/offers/link-payment
+ * Link a payment to an offer and credit cashback if eligible
+ * Idempotent: returns existing linkage if already linked
+ */
+export const linkPaymentToOffer = asyncHandler(async (req: Request, res: Response) => {
+  const { paymentId, offerId, orderAmount, userId: targetUserId } = req.body;
+  const userId = req.user!.id;
+
+  // Validate required fields
+  if (!paymentId || !offerId || !orderAmount) {
+    return sendError(res, 'paymentId, offerId, and orderAmount are required', 400);
+  }
+
+  // Find the offer
+  const offer = await Offer.findById(offerId).lean();
+  if (!offer) {
+    return sendError(res, 'Offer not found', 404);
+  }
+
+  // Check if offer is still valid
+  const now = new Date();
+  if (now > offer.validity.endDate || now < offer.validity.startDate || !offer.validity.isActive) {
+    return sendError(res, 'Offer is no longer valid', 400);
+  }
+
+  // Check minimum order value
+  if (offer.restrictions.minOrderValue && orderAmount < offer.restrictions.minOrderValue) {
+    return sendError(res, `Minimum order value of ₹${offer.restrictions.minOrderValue} required`, 400);
+  }
+
+  // Start transaction for atomicity
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Idempotency check: see if payment already linked to an offer
+    const existingLinkage = await OfferRedemption.findOne({
+      order: new mongoose.Types.ObjectId(paymentId),
+      offer: new mongoose.Types.ObjectId(offerId),
+    }).session(session);
+
+    if (existingLinkage) {
+      // Already linked - return existing result
+      await session.commitTransaction();
+      session.endSession();
+
+      return sendSuccess(res, {
+        linked: false,
+        existing: true,
+        redemption: existingLinkage,
+        message: 'Payment already linked to this offer',
+      });
+    }
+
+    // Check global redemption limit atomically using $inc
+    if (offer.restrictions.usageLimit) {
+      const updated = await Offer.findOneAndUpdate(
+        {
+          _id: new mongoose.Types.ObjectId(offerId),
+          $expr: { $lt: [{ $ifNull: ['$redemptionCount', 0] }, offer.restrictions.usageLimit] },
+        },
+        { $inc: { redemptionCount: 1 } },
+        { new: true, session },
+      );
+
+      if (!updated) {
+        await session.abortTransaction();
+        session.endSession();
+        return sendError(res, 'Offer redemption limit reached', 400);
+      }
+    }
+
+    // Create redemption record
+    const redemption = new OfferRedemption({
+      user: targetUserId || userId,
+      offer: offerId,
+      redemptionType: 'online',
+      redemptionDate: new Date(),
+      validityDays: 30,
+      status: 'active',
+      order: new mongoose.Types.ObjectId(paymentId),
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    await redemption.save({ session });
+
+    // Calculate and credit cashback
+    let cashbackAmount = (orderAmount * offer.cashbackPercentage) / 100;
+
+    if (offer.restrictions.maxDiscountAmount && cashbackAmount > offer.restrictions.maxDiscountAmount) {
+      cashbackAmount = offer.restrictions.maxDiscountAmount;
+    }
+
+    cashbackAmount = Math.round(cashbackAmount * 100) / 100;
+
+    // Update redemption with amount
+    await OfferRedemption.findByIdAndUpdate(redemption._id, { usedAmount: cashbackAmount }, { session });
+
+    // Credit to wallet if cashback > 0
+    if (cashbackAmount > 0) {
+      const { walletService } = await import('../services/walletService');
+      await walletService.credit({
+        userId: targetUserId || userId,
+        amount: cashbackAmount,
+        source: 'cashback',
+        description: `Cashback from ${offer.title}`,
+        operationType: 'offer_cashback',
+        referenceId: `offer-cashback:${redemption._id}`,
+        referenceModel: 'OfferRedemption',
+        metadata: {
+          offerId: offer._id,
+          offerTitle: offer.title,
+          orderAmount,
+          cashbackPercentage: offer.cashbackPercentage,
+          paymentId,
+          redemptionId: redemption._id,
+        },
+        session,
+      });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    // Get updated wallet balance
+    const wallet = await Wallet.findOne({ user: targetUserId || userId }).lean();
+
+    sendSuccess(
+      res,
+      {
+        linked: true,
+        redemption: {
+          _id: redemption._id,
+          status: 'active',
+          cashbackAmount,
+          offerTitle: offer.title,
+        },
+        wallet: wallet
+          ? {
+              total: wallet.balance.total,
+              available: wallet.balance.available,
+            }
+          : null,
+      },
+      'Payment linked to offer and cashback credited',
+    );
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    logger.error('Error linking payment to offer:', error);
+    throw error;
+  }
+});
+
+/**
+ * POST /api/offers/vouchers/validate
+ * Validate a voucher for use at a store
+ * Used by merchant POS to validate voucher eligibility
+ */
+export const validateVoucher = asyncHandler(async (req: Request, res: Response) => {
+  const { voucherCode, storeId, orderAmount } = req.body;
+
+  if (!voucherCode) {
+    return sendError(res, 'Voucher code is required', 400);
+  }
+
+  // Find redemption by code
+  const redemption = await OfferRedemption.findOne({
+    $or: [{ redemptionCode: voucherCode.toUpperCase() }, { verificationCode: voucherCode.toUpperCase() }],
+  })
+    .populate('offer', 'title image cashbackPercentage type restrictions store')
+    .lean();
+
+  if (!redemption) {
+    return sendError(res, 'Voucher not found', 404);
+  }
+
+  // Check if voucher belongs to this user (for user-facing validation)
+  // Skip for merchant POS validation
+  const userId = req.user?.id;
+  if (userId && redemption.user.toString() !== userId) {
+    return sendError(res, 'This voucher belongs to another user', 403);
+  }
+
+  // Check status
+  if (redemption.status === 'used') {
+    return sendSuccess(
+      res,
+      {
+        eligible: false,
+        reason: 'Voucher already used',
+        usedDate: redemption.usedDate,
+        valid: false,
+      },
+      'Voucher already used',
+    );
+  }
+
+  if (redemption.status === 'expired' || redemption.status === 'cancelled') {
+    return sendSuccess(
+      res,
+      {
+        eligible: false,
+        reason: `Voucher is ${redemption.status}`,
+        valid: false,
+      },
+      `Voucher ${redemption.status}`,
+    );
+  }
+
+  // Check expiry
+  if (new Date() > redemption.expiryDate) {
+    return sendSuccess(
+      res,
+      {
+        eligible: false,
+        reason: 'Voucher has expired',
+        valid: false,
+      },
+      'Voucher expired',
+    );
+  }
+
+  const offer = redemption.offer as any;
+
+  // Check minimum order value if orderAmount provided
+  let eligible = true;
+  let reason = '';
+  let discountAmount = 0;
+
+  if (orderAmount && offer?.restrictions?.minOrderValue) {
+    if (orderAmount < offer.restrictions.minOrderValue) {
+      eligible = false;
+      reason = `Minimum order value of ₹${offer.restrictions.minOrderValue} required`;
+    }
+  }
+
+  // Calculate potential cashback/discount
+  if (eligible && orderAmount) {
+    discountAmount = (orderAmount * (offer?.cashbackPercentage || 0)) / 100;
+    if (offer?.restrictions?.maxDiscountAmount) {
+      discountAmount = Math.min(discountAmount, offer.restrictions.maxDiscountAmount);
+    }
+    discountAmount = Math.round(discountAmount * 100) / 100;
+  }
+
+  sendSuccess(
+    res,
+    {
+      eligible,
+      valid: true,
+      reason: eligible ? undefined : reason,
+      voucher: {
+        code: redemption.redemptionCode,
+        status: redemption.status,
+        expiresAt: redemption.expiryDate,
+        redemptionType: redemption.redemptionType,
+        usedAmount: redemption.usedAmount,
+      },
+      offer: offer
+        ? {
+            _id: offer._id,
+            title: offer.title,
+            image: offer.image,
+            cashbackPercentage: offer.cashbackPercentage,
+            type: offer.type,
+            restrictions: {
+              minOrderValue: offer.restrictions?.minOrderValue || 0,
+              maxDiscountAmount: offer.restrictions?.maxDiscountAmount || null,
+            },
+          }
+        : null,
+      discount: eligible
+        ? {
+            amount: discountAmount,
+            percentage: offer?.cashbackPercentage || 0,
+            orderAmount: orderAmount || 0,
+          }
+        : null,
+    },
+    eligible ? 'Voucher is valid' : reason,
+  );
+});
+
+/**
+ * POST /api/offers/vouchers/:id/use
+ * Mark a voucher as used by merchant POS
+ * Calculates and credits cashback to user wallet
+ */
+export const merchantUseVoucher = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { id } = req.params;
+    const { orderAmount, orderId, storeId, merchantId } = req.body;
+
+    if (!orderAmount || orderAmount <= 0) {
+      await session.abortTransaction();
+      session.endSession();
+      return sendError(res, 'Valid order amount is required', 400);
+    }
+
+    // Atomic find and update with MongoDB transaction
+    const redemption = await OfferRedemption.findOneAndUpdate(
+      {
+        _id: id,
+        status: 'active',
+        expiryDate: { $gt: new Date() },
+      },
+      {
+        $set: {
+          status: 'used',
+          usedDate: new Date(),
+          ...(orderId && { order: new mongoose.Types.ObjectId(orderId) }),
+          ...(storeId && { usedAtStore: new mongoose.Types.ObjectId(storeId) }),
+        },
+      },
+      {
+        new: false,
+        session,
+      },
+    )
+      .populate('offer', 'title cashbackPercentage type restrictions')
+      .populate('user', '_id');
+
+    if (!redemption) {
+      await session.abortTransaction();
+      session.endSession();
+
+      // Check why it failed
+      const existing = await OfferRedemption.findById(id);
+      if (!existing) {
+        return sendError(res, 'Voucher not found', 404);
+      }
+      if (existing.status === 'used') {
+        return sendError(res, 'Voucher already used', 400);
+      }
+      if (existing.status === 'expired') {
+        return sendError(res, 'Voucher expired', 400);
+      }
+      return sendError(res, 'Cannot use voucher', 400);
+    }
+
+    const offer = redemption.offer as any;
+    const userId = (redemption.user as any)._id.toString();
+
+    // Check minimum order value
+    if (offer?.restrictions?.minOrderValue && orderAmount < offer.restrictions.minOrderValue) {
+      await session.abortTransaction();
+      session.endSession();
+      return sendError(res, `Minimum order value of ₹${offer.restrictions.minOrderValue} required`, 400);
+    }
+
+    // Calculate cashback
+    let cashbackAmount = (orderAmount * (offer?.cashbackPercentage || 0)) / 100;
+    if (offer?.restrictions?.maxDiscountAmount) {
+      cashbackAmount = Math.min(cashbackAmount, offer.restrictions.maxDiscountAmount);
+    }
+    cashbackAmount = Math.round(cashbackAmount * 100) / 100;
+
+    // Update redemption with amount
+    await OfferRedemption.findByIdAndUpdate(redemption._id, { usedAmount: cashbackAmount }, { session });
+
+    // Credit cashback
+    let walletBalance = null;
+    if (cashbackAmount > 0) {
+      const { walletService } = await import('../services/walletService');
+      await walletService.credit({
+        userId,
+        amount: cashbackAmount,
+        source: 'cashback',
+        description: `In-store cashback from ${offer?.title || 'offer'}`,
+        operationType: 'voucher_cashback',
+        referenceId: `voucher-cashback:${redemption._id}`,
+        referenceModel: 'OfferRedemption',
+        metadata: {
+          offerId: offer?._id,
+          storeId,
+          redemptionId: redemption._id,
+        },
+        session,
+      });
+    }
+
+    // Get updated wallet
+    const wallet = await Wallet.findOne({ user: userId }).session(session).lean();
+    if (wallet) {
+      walletBalance = {
+        total: wallet.balance.total,
+        available: wallet.balance.available,
+      };
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    sendSuccess(
+      res,
+      {
+        success: true,
+        voucher: {
+          _id: redemption._id,
+          code: redemption.redemptionCode,
+          status: 'used',
+          usedDate: new Date(),
+          usedAmount: cashbackAmount,
+        },
+        cashback: {
+          amount: cashbackAmount,
+          percentage: offer?.cashbackPercentage || 0,
+          orderAmount,
+        },
+        wallet: walletBalance,
+      },
+      `₹${cashbackAmount} cashback credited to customer wallet`,
+    );
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    logger.error('Error marking voucher as used:', error);
+    sendError(res, 'Failed to process voucher', 500);
+  }
+};

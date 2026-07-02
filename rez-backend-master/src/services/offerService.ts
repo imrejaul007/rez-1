@@ -49,11 +49,7 @@ class OfferService {
   /**
    * Find the best offer for a cart
    */
-  async findBestOffer(
-    cartTotal: number,
-    items: CartItem[],
-    userId: string
-  ): Promise<BestOfferResult> {
+  async findBestOffer(cartTotal: number, items: CartItem[], userId: string): Promise<BestOfferResult> {
     try {
       logger.info('🔍 [OfferService] Finding best offer for cart:', {
         cartTotal,
@@ -105,7 +101,7 @@ class OfferService {
   private async getAllApplicableOffers(
     cartTotal: number,
     items: CartItem[],
-    userId: string
+    userId: string,
   ): Promise<OfferCalculation[]> {
     const offers: OfferCalculation[] = [];
 
@@ -130,18 +126,15 @@ class OfferService {
     offers.push(...generalOffers);
 
     // Filter out non-applicable offers
-    return offers.filter(offer => offer.applicable);
+    return offers.filter((offer) => offer.applicable);
   }
 
   /**
    * Get flash sale offers
    */
-  private async getFlashSaleOffers(
-    items: CartItem[],
-    cartTotal: number
-  ): Promise<OfferCalculation[]> {
+  private async getFlashSaleOffers(items: CartItem[], cartTotal: number): Promise<OfferCalculation[]> {
     try {
-      const productIds = items.map(item => new mongoose.Types.ObjectId(item.productId));
+      const productIds = items.map((item) => new mongoose.Types.ObjectId(item.productId));
       const now = new Date();
 
       const flashSales = await FlashSale.find({
@@ -150,13 +143,13 @@ class OfferService {
         startTime: { $lte: now },
         endTime: { $gte: now },
         status: { $nin: ['ended', 'sold_out'] },
-      }).sort({ priority: -1, discountPercentage: -1 }).lean();
+      })
+        .sort({ priority: -1, discountPercentage: -1 })
+        .lean();
 
-      return flashSales.map(sale => {
+      return flashSales.map((sale) => {
         const savings = (cartTotal * sale.discountPercentage) / 100;
-        const cappedSavings = sale.maximumDiscount
-          ? Math.min(savings, sale.maximumDiscount)
-          : savings;
+        const cappedSavings = sale.maximumDiscount ? Math.min(savings, sale.maximumDiscount) : savings;
 
         const applicable = !sale.minimumPurchase || cartTotal >= sale.minimumPurchase;
 
@@ -182,17 +175,13 @@ class OfferService {
   /**
    * Get exclusive user offers (based on loyalty tier)
    */
-  private async getExclusiveOffers(
-    userId: string,
-    cartTotal: number,
-    items: CartItem[]
-  ): Promise<OfferCalculation[]> {
+  private async getExclusiveOffers(userId: string, cartTotal: number, items: CartItem[]): Promise<OfferCalculation[]> {
     try {
       // Get user's tier/loyalty level
       const user = await User.findById(userId).select('tier loyaltyPoints').lean();
       if (!user) return [];
 
-      const productIds = items.map(item => new mongoose.Types.ObjectId(item.productId));
+      const productIds = items.map((item) => new mongoose.Types.ObjectId(item.productId));
       const now = new Date();
 
       // Find offers that are exclusive to user's tier
@@ -200,13 +189,10 @@ class OfferService {
         isActive: true,
         startDate: { $lte: now },
         endDate: { $gte: now },
-        $or: [
-          { applicableProducts: { $in: productIds } },
-          { tags: { $in: ['exclusive', 'vip', 'premium'] } },
-        ],
+        $or: [{ applicableProducts: { $in: productIds } }, { tags: { $in: ['exclusive', 'vip', 'premium'] } }],
       }).lean();
 
-      return exclusiveOffers.map(offer => {
+      return exclusiveOffers.map((offer) => {
         const discountPercentage = offer.cashbackPercentage || 0;
         const savings = (cartTotal * discountPercentage) / 100;
         const cappedSavings = offer.restrictions.maxDiscountAmount
@@ -237,14 +223,11 @@ class OfferService {
   /**
    * Get category-specific offers
    */
-  private async getCategoryOffers(
-    items: CartItem[],
-    cartTotal: number
-  ): Promise<OfferCalculation[]> {
+  private async getCategoryOffers(items: CartItem[], cartTotal: number): Promise<OfferCalculation[]> {
     try {
       const categoryIds = items
-        .filter(item => item.categoryId)
-        .map(item => new mongoose.Types.ObjectId(item.categoryId!));
+        .filter((item) => item.categoryId)
+        .map((item) => new mongoose.Types.ObjectId(item.categoryId!));
 
       if (categoryIds.length === 0) return [];
 
@@ -257,7 +240,7 @@ class OfferService {
         endDate: { $gte: now },
       }).lean();
 
-      return categoryOffers.map(offer => {
+      return categoryOffers.map((offer) => {
         const discountPercentage = offer.cashbackPercentage || 0;
         const savings = (cartTotal * discountPercentage) / 100;
         const cappedSavings = offer.restrictions.maxDiscountAmount
@@ -288,30 +271,22 @@ class OfferService {
   /**
    * Get store-wide offers
    */
-  private async getStoreOffers(
-    items: CartItem[],
-    cartTotal: number
-  ): Promise<OfferCalculation[]> {
+  private async getStoreOffers(items: CartItem[], cartTotal: number): Promise<OfferCalculation[]> {
     try {
-      const storeIds = items
-        .filter(item => item.storeId)
-        .map(item => new mongoose.Types.ObjectId(item.storeId!));
+      const storeIds = items.filter((item) => item.storeId).map((item) => new mongoose.Types.ObjectId(item.storeId!));
 
       if (storeIds.length === 0) return [];
 
       const now = new Date();
 
       const storeOffers = await Offer.find({
-        $or: [
-          { store: { $in: storeIds } },
-          { applicableStores: { $in: storeIds } },
-        ],
+        $or: [{ store: { $in: storeIds } }, { applicableStores: { $in: storeIds } }],
         isActive: true,
         startDate: { $lte: now },
         endDate: { $gte: now },
       }).lean();
 
-      return storeOffers.map(offer => {
+      return storeOffers.map((offer) => {
         const discountPercentage = offer.cashbackPercentage || 0;
         const savings = (cartTotal * discountPercentage) / 100;
         const cappedSavings = offer.restrictions.maxDiscountAmount
@@ -359,7 +334,7 @@ class OfferService {
         ],
       }).lean();
 
-      return generalOffers.map(offer => {
+      return generalOffers.map((offer) => {
         const discountPercentage = offer.cashbackPercentage || 0;
         const savings = (cartTotal * discountPercentage) / 100;
         const cappedSavings = offer.restrictions.maxDiscountAmount
@@ -394,7 +369,7 @@ class OfferService {
     offerId: string,
     cartTotal: number,
     items: CartItem[],
-    userId: string
+    userId: string,
   ): Promise<{
     success: boolean;
     finalPrice: number;
@@ -407,9 +382,7 @@ class OfferService {
       const result = await this.findBestOffer(cartTotal, items, userId);
 
       // Find the specific offer
-      const selectedOffer = result.allApplicableOffers.find(
-        offer => offer.offerId === offerId
-      );
+      const selectedOffer = result.allApplicableOffers.find((offer) => offer.offerId === offerId);
 
       if (!selectedOffer) {
         return {
@@ -447,7 +420,7 @@ class OfferService {
   async validatePromoCode(
     promoCode: string,
     cartTotal: number,
-    userId: string
+    userId: string,
   ): Promise<{
     valid: boolean;
     offer?: Lean<IOffer> | Lean<IFlashSale>;
@@ -478,9 +451,7 @@ class OfferService {
         }
 
         const savings = (cartTotal * flashSale.discountPercentage) / 100;
-        const cappedSavings = flashSale.maximumDiscount
-          ? Math.min(savings, flashSale.maximumDiscount)
-          : savings;
+        const cappedSavings = flashSale.maximumDiscount ? Math.min(savings, flashSale.maximumDiscount) : savings;
 
         return {
           valid: true,
@@ -530,6 +501,122 @@ class OfferService {
       logger.error('❌ [OfferService] Error validating promo code:', error);
       throw error;
     }
+  }
+
+  /**
+   * Calculate stacking of multiple offers from different categories
+   * Allows combining offers that don't conflict (e.g., store offer + bank offer)
+   */
+  async calculateOfferStacking(
+    cartTotal: number,
+    items: CartItem[],
+    userId: string,
+    offerIds: string[],
+  ): Promise<{
+    appliedOffers: OfferCalculation[];
+    totalSavings: number;
+    finalTotal: number;
+    errors: string[];
+  }> {
+    const appliedOffers: OfferCalculation[] = [];
+    const errors: string[] = [];
+    let remainingTotal = cartTotal;
+
+    // Sort by priority (highest first)
+    const sortedOfferIds = [...offerIds];
+    const offersMap = new Map<string, OfferCalculation>();
+
+    // Get all offers in parallel
+    const offers = await Offer.find({
+      _id: { $in: offerIds.map((id) => new mongoose.Types.ObjectId(id)) },
+      isActive: true,
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() },
+    }).lean();
+
+    // Check each offer
+    for (const offer of offers) {
+      const discountPercentage = offer.cashbackPercentage || 0;
+      const savings = (remainingTotal * discountPercentage) / 100;
+      const cappedSavings = offer.restrictions.maxDiscountAmount
+        ? Math.min(savings, offer.restrictions.maxDiscountAmount)
+        : savings;
+
+      const applicable = !offer.restrictions.minOrderValue || remainingTotal >= offer.restrictions.minOrderValue;
+
+      const calculation: OfferCalculation = {
+        offerId: (offer as any)._id.toString(),
+        offerType: 'general',
+        title: offer.title,
+        description: offer.description || '',
+        priority: this.OFFER_PRIORITY.general,
+        savings: cappedSavings,
+        finalPrice: remainingTotal - cappedSavings,
+        discountPercentage,
+        applicable,
+        reason: applicable ? undefined : `Minimum order value of ₹${offer.restrictions.minOrderValue} required`,
+      };
+
+      if (applicable) {
+        appliedOffers.push(calculation);
+        offersMap.set((offer as any)._id.toString(), calculation);
+        remainingTotal -= cappedSavings;
+      } else {
+        errors.push(`${offer.title}: ${calculation.reason}`);
+      }
+    }
+
+    const totalSavings = appliedOffers.reduce((sum, o) => sum + o.savings, 0);
+
+    return {
+      appliedOffers,
+      totalSavings,
+      finalTotal: Math.max(0, cartTotal - totalSavings),
+      errors,
+    };
+  }
+
+  /**
+   * Validate multiple offers can stack together
+   */
+  async validateOfferStacking(
+    offerIds: string[],
+    cartTotal: number,
+  ): Promise<{
+    valid: boolean;
+    conflictingOffers: string[];
+    message?: string;
+  }> {
+    if (offerIds.length <= 1) {
+      return { valid: true, conflictingOffers: [] };
+    }
+
+    const offers = await Offer.find({
+      _id: { $in: offerIds.map((id) => new mongoose.Types.ObjectId(id)) },
+    }).lean();
+
+    // Check for exclusive offers (can't stack)
+    const exclusiveOffers = offers.filter((o) => (o as any).isExclusive);
+    if (exclusiveOffers.length > 1) {
+      return {
+        valid: false,
+        conflictingOffers: exclusiveOffers.map((o) => (o as any)._id.toString()),
+        message: 'Exclusive offers cannot be stacked',
+      };
+    }
+
+    // Check minimum order values
+    for (const offer of offers) {
+      if ((offer as any).restrictions?.minOrderValue && cartTotal < (offer as any).restrictions.minOrderValue) {
+        return {
+          valid: false,
+          conflictingOffers: [(offer as any)._id.toString()],
+          message: `Minimum order value of ₹${(offer as any).restrictions.minOrderValue} required for ${(offer as any).title}`,
+        };
+      }
+    }
+
+    return { valid: true, conflictingOffers: [] };
   }
 }
 

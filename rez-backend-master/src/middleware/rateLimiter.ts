@@ -188,41 +188,47 @@ export const generalLimiter = isRateLimitDisabled
 
 export const authLimiter = isRateLimitDisabled
   ? passthrough
-  : makeLimiter({
-      windowMs: 15 * 60 * 1000,
-      max: 5,
-      keyGenerator,
-      store: makeStore('auth', { failOpen: false }),
-      message: (_req: Request, res: Response) => {
-        res.status(429).json({
-          success: false,
-          error: 'Too many login attempts. Please try again after 15 minutes.',
-          retryAfter: 15 * 60,
-        });
+  : makeLimiter(
+      {
+        windowMs: 15 * 60 * 1000,
+        max: 5,
+        keyGenerator,
+        store: makeStore('auth', { failOpen: false }),
+        message: (_req: Request, res: Response) => {
+          res.status(429).json({
+            success: false,
+            error: 'Too many login attempts. Please try again after 15 minutes.',
+            retryAfter: 15 * 60,
+          });
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+        skipSuccessfulRequests: true,
       },
-      standardHeaders: true,
-      legacyHeaders: false,
-      skipSuccessfulRequests: true,
-    }, false);
+      false,
+    );
 
 export const adminAuthLimiter = isRateLimitDisabled
   ? passthrough
-  : makeLimiter({
-      windowMs: 15 * 60 * 1000,
-      max: 3,
-      keyGenerator,
-      store: makeStore('admin-auth', { failOpen: false }),
-      message: (_req: Request, res: Response) => {
-        res.status(429).json({
-          success: false,
-          error: 'Too many admin login attempts. Please try again after 15 minutes.',
-          retryAfter: 15 * 60,
-        });
+  : makeLimiter(
+      {
+        windowMs: 15 * 60 * 1000,
+        max: 3,
+        keyGenerator,
+        store: makeStore('admin-auth', { failOpen: false }),
+        message: (_req: Request, res: Response) => {
+          res.status(429).json({
+            success: false,
+            error: 'Too many admin login attempts. Please try again after 15 minutes.',
+            retryAfter: 15 * 60,
+          });
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+        skipSuccessfulRequests: true,
       },
-      standardHeaders: true,
-      legacyHeaders: false,
-      skipSuccessfulRequests: true,
-    }, false);
+      false,
+    );
 
 // Admin MFA verify/setup/disable: strict per-IP rate limit to prevent
 // brute-forcing the 6-digit TOTP code (1M possibilities × no limit = trivial
@@ -231,22 +237,25 @@ export const adminAuthLimiter = isRateLimitDisabled
 // for the account-lockout path).
 export const adminMfaLimiter = isRateLimitDisabled
   ? passthrough
-  : makeLimiter({
-      windowMs: 15 * 60 * 1000,
-      max: 5,
-      keyGenerator,
-      store: makeStore('admin-mfa', { failOpen: false }),
-      message: (_req: Request, res: Response) => {
-        res.status(429).json({
-          success: false,
-          error: 'Too many admin MFA attempts. Please try again after 15 minutes.',
-          retryAfter: 15 * 60,
-        });
+  : makeLimiter(
+      {
+        windowMs: 15 * 60 * 1000,
+        max: 5,
+        keyGenerator,
+        store: makeStore('admin-mfa', { failOpen: false }),
+        message: (_req: Request, res: Response) => {
+          res.status(429).json({
+            success: false,
+            error: 'Too many admin MFA attempts. Please try again after 15 minutes.',
+            retryAfter: 15 * 60,
+          });
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+        skipSuccessfulRequests: true,
       },
-      standardHeaders: true,
-      legacyHeaders: false,
-      skipSuccessfulRequests: true,
-    }, false);
+      false,
+    );
 
 export const registrationLimiter = isRateLimitDisabled
   ? passthrough
@@ -268,45 +277,54 @@ export const registrationLimiter = isRateLimitDisabled
 
 export const otpLimiter = isRateLimitDisabled
   ? passthrough
-  : makeLimiter({
-      windowMs: 30 * 1000,
-      max: 3,
-      keyGenerator,
-      store: makeStore('otp', { failOpen: false }),
-      message: (_req: Request, res: Response) => {
-        res.status(429).json({
-          success: false,
-          message: 'Please wait 30 seconds before requesting another OTP.',
-          retryAfter: 30,
-        });
+  : makeLimiter(
+      {
+        windowMs: 30 * 1000,
+        max: 3,
+        keyGenerator,
+        store: makeStore('otp', { failOpen: false }),
+        message: (_req: Request, res: Response) => {
+          res.status(429).json({
+            success: false,
+            message: 'Please wait 30 seconds before requesting another OTP.',
+            retryAfter: 30,
+          });
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
       },
-      standardHeaders: true,
-      legacyHeaders: false,
-    }, false);
+      false,
+    );
 
 export const passwordResetLimiter = isRateLimitDisabled
   ? passthrough
-  : makeLimiter({
-      windowMs: 60 * 60 * 1000,
-      max: 3,
-      keyGenerator,
-      store: makeStore('pwd-reset', { failOpen: false }),
-      message: rateLimitResponse,
-      standardHeaders: true,
-      legacyHeaders: false,
-    }, false);
+  : makeLimiter(
+      {
+        windowMs: 60 * 60 * 1000,
+        max: 3,
+        keyGenerator,
+        store: makeStore('pwd-reset', { failOpen: false }),
+        message: rateLimitResponse,
+        standardHeaders: true,
+        legacyHeaders: false,
+      },
+      false,
+    );
 
 export const securityLimiter = isRateLimitDisabled
   ? passthrough
-  : makeLimiter({
-      windowMs: 15 * 60 * 1000,
-      max: 3,
-      keyGenerator,
-      store: makeStore('security', { failOpen: false }),
-      message: rateLimitResponse,
-      standardHeaders: true,
-      legacyHeaders: false,
-    }, false);
+  : makeLimiter(
+      {
+        windowMs: 15 * 60 * 1000,
+        max: 3,
+        keyGenerator,
+        store: makeStore('security', { failOpen: false }),
+        message: rateLimitResponse,
+        standardHeaders: true,
+        legacyHeaders: false,
+      },
+      false,
+    );
 
 export const uploadLimiter = isRateLimitDisabled
   ? passthrough
@@ -440,6 +458,75 @@ export const recommendationLimiter = isRateLimitDisabled
       legacyHeaders: false,
     });
 
+// ─── Redemption limiter — strict, per-user, fail-closed ──────────────────────
+export const redemptionLimiter = isRateLimitDisabled
+  ? passthrough
+  : makeLimiter(
+      {
+        windowMs: 60 * 1000, // 1 minute
+        max: 10, // max 10 redemptions per minute per user
+        keyGenerator,
+        store: makeStore('redemption', { failOpen: false }),
+        message: (_req: Request, res: Response) => {
+          res.status(429).json({
+            success: false,
+            error: 'RATE_LIMITED',
+            message: 'Too many redemption attempts. Please wait 1 minute.',
+            retryAfter: 60,
+          });
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+      },
+      false,
+    ); // fail-closed: reject if Redis unavailable
+
+// ─── Payment limiter — strict, per-user, fail-closed ─────────────────────────
+export const paymentLimiter = isRateLimitDisabled
+  ? passthrough
+  : makeLimiter(
+      {
+        windowMs: 60 * 1000, // 1 minute
+        max: 5, // max 5 payment operations per minute per user
+        keyGenerator,
+        store: makeStore('payment', { failOpen: false }),
+        message: (_req: Request, res: Response) => {
+          res.status(429).json({
+            success: false,
+            error: 'RATE_LIMITED',
+            message: 'Too many payment requests. Please wait 1 minute.',
+            retryAfter: 60,
+          });
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+      },
+      false,
+    ); // fail-closed: reject if Redis unavailable
+
+// ─── Webhook global limiter — per-IP, strict ─────────────────────────────────
+export const webhookLimiter = isRateLimitDisabled
+  ? passthrough
+  : makeLimiter(
+      {
+        windowMs: 60 * 1000, // 1 minute
+        max: 100, // max 100 webhook requests per IP per minute
+        keyGenerator: (req: Request) => `ip:${req.ip || 'unknown'}`,
+        store: makeStore('webhook-global', { failOpen: false }),
+        message: (_req: Request, res: Response) => {
+          res.status(429).json({
+            success: false,
+            error: 'RATE_LIMITED',
+            message: 'Too many webhook requests. Please try again later.',
+            retryAfter: 60,
+          });
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+      },
+      false,
+    ); // fail-closed
+
 export const referralLimiter = isRateLimitDisabled
   ? passthrough
   : makeLimiter({
@@ -519,31 +606,34 @@ export const productBulkLimiter = isRateLimitDisabled
 // ─── Financial operations limiter — strict, per-user, fail-closed ────────────
 export const financialLimiter = isRateLimitDisabled
   ? passthrough
-  : makeLimiter({
-      windowMs: 60 * 1000,     // 1 minute
-      max: 10,                  // max 10 financial operations per minute
-      keyGenerator,
-      store: makeStore('financial', { failOpen: false }),
-      message: (_req: Request, res: Response) => {
-        res.status(429).json({
-          success: false,
-          error: 'RATE_LIMITED',
-          message: 'Too many payment requests. Please wait 1 minute.',
-          retryAfter: 60,
-        });
+  : makeLimiter(
+      {
+        windowMs: 60 * 1000, // 1 minute
+        max: 10, // max 10 financial operations per minute
+        keyGenerator,
+        store: makeStore('financial', { failOpen: false }),
+        message: (_req: Request, res: Response) => {
+          res.status(429).json({
+            success: false,
+            error: 'RATE_LIMITED',
+            message: 'Too many payment requests. Please wait 1 minute.',
+            retryAfter: 60,
+          });
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
       },
-      standardHeaders: true,
-      legacyHeaders: false,
-    }, false);  // fail-closed: reject if Redis unavailable
+      false,
+    ); // fail-closed: reject if Redis unavailable
 
 export const createProductLimiter = (method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'BULK') => {
   if (isRateLimitDisabled) return passthrough;
   const configs = {
-    GET:    { max: 100, prefix: 'product-get' },
-    POST:   { max: 30,  prefix: 'product-post' },
-    PUT:    { max: 30,  prefix: 'product-put' },
-    DELETE: { max: 10,  prefix: 'product-del' },
-    BULK:   { max: 5,   prefix: 'product-bulk2' },
+    GET: { max: 100, prefix: 'product-get' },
+    POST: { max: 30, prefix: 'product-post' },
+    PUT: { max: 30, prefix: 'product-put' },
+    DELETE: { max: 10, prefix: 'product-del' },
+    BULK: { max: 5, prefix: 'product-bulk2' },
   };
   const { max, prefix } = configs[method];
   return makeLimiter({

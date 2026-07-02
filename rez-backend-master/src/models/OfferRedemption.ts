@@ -1,4 +1,5 @@
 import { logger } from '../config/logger';
+import crypto from 'crypto';
 import mongoose, { Document, Schema, Model } from 'mongoose';
 
 // Instance methods interface
@@ -192,7 +193,7 @@ const OfferRedemptionSchema = new Schema<IOfferRedemption>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 // Compound indexes
@@ -207,13 +208,13 @@ OfferRedemptionSchema.pre('save', function (next) {
   // Generate redemption code if not provided
   if (!this.redemptionCode) {
     const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const random = crypto.randomBytes(4).toString('hex').toUpperCase();
     this.redemptionCode = `RED-${timestamp}-${random}`;
   }
 
-  // Generate verification code (6 digits)
+  // Generate verification code (6 digits) - cryptographically secure
   if (!this.verificationCode && this.redemptionType === 'instore') {
-    this.verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    this.verificationCode = crypto.randomInt(100000, 999999).toString();
   }
 
   // Set expiry date if not set
@@ -229,18 +230,11 @@ OfferRedemptionSchema.pre('save', function (next) {
 // Method to check if redemption is valid
 OfferRedemptionSchema.methods.isValid = function (): boolean {
   const now = new Date();
-  return (
-    (this.status === 'pending' || this.status === 'active') &&
-    now <= this.expiryDate
-  );
+  return (this.status === 'pending' || this.status === 'active') && now <= this.expiryDate;
 };
 
 // Method to mark as used with idempotency check
-OfferRedemptionSchema.methods.markAsUsed = async function (
-  orderId?: string,
-  amount?: number,
-  storeId?: string
-) {
+OfferRedemptionSchema.methods.markAsUsed = async function (orderId?: string, amount?: number, storeId?: string) {
   // Idempotency check - if already used, return without error
   if (this.status === 'used') {
     logger.info(`⚠️ [OFFER REDEMPTION] Redemption ${this.redemptionCode} already marked as used, skipping`);
@@ -283,9 +277,7 @@ OfferRedemptionSchema.methods.cancel = async function (reason?: string) {
 };
 
 // Method to verify (for in-store)
-OfferRedemptionSchema.methods.verify = async function (
-  verifiedByUserId: string
-) {
+OfferRedemptionSchema.methods.verify = async function (verifiedByUserId: string) {
   this.status = 'active';
   this.verifiedBy = verifiedByUserId;
   this.verifiedAt = new Date();
@@ -302,16 +294,12 @@ OfferRedemptionSchema.statics.updateExpired = async function () {
     },
     {
       $set: { status: 'expired' },
-    }
+    },
   );
 };
 
 // Static method to get user's redemptions
-OfferRedemptionSchema.statics.getUserRedemptions = function (
-  userId: string,
-  status?: string,
-  limit: number = 20
-) {
+OfferRedemptionSchema.statics.getUserRedemptions = function (userId: string, status?: string, limit: number = 20) {
   const query: any = { user: userId };
 
   if (status) {
@@ -326,10 +314,7 @@ OfferRedemptionSchema.statics.getUserRedemptions = function (
 };
 
 // Static method to count user redemptions for an offer
-OfferRedemptionSchema.statics.countUserOfferRedemptions = function (
-  userId: string,
-  offerId: string
-) {
+OfferRedemptionSchema.statics.countUserOfferRedemptions = function (userId: string, offerId: string) {
   return this.countDocuments({
     user: userId,
     offer: offerId,
@@ -339,16 +324,15 @@ OfferRedemptionSchema.statics.countUserOfferRedemptions = function (
 
 // Static method to check if user can redeem offer
 // @ts-ignore
-OfferRedemptionSchema.statics.canUserRedeem = async function (
-  userId: string,
-  offerId: string,
-  userLimit: number
-) {
+OfferRedemptionSchema.statics.canUserRedeem = async function (userId: string, offerId: string, userLimit: number) {
   // @ts-ignore
   const count = await this.countUserOfferRedemptions(userId, offerId);
   return count < userLimit;
 };
 
-const OfferRedemption = mongoose.model<IOfferRedemption, IOfferRedemptionModel>('OfferRedemption', OfferRedemptionSchema);
+const OfferRedemption = mongoose.model<IOfferRedemption, IOfferRedemptionModel>(
+  'OfferRedemption',
+  OfferRedemptionSchema,
+);
 
 export default OfferRedemption;
